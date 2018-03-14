@@ -179,6 +179,9 @@ if [ "$ONGCP" = "true" ]; then
     #gsutil cp blastjni.so gs://blastgcp-pipeline-test/libs/blastjni.so
 
     gsutil ls -l -r "$PIPELINEBUCKET/"
+    echo "if query.jsonl or db_partitions.jsonl have changed run:"
+    echo "  hadoop fs -copyFromLocal -f query.jsonl query.jsonl"
+    echo "  hadoop fs -copyFromLocal -f db_partitions.jsonl db_partitions.jsonl"
 fi
 
 
@@ -193,10 +196,6 @@ wc << HINTS
 
  gcloud dataproc jobs submit spark --cluster cluster-blast-vartanianmh --class org.apache.spark.examples.SparkPi --jars file:///usr/lib/spark/examples/jars/spark-examples.jar  --region=us-east4 --max-failures-per-hour 2
 
- gcloud beta dataproc --region us-east4 clusters create cluster-vartanianmh --subnet t --zone "" --master-machine-type n1-standard-1 --master-boot-disk-size 50 --num-workers 2 --worker-machine-type n1-standard-1 --worker-boot-disk-size 50 --project ncbi-sandbox-blast # TODO: --max-age=8h
- gcloud dataproc --region us-east4 clusters create cluster-1ad8 --subnet default --zone us-east4-b --master-machine-type n1-standard-1 --master-boot-disk-size 100 --num-workers 2 --worker-machine-type n1-standard-1 --worker-boot-disk-size 100 --num-preemptible-workers 1 --project ncbi-sandbox-blast
- --initialization-actions $PIPELINEBUCKET/scripts/cluster_initialize.sh
-
 gcloud dataproc --region us-east4 \
     clusters create cluster-3941 \
     --subnet t --zone us-east4-b \ # --zone "" ?
@@ -207,33 +206,26 @@ gcloud dataproc --region us-east4 \
     --project ncbi-sandbox-blast \
     --labels owner=vartanianmh \
     --initialization-actions \
-    'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh'
-    --initialization-actions-timeout 60 # Default 10m
+    'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
+    --initialization-actions-timeout 60 # Default 10m \
+    --max-age=8h
 
-
- sudo apt-get install maven libdw-dev -y #liblmdb0
- hadoop fs -copyFromLocal -f query.jsonl /user/vartanianmh/query.jsonl
- hadoop fs -copyFromLocal -f db_partitions.jsonl /user/vartanianmh/db_partitions.jsonl
-
- scp src.zip 35.188.236.53:/home/vartanianmh/blast/src.zip
- unzip -o src; \
- ./build.sh; \
- spark-submit --files blastjni.so \
- --jars BlastJNI.jar --class BlastSpark --master yarn \
- target/blastjni-0.0314.jar /user/vartanianmh/query.jsonl
-
- hadoop fs -rm -r map* foo* job* joi* csv*
-
+# Can be useful for debugging
  export SPARK_PRINT_LAUNCH_COMMAND=1
 
+# To manually populate /tmp on workers:
  cd /tmp;gsutil cp gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh .;chmod +x cluster_initialize.sh; sudo ./cluster_initialize.sh
 
- vi /etc/spark/conf.dist/spark-env.sh
+# Not sure if needed
+ sudo vi /etc/spark/conf.dist/spark-env.sh
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/blast
-
+# could be replaced by
  -conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast"
- spark-submit --conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast" \
-     --files blastjni.so  --jars BlastJNI.jar \
+
+ spark-submit \
+     --conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast" \
+     --files blastjni.so  \
+     --jars BlastJNI.jar \
      --class BlastSpark \
      --master yarn \
      target/blastjni-0.0314.jar \
