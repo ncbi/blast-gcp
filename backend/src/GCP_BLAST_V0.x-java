@@ -1,0 +1,241 @@
+/*===========================================================================
+*
+*                            PUBLIC DOMAIN NOTICE
+*               National Center for Biotechnology Information
+*
+*  This software/database is a "United States Government Work" under the
+*  terms of the United States Copyright Act.  It was written as part of
+*  the author's official duties as a United States Government employee and
+*  thus cannot be copyrighted.  This software/database is freely available
+*  to the public for use. The National Library of Medicine and the U.S.
+*  Government have not placed any restriction on its use or reproduction.
+*
+*  Although all reasonable efforts have been taken to ensure the accuracy
+*  and reliability of the software and data, the NLM and the U.S.
+*  Government do not and cannot warrant the performance or results that
+*  may be obtained by using this software or data. The NLM and the U.S.
+*  Government disclaim all warranties, express or implied, including
+*  warranties of performance, merchantability or fitness for any particular
+*  purpose.
+*
+*  Please cite the author in any work or product based on this material.
+*
+* ===========================================================================
+*
+*/
+
+import java.util.*;
+import java.io.*;
+
+import org.apache.spark.*;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.streaming.*;
+import org.apache.spark.streaming.api.java.*;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.SparkFiles;
+
+import scala.Tuple2;
+import scala.Tuple6;
+import scala.Tuple12;
+
+public final class GCP_BLAST
+{
+    private static int randInt( int min, int max )
+    {
+        Random rand = new Random();
+        return rand.nextInt( ( max - min ) + 1 ) + min;
+    }
+
+    private static void print_elapsed( String mark, long startTime )
+    {
+		float elapsedTime = System.currentTimeMillis() - startTime;
+		System.out.println( String.format( "%s : elapsed time = %f seconds.", mark, elapsedTime / 1000.0 ) );
+    }
+
+    public static void batch_version( JavaSparkContext sc, String query, int num_jobs, int num_samples, int min_score )
+    {
+        try
+        {
+            int num_partitions = 2;
+            
+            // a list of jobs is created
+            List< Tuple2< String, Integer > > job_list = new ArrayList<>();
+            for ( int i = 0; i < num_jobs; i++ )
+            {
+                job_list.add( new Tuple2< String, Integer >( String.format( "chunk #%d", i ), i ) );
+            }
+            
+            // let the SparkContest turn it into a RDD
+            JavaRDD< Tuple2< String, Integer > > JOB_RDD = sc.parallelize( job_list, num_partitions );
+
+            // send it to the search-function, which turns it into HSP's aka Tuple6-values
+            JavaRDD< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > > SEARCH_RES_RDD
+                = JOB_RDD.flatMap( new FlatMapFunction< Tuple2< String, Integer>, Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > >()
+                {
+                    public Iterator< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > > call( Tuple2< String, Integer > item )
+                    {
+                        /* simulated prelim_search */
+                        ArrayList< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > > tmp = new ArrayList<>();
+                        for ( int i = 0; i < num_samples; ++i )
+                            tmp.add( new Tuple6< Integer, Integer, Integer, Integer, Integer, Integer >( 1, 2, 3, randInt( 1, 1000 ), item._2(), i ) );
+                        return tmp.iterator();
+                    }
+                }
+                );
+
+            // sort the SEARCH_RES_RDD by score ._4()
+            JavaRDD< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > > SORTEDS_RES_RDD
+                =  SEARCH_RES_RDD.sortBy( new Function< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer >, Integer >()
+                {
+                    public Integer call( Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > item )
+                    {
+                        return item._4();
+                    }
+                },
+                false, num_partitions );
+            
+            // define the filter-function to perform the merge
+            Function< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer >, Boolean > MergeFilter = e -> e._4() > min_score;
+            
+            // filter the search_res-RDD into the merged-RDD
+            JavaRDD< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > > MERGED_RDD = SORTEDS_RES_RDD.filter( MergeFilter );
+            
+            // map the merged-RDD via Backtrace into an alignment
+            JavaRDD< String > FINAL_RDD
+                = MERGED_RDD.map( new Function< Tuple6< Integer, Integer, Integer, Integer, Integer, Integer >, String >()
+                {
+                    public String call( Tuple6< Integer, Integer, Integer, Integer, Integer, Integer > item )
+                    {
+                        // simulated backtrace
+                        return String.format( "%d %d %d %d %d %d", item._1(), item._2(), item._3(), item._4(), item._5(), item._6() );
+                    }
+                }
+            );
+            
+            // collect the output and print it
+            List< String > result = FINAL_RDD.collect();
+            for ( String S : result )
+                 System.out.println( S );
+        }
+        catch ( Exception e )
+        {
+            System.out.println( "batch_version . exception: " + e );
+        }
+    }
+    
+    public static void stream_version( JavaSparkContext sc, int num_samples, int min_score )
+    {
+        try
+        {
+            // send the file libblastjni.so to all nodes, the java-class BlastJNI will load this lib in it's static initialization
+            // via System.load( SparkFiles.get( "libblastjni.so" ) );
+            sc.addFile( "libblastjni.so" );
+            
+            // create a streaming-context from SparkContext given
+            JavaStreamingContext jssc = new JavaStreamingContext( sc, Durations.seconds( 1 ) );
+            
+            // create a list with 200 chunks for the database nt04, to be used later for creating jobs out of a request
+            int num_chunks = 200;
+            List< GCP_BLAST_CHUNK > chunk_list = new ArrayList<>();
+            for ( int i = 0; i < num_chunks; i++ )
+                chunk_list.add( new GCP_BLAST_CHUNK( String.format( "nt04_%d", i ), i ) );
+
+            // we broadcast this list to all nodes
+            Broadcast< List< GCP_BLAST_CHUNK > > chunks = jssc.sparkContext().broadcast( chunk_list );
+
+            // Create a local StreamingContext listening on port localhost.9999
+            JavaReceiverInputDStream< String > lines = jssc.socketTextStream( "localhost", 9999 );
+            
+            // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
+            JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
+            {
+                ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
+                GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line );
+                // we are using the broadcasted ArrayList called 'chunks' to create the jobs
+                for ( GCP_BLAST_CHUNK chunk : chunks.getValue() )
+                    tmp.add( new GCP_BLAST_JOB( req, chunk ) );
+                return tmp.iterator();
+            } );
+            
+            // send it to the search-function, which turns it into HSP's
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
+            {
+                ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
+                
+                BlastJNI blaster = new BlastJNI();
+                String[] blast_res = blaster.jni_prelim_search( job.r.job_id, job.r.query, job.c.name, job.r.params );
+                for ( String S : blast_res )
+                    res.add( new GCP_BLAST_HSP( job, S ) );
+
+                return res.iterator();
+            } );
+            
+            // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
+            JavaDStream< GCP_BLAST_HSP > FILTERED = SEARCH_RES.filter( hsp -> hsp.score > min_score );
+
+            // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
+            JavaDStream< String > FINAL = FILTERED.map( hsp -> hsp.toString() );
+            
+            // print the FINAL ( this runs on a workernode! )
+            FINAL.foreachRDD( rdd -> {
+                long count = rdd.count();
+                if ( count > 0 )
+                {
+                    System.out.println( String.format( "-------------------------- [%d]", count ) );
+                    rdd.foreachPartition( part -> {
+                        int i = 0;
+                        while( part.hasNext() && ( i < 10 ) )
+                        {
+                            System.out.println( part.next() );
+                            i += 1;
+                        }
+                    } );
+                }
+                else
+                    System.out.println( "." );
+            } );
+            
+            jssc.start();               // Start the computation
+            jssc.awaitTermination();    // Wait for the computation to terminate
+        }
+        catch ( Exception e )
+        {
+            System.out.println( "stream_version . exception: " + e );
+        }
+    }
+    
+	public static void main( String[] args ) throws Exception
+	{
+		long startTime = System.currentTimeMillis();
+        
+        try
+        {
+            SparkConf conf = new SparkConf();
+            conf.setAppName( GCP_BLAST.class.getSimpleName() );
+            conf.setMaster( "local[4]" );
+            conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
+            
+            JavaSparkContext sc = new JavaSparkContext( conf );
+            sc.setLogLevel( "ERROR" );
+            print_elapsed( "context created", startTime );
+            
+            String db = "n04";
+            String query = "query";
+            String params = "params";
+            int num_samples = 10;
+            int min_score = 300;
+            
+            //batch_version( sc, query, num_jobs, num_samples, min_score );
+            stream_version( sc, num_samples, min_score );
+        }
+        catch ( Exception e )
+        {
+            System.out.println( "SparkConf exception: " + e );
+        }
+        
+        print_elapsed( "done", startTime );
+	}
+}
