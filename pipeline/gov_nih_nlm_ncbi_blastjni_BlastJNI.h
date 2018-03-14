@@ -23,5 +23,4 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1s
 vartanianmh
 javac 1.8.0_131
 g++ (Debian 4.9.2-10+deb8u1) 4.9.2
-Wed Mar 14 20:01:17 UTC 2018
 */
