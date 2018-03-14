@@ -1,0 +1,12 @@
+Java results[] has 10 entries:
+[{"chunk": "756412", "jobid": "JobID123", "oid": 125604, "score": 64, "qstart": 0, "qstop": 70, "sstart": 379, "sstop": 449 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 125605, "score": 64, "qstart": 0, "qstop": 70, "sstart": 379, "sstop": 449 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 164614, "score": 64, "qstart": 0, "qstop": 70, "sstart": 2415, "sstop": 2485 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 203890, "score": 46, "qstart": 3, "qstop": 70, "sstart": 363, "sstop": 430 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 377616, "score": 43, "qstart": 3, "qstop": 70, "sstart": 358, "sstop": 425 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 559578, "score": 46, "qstart": 3, "qstop": 70, "sstart": 400, "sstop": 467 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 575787, "score": 49, "qstart": 3, "qstop": 70, "sstart": 401, "sstop": 468 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 575788, "score": 49, "qstart": 3, "qstop": 70, "sstart": 401, "sstop": 468 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 626181, "score": 64, "qstart": 0, "qstop": 70, "sstart": 1326, "sstop": 1396 }
+, {"chunk": "756412", "jobid": "JobID123", "oid": 645404, "score": 64, "qstart": 0, "qstop": 70, "sstart": 2414, "sstop": 2484 }
+]
