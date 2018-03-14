@@ -170,9 +170,9 @@ if [ "$ONGCP" = "true" ]; then
         db_partitions.jsonl \
         "$PIPELINEBUCKET/db_partitions.jsonl"
 
-    gsutil cp \
-        ext/liblmdb.so \
-        "$PIPELINEBUCKET/liblmdb.so"
+    #gsutil cp \
+    #    ext/liblmdb.so \
+    #    "$PIPELINEBUCKET/liblmdb.so"
 
     #gsutil cp ~/nt.tar gs://blastgcp-pipeline-test/dbs/nt04.tar
     #gsutil cp liblmdb.so gs://blastgcp-pipeline-test/libs/liblmdb.so
