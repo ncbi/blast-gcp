@@ -33,14 +33,14 @@ rm -f *test.result
 rm -rf target
 rm -f BlastJNI.jar
 rm -f db_partitions.json db_partitions.jsonl
-rm -f src.zip
+#rm -f src.zip
 #rm -f blast4spar*pp
 
 #curl -o blast4spark.cpp https://svn.ncbi.nlm.nih.gov/viewvc/toolkit/branches/blast_gcp/src/algo/blast/api/blast4spark.cpp?view=co&content-type=text%2Fplain
 #curl -o blast4spark.hpp https://svn.ncbi.nlm.nih.gov/viewvc/toolkit/branches/blast_gcp/include/algo/blast/api/blast4spark.hpp?view=co&content-type=text%2Fplain
 if [ "$ONGCP" = "false" ]; then
     rm -f test_blast
-    cp -n /netopt/ncbi_tools64/lmdb-0.9.21/lib/*so .
+    cp -n /netopt/ncbi_tools64/lmdb-0.9.21/lib/*so ext
     echo "Compiling test_blast.cpp"
     g++ test_blast.cpp -L./blast-libs \
         -std=gnu++11 \
@@ -49,6 +49,7 @@ if [ "$ONGCP" = "false" ]; then
         -I /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/inc \
         -L /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/lib \
         -L . \
+        -L ext \
         -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer -lxblast -lxalgoblastdbindex -lcomposition_adjustment -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb -lblast_services -lxalnmgr -lxobjutil -lxobjread -lvariation -lcreaders -lsubmit -lxnetblastcli -lxnetblast -lblastdb -lscoremat -ltables -lxregexp -lncbi_xloader_genbank -lncbi_xreader_id1 -lncbi_xreader_id2 -lncbi_xreader_cache -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr -lgenome_collection -lseqedit -lseqsplit -lsubmit -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress -llmdb -lpthread -lz -lbz2 -L/netopt/ncbi_tools64/lzo-2.05/lib64 -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread\
         -o test_blast
 
@@ -84,7 +85,7 @@ echo "/*" >> $HDR
 echo "$USER" >> $HDR
 javac -version >> $HDR 2>&1
 g++ --version | head -1 >> $HDR
-date >> $HDR
+#date >> $HDR
 echo "*/" >> $HDR
 
 
@@ -107,6 +108,7 @@ if [ "$ONGCP" = "false" ]; then
         -I /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/inc \
         -L /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/lib \
         -L . \
+	-L ext \
         -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer -lxblast -lxalgoblastdbindex -lcomposition_adjustment -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb -lblast_services -lxalnmgr -lxobjutil -lxobjread -lvariation -lcreaders -lsubmit -lxnetblastcli -lxnetblast -lblastdb -lscoremat -ltables -lxregexp -lncbi_xloader_genbank -lncbi_xreader_id1 -lncbi_xreader_id2 -lncbi_xreader_cache -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr -lgenome_collection -lseqedit -lseqsplit -lsubmit -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress -llmdb -lpthread -lz -lbz2 -L/netopt/ncbi_tools64/lzo-2.05/lib64 -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread\
         -o blastjni.so
     # TODO: llmdb-static?
@@ -140,19 +142,19 @@ ls -l target/*jar
 echo "Make_partitions.py"
 ./make_partitions.py > db_partitions.jsonl
 
-echo "Zipping source"
-zip -q -r src.zip \
-      build.sh BlastJNI.java blastjni.cpp $HDR \
-      *.expected *py pom.xml \
-      src/ \
-      *.json *.jsonl \
-      test_blast.cpp \
-      blast4spark.hpp \
-      blastjni.so \
-      liblmdb.so \
-      test_blast \
-      cluster_initialize.sh \
-      *.py
+#echo "Zipping source"
+#zip -q -r src.zip \
+#      build.sh BlastJNI.java blastjni.cpp $HDR \
+#      *.expected *py pom.xml \
+#      src/ \
+#      *.json *.jsonl \
+#      test_blast.cpp \
+#      blast4spark.hpp \
+#      blastjni.so \
+#      ext/liblmdb.so \
+#      test_blast \
+#      cluster_initialize.sh \
+#      *.py
 
 echo "Creating JAR"
 jar cf BlastJNI.jar gov blastjni.so
@@ -168,9 +170,9 @@ if [ "$ONGCP" = "true" ]; then
         db_partitions.jsonl \
         "$PIPELINEBUCKET/db_partitions.jsonl"
 
-    gsutil cp \
-        liblmdb.so \
-        "$PIPELINEBUCKET/liblmdb.so"
+    #gsutil cp \
+    #    ext/liblmdb.so \
+    #    "$PIPELINEBUCKET/liblmdb.so"
 
     #gsutil cp ~/nt.tar gs://blastgcp-pipeline-test/dbs/nt04.tar
     #gsutil cp liblmdb.so gs://blastgcp-pipeline-test/libs/liblmdb.so
