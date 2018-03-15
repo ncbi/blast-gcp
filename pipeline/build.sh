@@ -14,13 +14,16 @@ if [ "$distro" -ne 0 ]; then
     export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
     export PATH="$JAVA_HOME/bin:$PATH"
     export LD_LIBRARY_PATH="/tmp/blast:."
+    export BLASTDB=/tmp/blast/db
 #    JAVA_INC="-I$JAVA_HOME/include"
 else
     echo "Building at NCBI on CentOS 7"
     export ONGCP="false"
     export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
     export LD_LIBRARY_PATH="/tmp/blast:.:/opt/ncbi/gcc/4.9.3/lib64/"
+    export BLASTDB=/net/napme02/vol/blast/db/blast
 fi
+
 JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
@@ -73,13 +76,14 @@ if [ "$ONGCP" = "false" ]; then
         -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer -lxblast -lxalgoblastdbindex -lcomposition_adjustment -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb -lblast_services -lxalnmgr -lxobjutil -lxobjread -lvariation -lcreaders -lsubmit -lxnetblastcli -lxnetblast -lblastdb -lscoremat -ltables -lxregexp -lncbi_xloader_genbank -lncbi_xreader_id1 -lncbi_xreader_id2 -lncbi_xreader_cache -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr -lgenome_collection -lseqedit -lseqsplit -lsubmit -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress -llmdb -lpthread -lz -lbz2 -L/netopt/ncbi_tools64/lzo-2.05/lib64 -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread\
         -o blastjni.so
     mkdir -p /tmp/blast
-    cp blastjni.so /tmp/blast
     cp -n /netopt/ncbi_tools64/lmdb-0.9.21/lib/*so ext
-    cp ext/liblmdb.so /tmp/blast/
 fi
 
+cp blastjni.so /tmp/blast
+cp ext/liblmdb.so /tmp/blast/
+
 echo "Testing JNI"
-java -Djava.library.path=$PWD -cp . gov.nih.nlm.ncbi.blastjni.BlastJNI > test.result
+java -Djava.library.path=$PWD -cp . gov.nih.nlm.ncbi.blastjni.BlastJNI > test.result 2>&1
 set +errexit
 CMP=$(cmp test.result test.expected)
 if [[ $? -ne 0 ]]; then
@@ -109,11 +113,6 @@ fi
 echo "Testing Blast Library"
 # More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
 
-if [ "$ONGCP" = "false" ]; then
-    export BLASTDB=/net/napme02/vol/blast/db/blast
-else
-    export BLASTDB=/tmp/blast/db
-fi
 ./test_blast 1 \
 CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG \
 nt.04 blastn > blast_test.result
@@ -133,20 +132,6 @@ ls -l target/*jar
 
 echo "Make_partitions.py"
 ./make_partitions.py > db_partitions.jsonl
-
-#echo "Zipping source"
-#zip -q -r src.zip \
-#      build.sh BlastJNI.java blastjni.cpp $HDR \
-#      *.expected *py pom.xml \
-#      src/ \
-#      *.json *.jsonl \
-#      test_blast.cpp \
-#      blast4spark.hpp \
-#      blastjni.so \
-#      ext/liblmdb.so \
-#      test_blast \
-#      cluster_initialize.sh \
-#      *.py
 
 echo "Creating JAR"
 jar cf BlastJNI.jar gov blastjni.so
@@ -205,6 +190,9 @@ gcloud dataproc --region us-east4 \
     git clone https://github.com/ncbi/blast-gcp.git
     cd blast-gcp
     git checkout engineering
+    git config --global user.email "mike.vartanian@nih.gov"
+    git config --global user.name "Mike Vartanian"
+
 
 # Can be useful for debugging
  export SPARK_PRINT_LAUNCH_COMMAND=1
