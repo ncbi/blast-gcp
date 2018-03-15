@@ -58,9 +58,13 @@ class GCP_BLAST_HSP implements Serializable
         String[] parts = blast_res.replace( "{", "" ).replace( "}", "" ).split( "," );
         for ( String part : parts )
         {
+            System.out.println("part is" + part);
             String[] kv = part.trim().split( ":" );
             String key = kv[ 0 ].replaceAll( "\"", "" );
+// {"chunk": 4, "RID": "6", "oid": 377616, "score": 43, "qstart": 3, "qstop":
+// 70, "sstart": 358, "sstop": 425 }
 
+            System.out.println("key is " + key + " value is " + kv[1]);
             if ( key.equals( "score" ) )
                 { t_score = Integer.parseInt( kv[ 1 ].trim() ); }
             else if ( key.equals( "qstart" ) )

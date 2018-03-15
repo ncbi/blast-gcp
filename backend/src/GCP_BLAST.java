@@ -57,6 +57,7 @@ public final class GCP_BLAST
 
         List< String > files_to_transfer = new ArrayList<>();
         files_to_transfer.add( "blastjni.so" );
+        //files_to_transfer.add( "liblmdb.so" );
         
         GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, master, files_to_transfer );
         driver.start();

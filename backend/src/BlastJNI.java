@@ -35,6 +35,8 @@ public class BlastJNI
         try
         {
             System.load( SparkFiles.get( "blastjni.so" ) );
+//                    System.load("/tmp/blast/blastjni.so");
+
         }
         catch ( Exception e )
         {

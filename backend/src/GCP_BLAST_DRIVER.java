@@ -97,12 +97,16 @@ class GCP_BLAST_DRIVER extends Thread
                 
                 BlastJNI blaster = new BlastJNI();
                 // ++++++ this is the where the work happens on the worker-nodes ++++++
-                System.out.println( String.format( "starting request: '%s' at '%s' has zero results", job.req.req_id, job.chunk.name ) );
+                System.out.println( String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.chunk.name ) );
                 String[] blast_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.chunk.name, job.req.params );
                 if ( blast_res.length > 0 )
                 {
+                    System.out.println("we have results" );
                     for ( String S : blast_res )
+                    {
+                        System.out.println("S is " + S);
                         res.add( new GCP_BLAST_HSP( job, S ) );
+                    }
                 }
                 else
                     System.out.println( String.format( "request: '%s' at '%s' has zero results", job.req.req_id, job.chunk.name ) );
@@ -151,6 +155,7 @@ class GCP_BLAST_DRIVER extends Thread
             conf.setAppName( this.appName );
             conf.setMaster( this.master );
             conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
+            conf.set( "spark.executorEnv.LD_LIBRARY_PATH","/tmp/blast");
             
             JavaSparkContext sc = new JavaSparkContext( conf );
             sc.setLogLevel( "ERROR" );
@@ -163,7 +168,7 @@ class GCP_BLAST_DRIVER extends Thread
             jssc = new JavaStreamingContext( sc, Durations.seconds( 1 ) );
             
             int num_samples = 10;
-            int min_score = 300;
+            int min_score = 1;//300;
             stream_version( num_samples, min_score );
         }
         catch ( Exception e )
