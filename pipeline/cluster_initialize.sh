@@ -18,17 +18,20 @@ shutdown -h +1440
 
 # Copy stuff from GCS
 mkdir -p /tmp/blast/db
-chown -R spark /tmp/blast
+chown -R spark:spark /tmp/blast/
 chmod -R ugo+rw /tmp/blast
 
 cd /tmp/blast/
-gsutil cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
+gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
 cd /tmp/blast/db
 tar -xvf ../nt04.tar
 rm -f ../nt04.tar
 cd /tmp/blast
 gsutil cp gs://blastgcp-pipeline-test/libs/* .
 chmod ugo+rx *.so
+chown -R spark:spark /tmp/blast/
+chmod -R ugo+rw /tmp/blast
+
 
 
 # For master node only below this:
