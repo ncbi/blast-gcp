@@ -99,8 +99,7 @@ public final class BlastSpark {
         System.out.println("Converted to RDD");
         rddjobs.saveAsTextFile("rddjobs"+fake_appid);
 
-        // RID, query, db_part, params
-        // rddjobs=DB, Params, Query, RID, partition
+        // CSV is RID, params, partitin, query
         System.out.println("making rddcsv");
         JavaRDD<String> rddcsv;
         rddcsv=rddjobs.map(new Function<Row, String>() {
@@ -132,6 +131,8 @@ public final class BlastSpark {
             //            return results.iterator();
         });
 
+        rddmap.saveAsTextFile("map" + fake_appid);
+
         JavaRDD<String> rddhsp=rddmap.cache().coalesce(1);
         System.out.println("FlatMapped:" + rddhsp.count());
         if (rddhsp.count()==0)
@@ -152,7 +153,7 @@ public final class BlastSpark {
             ++rowcount;
             if (rowcount < 10)
             {
-                System.out.println(lout);
+                System.out.println(rowcount + ":" + lout);
             } else if (rowcount==10)
             {
                 System.out.println("...");
@@ -161,32 +162,7 @@ public final class BlastSpark {
         }
         pw.close();
 
-        //s -> Arrays.asList(function(s).iterator()));
-        //                               (FlatMapFunction<String, String>) x -> Arrays.asList(x.split(" ")).iterator(),
-        //                               Encoders.STRING());
-
-        //        JavaRDD<
-        /*
-           System.out.println("making String[]");
-           JavaRDD<String[]> rddjobs5;
-           rddjobs5=rddjobs.map(new Function<Row, String[]>() {
-           public String[] call(Row row) {
-           String[] l=new String[4];
-           l[0]=row.getString(0);
-           l[1]=row.getString(1);
-           l[2]=row.getString(2);
-           l[3]=row.getString(3);
-           System.out.println("l is " + l);
-           return l;
-           }});
-           System.out.println("made String[]" + rddjobs5.count());
-           */
-        //JavaRDD<ArrayList<String>> fm=rddjobs4.collect();
-
-
-        //        rddjobs.saveAsTextFile("job" + r);
-        //rddcsv.saveAsTextFile("csv" + fake_appid);
-        //rddmap.saveAsTextFile("map" + fake_appid);
+        // Save to GCS bucket
         String gscbucket=
             "gs://blastgcp-pipeline-test/output/";
         String filename=gscbucket+"hsp."+fake_appid+".jsonl";
