@@ -70,8 +70,8 @@ public final class BlastSpark {
         dsquery.printSchema();
         dsquery.show();
 
-        //Dataset<Row> dsdb_partitions=spark.read().format("json").load("db_partitions.jsonl");
-        Dataset<Row> dsdb_partitions=spark.read().format("json").load("gs://blastgcp-pipeline-test/db_partitions.jsonl");
+        Dataset<Row> dsdb_partitions=spark.read().format("json").
+            load("gs://blastgcp-pipeline-test/dbs/db_partitions.jsonl");
         dsdb_partitions.printSchema();
         dsdb_partitions.show();
         //        query.select("select ..."
