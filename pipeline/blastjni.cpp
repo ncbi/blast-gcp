@@ -36,6 +36,7 @@
 #include <algo/blast/api/objmgrfree_query_data.hpp>
 #include <algo/blast/api/prelim_stage.hpp>
 #include <algo/blast/core/blast_hspstream.h>
+#include <ctype.h>
 #include <ncbi_pch.hpp>
 #include <objects/seq/Bioseq.hpp>
 #include <objects/seq/Seq_data.hpp>
@@ -66,25 +67,24 @@ static void log(const char* msg)
     }
 }
 
-static unsigned long long fakerng(unsigned long mod)
+static int dbtochunk(const char* db)
 {
-    static unsigned long long state = 1;
-
-    state *= 6364136223846793005ULL;
-    state += 1442695040888963407ULL;
-
-    return state % mod;
+    // Basically atoi with skipping
+    int chunk_id = 0;
+    for (const char* c = db; *c; ++c)
+        if (isdigit(*c)) chunk_id = chunk_id * 10 + *c - '0';
+    return chunk_id;
 }
 
-static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
-                         const char* job_id, std::vector<std::string>& vs)
+static void iterate_HSPs(BlastHSPList* hsp_list, int chunk_id,
+                         const char* rid, std::vector<std::string>& vs)
 {
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
         const BlastHSP* hsp = hsp_list->hsp_array[i];
         char buf[256];
         sprintf(buf,
                 "{"
-                "\"chunk\": \"%s\", "
+                "\"chunk\": %d, "
                 "\"RID\": \"%s\", "
                 "\"oid\": %d, "
                 "\"score\": %d, "
@@ -93,9 +93,8 @@ static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
                 "\"sstart\": %d, "
                 "\"sstop\": %d "
                 "}\n",
-                chunk_id, job_id, hsp_list->oid, hsp->score,
-                hsp->query.offset, hsp->query.end, hsp->subject.offset,
-                hsp->subject.end);
+                chunk_id, rid, hsp_list->oid, hsp->score, hsp->query.offset,
+                hsp->query.end, hsp->subject.offset, hsp->subject.end);
         vs.push_back(buf);
     }
 }
@@ -124,10 +123,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     std::string sdb(cdb);
     std::string sparams(cparams);
 
-    // TODO: Chunkid (getpid? passed from Spark's application-id? Might not be
-    // an integer.
-    char chunkid[256];
-    sprintf(chunkid, "%llu", fakerng(1000000));
+    int chunk_id = dbtochunk(cdb);
     BlastHSPStream* hsp_stream
         = ncbi::blast::PrelimSearch(squery, sdb, sparams);
 
@@ -156,7 +152,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
         while (status == kBlastHSPStream_Success && hsp_list != NULL) {
             sprintf(msg, "%s - have hsp_list at %p\n", __func__, hsp_list);
             log(msg);
-            iterate_HSPs(hsp_list, chunkid, crid, vs);
+            iterate_HSPs(hsp_list, chunk_id, crid, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
         }
 
