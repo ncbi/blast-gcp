@@ -159,7 +159,7 @@ if [ "$ONGCP" = "true" ]; then
         query.jsonl \
         "$PIPELINEBUCKET/input/query.jsonl"
 	
-    gsutil ls -l -r "$PIPELINEBUCKET/"
+    # gsutil ls -l -r "$PIPELINEBUCKET/"
 fi
 
 
@@ -214,7 +214,8 @@ gcloud dataproc --region us-east4 \
      --class BlastSpark \
      --master yarn \
      target/blastjni-0.0314.jar \
-     /user/vartanianmh/query.jsonl
+	$PIPELINEBUCKET/input/query.jsonl
+     #/user/vartanianmh/query.jsonl
 
 
 HINTS

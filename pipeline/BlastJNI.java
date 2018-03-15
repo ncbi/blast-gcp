@@ -46,8 +46,12 @@ public class BlastJNI {
 
     public String[] jni_prelim_search(String rid, String query, String db_part, String params)
     {
-        log("jni_prelim_search called with "+query+","+db_part+","+params);
-        String[] results=prelim_search(rid, query,db_part,params);
+        log("Java jni_prelim_search called with:");
+        log("                               id=" + rid);
+        log("                            query=" + query);
+        log("                          db_part=" + db_part);
+        log("                           params=" + params);
+        String[] results=prelim_search(rid, query, db_part, params);
         log("jni_prelim_search returned " + results.length + " results");
         return results;
     }

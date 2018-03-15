@@ -16,12 +16,13 @@ apt-get install libdw-dev -y
 # Autokill cluster in 24 hours
 shutdown -h +1440
 
-# Copy stuff from GCS
+# Set lax permissions for /tmp/blast
+cd /tmp/blast/
 mkdir -p /tmp/blast/db
 chown -R spark:spark /tmp/blast/
 chmod -R ugo+rw /tmp/blast
 
-cd /tmp/blast/
+# Copy stuff from GCS
 gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
 cd /tmp/blast/db
 tar -xvf ../nt04.tar
@@ -33,15 +34,15 @@ chown -R spark:spark /tmp/blast/
 chmod -R ugo+rw /tmp/blast
 
 
-
 # For master node only below this:
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 if [[ "${ROLE}" == 'Master' ]]; then
-    echo "master"
-#  gsutil cp gs://my-bucket/jobs/sessionalize-logs-1.0.jar home/username
+    echo "master only now"
 fi
 
 [[ "${HOSTNAME}" =~ -m$ ]] || exit 0
+
 # Need maven for building
 apt-get install maven -y
+
 exit 0

@@ -148,6 +148,12 @@ public final class BlastSpark {
 
         JavaRDD<String> rddhsp=rddmap.cache().coalesce(1);
         System.out.println("FlatMapped:" + rddhsp.count());
+	if (rddhsp.count()==0)
+	{
+		System.out.println("no results");
+		spark.stop();
+		return;
+	}
 
         List<String> lout=rddhsp.collect();
         System.out.println("HSP");
@@ -197,7 +203,7 @@ public final class BlastSpark {
         //rddmap.saveAsTextFile("map" + fake_appid);
         String gscbucket=
             "gs://blastgcp-pipeline-test/output/";
-        String filename=gscbucket+"hsp"+fake_appid+".jsonl";
+        String filename=gscbucket+"hsp."+fake_appid+".jsonl";
         System.out.println("saving to " + filename);
         rddhsp.saveAsTextFile(filename);
 

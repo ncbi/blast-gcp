@@ -105,7 +105,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     jstring params)
 {
     char msg[256];
-    log("Entered Java_BlastJNI_prelim_1search");
+    log("Entered C++ Java_BlastJNI_prelim_1search");
 
     const char* crid = env->GetStringUTFChars(rid, NULL);
     log(crid);
@@ -177,7 +177,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     env->ReleaseStringUTFChars(query, cquery);
     env->ReleaseStringUTFChars(db, cdb);
     env->ReleaseStringUTFChars(params, cparams);
-    log("Leaving Java_BlastJNI_prelim_1search");
+    log("Leaving C++ Java_BlastJNI_prelim_1search");
     return (ret);
 
     // TODO: Exceptions: env->Throw(...)
