@@ -85,7 +85,7 @@ static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
         sprintf(buf,
                 "{"
                 "\"chunk\": \"%s\", "
-                "\"jobid\": \"%s\", "
+                "\"RID\": \"%s\", "
                 "\"oid\": %d, "
                 "\"score\": %d, "
                 "\"qstart\": %d, "
@@ -102,14 +102,14 @@ static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
 
 JNIEXPORT jobjectArray JNICALL
 Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
-    JNIEnv* env, jobject jobj, jstring jobid, jstring query, jstring db,
+    JNIEnv* env, jobject jobj, jstring rid, jstring query, jstring db,
     jstring params)
 {
     char msg[256];
     log("Entered Java_BlastJNI_prelim_1search");
 
-    const char* cjobid = env->GetStringUTFChars(jobid, NULL);
-    log(cjobid);
+    const char* crid = env->GetStringUTFChars(rid, NULL);
+    log(crid);
 
     const char* cquery = env->GetStringUTFChars(query, NULL);
     log(cquery);
@@ -131,15 +131,18 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     BlastHSPStream* hsp_stream
         = ncbi::blast::PrelimSearch(squery, sdb, sparams);
 
-    if (getenv("BLASTDB"))
-    {
-        sprintf(msg,"BLASTDB env is %s", getenv("BLASTDB"));
+    if (getenv("BLASTDB")) {
+        sprintf(msg, "BLASTDB env was %s", getenv("BLASTDB"));
         log(msg);
     }
 
-    if (setenv("BLASTDB", "/tmp/blast/db", 1)) 
-    {
-        sprintf(msg,"Couldn't setenv errno:%d",errno);
+    if (setenv("BLASTDB", "/tmp/blast/db", 1)) {
+        sprintf(msg, "Couldn't setenv errno:%d", errno);
+        log(msg);
+    }
+
+    if (getenv("BLASTDB")) {
+        sprintf(msg, "BLASTDB env is now %s", getenv("BLASTDB"));
         log(msg);
     }
 
@@ -153,7 +156,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
         while (status == kBlastHSPStream_Success && hsp_list != NULL) {
             sprintf(msg, "%s - have hsp_list at %p\n", __func__, hsp_list);
             log(msg);
-            iterate_HSPs(hsp_list, chunkid, cjobid, vs);
+            iterate_HSPs(hsp_list, chunkid, crid, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
         }
 
@@ -164,16 +167,17 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     size_t numelems = vs.size();
     sprintf(msg, "Have %lu elements", numelems);
     log(msg);
+
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
         numelems, env->FindClass("java/lang/String"), NULL);
 
-    for (size_t i = 0; i != vs.size(); ++i) {
+    for (size_t i = 0; i != numelems; ++i) {
         const char* buf = vs[i].data();
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(buf));
     }
 
-    env->ReleaseStringUTFChars(jobid, cjobid);
+    env->ReleaseStringUTFChars(rid, crid);
     env->ReleaseStringUTFChars(query, cquery);
     env->ReleaseStringUTFChars(db, cdb);
     env->ReleaseStringUTFChars(params, cparams);

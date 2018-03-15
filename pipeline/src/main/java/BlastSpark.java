@@ -103,13 +103,13 @@ public final class BlastSpark {
         System.out.println("Converted to RDD");
         //rddjobs.collect();
 
-        // jobid, query, db_part, params
+        // RID, query, db_part, params
         System.out.println("making arraylist");
         JavaRDD<ArrayList<String>> rddjobs4;
         rddjobs4=rddjobs.map(new Function<Row, ArrayList<String>>() {
             public ArrayList<String> call(Row row) {
                 ArrayList<String> l=new ArrayList<String>(4);
-                l.add(row.getString(1)); // JobID
+                l.add(row.getString(1)); // RID
                 l.add(row.getString(2)); // Params
                 l.add(row.getString(4)); // partition
                 l.add(row.getString(3)); // Query
@@ -122,7 +122,7 @@ public final class BlastSpark {
         rddcsv=rddjobs.map(new Function<Row, String>() {
             public String call(Row row) {
                 return 
-                    row.getString(1) +"," + // JobID
+                    row.getString(1) +"," + // RID
                     row.getString(2) +"," + // Params
                     row.getString(4) + ","+ // partition
                     row.getString(3); // Query
@@ -133,11 +133,11 @@ public final class BlastSpark {
         JavaRDD<String> rddmap;
         rddmap=rddcsv.flatMap( s-> {
             List<String> csv=Arrays.asList(s.split(","));
-            String jobid=csv.get(0);
+            String rid=csv.get(0);
             String params=csv.get(1);
             String db_part=csv.get(2);
             String query=csv.get(3);
-            String newresults[] = new BlastJNI().jni_prelim_search(jobid,query,db_part,params);
+            String newresults[] = new BlastJNI().jni_prelim_search(rid,query,db_part,params);
             ArrayList<String> results=new ArrayList<>();
             Collections.addAll(results, newresults);
             //            results=Arrays.asList(newresults);

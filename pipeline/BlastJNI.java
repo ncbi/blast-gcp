@@ -42,18 +42,18 @@ public class BlastJNI {
         {}
     }
 
-    private native String[] prelim_search(String jobid, String query, String db_part, String params);
+    private native String[] prelim_search(String rid, String query, String db_part, String params);
 
-    public String[] jni_prelim_search(String jobid, String query, String db_part, String params)
+    public String[] jni_prelim_search(String rid, String query, String db_part, String params)
     {
         log("jni_prelim_search called with "+query+","+db_part+","+params);
-        String[] results=prelim_search(jobid, query,db_part,params);
+        String[] results=prelim_search(rid, query,db_part,params);
         log("jni_prelim_search returned " + results.length + " results");
         return results;
     }
 
     public static void main(String[] args) {
-        String results[] = new BlastJNI().jni_prelim_search("JobID123","CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG","nt.04","blastn");
+        String results[] = new BlastJNI().jni_prelim_search("123","CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG","nt.04","blastn");
         System.out.println("Java results[] has "+ results.length + " entries:");
         System.out.println(Arrays.toString(results));
     }

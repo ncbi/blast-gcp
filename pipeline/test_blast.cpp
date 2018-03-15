@@ -188,7 +188,7 @@ static void iterate_HSPs(BlastHSPList* hsp_list)
 
 static int run(int argc, char* argv[])
 {
-    std::string jobid(argv[1]);
+    std::string rid(argv[1]);
     std::string query(argv[2]);
     std::string db(argv[3]);
     std::string params(argv[4]);
@@ -219,7 +219,7 @@ static int run(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     if (argc != 5) {
-        fprintf(stderr, "Usage: %s jobid query db params\n", argv[0]);
+        fprintf(stderr, "Usage: %s rid query db params\n", argv[0]);
         return 1;
     }
 
