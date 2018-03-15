@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Note: Appears this can't be in a bucket with lifecycle.
+
 set -o errexit
 set -o nounset
 set -o xtrace

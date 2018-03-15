@@ -174,19 +174,28 @@ wc << HINTS
 
  gcloud dataproc jobs submit spark --cluster cluster-blast-vartanianmh --class org.apache.spark.examples.SparkPi --jars file:///usr/lib/spark/examples/jars/spark-examples.jar  --region=us-east4 --max-failures-per-hour 2
 
+ gcloud dataproc clusters create --help
+
+ # subnet is t or default or subnet-sandbox-blast
+ # zone is us-east4-b or ""
+ # max-age=8h
 gcloud dataproc --region us-east4 \
-    clusters create cluster-3941 \
-    --subnet t --zone us-east4-b \ # --zone "" ?
-    --master-machine-type n1-standard-4 --master-boot-disk-size 500 \
+    clusters create cluster-$USER-$RANDOM \
+    --subnet subnet-sandbox-blast \
+    --zone us-east4-b \
+    --master-machine-type n1-standard-4 \
+    --image-version 1.2 \
+    --master-boot-disk-size 500 \
     --num-workers 2 \
-    --worker-machine-type n1-standard-4 --worker-boot-disk-size 500 \
+    --worker-machine-type n1-standard-4 \
+    --worker-boot-disk-size 500 \
     --scopes 'https://www.googleapis.com/auth/cloud-platform' \
     --project ncbi-sandbox-blast \
-    --labels owner=vartanianmh \
+    --labels owner=$USER \
     --initialization-actions \
-    'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
-    --initialization-actions-timeout 60 # Default 10m \
-    --max-age=8h
+    'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh'
+
+    gcloud dataproc --region us-east4 clusters create cluster-910f --subnet t --zone us-east4-b --master-machine-type n1-standard-1 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-1 --worker-boot-disk-size 500 --scopes 'https://www.googleapis.com/auth/cloud-platform' --project ncbi-sandbox-blast
 
     git clone https://github.com/ncbi/blast-gcp.git
     cd blast-gcp
