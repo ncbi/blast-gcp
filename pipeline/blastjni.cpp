@@ -177,7 +177,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     env->ReleaseStringUTFChars(query, cquery);
     env->ReleaseStringUTFChars(db, cdb);
     env->ReleaseStringUTFChars(params, cparams);
-    log("Leaving C++ Java_BlastJNI_prelim_1search");
+    log("Leaving C++ Java_BlastJNI_prelim_1search\n");
     return (ret);
 
     // TODO: Exceptions: env->Throw(...)

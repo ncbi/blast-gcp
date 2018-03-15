@@ -92,42 +92,28 @@ public final class BlastSpark {
 
         Dataset<String> jobsjson=dsjobs.toJSON();
         System.out.println("jobsjson is");
-        jobsjson.show();
-        /*
-           Dataset<Row> dsmapped=dsjobs.flatMap(
-           (FlatMapFunction<ArrayList<String>, String[]>)
-           x-> { return;}, Encoders.STRING());
-           */
+        jobsjson.show(false);
+
         System.out.println("Converting to RDD");
         JavaRDD<Row> rddjobs=dsjobs.toJavaRDD();
         System.out.println("Converted to RDD");
-        //rddjobs.collect();
+        rddjobs.saveAsTextFile("rddjobs"+fake_appid);
 
         // RID, query, db_part, params
-        System.out.println("making arraylist");
-        JavaRDD<ArrayList<String>> rddjobs4;
-        rddjobs4=rddjobs.map(new Function<Row, ArrayList<String>>() {
-            public ArrayList<String> call(Row row) {
-                ArrayList<String> l=new ArrayList<String>(4);
-                l.add(row.getString(1)); // RID
-                l.add(row.getString(2)); // Params
-                l.add(row.getString(4)); // partition
-                l.add(row.getString(3)); // Query
-                return l;
-            }});
-        System.out.println("made arraylist");
-
+        // rddjobs=DB, Params, Query, RID, partition
         System.out.println("making rddcsv");
         JavaRDD<String> rddcsv;
         rddcsv=rddjobs.map(new Function<Row, String>() {
             public String call(Row row) {
-                return 
-                    row.getString(1) +"," + // RID
-                    row.getString(2) +"," + // Params
-                    row.getString(4) + ","+ // partition
-                    row.getString(3); // Query
+                //TODO: Fragile, use int rididx=row.fieldIndex("RID");
+                return
+                    row.getString(3) + "," + // RID
+                    row.getString(1) + "," + // Params
+                    row.getString(4) + "," + // partition
+                    row.getString(2); // Query
             }});
         System.out.println("made rddcsv");
+        rddcsv.saveAsTextFile("rddcsv"+fake_appid);
 
         System.out.println("FlatMap");
         JavaRDD<String> rddmap;
@@ -148,12 +134,12 @@ public final class BlastSpark {
 
         JavaRDD<String> rddhsp=rddmap.cache().coalesce(1);
         System.out.println("FlatMapped:" + rddhsp.count());
-	if (rddhsp.count()==0)
-	{
-		System.out.println("no results");
-		spark.stop();
-		return;
-	}
+        if (rddhsp.count()==0)
+        {
+            System.out.println("no results");
+            spark.stop();
+            return;
+        }
 
         List<String> lout=rddhsp.collect();
         System.out.println("HSP");
