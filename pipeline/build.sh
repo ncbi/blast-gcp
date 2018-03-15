@@ -145,20 +145,21 @@ if [ "$ONGCP" = "true" ]; then
 
     gsutil cp \
         db_partitions.jsonl \
-        "$PIPELINEBUCKET/db_partitions.jsonl"
+        "$PIPELINEBUCKET/dbs/db_partitions.jsonl"
 
-    #gsutil cp \
-    #    ext/liblmdb.so \
-    #    "$PIPELINEBUCKET/liblmdb.so"
+    gsutil cp \
+        ext/liblmdb.so \
+       "$PIPELINEBUCKET/libs/liblmdb.so"
 
-    #gsutil cp ~/nt.tar gs://blastgcp-pipeline-test/dbs/nt04.tar
-    #gsutil cp liblmdb.so gs://blastgcp-pipeline-test/libs/liblmdb.so
-    #gsutil cp blastjni.so gs://blastgcp-pipeline-test/libs/blastjni.so
+    gsutil cp \
+        blastjni.so \
+	"$PIPELINEBUCKET/libs/blastjni.so"
 
+    gsutil cp \
+        query.jsonl \
+        "$PIPELINEBUCKET/input/query.jsonl"
+	
     gsutil ls -l -r "$PIPELINEBUCKET/"
-    echo "if query.jsonl or db_partitions.jsonl have changed run:"
-    echo "  hadoop fs -copyFromLocal -f query.jsonl query.jsonl"
-    echo "  hadoop fs -copyFromLocal -f db_partitions.jsonl db_partitions.jsonl"
 fi
 
 
