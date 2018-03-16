@@ -21,7 +21,7 @@
  */
 
 
-import BlastJNI;
+//import BlastJNI.*;
 import java.lang.String;
 import java.lang.System;
 import java.io.*;

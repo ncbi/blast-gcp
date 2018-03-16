@@ -21,6 +21,6 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search
 #endif
 /*
 vartanianmh
-javac 1.8.0_131
-g++ (Debian 4.9.2-10+deb8u1) 4.9.2
+javac 1.8.0_161
+g++ (GCC) 4.9.3
 */
