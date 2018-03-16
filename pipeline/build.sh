@@ -213,7 +213,7 @@ gcloud dataproc --region us-east4 \
 
  spark-submit \
      --conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast" \
-     --files blastjni.so  \
+     --files libblastjni.so  \
      --jars BlastJNI.jar \
      --class BlastSpark \
      --master yarn \
