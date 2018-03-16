@@ -76,7 +76,7 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< List< GCP_BLAST_CHUNK > > CHUNKS = jssc.sparkContext().broadcast( chunk_list );
 
             // Create a local StreamingContext listening on port localhost.9999
-            JavaReceiverInputDStream< String > lines = jssc.socketTextStream( "localhost", 9999 );
+            JavaReceiverInputDStream< String > lines = jssc.socketTextStream( "localhost", 20814);
             
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
@@ -133,6 +133,9 @@ class GCP_BLAST_DRIVER extends Thread
                     } );
                 }
             } );
+
+        FINAL.print();
+
             
             jssc.start();               // Start the computation
             System.out.println( "driver started..." );
