@@ -28,19 +28,21 @@ import java.io.*;
 
 class GCP_BLAST_REQUEST implements Serializable
 {
-    public final String job_id, db, query, params;
+    public final String req_id, db, query, params;
+    public final Integer min_score;
     
-    public GCP_BLAST_REQUEST( final String line )
+    public GCP_BLAST_REQUEST( final String line, final Integer dflt_min_score )
     {
         String[] parts = line.split( "\\:" );
-        this.job_id = ( parts.length > 0 ) ? parts[ 0 ] : "dflt_job_id";
-        this.db     = ( parts.length > 1 ) ? parts[ 1 ] : "dflt_db";
-        this.query  = ( parts.length > 2 ) ? parts[ 2 ] : "dflt_query";
-        this.params = ( parts.length > 3 ) ? parts[ 3 ] : "dflt_params";
+        this.req_id = ( parts.length > 0 ) ? parts[ 0 ] : "Req_Id_0001";
+        this.db     = ( parts.length > 1 ) ? parts[ 1 ] : "nt";
+        this.query  = ( parts.length > 2 ) ? parts[ 2 ] : "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+        this.params = ( parts.length > 3 ) ? parts[ 3 ] : "blastn";
+        this.min_score = ( parts.length > 4 ) ? Integer.parseInt( parts[ 4 ].trim() ) : dflt_min_score;
     }
     
     @Override public String toString()
     {
-        return String.format( "%s.%s.%s.%s", this.job_id, this.db, this.query, this.params );
+        return String.format( "%s.%s.%s.%s.%d", this.req_id, this.db, this.query, this.params, this.min_score );
     }
 }

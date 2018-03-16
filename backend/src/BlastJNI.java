@@ -20,16 +20,14 @@
  *  Please cite the author in any work or product based on this material.
  */
 
-//package gov.nih.nlm.ncbi.blastjni;
-
 import java.util.Arrays;
 import java.lang.String;
 import java.lang.System;
 import java.io.*;
 
+import org.apache.spark.*;
 import org.apache.spark.SparkFiles;
 
-// TODO: Pass in job-id so mappers can atomically preload new database?
 public class BlastJNI
 {
     static
@@ -48,26 +46,33 @@ public class BlastJNI
     {
         try
         {
-            PrintWriter pw = new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.java.log"),true));
-            pw.println(msg);
+            PrintWriter pw = new PrintWriter( new FileOutputStream( new File( "/tmp/blastjni.java.log" ), true ) );
+            pw.println( msg );
             pw.close();
-        } catch (FileNotFoundException ex)
+        } catch ( FileNotFoundException ex )
         {}
     }
 
-    private native String[] prelim_search(String jobid, String query, String db_part, String params);
+    private native String[] prelim_search( String jobid, String query, String db_part, String params );
 
-    public String[] jni_prelim_search(String jobid, String query, String db_part, String params)
+    public String[] jni_prelim_search( String jobid, String query, String db_part, String params )
     {
-        log("jni_prelim_search called with "+query+","+db_part+","+params);
-        String[] results=prelim_search(jobid, query,db_part,params);
-        log("jni_prelim_search returned " + results.length + " results");
+        log( "jni_prelim_search called with "+query+","+db_part+","+params );
+        String[] results = prelim_search( jobid, query, db_part, params );
+        log( "jni_prelim_search returned " + results.length + " results" );
         return results;
     }
 
-    public static void main(String[] args) {
-        String results[] = new BlastJNI().jni_prelim_search("JobID123","gattaca","nt04","blastn");
-        System.out.println("Java results[] has "+ results.length + " entries:");
-        System.out.println(Arrays.toString(results));
+    public static void main( String[] args )
+    {
+        String r_id   = "ReqID123";
+        String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+        String db     = "nt.04";
+        String params = "blastn";
+        
+        String results[] = new BlastJNI().jni_prelim_search( r_id, query, db, params );
+        
+        System.out.println( "Java results[] has " + results.length + " entries:" );
+        System.out.println( Arrays.toString( results ) );
     }
 }

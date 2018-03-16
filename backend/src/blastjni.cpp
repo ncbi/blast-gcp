@@ -26,10 +26,31 @@
 
 #include "gov_nih_nlm_ncbi_blastjni_BlastJNI.h"
 #include <jni.h>
+
+#include "blast4spark.hpp"
+#include <algo/blast/api/blast_advprot_options.hpp>
+#include <algo/blast/api/blast_exception.hpp>
+#include <algo/blast/api/blast_nucl_options.hpp>
+#include <algo/blast/api/blast_results.hpp>
+#include <algo/blast/api/local_blast.hpp>
+#include <algo/blast/api/objmgrfree_query_data.hpp>
+#include <algo/blast/api/prelim_stage.hpp>
+#include <algo/blast/core/blast_hspstream.h>
+#include <ctype.h>
+#include <ncbi_pch.hpp>
+#include <objects/seq/Bioseq.hpp>
+#include <objects/seq/Seq_data.hpp>
+#include <objects/seqalign/Seq_align.hpp>
+#include <objects/seqalign/Seq_align_set.hpp>
+#include <objects/seqloc/Seq_id.hpp>
+#include <objects/seqset/Bioseq_set.hpp>
+#include <objects/seqset/Seq_entry.hpp>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 
 static void log(const char* msg)
 {
@@ -46,26 +67,48 @@ static void log(const char* msg)
     }
 }
 
-static unsigned long long fakerng(unsigned long mod)
+static int dbtochunk(const char* db)
 {
-    static unsigned long long state = 1;
-
-    state *= 6364136223846793005ULL;
-    state += 1442695040888963407ULL;
-
-    return state % mod;
+    // Basically atoi with skipping
+    int chunk_id = 0;
+    for (const char* c = db; *c; ++c)
+        if (isdigit(*c)) chunk_id = chunk_id * 10 + *c - '0';
+    return chunk_id;
 }
 
-// JNIEXPORT jobjectArray JNICALL
+static void iterate_HSPs(BlastHSPList* hsp_list, int chunk_id,
+                         const char* rid, std::vector<std::string>& vs)
+{
+    for (int i = 0; i < hsp_list->hspcnt; ++i) {
+        const BlastHSP* hsp = hsp_list->hsp_array[i];
+        char buf[256];
+        sprintf(buf,
+                "{"
+                "\"chunk\": %d, "
+                "\"RID\": \"%s\", "
+                "\"oid\": %d, "
+                "\"score\": %d, "
+                "\"qstart\": %d, "
+                "\"qstop\": %d, "
+                "\"sstart\": %d, "
+                "\"sstop\": %d "
+                "}\n",
+                chunk_id, rid, hsp_list->oid, hsp->score, hsp->query.offset,
+                hsp->query.end, hsp->subject.offset, hsp->subject.end);
+        vs.push_back(buf);
+    }
+}
+
 JNIEXPORT jobjectArray JNICALL
 Java_BlastJNI_prelim_1search(
-    JNIEnv* env, jobject jobj, jstring jobid, jstring query, jstring db,
+    JNIEnv* env, jobject jobj, jstring rid, jstring query, jstring db,
     jstring params)
 {
-    log("Entered Java_BlastJNI_prelim_1search");
+    char msg[256];
+    log("Entered C++ Java_BlastJNI_prelim_1search");
 
-    const char* cjobid = env->GetStringUTFChars(jobid, NULL);
-    log(cjobid);
+    const char* crid = env->GetStringUTFChars(rid, NULL);
+    log(crid);
 
     const char* cquery = env->GetStringUTFChars(query, NULL);
     log(cquery);
@@ -76,65 +119,65 @@ Java_BlastJNI_prelim_1search(
     const char* cparams = env->GetStringUTFChars(params, NULL);
     log(cparams);
 
-    std::string cppquery;
-    // cppquery = "CHUNKGOESHERE";
-    // cppquery.append(cquery);
+    std::string squery(cquery);
+    std::string sdb(cdb);
+    std::string sparams(cparams);
 
-    // BlastHSPStream* PrelimSearch(
-    //      const std::string& single_query,
-    //      const std::string& database_name,
-    //      const std::string& program_name);
-    /*
-        BlastHSPStream's sorted_hsplists->
-        BlastHSPList's hsplist_array ->
-        BlashHSPList's hsp_array
-        BlastHSP hsp_array[] (BlastHSP bit_score and evalue are double)
-           or
-        BlastHSPStream's results->
-        BlastHSPResults's hislist_array ->
-        BlastHitList's hsplist_array ->
-        BlastHSPList's hsplist_array[] (worst_evalue is double, low_score is
-       integer)
-Use:
+    int chunk_id = dbtochunk(cdb);
+    BlastHSPStream* hsp_stream
+        = ncbi::blast::PrelimSearch(squery, sdb, sparams);
 
-       BlastHSPStreamRead(BlastHSPStream* hsp_stream, BlastHSPList**
-hsp_list_out
-    */
+    if (getenv("BLASTDB")) {
+        sprintf(msg, "BLASTDB env was %s", getenv("BLASTDB"));
+        log(msg);
+    }
 
-    size_t numelems = fakerng(20);
+    if (setenv("BLASTDB", "/tmp/blast/db", 1)) {
+        sprintf(msg, "Couldn't setenv errno:%d", errno);
+        log(msg);
+    }
+
+    if (getenv("BLASTDB")) {
+        sprintf(msg, "BLASTDB env is now %s", getenv("BLASTDB"));
+        log(msg);
+    }
+
+    std::vector<std::string> vs;
+
+    if (hsp_stream != NULL) {
+        BlastHSPList* hsp_list = NULL;
+        int status = BlastHSPStreamRead(hsp_stream, &hsp_list);
+        sprintf(msg, "BlastHSPStreamRead returned status = %d\n", status);
+        log(msg);
+        while (status == kBlastHSPStream_Success && hsp_list != NULL) {
+            sprintf(msg, "%s - have hsp_list at %p\n", __func__, hsp_list);
+            log(msg);
+            iterate_HSPs(hsp_list, chunk_id, crid, vs);
+            status = BlastHSPStreamRead(hsp_stream, &hsp_list);
+        }
+
+        Blast_HSPListFree(hsp_list);
+        BlastHSPStreamFree(hsp_stream);
+    }
+
+    size_t numelems = vs.size();
+    sprintf(msg, "Have %lu elements", numelems);
+    log(msg);
+
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
         numelems, env->FindClass("java/lang/String"), NULL);
 
-    long job_id = 1;
-    long chunk_id = fakerng(200);
     for (size_t i = 0; i != numelems; ++i) {
-        char buf[256];
-        long oid = fakerng(3000000);
-        long score = fakerng(1000); // TODO: Could be double
-        long qstart = fakerng(500);
-        long qstop = qstart + fakerng(100);
-        long sstart = fakerng(4 * 4294967296);
-        long sstop = sstart + fakerng(300);
-        // HSP: Job-ID, Chunk, OID, High Score, start/stops, score
-        // TODO: Populate HSP Java object rather than String
-        sprintf(buf,
-                "{ \"chunk\": %lu, \"jobid\": %lu, \"oid\": %lu, \"score\": "
-                "%lu, \"qstart\": %lu, \"qstop\": %lu, \"sstart\": %lu, "
-                "\"sstop\": %lu }\n",
-                chunk_id, job_id, oid, score, qstart, qstop, sstart, sstop);
-
-        //        sprintf(buf, "%s,%s,%lu,%lu,%lu,%lu,%lu,%lu\n",
-        //        cppquery.data(),
-        //               cjobid, oid, score, qstart, qstop, sstart, sstop);
+        const char* buf = vs[i].data();
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(buf));
     }
 
-    env->ReleaseStringUTFChars(jobid, cjobid);
+    env->ReleaseStringUTFChars(rid, crid);
     env->ReleaseStringUTFChars(query, cquery);
     env->ReleaseStringUTFChars(db, cdb);
     env->ReleaseStringUTFChars(params, cparams);
-    log("Leaving Java_BlastJNI_prelim_1search");
+    log("Leaving C++ Java_BlastJNI_prelim_1search");
     return (ret);
 
     // TODO: Exceptions: env->Throw(...)
