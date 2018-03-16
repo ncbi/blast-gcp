@@ -62,7 +62,7 @@ class GCP_BLAST_DRIVER extends Thread
         }
     }
     
-    private void stream_version( int num_samples, int min_score )
+    private void stream_version( int dflt_min_score )
     {
         try
         {
@@ -83,7 +83,7 @@ class GCP_BLAST_DRIVER extends Thread
             {
                 System.out.println( String.format( "Request: %s received", line ) );
                 ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
-                GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line );
+                GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line, dflt_min_score );
                 // we are using the broadcasted ArrayList called 'CHUNKS' to create the jobs
                 for ( GCP_BLAST_CHUNK chunk : CHUNKS.getValue() )
                     tmp.add( new GCP_BLAST_JOB( req, chunk ) );
@@ -109,7 +109,10 @@ class GCP_BLAST_DRIVER extends Thread
             } );
             
             // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
-            JavaDStream< GCP_BLAST_HSP > FILTERED = SEARCH_RES.filter( hsp -> hsp.score > min_score );
+            JavaDStream< GCP_BLAST_HSP > FILTERED = SEARCH_RES.filter( hsp ->
+            {
+                return ( hsp.score >= hsp.job.req.min_score );
+            } );
 
             // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
             JavaDStream< String > FINAL = FILTERED.map( hsp -> hsp.toString() );
@@ -161,9 +164,8 @@ class GCP_BLAST_DRIVER extends Thread
             // create a streaming-context from SparkContext given
             jssc = new JavaStreamingContext( sc, Durations.seconds( 1 ) );
             
-            int num_samples = 10;
-            int min_score = 1;//300;
-            stream_version( num_samples, min_score );
+            int dflt_min_score = 1;
+            stream_version( dflt_min_score );
         }
         catch ( Exception e )
         {

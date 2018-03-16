@@ -35,8 +35,6 @@ public class BlastJNI
         try
         {
             System.load( SparkFiles.get( "blastjni.so" ) );
-//                    System.load("/tmp/blast/blastjni.so");
-
         }
         catch ( Exception e )
         {
@@ -55,7 +53,7 @@ public class BlastJNI
         {}
     }
 
-    private native String[] prelim_search(String jobid, String query, String db_part, String params);
+    private native String[] prelim_search( String jobid, String query, String db_part, String params );
 
     public String[] jni_prelim_search( String jobid, String query, String db_part, String params )
     {
