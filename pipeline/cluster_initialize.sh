@@ -6,8 +6,8 @@ set -o xtrace
 
 exec >  >(tee -ia /tmp/cluster_initialize.log)
 exec 2> >(tee -ia /tmp/cluster_initialize.log >&2)
+echo Initializing Cluster
 date
-pwd >> /tmp/cluster_initialize.log
 
 cd /tmp
 # Need libdw for Blast library
@@ -17,8 +17,8 @@ apt-get install libdw-dev -y
 shutdown -h +1440
 
 # Set lax permissions for /tmp/blast
-cd /tmp/blast/
 mkdir -p /tmp/blast/db
+cd /tmp/blast/
 chown -R spark:spark /tmp/blast/
 chmod -R ugo+rw /tmp/blast
 
@@ -38,11 +38,12 @@ chmod -R ugo+rw /tmp/blast
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 if [[ "${ROLE}" == 'Master' ]]; then
     echo "master only now"
+
+    # Need maven for building
+    apt-get install maven -y
 fi
 
-[[ "${HOSTNAME}" =~ -m$ ]] || exit 0
-
-# Need maven for building
-apt-get install maven -y
+echo Cluster Initialized
+date
 
 exit 0
