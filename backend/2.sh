@@ -5,7 +5,10 @@
 #
 
 SPARK_HOME="/usr/lib/spark/jars"
-JAVA_HOME="$(dirname $(dirname $(readlink -f $(which javac))))"
+#JAVA_HOME="$(dirname $(dirname $(readlink -f $(which javac))))"
+JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+export PATH="$JAVA_HOME/bin:$PATH"
+
 
 BLASTJNI="gov.nih.nlm.ncbi.blastjni.BlastJNI"
 DEPENDS="$SPARK_HOME/*:$BLASTJNI:."
@@ -25,11 +28,24 @@ run_local()
 	yarn
 }
 
+run_submit()
+{
+#     --jars BlastJNI.jar,foo.jar,$MAIN_JAR \
+  spark-submit \
+     --files libblastjni.so  \
+     --deploy-mode client \
+     --jars foo.jar,$MAIN_JAR \
+     --master yarn \
+     --class GCP_BLAST \
+	foo.jar
+}
+
 compile_blast_java()
 {
     rm -rf *.class
     echo "compiling java-classes"
 	javac -Xlint:unchecked -cp $DEPENDS -d . src/*.java
+    jar cf foo.jar *class
 }
 
 
@@ -60,4 +76,5 @@ echo "package jar success"
 #run_test
 
 HADOOP_CLASSPATH=`hadoop classpath`
-run_local
+#run_local
+run_submit

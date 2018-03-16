@@ -109,13 +109,13 @@ class GCP_BLAST_DRIVER extends Thread
             } );
             
             // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
-            JavaDStream< GCP_BLAST_HSP > FILTERED = SEARCH_RES.filter( hsp ->
-            {
-                return ( hsp.score >= hsp.job.req.min_score );
-            } );
+//            JavaDStream< GCP_BLAST_HSP > FILTERED = SEARCH_RES.filter( hsp ->
+ //           {
+  //              return ( hsp.score >= hsp.job.req.min_score );
+   //         } );
 
             // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
-            JavaDStream< String > FINAL = FILTERED.map( hsp -> hsp.toString() );
+            JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() );
             
             // print the FINAL ( this runs on a workernode! )
             FINAL.foreachRDD( rdd -> {
@@ -150,8 +150,9 @@ class GCP_BLAST_DRIVER extends Thread
         {
             SparkConf conf = new SparkConf();
             conf.setAppName( this.appName );
-            conf.setMaster( this.master );
+//            conf.setMaster( this.master );
             conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
+//           conf.set( "spark.yarn.jars", "" );
 //            conf.set( "spark.executorEnv.LD_LIBRARY_PATH","/tmp/blast");
             
             JavaSparkContext sc = new JavaSparkContext( conf );
