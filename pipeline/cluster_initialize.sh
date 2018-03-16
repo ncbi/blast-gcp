@@ -28,8 +28,8 @@ cd /tmp/blast/db
 tar -xvf ../nt04.tar
 rm -f ../nt04.tar
 cd /tmp/blast
-gsutil cp gs://blastgcp-pipeline-test/libs/* .
-chmod ugo+rx *.so
+#gsutil cp gs://blastgcp-pipeline-test/libs/* .
+#chmod ugo+rx *.so
 chown -R spark:spark /tmp/blast/
 chmod -R ugo+rw /tmp/blast
 

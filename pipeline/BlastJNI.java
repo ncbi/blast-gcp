@@ -20,46 +20,63 @@
  *  Please cite the author in any work or product based on this material.
  */
 
-package gov.nih.nlm.ncbi.blastjni;
-
 import java.util.Arrays;
 import java.lang.String;
 import java.lang.System;
 import java.io.*;
 
-public class BlastJNI {
-    static {
-        //System.loadLibrary("blastjni");
-        System.load("/tmp/blast/blastjni.so");
+//import org.apache.spark.*;
+//import org.apache.spark.SparkFiles;
+
+public class BlastJNI
+{
+    static
+    {
+        try
+        {
+ //           System.load( SparkFiles.get( "libblastjni.so" ) );
+//                    System.load("/tmp/blast/blastjni.so");
+            // Java will look for libblastjni.so
+            System.loadLibrary("blastjni"); 
+
+        }
+        catch ( Exception e )
+        {
+            System.out.println( "System.load() exception: " + e );
+        }
     }
 
-    private static void log(String msg) {
-        try {
-            PrintWriter pw = new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.java.log"),true));
-            pw.println(msg);
+    public static void log( String msg )
+    {
+        try
+        {
+            PrintWriter pw = new PrintWriter( new FileOutputStream( new File( "/tmp/blastjni.java.log" ), true ) );
+            pw.println( msg );
             pw.close();
-        } catch (FileNotFoundException ex)
+        } catch ( FileNotFoundException ex )
         {}
     }
 
-    private native String[] prelim_search(String rid, String query, String db_part, String params);
+    private native String[] prelim_search(String jobid, String query, String db_part, String params);
 
-    public String[] jni_prelim_search(String rid, String query, String db_part, String params)
+    public String[] jni_prelim_search( String jobid, String query, String db_part, String params )
     {
-        log("Java jni_prelim_search called with:");
-        log("                               id=" + rid);
-        log("                            query=" + query);
-        log("                          db_part=" + db_part);
-        log("                           params=" + params);
-        String[] results=prelim_search(rid, query, db_part, params);
-        log("jni_prelim_search returned " + results.length + " results");
+        log( "jni_prelim_search called with "+query+","+db_part+","+params );
+        String[] results = prelim_search( jobid, query, db_part, params );
+        log( "jni_prelim_search returned " + results.length + " results" );
         return results;
     }
 
-    public static void main(String[] args) {
-        String results[] = new BlastJNI().jni_prelim_search("123","CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG","nt.04","blastn");
-        System.out.println("Java results[] has "+ results.length + " entries:");
-        System.out.println(Arrays.toString(results));
+    public static void main( String[] args )
+    {
+        String r_id   = "ReqID123";
+        String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+        String db     = "nt.04";
+        String params = "blastn";
+        
+        String results[] = new BlastJNI().jni_prelim_search( r_id, query, db, params );
+        
+        System.out.println( "Java results[] has " + results.length + " entries:" );
+        System.out.println( Arrays.toString( results ) );
     }
 }
-

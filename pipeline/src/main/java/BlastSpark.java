@@ -20,9 +20,8 @@
  *  Please cite the author in any work or product based on this material.
  */
 
-//package gov.nih.nlm.ncbi.blastjni;
 
-import gov.nih.nlm.ncbi.blastjni.BlastJNI;
+import BlastJNI;
 import java.lang.String;
 import java.lang.System;
 import java.io.*;
@@ -32,8 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
-
-//import scala.Tuple2;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;

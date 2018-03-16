@@ -24,7 +24,7 @@
  *
  */
 
-#include "gov_nih_nlm_ncbi_blastjni_BlastJNI.h"
+#include "BlastJNI.h"
 #include <jni.h>
 
 #include "blast4spark.hpp"
@@ -67,16 +67,16 @@ static void log(const char* msg)
     }
 }
 
-static int dbtochunk(const char* db)
+static long long dbtochunk(const char* db)
 {
     // Basically atoi with skipping
-    int chunk_id = 0;
+    long long chunk_id = 0;
     for (const char* c = db; *c; ++c)
-        if (isdigit(*c)) chunk_id = chunk_id * 10 + *c - '0';
+        if (isdigit(*c)) chunk_id = chunk_id * 100 + *c - '0';
     return chunk_id;
 }
 
-static void iterate_HSPs(BlastHSPList* hsp_list, int chunk_id,
+static void iterate_HSPs(BlastHSPList* hsp_list, long long chunk_id,
                          const char* rid, std::vector<std::string>& vs)
 {
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
@@ -84,7 +84,7 @@ static void iterate_HSPs(BlastHSPList* hsp_list, int chunk_id,
         char buf[256];
         sprintf(buf,
                 "{"
-                "\"chunk\": %d, "
+                "\"chunk\": %llu, "
                 "\"RID\": \"%s\", "
                 "\"oid\": %d, "
                 "\"score\": %d, "
@@ -99,8 +99,7 @@ static void iterate_HSPs(BlastHSPList* hsp_list, int chunk_id,
     }
 }
 
-JNIEXPORT jobjectArray JNICALL
-Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
+JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     JNIEnv* env, jobject jobj, jstring rid, jstring query, jstring db,
     jstring params)
 {
@@ -123,7 +122,7 @@ Java_gov_nih_nlm_ncbi_blastjni_BlastJNI_prelim_1search(
     std::string sdb(cdb);
     std::string sparams(cparams);
 
-    int chunk_id = dbtochunk(cdb);
+    long long chunk_id = dbtochunk(cdb);
     BlastHSPStream* hsp_stream
         = ncbi::blast::PrelimSearch(squery, sdb, sparams);
 
