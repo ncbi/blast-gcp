@@ -19,9 +19,10 @@ run_local()
     echo "running:"
 	echo "java -cp $MAIN_JAR:$DEPENDS $MAIN_CLASS"
     export LD_LIBRARY_PATH=".:./ext:/opt/ncbi/gcc/4.9.3/lib64/"
-    export BLASTDB="/net/napme02/vol/blast/db/blast"
+#    export BLASTDB="/net/napme02/vol/blast/db/blast"
 	java -cp $MAIN_JAR:$DEPENDS:$HADOOP_CLASSPATH \
-        $MAIN_CLASS
+        $MAIN_CLASS  \
+	yarn
 }
 
 compile_blast_java()

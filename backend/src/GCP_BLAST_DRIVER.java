@@ -152,7 +152,7 @@ class GCP_BLAST_DRIVER extends Thread
             conf.setAppName( this.appName );
             conf.setMaster( this.master );
             conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
-            conf.set( "spark.executorEnv.LD_LIBRARY_PATH","/tmp/blast");
+//            conf.set( "spark.executorEnv.LD_LIBRARY_PATH","/tmp/blast");
             
             JavaSparkContext sc = new JavaSparkContext( conf );
             sc.setLogLevel( "ERROR" );

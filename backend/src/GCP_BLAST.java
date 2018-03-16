@@ -56,7 +56,7 @@ public final class GCP_BLAST
         final String master = args.length > 0 ? args[ 0 ] : "local[4]";
 
         List< String > files_to_transfer = new ArrayList<>();
-        files_to_transfer.add( "blastjni.so" );
+        files_to_transfer.add( "libblastjni.so" );
         
         GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, master, files_to_transfer );
         driver.start();
