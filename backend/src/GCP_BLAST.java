@@ -53,7 +53,7 @@ public final class GCP_BLAST
 	public static void main( String[] args ) throws Exception
 	{
         final String appName = GCP_BLAST.class.getSimpleName();
-        final String master = "local[4]";
+        final String master = args.length > 0 ? args[ 0 ] : "local[4]";
 
         List< String > files_to_transfer = new ArrayList<>();
         files_to_transfer.add( "blastjni.so" );

@@ -99,18 +99,12 @@ class GCP_BLAST_DRIVER extends Thread
                 // ++++++ this is the where the work happens on the worker-nodes ++++++
                 System.out.println( String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.chunk.name ) );
                 String[] blast_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.chunk.name, job.req.params );
-                if ( blast_res.length > 0 )
+                Integer count = blast_res.length;
+                if ( count > 0 )
                 {
-                    System.out.println("we have results" );
                     for ( String S : blast_res )
-                    {
-                        System.out.println("S is " + S);
                         res.add( new GCP_BLAST_HSP( job, S ) );
-                    }
                 }
-                else
-                    System.out.println( String.format( "request: '%s' at '%s' has zero results", job.req.req_id, job.chunk.name ) );
-                    
                 return res.iterator();
             } );
             
