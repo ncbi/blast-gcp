@@ -167,8 +167,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         // TODO: Exception
     }
 
-    size_t numelems = vs.size();
-    sprintf(msg, "  Have %lu elements", numelems);
+    sprintf(msg, "  Have %lu elements", vs.size());
     log(msg);
 
     if (!vs.size()) {
@@ -191,9 +190,9 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
-        numelems, env->FindClass("java/lang/String"), NULL);
+        vs.size(), env->FindClass("java/lang/String"), NULL);
 
-    for (size_t i = 0; i != numelems; ++i) {
+    for (size_t i = 0; i != vs.size(); ++i) {
         const char* buf = vs[i].data();
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(buf));
     }
