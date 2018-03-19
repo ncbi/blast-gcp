@@ -71,8 +71,9 @@ public class BlastJNI {
     // TODO: Will be fed merged top-N highest scoring HSPs
     private native String traceback(String something);
 
-    private String cache(String db_bucket, String db, String db_part) {
-        log("cache(db_bucket=" + db_bucket + ", db=" + db + ", db_part=" + db_part + ")");
+
+    private String cache_dbs(String db_bucket, String db, String db_part) {
+        log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", db_part=" + db_part + ")");
 
         String localdir="/tmp/blast/";
         String dbdir=localdir + db_part + "/";
@@ -94,7 +95,6 @@ public class BlastJNI {
                 if(!Files.exists(Paths.get(donefile))) {
                     log(donefile + " still doesn't exist. This thread will download.");
                     // Done file still doesn't exist, this thread has to do the work
-                    // gs://nt_500mb_chunks/nt_500M.57.nsq
                     Storage storage=StorageOptions.getDefaultInstance().getService();
 
                     log("Got storage for bucket " + db_bucket);
@@ -104,8 +104,6 @@ public class BlastJNI {
                                 Storage.BlobListOption.prefix(db_part + ".")).
                             iterateAll()) {
                         String dbfile=blob.getName();
-                        //Blob blob=blobIterator.next();
-                        //Path path=Paths.get(dbdir + dbfile);
                         String ext=dbfile.substring(dbfile.length() - 4);
                         if(ext.endsWith("sq") || ext.endsWith("in")) {
                             Path path=Paths.get(dbdir + db + ext);
@@ -139,19 +137,18 @@ public class BlastJNI {
 
     public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String db_part, String params) {
         log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + db_part + "," + params);
-        String dbenv=cache(db_bucket, db, db_part);
+        String dbenv=cache_dbs(db_bucket, db, db_part);
 
         String[] results=prelim_search(dbenv, rid, query, db, params);
         log("jni_prelim_search returned " + results.length + " results");
         return results;
     }
 
+
     public static void main(String[] args) {
         String rid  ="ReqID123";
         String query ="CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-        // gs://nt_500mb_chunks/nt_500M.57.nsq
         String db    ="nt";
-        //        String db_bucket="gs://" + db + "_500mb_chunks";
         String db_bucket=db + "_50mb_chunks";
         String db_part=db + "_50M." + "57";
         String params="blastn";
