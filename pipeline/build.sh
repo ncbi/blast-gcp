@@ -30,21 +30,19 @@ export CLASSPATH="."
 
 HDR="gov_nih_nlm_ncbi_blastjni_BlastJNI.h"
 HDR="BlastJNI.h"
-#rm -rf /tmp/blast
-#rm -f $HDR
 rm -f BlastJNI.class
 rm -f blastjni.o
 rm -rf gov
 rm -f *test.result
 rm -rf target
 rm -f BlastJNI.jar
-rm -f db_partitions.json db_partitions.jsonl
-#rm -f src.zip
-#rm -f blast4spar*pp
+#rm -f db_partitions.json db_partitions.jsonl
 
+<<"SKIP"
+#rm -f $HDR
 echo "Creating BlastJNI header"
 #javac -cp .:$SPARK_HOME/* -d . -h . BlastJNI.java
-javac -d . -h . BlastJNI.java
+javac -d . -h . src/main/java/BlastJNI.java
 echo "/*" >> $HDR
 echo "$USER" >> $HDR
 javac -version >> $HDR 2>&1
@@ -53,6 +51,7 @@ g++ --version | head -1 >> $HDR
 echo "*/" >> $HDR
 # javac
 #javac -d . BlastJNI.java
+SKIP
 
 if [ "$ONGCP" = "false" ]; then
     echo "Compiling blastjni.cpp"
@@ -166,7 +165,8 @@ fi
 
 echo "Build Complete"
 exit 0
-wc << HINTS
+
+<<HINTS
  gcloud auth login (copy/paste from web)
  gcloud dataproc clusters list  --region=us-east4
  gcloud dataproc jobs list

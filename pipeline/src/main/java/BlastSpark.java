@@ -119,7 +119,9 @@ public final class BlastSpark {
             String params=csv.get(1);
             String db_part=csv.get(2);
             String query=csv.get(3);
-            String newresults[] = new BlastJNI().jni_prelim_search(rid,query,db_part,params);
+            String db="nt";
+            String db_bucket="gs://" + db + "_500mb_chunks/";
+            String newresults[] = new BlastJNI().jni_prelim_search(db_bucket,db,rid,query,db_part,params);
             ArrayList<String> results=new ArrayList<>();
             Collections.addAll(results, newresults);
             //            results=Arrays.asList(newresults);

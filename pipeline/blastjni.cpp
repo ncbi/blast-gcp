@@ -67,17 +67,7 @@ static void log(const char* msg)
     }
 }
 
-/*
-static long long dbtochunk(const char* db)
-{
-    // Basically atoi with skipping
-    long long chunk_id = 0;
-    for (const char* c = db; *c; ++c)
-        if (isdigit(*c)) chunk_id = chunk_id * 100 + *c - '0';
-    return chunk_id;
-}
-*/
-static void iterate_HSPs(BlastHSPList* hsp_list, const char * chunk_id,
+static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
                          const char* rid, std::vector<std::string>& vs)
 {
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
@@ -101,19 +91,14 @@ static void iterate_HSPs(BlastHSPList* hsp_list, const char * chunk_id,
 }
 
 JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
-                                                            JNIEnv* env,
-                                                            jobject jobj,
-                                                            jstring dbenv,
-                                                            jstring rid,
-                                                            jstring query,
-                                                            jstring db,
-                                                            jstring params)
+    JNIEnv* env, jobject jobj, jstring dbenv, jstring rid, jstring query,
+    jstring db, jstring params)
 {
     char msg[256];
     log("Entered C++ Java_BlastJNI_prelim_1search");
 
-    const char* cdbenv= env->GetStringUTFChars(dbenv, NULL);
-    log(crid);
+    const char* cdbenv = env->GetStringUTFChars(dbenv, NULL);
+    log(cdbenv);
 
     const char* crid = env->GetStringUTFChars(rid, NULL);
     log(crid);
@@ -131,7 +116,6 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     std::string sdb(cdb);
     std::string sparams(cparams);
 
-    const char * chunk_id=dbenv;
     if (getenv("BLASTDB")) {
         sprintf(msg, "BLASTDB env was %s", getenv("BLASTDB"));
         log(msg);
@@ -152,7 +136,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     std::vector<std::string> vs;
 
-// TODO: Exceptions: env->Throw(...)
+    // TODO: Exceptions: env->Throw(...)
     if (hsp_stream != NULL) {
         BlastHSPList* hsp_list = NULL;
         int status = BlastHSPStreamRead(hsp_stream, &hsp_list);
@@ -161,15 +145,15 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         while (status == kBlastHSPStream_Success && hsp_list != NULL) {
             sprintf(msg, "%s - have hsp_list at %p\n", __func__, hsp_list);
             log(msg);
+            const char* chunk_id = cdbenv;
             iterate_HSPs(hsp_list, chunk_id, crid, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
         }
 
         Blast_HSPListFree(hsp_list);
         BlastHSPStreamFree(hsp_stream);
-    } else
-    {
-        log ("NULL hsp_stream");
+    } else {
+        log("NULL hsp_stream");
     }
 
     size_t numelems = vs.size();
@@ -178,7 +162,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
-                                            numelems, env->FindClass("java/lang/String"), NULL);
+        numelems, env->FindClass("java/lang/String"), NULL);
 
     for (size_t i = 0; i != numelems; ++i) {
         const char* buf = vs[i].data();
@@ -193,4 +177,3 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     log("Leaving C++ Java_BlastJNI_prelim_1search\n");
     return (ret);
 }
-
