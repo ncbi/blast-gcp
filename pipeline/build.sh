@@ -37,7 +37,6 @@ rm -f BlastJNI.jar
 
 if [ "$ONGCP" = "false" ]; then
     echo "Compiling blastjni.cpp"
-    rm -f $HDR
     echo "Creating BlastJNI header"
     javac -d . -h . src/main/java/BlastJNI.java
     echo "/*" >> $HDR
