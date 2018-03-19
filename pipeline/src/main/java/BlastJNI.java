@@ -45,125 +45,109 @@ import com.google.cloud.storage.StorageOptions;
 //import org.apache.spark.*;
 //import org.apache.spark.SparkFiles;
 
-public class BlastJNI
-{
-    static
-    {
-        try
-        {
+public class BlastJNI {
+    static {
+        try {
             // Java will look for libblastjni.so
-            System.loadLibrary("blastjni"); 
-            //System.load( SparkFiles.get( "libblastjni.so" ) );
-        }
-        catch ( Exception e )
-        {
-            log( "System.load() exception: " + e );
+            System.loadLibrary("blastjni");
+            //System.load(SparkFiles.get("libblastjni.so"));
+        } catch(Exception e) {
+            log("System.load() exception: " + e);
         }
     }
 
-    public static void log( String msg )
-    {
-        try
-        {
+    public static void log(String msg) {
+        try {
             System.out.println(msg);
-            PrintWriter pw = new PrintWriter( new FileOutputStream( new File( "/tmp/blastjni.java.log" ), true ) );
-            pw.println( msg );
+            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.java.log"), true));
+            pw.println(msg);
             pw.close();
-        } catch ( FileNotFoundException ex )
-        {}
+        } catch(FileNotFoundException ex) {
+        }
     }
 
     private native String[] prelim_search(String dbenv, String rid, String query, String db_part, String params);
 
-    private String cache(String db_bucket, String db, String db_part)
-    {
+    private String cache(String db_bucket, String db, String db_part) {
         String localdir="/tmp/blast/";
-        String dbdir=localdir+db+"/";
-        String donefile=dbdir+"done";
-        String lockfile=dbdir+"lock";
+        String dbdir=localdir + db + "/";
+        String donefile=dbdir + "done";
+        String lockfile=dbdir + "lock";
 
-        log("cache (db_bucket=" + db_bucket + ", db="+ db + ", db_part=" + db_part + ")");
-        if (!Files.exists(Paths.get(donefile)))
-        {
-            log(donefile + " doesn't exist.");
+        log("cache(db_bucket=" + db_bucket + ", db=" + db + ", db_part=" + db_part + ")");
+        if(!Files.exists(Paths.get(donefile))) {
+            log(donefile + " doesn't exist. Checking lock.");
             try {
                 File dir=new File(dbdir);
                 dir.mkdirs();
 
                 File flock=new File(lockfile);
-                FileChannel channel=new RandomAccessFile(flock,"rw").getChannel();
+                FileChannel channel=new RandomAccessFile(flock, "rw").getChannel();
                 FileLock lock=channel.lock();
                 // ^^^ blocks
-                if (!Files.exists(Paths.get(donefile)))
-                {
-                    log(donefile + " still doesn't exist.");
+                if(!Files.exists(Paths.get(donefile))) {
+                    log(donefile + " still doesn't exist. This thread will download.");
                     // Done file still doesn't exist, this thread has to do the work
                     // gs://nt_500mb_chunks/nt_500M.57.nsq
-                    Storage storage = StorageOptions.getDefaultInstance().getService();
+                    Storage storage=StorageOptions.getDefaultInstance().getService();
 
-                    log("Got storage for bucket "+ db_bucket);
+                    log("Got storage for bucket " + db_bucket);
 
                     Bucket bucket=storage.get(db_bucket);
-                    for (Blob blob:bucket.list(
-                                Storage.BlobListOption.prefix(db_part+".")).
-                            iterateAll())
-                    {
+                    for(Blob blob : bucket.list(
+                                Storage.BlobListOption.prefix(db_part + ".")).
+                            iterateAll()) {
                         String dbfile=blob.getName();
-                        log("Downloading " + blob.getName()+ "...");
+                        log("    Downloading " + blob.getName() + "...");
                         //Blob blob=blobIterator.next();
-                        Path path=Paths.get(dbdir+blob.getName());
+                        Path path=Paths.get(dbdir + blob.getName());
 
                         blob.downloadTo(path);
                     }
 
                     // Create donefile
-                    File fdone =new File (donefile);
+                    File fdone=new File(donefile);
                     fdone.createNewFile();
-                    log("Created "+ donefile);
+                    log("Created " + donefile);
 
                     flock.delete();
                 }
 
-                if (lock!=null)
-                {
+                if(lock != null) {
                     lock.release();
                 }
                 channel.close();
-            }
-            catch ( Exception e )
-            {
-                log( "exception in cache method: " + e );
+            } catch(Exception e) {
+                log("exception in cache method: " + e);
             }
         }
 
         return dbdir;
     }
 
-    public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String db_part, String params )
-    {
-        log( "jni_prelim_search called with "+db_bucket+","+db+","+rid+","+ query+","+db_part+","+params );
+    public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String db_part, String params) {
+        log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + db_part + "," + params);
         /* TODO: Cache */
         String dbenv=cache(db_bucket, db, db_part);
 
-        String[] results = prelim_search( dbenv, rid, query, db, params );
-        log( "jni_prelim_search returned " + results.length + " results" );
+        String[] results=prelim_search(dbenv, rid, query, db, params);
+        log("jni_prelim_search returned " + results.length + " results");
         return results;
     }
 
-    public static void main( String[] args )
-    {
-        String rid   = "ReqID123";
-        String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+    public static void main(String[] args) {
+        String rid  ="ReqID123";
+        String query ="CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
         // gs://nt_500mb_chunks/nt_500M.57.nsq
-        String db     = "nt";
-        //        String db_bucket = "gs://" + db + "_500mb_chunks";
-        String db_bucket = db + "_50mb_chunks";
-        String db_part=db+ "_50M." + "57";
-        String params = "blastn";
+        String db    ="nt";
+        //        String db_bucket="gs://" + db + "_500mb_chunks";
+        String db_bucket=db + "_50mb_chunks";
+        String db_part=db + "_50M." + "57";
+        String params="blastn";
 
-        String results[] = new BlastJNI().jni_prelim_search( db_bucket, db, rid, query, db_part, params );
+        String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, db_part, params);
 
-        log( "Java results[] has " + results.length + " entries:" );
-        log( Arrays.toString( results ) );
+        log("Java results[] has " + results.length + " entries:");
+        log(Arrays.toString(results));
     }
 }
