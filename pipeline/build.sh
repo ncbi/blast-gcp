@@ -31,7 +31,7 @@ export CLASSPATH="."
 HDR="gov_nih_nlm_ncbi_blastjni_BlastJNI.h"
 HDR="BlastJNI.h"
 #rm -rf /tmp/blast
-rm -f $HDR
+#rm -f $HDR
 rm -f BlastJNI.class
 rm -f blastjni.o
 rm -rf gov
@@ -41,9 +41,6 @@ rm -f BlastJNI.jar
 rm -f db_partitions.json db_partitions.jsonl
 #rm -f src.zip
 #rm -f blast4spar*pp
-
-#curl -o blast4spark.cpp https://svn.ncbi.nlm.nih.gov/viewvc/toolkit/branches/blast_gcp/src/algo/blast/api/blast4spark.cpp?view=co&content-type=text%2Fplain
-#curl -o blast4spark.hpp https://svn.ncbi.nlm.nih.gov/viewvc/toolkit/branches/blast_gcp/include/algo/blast/api/blast4spark.hpp?view=co&content-type=text%2Fplain
 
 echo "Creating BlastJNI header"
 #javac -cp .:$SPARK_HOME/* -d . -h . BlastJNI.java

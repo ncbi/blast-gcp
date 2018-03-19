@@ -67,6 +67,7 @@ static void log(const char* msg)
     }
 }
 
+/*
 static long long dbtochunk(const char* db)
 {
     // Basically atoi with skipping
@@ -75,8 +76,8 @@ static long long dbtochunk(const char* db)
         if (isdigit(*c)) chunk_id = chunk_id * 100 + *c - '0';
     return chunk_id;
 }
-
-static void iterate_HSPs(BlastHSPList* hsp_list, long long chunk_id,
+*/
+static void iterate_HSPs(BlastHSPList* hsp_list, const char * chunk_id,
                          const char* rid, std::vector<std::string>& vs)
 {
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
@@ -84,7 +85,7 @@ static void iterate_HSPs(BlastHSPList* hsp_list, long long chunk_id,
         char buf[256];
         sprintf(buf,
                 "{"
-                "\"chunk\": %llu, "
+                "\"chunk\": \"%s\", "
                 "\"RID\": \"%s\", "
                 "\"oid\": %d, "
                 "\"score\": %d, "
@@ -100,11 +101,19 @@ static void iterate_HSPs(BlastHSPList* hsp_list, long long chunk_id,
 }
 
 JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
-    JNIEnv* env, jobject jobj, jstring rid, jstring query, jstring db,
-    jstring params)
+                                                            JNIEnv* env,
+                                                            jobject jobj,
+                                                            jstring dbenv,
+                                                            jstring rid,
+                                                            jstring query,
+                                                            jstring db,
+                                                            jstring params)
 {
     char msg[256];
     log("Entered C++ Java_BlastJNI_prelim_1search");
+
+    const char* cdbenv= env->GetStringUTFChars(dbenv, NULL);
+    log(crid);
 
     const char* crid = env->GetStringUTFChars(rid, NULL);
     log(crid);
@@ -122,17 +131,14 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     std::string sdb(cdb);
     std::string sparams(cparams);
 
-    long long chunk_id = dbtochunk(cdb);
-    BlastHSPStream* hsp_stream
-        = ncbi::blast::PrelimSearch(squery, sdb, sparams);
-
+    const char * chunk_id=dbenv;
     if (getenv("BLASTDB")) {
         sprintf(msg, "BLASTDB env was %s", getenv("BLASTDB"));
         log(msg);
     }
 
-    if (setenv("BLASTDB", "/tmp/blast/db", 1)) {
-        sprintf(msg, "Couldn't setenv errno:%d", errno);
+    if (setenv("BLASTDB", cdbenv, 1)) {
+        sprintf(msg, "Couldn't setenv BLASTDB=%s, errno:%d", cdbenv, errno);
         log(msg);
     }
 
@@ -141,8 +147,12 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         log(msg);
     }
 
+    BlastHSPStream* hsp_stream
+        = ncbi::blast::PrelimSearch(squery, sdb, sparams);
+
     std::vector<std::string> vs;
 
+// TODO: Exceptions: env->Throw(...)
     if (hsp_stream != NULL) {
         BlastHSPList* hsp_list = NULL;
         int status = BlastHSPStreamRead(hsp_stream, &hsp_list);
@@ -157,6 +167,9 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
         Blast_HSPListFree(hsp_list);
         BlastHSPStreamFree(hsp_stream);
+    } else
+    {
+        log ("NULL hsp_stream");
     }
 
     size_t numelems = vs.size();
@@ -165,19 +178,19 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
-        numelems, env->FindClass("java/lang/String"), NULL);
+                                            numelems, env->FindClass("java/lang/String"), NULL);
 
     for (size_t i = 0; i != numelems; ++i) {
         const char* buf = vs[i].data();
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(buf));
     }
 
+    env->ReleaseStringUTFChars(dbenv, cdbenv);
     env->ReleaseStringUTFChars(rid, crid);
     env->ReleaseStringUTFChars(query, cquery);
     env->ReleaseStringUTFChars(db, cdb);
     env->ReleaseStringUTFChars(params, cparams);
     log("Leaving C++ Java_BlastJNI_prelim_1search\n");
     return (ret);
-
-    // TODO: Exceptions: env->Throw(...)
 }
+

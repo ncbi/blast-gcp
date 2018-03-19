@@ -1,5 +1,6 @@
+<?xml version="1.0"?>
 <project>
-  <groupId>gov.nih.nlm.ncbi</groupId>
+  <groupId>BlastJNI</groupId>
   <artifactId>blastjni</artifactId>
   <modelVersion>4.0.0</modelVersion>
   <name>Blast on Spark</name>
@@ -12,10 +13,21 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
-    <dependency> <!-- Spark dependency -->
+    <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_2.11</artifactId>
       <version>2.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <version>1.22.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-streaming_2.11</artifactId>
+      <version>2.2.1</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

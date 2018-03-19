@@ -10,17 +10,12 @@ extern "C" {
 /*
  * Class:     BlastJNI
  * Method:    prelim_search
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;
  */
 JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search
-  (JNIEnv *, jobject, jstring, jstring, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jstring, jstring, jstring, jstring);
 
 #ifdef __cplusplus
 }
 #endif
 #endif
-/*
-vartanianmh
-javac 1.8.0_161
-g++ (GCC) 4.9.3
-*/
