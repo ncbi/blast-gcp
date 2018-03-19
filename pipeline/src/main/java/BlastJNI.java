@@ -57,7 +57,7 @@ public class BlastJNI
         }
         catch ( Exception e )
         {
-            System.out.println( "System.load() exception: " + e );
+            log( "System.load() exception: " + e );
         }
     }
 
@@ -65,6 +65,7 @@ public class BlastJNI
     {
         try
         {
+            System.out.println(msg);
             PrintWriter pw = new PrintWriter( new FileOutputStream( new File( "/tmp/blastjni.java.log" ), true ) );
             pw.println( msg );
             pw.close();
@@ -81,8 +82,10 @@ public class BlastJNI
         String donefile=dbdir+"done";
         String lockfile=dbdir+"lock";
 
+        log("cache (db_bucket=" + db_bucket + ", db="+ db + ", db_part=" + db_part + ")");
         if (!Files.exists(Paths.get(donefile)))
         {
+            log(donefile + " doesn't exist.");
             try {
                 File dir=new File(dbdir);
                 dir.mkdirs();
@@ -93,14 +96,17 @@ public class BlastJNI
                 // ^^^ blocks
                 if (!Files.exists(Paths.get(donefile)))
                 {
+                    log(donefile + " still doesn't exist.");
                     // Done file still doesn't exist, this thread has to do the work
                     // gs://nt_500mb_chunks/nt_500M.57.nsq
                     Storage storage = StorageOptions.getDefaultInstance().getService();
 
-                    System.out.println("Got storage");
+                    log("Got storage for bucket "+ db_bucket);
 
                     Bucket bucket=storage.get(db_bucket);
-                    for (Blob blob:bucket.list(Storage.BlobListOption.prefix(db_part)).iterateAll())
+                    for (Blob blob:bucket.list(
+                                Storage.BlobListOption.prefix(db_part+".")).
+                            iterateAll())
                     {
                         String dbfile=blob.getName();
                         log("Downloading " + blob.getName()+ "...");
@@ -113,6 +119,9 @@ public class BlastJNI
                     // Create donefile
                     File fdone =new File (donefile);
                     fdone.createNewFile();
+                    log("Created "+ donefile);
+
+                    flock.delete();
                 }
 
                 if (lock!=null)
@@ -123,7 +132,7 @@ public class BlastJNI
             }
             catch ( Exception e )
             {
-                System.out.println( "exception in cache method: " + e );
+                log( "exception in cache method: " + e );
             }
         }
 
@@ -147,14 +156,14 @@ public class BlastJNI
         String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
         // gs://nt_500mb_chunks/nt_500M.57.nsq
         String db     = "nt";
-//        String db_bucket = "gs://" + db + "_500mb_chunks";
+        //        String db_bucket = "gs://" + db + "_500mb_chunks";
         String db_bucket = db + "_50mb_chunks";
         String db_part=db+ "_50M." + "57";
         String params = "blastn";
 
         String results[] = new BlastJNI().jni_prelim_search( db_bucket, db, rid, query, db_part, params );
 
-        System.out.println( "Java results[] has " + results.length + " entries:" );
-        System.out.println( Arrays.toString( results ) );
+        log( "Java results[] has " + results.length + " entries:" );
+        log( Arrays.toString( results ) );
     }
 }
