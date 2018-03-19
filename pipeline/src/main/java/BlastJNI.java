@@ -39,6 +39,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.cloud.storage.StorageOptions;
 
 //import org.apache.spark.*;
@@ -99,11 +100,12 @@ public class BlastJNI
                     System.out.println("Got storage");
 
                     Bucket bucket=storage.get(db_bucket);
-                    for (Blob blob:bucket.list().iterateAll())
+                    for (Blob blob:bucket.list(Storage.BlobListOption.prefix(db_part)).iterateAll())
                     {
-                        log("Downloading " + blob.getName());
+                        String dbfile=blob.getName();
+                        log("Downloading " + blob.getName()+ "...");
                         //Blob blob=blobIterator.next();
-                        Path path=Paths.get(localdir+blob.getName());
+                        Path path=Paths.get(dbdir+blob.getName());
 
                         blob.downloadTo(path);
                     }
@@ -145,8 +147,9 @@ public class BlastJNI
         String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
         // gs://nt_500mb_chunks/nt_500M.57.nsq
         String db     = "nt";
-        String db_bucket = "gs://" + db + "_500mb_chunks/";
-        String db_part=db+ "_500M." + "57";
+//        String db_bucket = "gs://" + db + "_500mb_chunks";
+        String db_bucket = db + "_50mb_chunks";
+        String db_part=db+ "_50M." + "57";
         String params = "blastn";
 
         String results[] = new BlastJNI().jni_prelim_search( db_bucket, db, rid, query, db_part, params );

@@ -12,11 +12,8 @@ if [ "$distro" -ne 0 ]; then
     echo "Building at Google on Debian 8"
     export ONGCP="true"
     export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-    export SPARK_HOME="/usr/lib/spark/jars"
     export PATH="$JAVA_HOME/bin:$PATH"
-#    export LD_LIBRARY_PATH="/tmp/blast:."
     export BLASTDB=/tmp/blast/db
-#    JAVA_INC="-I$JAVA_HOME/include"
 else
     echo "Building at NCBI on CentOS 7"
     export ONGCP="false"
@@ -34,27 +31,21 @@ rm -f BlastJNI.class
 rm -f blastjni.o
 rm -rf gov
 rm -f *test.result
-rm -rf target
+#rm -rf target
 rm -f BlastJNI.jar
 #rm -f db_partitions.json db_partitions.jsonl
 
-<<"SKIP"
-#rm -f $HDR
-echo "Creating BlastJNI header"
-#javac -cp .:$SPARK_HOME/* -d . -h . BlastJNI.java
-javac -d . -h . src/main/java/BlastJNI.java
-echo "/*" >> $HDR
-echo "$USER" >> $HDR
-javac -version >> $HDR 2>&1
-g++ --version | head -1 >> $HDR
-#date >> $HDR
-echo "*/" >> $HDR
-# javac
-#javac -d . BlastJNI.java
-SKIP
-
 if [ "$ONGCP" = "false" ]; then
     echo "Compiling blastjni.cpp"
+    rm -f $HDR
+    echo "Creating BlastJNI header"
+    javac -d . -h . src/main/java/BlastJNI.java
+    echo "/*" >> $HDR
+    echo "$USER" >> $HDR
+    javac -version >> $HDR 2>&1
+    g++ --version | head -1 >> $HDR
+    echo "*/" >> $HDR
+
     rm -f blastjni.so libblastjni.so
     g++ blastjni.cpp \
         -L./int/blast/libs \
@@ -78,6 +69,8 @@ fi
 #cp ext/liblmdb.so /tmp/blast/
 
 echo "Testing JNI"
+#java -cp target/blastjni-0.0314.jar BlastJNI
+java -cp target/blastjni-0.0314-jar-with-dependencies.jar BlastJNI
 java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
 set +errexit
 CMP=$(cmp test.result test.expected)
@@ -106,7 +99,6 @@ if [ "$ONGCP" = "false" ]; then
 fi
 
 echo "Compiling BlastJNI Java"
-#javac -cp .:$SPARK_HOME/* -d . -h . BlastJNI.java
 javac -d . BlastJNI.java
 
 
@@ -128,6 +120,7 @@ echo "Test OK"
 
 echo "Maven packaging"
 mvn package
+mvn assembly:assembly -DdescriptorId=jar-with-dependencies
 ls -l target/*jar
 
 echo "Make_partitions.py"
