@@ -70,10 +70,9 @@ static void log(const char* msg)
 static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
                          const char* rid, std::vector<std::string>& vs)
 {
-    char buf[256];
-
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
         const BlastHSP* hsp = hsp_list->hsp_array[i];
+        char buf[256];
         sprintf(buf,
                 "{"
                 "\"chunk\": \"%s\", "
@@ -88,25 +87,6 @@ static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
                 chunk_id, rid, hsp_list->oid, hsp->score, hsp->query.offset,
                 hsp->query.end, hsp->subject.offset, hsp->subject.end);
         vs.push_back(buf);
-    }
-
-    if (hsp_list->hspcnt==0)
-    {
-        log("Empty hsp_list, emitting sentinel");
-        sprintf(buf,
-                "{"
-                "\"chunk\": \"%s\", "
-                "\"RID\": \"%s\", "
-                "\"oid\": %d, "
-                "\"score\": %d, "
-                "\"qstart\": %d, "
-                "\"qstop\": %d, "
-                "\"sstart\": %d, "
-                "\"sstop\": %d "
-                "}\n",
-                chunk_id, rid, -1, -1, -1, -1, -1, -1);
-        vs.push_back(buf);
-
     }
 }
 
@@ -132,6 +112,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     const char* cparams = env->GetStringUTFChars(params, NULL);
     log(cparams);
 
+    const char* chunk_id = cdbenv;
     std::string squery(cquery);
     std::string sdb(cdb);
     std::string sparams(cparams);
@@ -162,23 +143,51 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         int status = BlastHSPStreamRead(hsp_stream, &hsp_list);
         sprintf(msg, "  BlastHSPStreamRead returned status = %d", status);
         log(msg);
+
+        if (status == kBlastHSPStream_Error) {
+            log("TODO: Exception");
+            // TODO: Exception
+        }
+
         while (status == kBlastHSPStream_Success && hsp_list != NULL) {
             sprintf(msg, "  %s - have hsp_list at %p", __func__, hsp_list);
             log(msg);
-            const char* chunk_id = cdbenv;
             iterate_HSPs(hsp_list, chunk_id, crid, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
+            if (status == kBlastHSPStream_Error) {
+                log("TODO: Exception");
+                // TODO: Exception
+            }
         }
 
         Blast_HSPListFree(hsp_list);
         BlastHSPStreamFree(hsp_stream);
     } else {
         log("NULL hsp_stream");
+        // TODO: Exception
     }
 
     size_t numelems = vs.size();
     sprintf(msg, "  Have %lu elements", numelems);
     log(msg);
+
+    if (!vs.size()) {
+        char buf[256];
+        log("Empty hsp_list, emitting sentinel");
+        sprintf(buf,
+                "{"
+                "\"chunk\": \"%s\", "
+                "\"RID\": \"%s\", "
+                "\"oid\": %d, "
+                "\"score\": %d, "
+                "\"qstart\": %d, "
+                "\"qstop\": %d, "
+                "\"sstart\": %d, "
+                "\"sstop\": %d "
+                "}\n",
+                chunk_id, crid, -1, -1, -1, -1, -1, -1);
+        vs.push_back(buf);
+    }
 
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
@@ -197,9 +206,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     log("Leaving C++ Java_BlastJNI_prelim_1search\n");
     return (ret);
 }
-JNIEXPORT jstring JNICALL Java_BlastJNI_traceback
-  (JNIEnv *, jobject, jstring)
+JNIEXPORT jstring JNICALL Java_BlastJNI_traceback(JNIEnv*, jobject, jstring)
 {
     return 0;
 }
-
