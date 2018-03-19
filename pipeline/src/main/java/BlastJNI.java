@@ -68,13 +68,19 @@ public class BlastJNI {
 
     private native String[] prelim_search(String dbenv, String rid, String query, String db_part, String params);
 
+    // TODO: Will be fed merged top-N highest scoring HSPs
+    private native String traceback(String something);
+
     private String cache(String db_bucket, String db, String db_part) {
+        log("cache(db_bucket=" + db_bucket + ", db=" + db + ", db_part=" + db_part + ")");
+
         String localdir="/tmp/blast/";
-        String dbdir=localdir + db + "/";
+        String dbdir=localdir + db_part + "/";
         String donefile=dbdir + "done";
         String lockfile=dbdir + "lock";
 
-        log("cache(db_bucket=" + db_bucket + ", db=" + db + ", db_part=" + db_part + ")");
+        // This requires 118MB of .jars, could also just invoke cache_files.sh
+        // which would invoke gsutil
         if(!Files.exists(Paths.get(donefile))) {
             log(donefile + " doesn't exist. Checking lock.");
             try {
@@ -102,10 +108,11 @@ public class BlastJNI {
                         //Path path=Paths.get(dbdir + dbfile);
                         String ext=dbfile.substring(dbfile.length() - 4);
                         Path path=Paths.get(dbdir + db + ext);
-
-                        log("    Downloading " + dbfile + " ...");
+//     Downloading nt_50M.57.nnd -> /tmp/blast/nt_50M.57/nt.nnd ...
+                        log("    Downloading " + dbfile +
+                                " -> " + path + " ...");
                         blob.downloadTo(path);
-                    }
+                            }
 
                     // Create donefile
                     File fdone=new File(donefile);
@@ -129,7 +136,6 @@ public class BlastJNI {
 
     public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String db_part, String params) {
         log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + db_part + "," + params);
-        /* TODO: Cache */
         String dbenv=cache(db_bucket, db, db_part);
 
         String[] results=prelim_search(dbenv, rid, query, db, params);
@@ -153,3 +159,4 @@ public class BlastJNI {
         log(Arrays.toString(results));
     }
 }
+

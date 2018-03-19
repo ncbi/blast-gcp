@@ -137,7 +137,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     std::string sparams(cparams);
 
     if (getenv("BLASTDB")) {
-        sprintf(msg, "BLASTDB env was %s", getenv("BLASTDB"));
+        sprintf(msg, "  $BLASTDB was    %s", getenv("BLASTDB"));
         log(msg);
     }
 
@@ -147,7 +147,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     }
 
     if (getenv("BLASTDB")) {
-        sprintf(msg, "BLASTDB env is now %s", getenv("BLASTDB"));
+        sprintf(msg, "  $BLASTDB is now %s", getenv("BLASTDB"));
         log(msg);
     }
 
@@ -160,10 +160,10 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     if (hsp_stream != NULL) {
         BlastHSPList* hsp_list = NULL;
         int status = BlastHSPStreamRead(hsp_stream, &hsp_list);
-        sprintf(msg, "BlastHSPStreamRead returned status = %d\n", status);
+        sprintf(msg, "  BlastHSPStreamRead returned status = %d", status);
         log(msg);
         while (status == kBlastHSPStream_Success && hsp_list != NULL) {
-            sprintf(msg, "%s - have hsp_list at %p\n", __func__, hsp_list);
+            sprintf(msg, "  %s - have hsp_list at %p", __func__, hsp_list);
             log(msg);
             const char* chunk_id = cdbenv;
             iterate_HSPs(hsp_list, chunk_id, crid, vs);
@@ -177,7 +177,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     }
 
     size_t numelems = vs.size();
-    sprintf(msg, "Have %lu elements", numelems);
+    sprintf(msg, "  Have %lu elements", numelems);
     log(msg);
 
     jobjectArray ret;
