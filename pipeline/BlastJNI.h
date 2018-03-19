@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search
   (JNIEnv *, jobject, jstring, jstring, jstring, jstring, jstring);
 
+/*
+ * Class:     BlastJNI
+ * Method:    traceback
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_BlastJNI_traceback
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

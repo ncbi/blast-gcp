@@ -98,10 +98,12 @@ public class BlastJNI {
                                 Storage.BlobListOption.prefix(db_part + ".")).
                             iterateAll()) {
                         String dbfile=blob.getName();
-                        log("    Downloading " + blob.getName() + "...");
                         //Blob blob=blobIterator.next();
-                        Path path=Paths.get(dbdir + blob.getName());
+                        //Path path=Paths.get(dbdir + dbfile);
+                        String ext=dbfile.substring(dbfile.length() - 4);
+                        Path path=Paths.get(dbdir + db + ext);
 
+                        log("    Downloading " + dbfile + " ...");
                         blob.downloadTo(path);
                     }
 

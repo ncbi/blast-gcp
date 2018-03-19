@@ -70,9 +70,10 @@ static void log(const char* msg)
 static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
                          const char* rid, std::vector<std::string>& vs)
 {
+    char buf[256];
+
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
         const BlastHSP* hsp = hsp_list->hsp_array[i];
-        char buf[256];
         sprintf(buf,
                 "{"
                 "\"chunk\": \"%s\", "
@@ -87,6 +88,25 @@ static void iterate_HSPs(BlastHSPList* hsp_list, const char* chunk_id,
                 chunk_id, rid, hsp_list->oid, hsp->score, hsp->query.offset,
                 hsp->query.end, hsp->subject.offset, hsp->subject.end);
         vs.push_back(buf);
+    }
+
+    if (hsp_list->hspcnt==0)
+    {
+        log("Empty hsp_list, emitting sentinel");
+        sprintf(buf,
+                "{"
+                "\"chunk\": \"%s\", "
+                "\"RID\": \"%s\", "
+                "\"oid\": %d, "
+                "\"score\": %d, "
+                "\"qstart\": %d, "
+                "\"qstop\": %d, "
+                "\"sstart\": %d, "
+                "\"sstop\": %d "
+                "}\n",
+                chunk_id, rid, -1, -1, -1, -1, -1, -1);
+        vs.push_back(buf);
+
     }
 }
 
@@ -177,3 +197,9 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     log("Leaving C++ Java_BlastJNI_prelim_1search\n");
     return (ret);
 }
+JNIEXPORT jstring JNICALL Java_BlastJNI_traceback
+  (JNIEnv *, jobject, jstring)
+{
+    return 0;
+}
+
