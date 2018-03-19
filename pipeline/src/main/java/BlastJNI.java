@@ -107,11 +107,14 @@ public class BlastJNI {
                         //Blob blob=blobIterator.next();
                         //Path path=Paths.get(dbdir + dbfile);
                         String ext=dbfile.substring(dbfile.length() - 4);
-                        Path path=Paths.get(dbdir + db + ext);
-//     Downloading nt_50M.57.nnd -> /tmp/blast/nt_50M.57/nt.nnd ...
-                        log("    Downloading " + dbfile +
-                                " -> " + path + " ...");
-                        blob.downloadTo(path);
+                        if(ext.endsWith("sq") || ext.endsWith("in")) {
+                            Path path=Paths.get(dbdir + db + ext);
+                            log("    Downloading " + dbfile +
+                                    " -> " + path + " ...");
+                            blob.downloadTo(path);
+                        } else {
+                            log("    Skipping " + dbfile);
+                        }
                             }
 
                     // Create donefile
