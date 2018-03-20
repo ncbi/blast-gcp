@@ -35,6 +35,8 @@
 
 #include <corelib/ncbistd.hpp>
 #include <algo/blast/core/blast_export.h>
+#include <algo/blast/core/blast_hspstream.h>
+
 
 /** @addtogroup AlgoBlast
  *
