@@ -13,7 +13,7 @@ if [ "$distro" -ne 0 ]; then
     export BUILDENV="google"
     export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
     export PATH="$JAVA_HOME/bin:$PATH"
-    export BLASTDB=/tmp/blast/db
+    export BLASTDB=/tmp/blast/
 else
     export DISTRO="CentOS 7"
     export BUILDENV="ncbi"
@@ -39,27 +39,13 @@ rm -f BlastJNI.jar
 echo "Maven packaging"
     mvn -q package
     mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
-    ls -l target/*jar
 
 # TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to 
 #packages,  but is required by g++ # at NCBI.
 HDR="BlastJNI.h"
-if [ "$BUILDENV" = "google" ]; then
-    echo "Creating BlastJNI header: $HDR"
-    #javac -d . -h . src/main/java/BlastJNI.java
-    javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d . -h . src/main/java/BlastJNI.java
-    echo "/*" >> $HDR
-    echo "$USER" >> $HDR
-    javac -version >> $HDR 2>&1
-    g++ --version | head -1 >> $HDR
-    echo "*/" >> $HDR
-#else
-#    Can work at NCBI if target/ present?:
-#    if [ -d target ]; then
-#        echo "Creating BlastJNI header"
-#       javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d . -h . src/main/java/BlastJNI.java
-#    fi
-fi
+echo "Creating BlastJNI header: $HDR"
+#javac -d . -h . src/main/java/BlastJNI.java
+javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d /tmp -h . src/main/java/BlastJNI.java
 
 if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling blastjni.cpp"
@@ -227,7 +213,7 @@ gcloud dataproc --region us-east4 \
     git clone https://github.com/ncbi/blast-gcp.git
     cd blast-gcp
     git checkout engineering
-    git config --global user.email "mike.vartanian@nih.gov"
+    git config --global user.email "Mike.Vartanian@nih.gov"
     git config --global user.name "Mike Vartanian"
 
 
