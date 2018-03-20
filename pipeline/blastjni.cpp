@@ -61,7 +61,7 @@ static void log(const char* msg)
         FILE* fout = fopen(fname, "a");
         if (!fout) return;
         char pid[32];
-        sprintf(pid,"(%0.4d) ",getpid());
+        sprintf(pid,"(%04d) ",getpid());
         fputs(pid, fout);
         fputs(msg, fout);
         fputc('\n', fout);
