@@ -59,8 +59,8 @@ public class BlastJNI {
     public static void log(String msg) {
         try {
             System.out.println(msg);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.java.log"), true));
-            pw.println(msg);
+            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.log"), true));
+            pw.println("(java) "+ msg);
             pw.close();
         } catch(FileNotFoundException ex) {
         }
@@ -83,7 +83,7 @@ public class BlastJNI {
         // This requires 118MB of .jars, could also just invoke cache_files.sh
         // which would invoke gsutil
         if(!Files.exists(Paths.get(donefile))) {
-            log(donefile + " doesn't exist. Checking lock.");
+            log(donefile + " doesn't exist. Checking if locked...");
             try {
                 File dir=new File(dbdir);
                 dir.mkdirs();
@@ -93,7 +93,7 @@ public class BlastJNI {
                 FileLock lock=channel.lock();
                 // ^^^ blocks
                 if(!Files.exists(Paths.get(donefile))) {
-                    log(donefile + " still doesn't exist. This thread will download.");
+                    log(donefile + " still doesn't exist. This thread will lock and download.");
                     // Done file still doesn't exist, this thread has to do the work
                     Storage storage=StorageOptions.getDefaultInstance().getService();
 
@@ -150,13 +150,18 @@ public class BlastJNI {
         String query ="CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
         String db    ="nt";
         String db_bucket=db + "_50mb_chunks";
-        String db_part=db + "_50M." + "57";
         String params="blastn";
+//        String db_part=db + "_50M." + "57";
 
-        String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, db_part, params);
+        for (int part=0; part <= 886; ++part)
+        {
+            String db_part=db + "_50M." + String.format("%02d", part);
 
-        log("Java results[] has " + results.length + " entries:");
-        log(Arrays.toString(results));
+            String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, db_part, params);
+
+            log("Java results[] has " + results.length + " entries:");
+            log(Arrays.toString(results));
+        }
     }
 }
 

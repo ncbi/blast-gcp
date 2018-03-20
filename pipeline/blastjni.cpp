@@ -57,10 +57,12 @@ static void log(const char* msg)
     const bool debug = true;
 
     if (debug) {
-        char fname[64];
-        sprintf(fname, "/tmp/blastjni.%u.log", getpid());
+        const char *fname="/tmp/blastjni.log";
         FILE* fout = fopen(fname, "a");
         if (!fout) return;
+        char pid[32];
+        sprintf(pid,"(%0.4d) ",getpid());
+        fputs(pid, fout);
         fputs(msg, fout);
         fputc('\n', fout);
         fclose(fout);
@@ -205,6 +207,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     log("Leaving C++ Java_BlastJNI_prelim_1search\n");
     return (ret);
 }
+
 JNIEXPORT jstring JNICALL Java_BlastJNI_traceback(JNIEnv*, jobject, jstring)
 {
     return 0;
