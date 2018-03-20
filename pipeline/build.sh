@@ -37,8 +37,8 @@ rm -f BlastJNI.jar
 
 
 echo "Maven packaging"
-    mvn package
-    mvn assembly:assembly -DdescriptorId=jar-with-dependencies
+    mvn -q package
+    mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
     ls -l target/*jar
 
 # TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to 
@@ -101,20 +101,22 @@ if [ "$BUILDENV" = "ncbi" ]; then
 fi
 
 
-echo "Testing JNI"
+if [ "$BUILDENV" = "google" ]; then
+    echo "Testing JNI"
     #java -cp target/blastjni-0.0314.jar BlastJNI
     java -cp target/blastjni-0.0314-jar-with-dependencies.jar \
         BlastJNI | grep "chunk" > test.result
 #    java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
-    set +errexit
     CMP=$(cmp test.result test.expected)
+    set +errexit
     if [[ $? -ne 0 ]]; then
         sdiff -w 70 test.result test.expected
         echo "Testing of JNI failed"
         exit 1
     fi
     set -o errexit
-echo "Test OK"
+    echo "Test OK"
+fi
 
 if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling test_blast.cpp"
@@ -171,9 +173,9 @@ echo "Test OK"
 echo "Make_partitions.py"
     ./make_partitions.py > db_partitions.jsonl
 
-echo "Creating JAR"
-    jar cf BlastJNI.jar BlastJNI.class libblastjni.so
-    unzip -v BlastJNI.jar
+#echo "Creating JAR"
+#    jar cf BlastJNI.jar BlastJNI.class libblastjni.so
+#    unzip -v BlastJNI.jar
 
 if [ "$BUILDENV" = "google" ]; then
     echo "Copying to Cloud Storage Bucket"
