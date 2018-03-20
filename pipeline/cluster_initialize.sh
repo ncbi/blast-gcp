@@ -1,5 +1,33 @@
 #!/bin/bash
 
+apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
+
+exit 0
+
+# Copy to bucket with:
+PIPELINEBUCKET="gs://blastgcp-pipeline-test"
+gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
+
+
+
+# TODOS:
+# Separate master/worker configuration
+# Auto terminate cluster (shutdown -h +14400)
+# Cheap Chaos Monkey (shutdown -h +$RANDOM)
+# Start daemons
+# pre-warm databases
+# Schedule things (cron or systemd timer)
+# Configure user environments
+# Submit stream, keep it alive:
+#     https://github.com/GoogleCloudPlatform/dataproc-initialization-actions/tree/master/post-init
+
+
+# Below is historical
+
+
+set -euxo pipefail
+
+
 set -o errexit
 set -o nounset
 set -o xtrace
@@ -11,7 +39,6 @@ date
 
 cd /tmp
 # Need libdw for Blast library, maven for building
-apt-get install maven libdw-dev -y
 
 # Autokill cluster in 24 hours
 shutdown -h +1440

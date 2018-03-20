@@ -9,43 +9,63 @@ set +errexit
 distro=$(grep Debian /etc/os-release | wc -l)
 set -o errexit
 if [ "$distro" -ne 0 ]; then
-    echo "Building at Google on Debian 8"
-    export ONGCP="true"
+    export DISTRO="Debian 8"
+    export BUILDENV="google"
     export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
     export PATH="$JAVA_HOME/bin:$PATH"
     export BLASTDB=/tmp/blast/db
 else
-    echo "Building at NCBI on CentOS 7"
-    export ONGCP="false"
+    export DISTRO="CentOS 7"
+    export BUILDENV="ncbi"
     export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
     export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/"
-    export BLASTDB=/net/napme02/vol/blast/db/blast
+    export BLASTDB=/net/frosty/vol/blast/db/blast
+    BLASTBYDATE=/netopt/ncbi_tools64/c++.stable/
+    BLASTBYDATE=/netopt/ncbi_tools64/c++.by-date/20180312/
 fi
+
+echo "Building at $BUILDENV on $DISTRO"
 
 JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
-HDR="gov_nih_nlm_ncbi_blastjni_BlastJNI.h"
-HDR="BlastJNI.h"
 rm -f BlastJNI.class
 rm -f blastjni.o
 rm -rf gov
 rm -f *test.result
-#rm -rf target
 rm -f BlastJNI.jar
-#rm -f db_partitions.json db_partitions.jsonl
 
-if [ "$ONGCP" = "false" ]; then
-    echo "Compiling blastjni.cpp"
-    echo "Creating BlastJNI header"
-    javac -d . -h . src/main/java/BlastJNI.java
+
+echo "Maven packaging"
+    mvn package
+    mvn assembly:assembly -DdescriptorId=jar-with-dependencies
+    ls -l target/*jar
+
+# TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to 
+#packages,  but is required by g++ # at NCBI.
+HDR="BlastJNI.h"
+if [ "$BUILDENV" = "google" ]; then
+    echo "Creating BlastJNI header: $HDR"
+    #javac -d . -h . src/main/java/BlastJNI.java
+    javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d . -h . src/main/java/BlastJNI.java
     echo "/*" >> $HDR
     echo "$USER" >> $HDR
     javac -version >> $HDR 2>&1
     g++ --version | head -1 >> $HDR
     echo "*/" >> $HDR
+#else
+#    # Can work at NCBI if target/ present:
+#    if [ -d target ]; then
+#        echo "Creating BlastJNI header"
+#       javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d . -h . src/main/java/BlastJNI.java
+#    fi
+fi
 
-    rm -f blastjni.so libblastjni.so
+if [ "$BUILDENV" = "ncbi" ]; then
+    echo "Compiling blastjni.cpp"
+    # Note: Library order important
+    #       lmdb previously built at NCBI as static .a in /ext/
+    #       Hidden dl_open for libdw
     g++ blastjni.cpp \
         -L./int/blast/libs \
         -std=gnu++11 \
@@ -53,48 +73,79 @@ if [ "$ONGCP" = "false" ]; then
         -shared \
         -fPIC \
         $JAVA_INC \
-        -I /netopt/ncbi_tools64/c++.stable/include \
-        -I /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/inc \
-        -L /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/lib \
+        -I $BLASTBYDATE/include \
+        -I $BLASTBYDATE/GCC493-ReleaseMT/inc \
+        -L $BLASTBYDATE/GCC493-ReleaseMT/lib \
         -L . \
-	-L ext \
-        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer -lxblast -lxalgoblastdbindex -lcomposition_adjustment -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb -lblast_services -lxalnmgr -lxobjutil -lxobjread -lvariation -lcreaders -lsubmit -lxnetblastcli -lxnetblast -lblastdb -lscoremat -ltables -lxregexp -lncbi_xloader_genbank -lncbi_xreader_id1 -lncbi_xreader_id2 -lncbi_xreader_cache -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr -lgenome_collection -lseqedit -lseqsplit -lsubmit -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress -llmdb -lpthread -lz -lbz2 -L/netopt/ncbi_tools64/lzo-2.05/lib64 -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread\
+        -L ext \
+        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
+        -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
+        -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
+        -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
+        -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
+        -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
+        -lblast_services -lxalnmgr -lxobjutil -lxobjread \
+        -lvariation -lcreaders -lsubmit -lxnetblastcli \
+        -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
+        -lncbi_xloader_genbank -lncbi_xreader_id1 \
+        -lncbi_xreader_id2 -lncbi_xreader_cache \
+        -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader \
+        -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr \
+        -lgenome_collection -lseqedit -lseqsplit -lsubmit \
+        -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
+        -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
+        -llmdb -lpthread -lz -lbz2 \
+        -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+        -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
         -o libblastjni.so
-    #mkdir -p /tmp/blast
-    #cp -n /netopt/ncbi_tools64/lmdb-0.9.21/lib/*so ext
 fi
 
-#cp blastjni.so /tmp/blast
-#cp ext/liblmdb.so /tmp/blast/
 
 echo "Testing JNI"
-#java -cp target/blastjni-0.0314.jar BlastJNI
-java -cp target/blastjni-0.0314-jar-with-dependencies.jar BlastJNI
-java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
-set +errexit
-CMP=$(cmp test.result test.expected)
-if [[ $? -ne 0 ]]; then
-    echo "Test failed"
-    sdiff -w 70 test.result test.expected
-    exit 1
-fi
-set -o errexit
+    #java -cp target/blastjni-0.0314.jar BlastJNI
+    java -cp target/blastjni-0.0314-jar-with-dependencies.jar BlastJNI
+    java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
+    set +errexit
+    CMP=$(cmp test.result test.expected)
+    if [[ $? -ne 0 ]]; then
+        echo "Test failed"
+        sdiff -w 70 test.result test.expected
+        exit 1
+    fi
+    set -o errexit
 echo "Test OK"
 
-if [ "$ONGCP" = "false" ]; then
+if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling test_blast.cpp"
     rm -f test_blast
     g++ test_blast.cpp -L./int/blast/libs \
         -std=gnu++11 \
         -Wall -g -fPIC -I . \
-        -I /netopt/ncbi_tools64/c++.stable/include \
-        -I /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/inc \
-        -L /netopt/ncbi_tools64/c++.stable/GCC493-ReleaseMT/lib \
+        -I $BLASTBYDATE/include \
+        -I $BLASTBYDATE/GCC493-ReleaseMT/inc \
+        -L $BLASTBYDATE/GCC493-ReleaseMT/lib \
         -L . \
         -L ext \
-        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer -lxblast -lxalgoblastdbindex -lcomposition_adjustment -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb -lblast_services -lxalnmgr -lxobjutil -lxobjread -lvariation -lcreaders -lsubmit -lxnetblastcli -lxnetblast -lblastdb -lscoremat -ltables -lxregexp -lncbi_xloader_genbank -lncbi_xreader_id1 -lncbi_xreader_id2 -lncbi_xreader_cache -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr -lgenome_collection -lseqedit -lseqsplit -lsubmit -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress -llmdb -lpthread -lz -lbz2 -L/netopt/ncbi_tools64/lzo-2.05/lib64 -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread\
+        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
+        -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
+        -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
+        -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
+        -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
+        -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
+        -lblast_services -lxalnmgr -lxobjutil -lxobjread \
+        -lvariation -lcreaders -lsubmit -lxnetblastcli \
+        -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
+        -lncbi_xloader_genbank -lncbi_xreader_id1 \
+        -lncbi_xreader_id2 -lncbi_xreader_cache \
+        -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader \
+        -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr \
+        -lgenome_collection -lseqedit -lseqsplit -lsubmit \
+        -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
+        -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
+        -llmdb -lpthread -lz -lbz2 \
+        -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+        -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
         -o test_blast
-
 fi
 
 echo "Compiling BlastJNI Java"
@@ -103,33 +154,27 @@ javac -d . BlastJNI.java
 
 echo "Testing Blast Library"
 # More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
-
-./test_blast 1 \
-CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG \
-nt.04 blastn > blast_test.result
-set +errexit
-CMP=$(cmp blast_test.result blast_test.expected)
-if [[ $? -ne 0 ]]; then
-    echo "Test failed"
-    sdiff -w 70 blast_test.result blast_test.expected | head
-    exit 1
-fi
-set -o errexit
+    ./test_blast 1 \
+    CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG \
+    nt.04 blastn > blast_test.result
+    set +errexit
+    CMP=$(cmp blast_test.result blast_test.expected)
+    if [[ $? -ne 0 ]]; then
+        echo "Test failed"
+        sdiff -w 70 blast_test.result blast_test.expected | head
+        exit 1
+    fi
+    set -o errexit
 echo "Test OK"
 
-echo "Maven packaging"
-mvn package
-mvn assembly:assembly -DdescriptorId=jar-with-dependencies
-ls -l target/*jar
-
 echo "Make_partitions.py"
-./make_partitions.py > db_partitions.jsonl
+    ./make_partitions.py > db_partitions.jsonl
 
 echo "Creating JAR"
-jar cf BlastJNI.jar BlastJNI.class libblastjni.so
-unzip -v BlastJNI.jar
+    jar cf BlastJNI.jar BlastJNI.class libblastjni.so
+    unzip -v BlastJNI.jar
 
-if [ "$ONGCP" = "true" ]; then
+if [ "$BUILDENV" = "google" ]; then
     echo "Copying to Cloud Storage Bucket"
     gsutil cp \
         cluster_initialize.sh \
@@ -139,24 +184,17 @@ if [ "$ONGCP" = "true" ]; then
         db_partitions.jsonl \
         "$PIPELINEBUCKET/dbs/db_partitions.jsonl"
 
-#    gsutil cp \
-#        ext/liblmdb.so \
-#       "$PIPELINEBUCKET/libs/liblmdb.so"
-
-#    gsutil cp \
-#        libblastjni.so \
-#	"$PIPELINEBUCKET/libs/blastjni.so"
-
     gsutil cp \
         query.jsonl \
         "$PIPELINEBUCKET/input/query.jsonl"
-	
-    # gsutil ls -l -r "$PIPELINEBUCKET/"
 fi
 
-
 echo "Build Complete"
+date
 exit 0
+
+
+
 
 <<HINTS
  gcloud auth login (copy/paste from web)
@@ -180,6 +218,8 @@ gcloud dataproc --region us-east4 \
     'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
     --initialization-actions-timeout 60 # Default 10m \
     --max-age=8h
+    --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S)
+
 
     git clone https://github.com/ncbi/blast-gcp.git
     cd blast-gcp
@@ -199,6 +239,17 @@ gcloud dataproc --region us-east4 \
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/blast
 # could be replaced by
  -conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast"
+
+# gcloud dataproc clusters diagnose cluster-name
+
+
+# gcloud dataproc clusters create args --single-node
+
+# gcloud dataproc jobs submit <job type> args --max-failures-per-hour number
+
+$ yarn logs
+yarn.nodemanager.delete.debug-delay-sec property Spark History Server
+
 
  spark-submit \
      --conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast" \
