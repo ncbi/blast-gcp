@@ -21,7 +21,7 @@ else
     export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/"
     export BLASTDB=/net/frosty/vol/blast/db/blast
     BLASTBYDATE=/netopt/ncbi_tools64/c++.stable/
-    BLASTBYDATE=/netopt/ncbi_tools64/c++.by-date/20180312/
+#    BLASTBYDATE=/netopt/ncbi_tools64/c++.by-date/20180319/
 fi
 
 echo "Building at $BUILDENV on $DISTRO"
