@@ -54,7 +54,7 @@ if [ "$BUILDENV" = "google" ]; then
     g++ --version | head -1 >> $HDR
     echo "*/" >> $HDR
 #else
-#    # Can work at NCBI if target/ present:
+#    Can work at NCBI if target/ present?:
 #    if [ -d target ]; then
 #        echo "Creating BlastJNI header"
 #       javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d . -h . src/main/java/BlastJNI.java
@@ -103,13 +103,14 @@ fi
 
 echo "Testing JNI"
     #java -cp target/blastjni-0.0314.jar BlastJNI
-    java -cp target/blastjni-0.0314-jar-with-dependencies.jar BlastJNI
-    java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
+    java -cp target/blastjni-0.0314-jar-with-dependencies.jar \
+        BlastJNI | grep "chunk" > test.result
+#    java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
     set +errexit
     CMP=$(cmp test.result test.expected)
     if [[ $? -ne 0 ]]; then
-        echo "Test failed"
         sdiff -w 70 test.result test.expected
+        echo "Testing of JNI failed"
         exit 1
     fi
     set -o errexit
@@ -148,8 +149,8 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -o test_blast
 fi
 
-echo "Compiling BlastJNI Java"
-javac -d . BlastJNI.java
+#echo "Compiling BlastJNI Java"
+#javac -d . BlastJNI.java
 
 
 echo "Testing Blast Library"
@@ -160,8 +161,8 @@ echo "Testing Blast Library"
     set +errexit
     CMP=$(cmp blast_test.result blast_test.expected)
     if [[ $? -ne 0 ]]; then
-        echo "Test failed"
         sdiff -w 70 blast_test.result blast_test.expected | head
+        echo "Testing Blast Library failed"
         exit 1
     fi
     set -o errexit

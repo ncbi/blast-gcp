@@ -94,7 +94,6 @@ public class BlastJNI {
                 // ^^^ blocks
                 if(!Files.exists(Paths.get(donefile))) {
                     log(donefile + " still doesn't exist. This thread will lock and download.");
-                    // Done file still doesn't exist, this thread has to do the work
                     Storage storage=StorageOptions.getDefaultInstance().getService();
 
                     log("Got storage for bucket " + db_bucket);
@@ -130,6 +129,9 @@ public class BlastJNI {
             } catch(Exception e) {
                 log("exception in cache method: " + e);
             }
+        } else
+        {
+            log(dbdir + " cached.");
         }
 
         return dbdir;
@@ -151,9 +153,9 @@ public class BlastJNI {
         String db    ="nt";
         String db_bucket=db + "_50mb_chunks";
         String params="blastn";
-//        String db_part=db + "_50M." + "57";
 
-        for (int part=0; part <= 886; ++part)
+        //        for (int part=0; part <= 886; ++part)
+        for (int part=0; part <= 26; ++part)
         {
             String db_part=db + "_50M." + String.format("%02d", part);
 

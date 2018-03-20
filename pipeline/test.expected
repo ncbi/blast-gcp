@@ -1,12 +1,83 @@
-Java results[] has 10 entries:
-[{"chunk": 4, "RID": "ReqID123", "oid": 125604, "score": 64, "qstart": 0, "qstop": 70, "sstart": 379, "sstop": 449 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 125605, "score": 64, "qstart": 0, "qstop": 70, "sstart": 379, "sstop": 449 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 164614, "score": 64, "qstart": 0, "qstop": 70, "sstart": 2415, "sstop": 2485 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 203890, "score": 46, "qstart": 3, "qstop": 70, "sstart": 363, "sstop": 430 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 377616, "score": 43, "qstart": 3, "qstop": 70, "sstart": 358, "sstop": 425 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 559578, "score": 46, "qstart": 3, "qstop": 70, "sstart": 400, "sstop": 467 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 575787, "score": 49, "qstart": 3, "qstop": 70, "sstart": 401, "sstop": 468 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 575788, "score": 49, "qstart": 3, "qstop": 70, "sstart": 401, "sstop": 468 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 626181, "score": 64, "qstart": 0, "qstop": 70, "sstart": 1326, "sstop": 1396 }
-, {"chunk": 4, "RID": "ReqID123", "oid": 645404, "score": 64, "qstart": 0, "qstop": 70, "sstart": 2414, "sstop": 2484 }
-]
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.00,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.00)
+[{"chunk": "/tmp/blast/nt_50M.00/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.01,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.01)
+[{"chunk": "/tmp/blast/nt_50M.01/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.02,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.02)
+[{"chunk": "/tmp/blast/nt_50M.02/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.03,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.03)
+[{"chunk": "/tmp/blast/nt_50M.03/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.04,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.04)
+[{"chunk": "/tmp/blast/nt_50M.04/", "RID": "ReqID123", "oid": 50941, "score": 70, "qstart": 0, "qstop": 70, "sstart": 2415, "sstop": 2485 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.05,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.05)
+[{"chunk": "/tmp/blast/nt_50M.05/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.06,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.06)
+[{"chunk": "/tmp/blast/nt_50M.06/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.07,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.07)
+[{"chunk": "/tmp/blast/nt_50M.07/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.08,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.08)
+[{"chunk": "/tmp/blast/nt_50M.08/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.09,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.09)
+[{"chunk": "/tmp/blast/nt_50M.09/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.10,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.10)
+[{"chunk": "/tmp/blast/nt_50M.10/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.11,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.11)
+[{"chunk": "/tmp/blast/nt_50M.11/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.12,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.12)
+[{"chunk": "/tmp/blast/nt_50M.12/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.13,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.13)
+[{"chunk": "/tmp/blast/nt_50M.13/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.14,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.14)
+[{"chunk": "/tmp/blast/nt_50M.14/", "RID": "ReqID123", "oid": 16374, "score": 61, "qstart": 0, "qstop": 70, "sstart": 329, "sstop": 399 }
+, {"chunk": "/tmp/blast/nt_50M.14/", "RID": "ReqID123", "oid": 19059, "score": 70, "qstart": 0, "qstop": 70, "sstart": 334, "sstop": 404 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.15,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.15)
+[{"chunk": "/tmp/blast/nt_50M.15/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.16,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.16)
+[{"chunk": "/tmp/blast/nt_50M.16/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.17,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.17)
+[{"chunk": "/tmp/blast/nt_50M.17/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.18,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.18)
+[{"chunk": "/tmp/blast/nt_50M.18/", "RID": "ReqID123", "oid": 16088, "score": 46, "qstart": 3, "qstop": 70, "sstart": 2416, "sstop": 2483 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.19,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.19)
+[{"chunk": "/tmp/blast/nt_50M.19/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.20,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.20)
+[{"chunk": "/tmp/blast/nt_50M.20/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.21,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.21)
+[{"chunk": "/tmp/blast/nt_50M.21/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.22,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.22)
+[{"chunk": "/tmp/blast/nt_50M.22/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.23,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.23)
+[{"chunk": "/tmp/blast/nt_50M.23/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.24,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.24)
+[{"chunk": "/tmp/blast/nt_50M.24/", "RID": "ReqID123", "oid": 12539, "score": 70, "qstart": 0, "qstop": 70, "sstart": 356, "sstop": 426 }
+, {"chunk": "/tmp/blast/nt_50M.24/", "RID": "ReqID123", "oid": 12547, "score": 70, "qstart": 0, "qstop": 70, "sstart": 353, "sstop": 423 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.25,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.25)
+[{"chunk": "/tmp/blast/nt_50M.25/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }
+jni_prelim_search called with nt_50mb_chunks,nt,ReqID123,CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG,nt_50M.26,blastn
+cache_dbs(db_bucket=nt_50mb_chunks, db=nt, db_part=nt_50M.26)
+[{"chunk": "/tmp/blast/nt_50M.26/", "RID": "ReqID123", "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 }

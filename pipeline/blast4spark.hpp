@@ -1,4 +1,4 @@
-/*  $Id$
+/*  $Id: blast4spark.hpp 560220 2018-03-20 15:58:33Z boratyng $
  * ===========================================================================
  *
  *                            PUBLIC DOMAIN NOTICE
@@ -35,7 +35,6 @@
 
 #include <corelib/ncbistd.hpp>
 #include <algo/blast/core/blast_export.h>
-#include <algo/blast/core/blast_hspstream.h>
 
 /** @addtogroup AlgoBlast
  *
@@ -45,11 +44,37 @@
 BEGIN_NCBI_SCOPE
 BEGIN_SCOPE(blast)
 
-NCBI_XBLAST_EXPORT 
+
+/// Simplified HSP returned from prelimiray search in spark
+struct SFlatHSP
+{
+    int oid;
+    int score;
+    int query_start;
+    int query_end;
+    int query_frame;
+    int subject_start;
+    int subject_end;
+    int subject_frame;
+};
+
+
+NCBI_XBLAST_EXPORT
 BlastHSPStream*
-PrelimSearch(const std::string& single_query, 
+PrelimSearch(const std::string& single_query,
         const std::string& database_name,
         const std::string& program_name);
+
+
+
+NCBI_XBLAST_EXPORT
+int
+TracebackSearch(const std::string& single_query,
+                const std::string& database_name,
+                const std::string& program_name,
+                std::vector<SFlatHSP>& flat_hsp_list,
+                vector< pair<double, string> >& alignments);
+
 
 END_SCOPE(blast)
 END_NCBI_SCOPE
