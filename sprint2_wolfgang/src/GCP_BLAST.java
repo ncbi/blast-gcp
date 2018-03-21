@@ -57,7 +57,10 @@ public final class GCP_BLAST
         List< String > files_to_transfer = new ArrayList<>();
         files_to_transfer.add( "libblastjni.so" );
 
-        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, files_to_transfer );
+        String master_host = "";
+        Integer master_port = 10011;
+        
+        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, files_to_transfer, master_host, master_port );
         driver.start();
         try
         {

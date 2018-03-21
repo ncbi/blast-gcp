@@ -40,12 +40,19 @@ class GCP_BLAST_DRIVER extends Thread
 {
     private final String appName;
     private final List< String > files_to_transfer;
+    private final String master_host;
+    private final Integer master_port;
     private JavaStreamingContext jssc;
 
-    public GCP_BLAST_DRIVER( final String appName, final List< String > files_to_transfer )
+    public GCP_BLAST_DRIVER( final String appName,
+                             final List< String > files_to_transfer,
+                             final String master_host,
+                             final Integer master_port )
     {
         this.appName = appName;
         this.files_to_transfer = files_to_transfer;
+        this.master_host = master_host;
+        this.master_port = master_port;
     }
 
     public void stop_blast()
@@ -60,7 +67,7 @@ class GCP_BLAST_DRIVER extends Thread
         }
     }
 
-    private void stream_version( int dflt_min_score )
+    private void stream_version( int dflt_min_score, final String master_host )
     {
         try
         {
@@ -72,7 +79,9 @@ class GCP_BLAST_DRIVER extends Thread
 
             // we broadcast this list to all nodes
             Broadcast< List< GCP_BLAST_CHUNK > > CHUNKS = jssc.sparkContext().broadcast( chunk_list );
-
+            Broadcast< String > MASTER_HOST = jssc.sparkContext().broadcast( this.master_host );
+            Broadcast< Integer > MASTER_PORT = jssc.sparkContext().broadcast( this.master_port );
+            
             // Create a local StreamingContext listening on port name-of-master-node.9999
             // JavaReceiverInputDStream< String > lines = jssc.socketTextStream( "wolfgang-cluster-m", 9999 );
             JavaDStream< String > lines = jssc.textFileStream( "hdfs:///user/raetzw/todo/" );
@@ -80,7 +89,9 @@ class GCP_BLAST_DRIVER extends Thread
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
             {
-                System.out.println( String.format( "Request: %s received", line ) );
+                //System.out.println( String.format( "Request: %s received", line ) );
+                GCP_BLAST_SEND.send( MASTER_HOST.getValue(), MASTER_PORT.getValue(), String.format( "Request: %s received", line ) );
+                
                 ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line, dflt_min_score );
                 // we are using the broadcasted ArrayList called 'CHUNKS' to create the jobs
