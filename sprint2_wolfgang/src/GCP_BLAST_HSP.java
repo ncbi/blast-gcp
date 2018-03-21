@@ -47,6 +47,17 @@ class GCP_BLAST_HSP implements Serializable
         this.score  = score;
     }
     
+    public GCP_BLAST_HSP( final GCP_BLAST_JOB job )
+    {
+        this.job    = job;
+        this.oid    = 0L;
+        this.qstart = 0L;
+        this.qstop  = 0L;
+        this.sstart = 0L;
+        this.sstop  = 0L;
+        this.score  = 0;
+    }
+    
     public GCP_BLAST_HSP( final GCP_BLAST_JOB job, final String blast_res )
     {
         this.job = job;

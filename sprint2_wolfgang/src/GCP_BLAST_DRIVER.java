@@ -128,7 +128,7 @@ class GCP_BLAST_DRIVER extends Thread
                         res.add( new GCP_BLAST_HSP( job, S ) );
                 }
                 else
-                   res.add( new GCP_BLAST_HSP( job, 0L, 0, 0, 0, 0, 0  ) );
+                   res.add( new GCP_BLAST_HSP( job ) );
                 return res.iterator();
             } );
 
