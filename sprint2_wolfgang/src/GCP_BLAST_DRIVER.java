@@ -67,7 +67,7 @@ class GCP_BLAST_DRIVER extends Thread
         }
     }
 
-    private void stream_version( int dflt_min_score, final String master_host )
+    private void stream_version()
     {
         try
         {
@@ -93,7 +93,7 @@ class GCP_BLAST_DRIVER extends Thread
                 GCP_BLAST_SEND.send( MASTER_HOST.getValue(), MASTER_PORT.getValue(), String.format( "Request: %s received", line ) );
                 
                 ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
-                GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line, dflt_min_score );
+                GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line );
                 // we are using the broadcasted ArrayList called 'CHUNKS' to create the jobs
                 for ( GCP_BLAST_CHUNK chunk : CHUNKS.getValue() )
                     tmp.add( new GCP_BLAST_JOB( req, chunk ) );
@@ -183,8 +183,7 @@ class GCP_BLAST_DRIVER extends Thread
             // create a streaming-context from SparkContext given
             jssc = new JavaStreamingContext( sc, Durations.seconds( 1 ) );
 
-            int dflt_min_score = 1;
-            stream_version( dflt_min_score );
+            stream_version();
         }
         catch ( Exception e )
         {
