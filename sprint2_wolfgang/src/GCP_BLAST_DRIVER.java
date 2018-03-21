@@ -42,25 +42,23 @@ class GCP_BLAST_DRIVER extends Thread
     private final List< String > files_to_transfer;
     private final String log_host;
     private final Integer log_port;
-    private final String trigger_host;
-    private final Integer trigger_port;
     private final String trigger_dir;
+    private final String save_dir;
     
     private JavaStreamingContext jssc;
 
     public GCP_BLAST_DRIVER( final String appName,
                              final List< String > files_to_transfer,
                              final String log_host, final Integer log_port,
-                             final String trigger_host, final Integer trigger_port,
-                             final String trigger_dir )
+                             final String trigger_dir,
+                             final String save_dir )
     {
         this.appName = appName;
         this.files_to_transfer = files_to_transfer;
         this.log_host = log_host;
         this.log_port = log_port;
-        this.trigger_host = log_host;
-        this.trigger_port = trigger_port;
         this.trigger_dir = trigger_dir;
+        this.save_dir = save_dir;
     }
 
     public void stop_blast()
@@ -89,6 +87,7 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< List< GCP_BLAST_CHUNK > > CHUNKS = jssc.sparkContext().broadcast( chunk_list );
             Broadcast< String > LOG_HOST = jssc.sparkContext().broadcast( this.log_host );
             Broadcast< Integer > LOG_PORT = jssc.sparkContext().broadcast( this.log_port );
+            Broadcast< String > SAVE_DIR = jssc.sparkContext().broadcast( this.save_dir );
             
             // Create a DStream listening on port name-of-master-node.9999
             //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
@@ -148,9 +147,12 @@ class GCP_BLAST_DRIVER extends Thread
                 long count = rdd.count();
                 if ( count > 0 )
                 {
+                    /*
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                          String.format( "-------------------------- [%d]", count ) );
-                    //rdd.saveAsTextFile( "hdfs:///user/raetzw/results" );
+                    */
+                    
+                    rdd.saveAsTextFile( SAVE_DIR.getValue() );
                     rdd.foreachPartition( part -> {
                         int i = 0;
                         while( part.hasNext() && ( i < 10 ) )
@@ -169,7 +171,7 @@ class GCP_BLAST_DRIVER extends Thread
         }
         catch ( Exception e )
         {
-            System.out.println( "stream_version() exception: " + e );
+            //System.out.println( "stream_version() exception: " + e );
         }
     }
 
