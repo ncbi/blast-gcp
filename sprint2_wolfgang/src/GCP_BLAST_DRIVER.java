@@ -40,19 +40,27 @@ class GCP_BLAST_DRIVER extends Thread
 {
     private final String appName;
     private final List< String > files_to_transfer;
-    private final String master_host;
-    private final Integer master_port;
+    private final String log_host;
+    private final Integer log_port;
+    private final String trigger_host;
+    private final Integer trigger_port;
+    private final String trigger_dir;
+    
     private JavaStreamingContext jssc;
 
     public GCP_BLAST_DRIVER( final String appName,
                              final List< String > files_to_transfer,
-                             final String master_host,
-                             final Integer master_port )
+                             final String log_host, final Integer log_port
+                             final String trigger_host, final Integer trigger_port,
+                             final String trigger_dir )
     {
         this.appName = appName;
         this.files_to_transfer = files_to_transfer;
-        this.master_host = master_host;
-        this.master_port = master_port;
+        this.log_host = log_host;
+        this.log_port = log_port;
+        this.trigger_host = log_host;
+        this.trigger_port = trigger_port;
+        this.trigger_dir = trigger_dir;
     }
 
     public void stop_blast()
@@ -79,18 +87,18 @@ class GCP_BLAST_DRIVER extends Thread
 
             // we broadcast this list to all nodes
             Broadcast< List< GCP_BLAST_CHUNK > > CHUNKS = jssc.sparkContext().broadcast( chunk_list );
-            Broadcast< String > MASTER_HOST = jssc.sparkContext().broadcast( this.master_host );
-            Broadcast< Integer > MASTER_PORT = jssc.sparkContext().broadcast( this.master_port );
+            Broadcast< String > LOG_HOST = jssc.sparkContext().broadcast( this.log_host );
+            Broadcast< Integer > LOG_PORT = jssc.sparkContext().broadcast( this.log_port );
             
-            // Create a local StreamingContext listening on port name-of-master-node.9999
-            // JavaReceiverInputDStream< String > lines = jssc.socketTextStream( "wolfgang-cluster-m", 9999 );
-            JavaDStream< String > lines = jssc.textFileStream( "hdfs:///user/raetzw/todo/" );
+            // Create a DStream listening on port name-of-master-node.9999
+            JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
+            //JavaDStream< String > lines = jssc.textFileStream( trigger_dir );
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
             {
                 //System.out.println( String.format( "Request: %s received", line ) );
-                GCP_BLAST_SEND.send( MASTER_HOST.getValue(), MASTER_PORT.getValue(), String.format( "Request: %s received", line ) );
+                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received", line ) );
                 
                 ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line );
@@ -107,20 +115,20 @@ class GCP_BLAST_DRIVER extends Thread
 
                 BlastJNI blaster = new BlastJNI();
                 // ++++++ this is the where the work happens on the worker-nodes ++++++
-                System.out.println( String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.chunk.name ) );
+                
+                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                     String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.chunk.name ) );
                 String[] blast_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.chunk.name, job.req.params );
                 Integer count = blast_res.length;
-                System.out.println( String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.chunk.name, count ) );
+                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                     String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.chunk.name, count ) );
                 if ( count > 0 )
                 {
                     for ( String S : blast_res )
                         res.add( new GCP_BLAST_HSP( job, S ) );
                 }
                 else
-                {
-                   String S = "{ \"chunk\": 4, \"RID\": \"6\", \"oid\": 0, \"score\": 0, \"qstart\": 0, \"qstop\": 0, \"sstart\": 0, \"sstop\": 0 }";
-                   res.add( new GCP_BLAST_HSP( job, S  ) );
-                }
+                   res.add( new GCP_BLAST_HSP( job, 0, 0, 0, 0, 0, 0  ) );
                 return res.iterator();
             } );
 
@@ -133,25 +141,25 @@ class GCP_BLAST_DRIVER extends Thread
            */
 
             // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
-            JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() );
+            /* JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() ); */
 
             // print the FINAL ( this runs on a workernode! )
-            FINAL.foreachRDD( rdd -> {
+            SEARCH_RES.foreachRDD( rdd -> {
                 long count = rdd.count();
                 if ( count > 0 )
                 {
-                    System.out.println( String.format( "-------------------------- [%d]", count ) );
-                    rdd.saveAsTextFile( "hdfs:///user/raetzw/results" );
-                    /*
+                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                         String.format( "-------------------------- [%d]", count ) );
+                    //rdd.saveAsTextFile( "hdfs:///user/raetzw/results" );
                     rdd.foreachPartition( part -> {
                         int i = 0;
                         while( part.hasNext() && ( i < 10 ) )
                         {
-                            System.out.println( String.format( "[ %d ] = %s", i, part.next() ) );
+                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                                 String.format( "[ %d ] = %s", i, part.next() ) );
                             i += 1;
                         }
                     } );
-                    */
                 }
             } );
 

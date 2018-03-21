@@ -57,10 +57,16 @@ public final class GCP_BLAST
         List< String > files_to_transfer = new ArrayList<>();
         files_to_transfer.add( "libblastjni.so" );
 
-        String master_host = "wolfgang-cluster-m";
-        Integer master_port = 10011;
+        String log_host = "wolfgang-cluster-m";
+        Integer log_port = 10011;
         
-        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, files_to_transfer, master_host, master_port );
+        String trigger_host = "wolfgang-cluster-m";
+        Integer trigger_port = 9999;
+
+        String trigger_dir = "hdfs:///user/raetzw/todo/";
+        
+        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, files_to_transfer,
+                    log_host, log_port, trigger_host, trigger_port, trigger_dir  );
         driver.start();
         try
         {
