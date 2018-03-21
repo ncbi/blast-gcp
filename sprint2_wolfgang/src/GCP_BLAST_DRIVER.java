@@ -96,7 +96,6 @@ class GCP_BLAST_DRIVER extends Thread
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
             {
-                //System.out.println( String.format( "Request: %s received", line ) );
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received", line ) );
                 
                 ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
@@ -147,18 +146,13 @@ class GCP_BLAST_DRIVER extends Thread
                 long count = rdd.count();
                 if ( count > 0 )
                 {
-                    /*
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                         String.format( "-------------------------- [%d]", count ) );
-                    */
-                    
                     rdd.saveAsTextFile( SAVE_DIR.getValue() );
                     rdd.foreachPartition( part -> {
                         int i = 0;
                         while( part.hasNext() && ( i < 10 ) )
                         {
                             GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                                 String.format( "[ %d ] = %s", i, part.next() ) );
+                                                 String.format( "[ %d of %d ] %s", i, count, part.next() ) );
                             i += 1;
                         }
                     } );
