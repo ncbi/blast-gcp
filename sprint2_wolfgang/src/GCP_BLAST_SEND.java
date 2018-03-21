@@ -38,7 +38,7 @@ public class GCP_BLAST_SEND
             Socket socket = new Socket( host, port );
             PrintWriter out = new PrintWriter( socket.getOutputStream(), true );
             out.println( msg );
-            socket.clos();
+            socket.close();
         }
         catch ( Exception e )
         {
