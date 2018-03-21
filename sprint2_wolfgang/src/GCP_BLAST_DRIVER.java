@@ -91,8 +91,8 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Integer > LOG_PORT = jssc.sparkContext().broadcast( this.log_port );
             
             // Create a DStream listening on port name-of-master-node.9999
-            JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
-            //JavaDStream< String > lines = jssc.textFileStream( trigger_dir );
+            //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
+            JavaDStream< String > lines = jssc.textFileStream( trigger_dir );
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
