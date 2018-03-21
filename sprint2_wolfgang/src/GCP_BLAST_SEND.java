@@ -27,7 +27,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Socket;
+import java.net.Socket;
 
 public class GCP_BLAST_SEND
 {
