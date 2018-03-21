@@ -50,7 +50,7 @@ class GCP_BLAST_DRIVER extends Thread
 
     public GCP_BLAST_DRIVER( final String appName,
                              final List< String > files_to_transfer,
-                             final String log_host, final Integer log_port
+                             final String log_host, final Integer log_port,
                              final String trigger_host, final Integer trigger_port,
                              final String trigger_dir )
     {
