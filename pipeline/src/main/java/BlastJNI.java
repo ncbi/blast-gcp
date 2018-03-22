@@ -77,11 +77,11 @@ public class BlastJNI {
     private native String traceback(String something);
 
 
-    private String cache_dbs(String db_bucket, String db, String db_part) {
-        log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", db_part=" + db_part + ")");
+    private String cache_dbs(String db_bucket, String db, String part) {
+        log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", part=" + part + ")");
 
         String localdir="/tmp/blast/";
-        String dbdir=localdir + db_part + "/";
+        String dbdir=localdir + part + "/";
         String donefile=dbdir + "done";
         String lockfile=dbdir + "lock";
 
@@ -105,7 +105,7 @@ public class BlastJNI {
 
                     Bucket bucket=storage.get(db_bucket);
                     for(Blob blob : bucket.list(
-                                Storage.BlobListOption.prefix(db_part + ".")).
+                                Storage.BlobListOption.prefix(part + ".")).
                             iterateAll()) {
                         String dbfile=blob.getName();
                         String ext=dbfile.substring(dbfile.length() - 4);
@@ -142,9 +142,9 @@ public class BlastJNI {
         return dbdir;
     }
 
-    public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String db_part, String params) {
-        log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + db_part + "," + params);
-        String dbenv=cache_dbs(db_bucket, db, db_part);
+    public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String part, String params) {
+        log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params);
+        String dbenv=cache_dbs(db_bucket, db, part);
 
         String[] results=prelim_search(dbenv, rid, query, db, params);
         log("jni_prelim_search returned " + results.length + " results");
@@ -159,12 +159,11 @@ public class BlastJNI {
         String db_bucket=db + "_50mb_chunks";
         String params="blastn";
 
-        //        for (int part=0; part <= 886; ++part)
-        for (int part=0; part <= 26; ++part)
+        for (int partnum=0; partnum <= 26; ++partnum)
         {
-            String db_part=db + "_50M." + String.format("%02d", part);
+            String part=db + "_50M." + String.format("%02d", partnum);
 
-            String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, db_part, params);
+            String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, part, params);
 
             log("Java results[] has " + results.length + " entries:");
             log(Arrays.toString(results));

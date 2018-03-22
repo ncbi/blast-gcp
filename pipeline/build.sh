@@ -37,7 +37,8 @@ rm -f BlastJNI.jar
 
 
 # TODO: provided dependencies?
-echo "Maven packaging: can take a while, especially if ~/.m2 cache is empty"
+echo "Maven packaging..."
+echo "  (can take a while, especially if ~/.m2 cache is empty)"
 mvn -q package
 mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
 
@@ -50,7 +51,7 @@ echo "Creating BlastJNI header: $HDR"
 javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d /tmp -h . src/main/java/BlastJNI.java
 
 if [ "$BUILDENV" = "ncbi" ]; then
-    echo "Compiling blastjni.cpp"
+    echo "Compiling and linking blastjni.cpp"
     # Note: Library order important
     #       lmdb previously built at NCBI as static .a in /ext/
     #       Hidden dl_open for libdw
@@ -93,7 +94,7 @@ if [ "$BUILDENV" = "google" ]; then
     echo "Testing JNI"
     #java -cp target/blastjni-0.0314.jar BlastJNI
     java -cp target/blastjni-0.0314-jar-with-dependencies.jar \
-        BlastJNI | grep "chunk" > test.result
+        BlastJNI | grep qstart | sort > test.result
 #    java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
     CMP=$(cmp test.result test.expected)
     set +errexit
@@ -107,7 +108,7 @@ if [ "$BUILDENV" = "google" ]; then
 fi
 
 if [ "$BUILDENV" = "ncbi" ]; then
-    echo "Compiling test_blast.cpp"
+    echo "Compiling and linking test_blast.cpp"
     rm -f test_blast
     g++ test_blast.cpp -L./int/blast/libs \
         -std=gnu++11 \
@@ -138,9 +139,6 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
         -o test_blast
 fi
-
-#echo "Compiling BlastJNI Java"
-#javac -d . BlastJNI.java
 
 
 # TODO: Can this be run in both environments?
@@ -185,6 +183,7 @@ fi
 
 echo "Build Complete"
 date
+echo
 exit 0
 
 

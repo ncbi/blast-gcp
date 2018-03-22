@@ -57,11 +57,11 @@ static void log(const char* msg)
     const bool debug = true;
 
     if (debug) {
-        const char *fname="/tmp/blastjni.log";
+        const char* fname = "/tmp/blastjni.log";
         FILE* fout = fopen(fname, "a");
         if (!fout) return;
         char pid[32];
-        sprintf(pid,"(%04d) ",getpid());
+        sprintf(pid, "(%04d) ", getpid());
         fputs(pid, fout);
         fputs(msg, fout);
         fputc('\n', fout);
@@ -75,15 +75,14 @@ static void iterate_HSPs(BlastHSPList* hsp_list, std::vector<std::string>& vs)
         const BlastHSP* hsp = hsp_list->hsp_array[i];
         char buf[256];
         sprintf(buf,
-                "{"
                 "\"oid\": %d, "
                 "\"score\": %d, "
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
                 "\"sstop\": %d ",
-                hsp_list->oid, hsp->score, hsp->query.offset,
-                hsp->query.end, hsp->subject.offset, hsp->subject.end);
+                hsp_list->oid, hsp->score, hsp->query.offset, hsp->query.end,
+                hsp->subject.offset, hsp->subject.end);
         vs.push_back(buf);
     }
 }
@@ -144,7 +143,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         log(msg);
 
         if (status == kBlastHSPStream_Error) {
-            log("TODO: Exception");
+            log("TODO: Exception from BlastHSPStreamRead");
             // TODO: Exception
         }
 
@@ -154,7 +153,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
             iterate_HSPs(hsp_list, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
             if (status == kBlastHSPStream_Error) {
-                log("TODO: Exception");
+                log("TODO: Exception from BlastHSPStreamRead");
                 // TODO: Exception
             }
         }
@@ -171,15 +170,14 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     if (!vs.size()) {
         char buf[256];
-        log("Empty hsp_list, emitting sentinel");
+        log("  Empty hsp_list, emitting sentinel");
         sprintf(buf,
-                "{"
                 "\"oid\": %d, "
                 "\"score\": %d, "
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
-                "\"sstop\": %d "
+                "\"sstop\": %d ",
                 -1, -1, -1, -1, -1, -1);
         vs.push_back(buf);
     }
@@ -188,13 +186,20 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     ret = (jobjectArray)env->NewObjectArray(
         vs.size(), env->FindClass("java/lang/String"), NULL);
 
+    sprintf(msg, "  Now have %lu elements", vs.size());
+    log(msg);
     for (size_t i = 0; i != vs.size(); ++i) {
-        std::string json=vs[i];
-        json+=", \"chunk\": \"" + sdbenv + "\" ";
-        json+=", \"db\": \"" + sdb + "\" ";
-        json+=", \"params\": \"" + sparams + "\" ";
-        json+=", \"query\": \"" + squery + "\" ";
-        json+="\n";
+        std::string json = "{ ";
+        json += vs[i];
+        json += ", \"part\": \"" + sdbenv + "\" ";
+        if (true) // Not joined by Spark
+        {
+            json += ", \"RID\": \"" + srid + "\" ";
+            json += ", \"db\": \"" + sdb + "\" ";
+            json += ", \"params\": \"" + sparams + "\" ";
+            json += ", \"query\": \"" + squery + "\" ";
+        }
+        json += " } \n";
 
         const char* buf = json.data();
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(buf));
@@ -213,4 +218,3 @@ JNIEXPORT jstring JNICALL Java_BlastJNI_traceback(JNIEnv*, jobject, jstring)
 {
     return 0;
 }
-
