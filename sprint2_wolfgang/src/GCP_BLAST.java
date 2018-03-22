@@ -52,8 +52,27 @@ public final class GCP_BLAST
 
    public static void main( String[] args ) throws Exception
    {
-        final GCP_BLAST_SETTINGS settings = new GCP_BLAST_SETTINGS( GCP_BLAST.class.getSimpleName() );
+        final String appName = GCP_BLAST.class.getSimpleName();
+        GCP_BLAST_SETTINGS settings;
+        if ( args.length() > 0 )
+        {
+            String ini_path = args[ 0 ];
+            try
+            {
+                GCP_BLAST_INI ini = new GCP_BLAST_INI( ini_path );
+                settings = new GCP_BLAST_SETTINGS( ini, appName );
+                System.out.println( String.format( "settings read from '%s'", ini_path ) );
+            }
+            catch( IOException e )
+            {
+                settings = new GCP_BLAST_SETTINGS( appName );
+            }
+        }
+        else
+            settings = new GCP_BLAST_SETTINGS( appName );
         settings.files_to_transfer.add( "libblastjni.so" );
+        
+        System.out.println( settings.toString() );
         
         GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( settings );
         driver.start();
