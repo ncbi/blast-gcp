@@ -74,4 +74,47 @@ public class GCP_BLAST_SETTINGS
         log_job_done = false;
         log_final = true;
     }
+    
+    public GCP_BLAST_SETTINGS( final GCP_BLAST_INI ini_file, final String appName )
+    {
+        this.appName = ini_file.getString( "APP", "appName", appName );
+        batch_duration = ini_file.getInt( "APP", "batch_duration", 1 );
+
+        files_to_transfer = new ArrayList<>();
+
+        try
+        {
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            log_host = ini_file.getInt( "APP", "log_host", localMachine.getHostName() );
+        }
+        catch ( UnknownHostException e )
+        {
+            System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
+            log_host = ini_file.getInt( "APP", "log_host", "localhost" );
+        }
+        
+        log_port = ini_file.getInt( "APP", "log_port", 10011 );
+        
+        final String username = System.getProperty( "user.name" );
+        
+        trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
+        trigger_dir = ini_file.getString( "APP", "trigger_dir", trigger_dir );
+        
+        save_dir = String.format( "hdfs:///user/%s/results/", username );
+        save_dir = ini_file.getString( "APP", "save_dir", save_dir );
+        
+        num_db_partitions   = ini_file.getInt( "APP", "num_db_partitions", 10 );
+        num_job_partitions  = ini_file.getInt( "APP", "num_job_partitions", 1 );
+        
+        log_request     = ini_file.getBoolean( "APP", "log_request", true );
+        log_job_start   = ini_file.getBoolean( "APP", "log_start", false );
+        log_job_done    = ini_file.getBoolean( "APP", "log_done", false );
+        log_final       = ini_file.getBoolean( "APP", "log_final", false );
+    }
+
+    @Override public String toString()
+    {
+        return String.format( "HSP( %s oid:%d %d-%d %d-%d score:%d )", job.toString(), oid, qstart, qstop, sstart, sstop, score );
+    }
+    
 }
