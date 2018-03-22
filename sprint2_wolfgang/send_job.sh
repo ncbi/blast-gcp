@@ -8,6 +8,7 @@ do
 done
 
 echo "job_$1" > ./$JOBFILE
-hadoop fs -copyFromLocal ./$JOBFILE todo/$JOBFILE
+hadoop fs -copyFromLocal ./$JOBFILE jobstage/$JOBFILE
 rm ./$JOBFILE
+hadoop fs -mv jobstage/$JOBFILE todo/$JOBFILE
 
