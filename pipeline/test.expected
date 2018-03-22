@@ -1,29 +1,58 @@
-[{ "oid": 12539, "score": 70, "qstart": 0, "qstop": 70, "sstart": 356, "sstop": 426 , "part": "/tmp/blast/nt_50M.24/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-, { "oid": 12547, "score": 70, "qstart": 0, "qstop": 70, "sstart": 353, "sstop": 423 , "part": "/tmp/blast/nt_50M.24/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": 16088, "score": 46, "qstart": 3, "qstop": 70, "sstart": 2416, "sstop": 2483 , "part": "/tmp/blast/nt_50M.18/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": 16374, "score": 61, "qstart": 0, "qstop": 70, "sstart": 329, "sstop": 399 , "part": "/tmp/blast/nt_50M.14/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-, { "oid": 19059, "score": 70, "qstart": 0, "qstop": 70, "sstart": 334, "sstop": 404 , "part": "/tmp/blast/nt_50M.14/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.00/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.01/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.02/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.03/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.05/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.06/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.07/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.08/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.09/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.10/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.11/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.12/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.13/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.15/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.16/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.17/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.19/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.20/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.21/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.22/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.23/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.25/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.26/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
-[{ "oid": 50941, "score": 70, "qstart": 0, "qstop": 70, "sstart": 2415, "sstop": 2485 , "part": "/tmp/blast/nt_50M.04/" , "RID": "ReqID123" , "db": "nt" , "params": "blastn" , "query": "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG"  } 
+hsp:{ "oid": 12539, "score": 70, "qstart": 0, "qstop": 70, "sstart": 356, "sstop": 426 , "part": "/tmp/blast/nt_50M.24/"  } 
+hsp:{ "oid": 12547, "score": 70, "qstart": 0, "qstop": 70, "sstart": 353, "sstop": 423 , "part": "/tmp/blast/nt_50M.24/"  } 
+hsp:{ "oid": 16088, "score": 46, "qstart": 3, "qstop": 70, "sstart": 2416, "sstop": 2483 , "part": "/tmp/blast/nt_50M.18/"  } 
+hsp:{ "oid": 16374, "score": 61, "qstart": 0, "qstop": 70, "sstart": 329, "sstop": 399 , "part": "/tmp/blast/nt_50M.14/"  } 
+hsp:{ "oid": 19059, "score": 70, "qstart": 0, "qstop": 70, "sstart": 334, "sstop": 404 , "part": "/tmp/blast/nt_50M.14/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.00/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.01/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.02/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.03/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.05/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.06/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.07/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.08/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.09/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.10/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.11/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.12/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.13/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.15/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.16/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.17/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.19/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.20/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.21/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.22/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.23/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.25/"  } 
+hsp:{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.26/"  } 
+hsp:{ "oid": 50941, "score": 70, "qstart": 0, "qstop": 70, "sstart": 2415, "sstop": 2485 , "part": "/tmp/blast/nt_50M.04/"  } 
+[{ "oid": 12539, "score": 70, "qstart": 0, "qstop": 70, "sstart": 356, "sstop": 426 , "part": "/tmp/blast/nt_50M.24/"  } 
+, { "oid": 12547, "score": 70, "qstart": 0, "qstop": 70, "sstart": 353, "sstop": 423 , "part": "/tmp/blast/nt_50M.24/"  } 
+[{ "oid": 16088, "score": 46, "qstart": 3, "qstop": 70, "sstart": 2416, "sstop": 2483 , "part": "/tmp/blast/nt_50M.18/"  } 
+[{ "oid": 16374, "score": 61, "qstart": 0, "qstop": 70, "sstart": 329, "sstop": 399 , "part": "/tmp/blast/nt_50M.14/"  } 
+, { "oid": 19059, "score": 70, "qstart": 0, "qstop": 70, "sstart": 334, "sstop": 404 , "part": "/tmp/blast/nt_50M.14/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.00/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.01/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.02/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.03/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.05/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.06/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.07/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.08/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.09/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.10/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.11/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.12/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.13/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.15/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.16/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.17/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.19/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.20/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.21/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.22/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.23/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.25/"  } 
+[{ "oid": -1, "score": -1, "qstart": -1, "qstop": -1, "sstart": -1, "sstop": -1 , "part": "/tmp/blast/nt_50M.26/"  } 
+[{ "oid": 50941, "score": 70, "qstart": 0, "qstop": 70, "sstart": 2415, "sstop": 2485 , "part": "/tmp/blast/nt_50M.04/"  } 
