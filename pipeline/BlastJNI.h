@@ -18,10 +18,10 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search
 /*
  * Class:     BlastJNI
  * Method:    traceback
- * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ * Signature: ([Ljava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_BlastJNI_traceback
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT jobjectArray JNICALL Java_BlastJNI_traceback
+  (JNIEnv *, jobject, jobjectArray);
 
 #ifdef __cplusplus
 }
