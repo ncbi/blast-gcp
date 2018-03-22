@@ -214,7 +214,31 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     return (ret);
 }
 
-JNIEXPORT jstring JNICALL Java_BlastJNI_traceback(JNIEnv*, jobject, jstring)
+JNIEXPORT jobjectArray JNICALL
+Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
 {
+    char msg[256];
+    log("Entered C++ Java_BlastJNI_traceback");
+
+    int stringCount = env->GetArrayLength(stringArray);
+
+    for (int i = 0; i != stringCount; ++i) {
+        jstring string
+            = (jstring)(env->GetObjectArrayElement(stringArray, i));
+        const char* cstring = env->GetStringUTFChars(string, NULL);
+        sprintf(msg, "%d: %s", i, cstring);
+        env->ReleaseStringUTFChars(string, cstring);
+    }
+
+    // TODO: env->ReleaseStringUTFChars(all the strings, cstring)
+    jobjectArray ret;
+    ret = (jobjectArray)env->NewObjectArray(
+        1, env->FindClass("java/lang/String"), NULL);
+
+    const char* buf = "{ \"foo\": \"bar\" }";
+    env->SetObjectArrayElement(ret, 0, env->NewStringUTF(buf));
+
+    log("Leaving C++ Java_BlastJNI_traceback\n");
+
     return 0;
 }

@@ -61,6 +61,10 @@ public class BlastJNI {
         }
     }
 
+    private native String[] prelim_search(String dbenv, String rid, String query, String db_part, String params);
+
+    private native String[] traceback(String[] jsonHSPs);
+
     public static void log(String msg) {
         try {
             System.out.println(msg);
@@ -70,12 +74,6 @@ public class BlastJNI {
         } catch(FileNotFoundException ex) {
         }
     }
-
-    private native String[] prelim_search(String dbenv, String rid, String query, String db_part, String params);
-
-    // TODO: Will be fed merged top-N highest scoring HSPs
-    private native String traceback(String something);
-
 
     private String cache_dbs(String db_bucket, String db, String part) {
         log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", part=" + part + ")");
@@ -142,6 +140,22 @@ public class BlastJNI {
         return dbdir;
     }
 
+    //private native String[] traceback(String[] jsonHSPs);
+    public String[] jni_traceback(String[] jsonHSPs)
+    {
+        log("jni_traceback called with ");
+        for (String s: jsonHSPs)
+        {
+            log(s);
+        }
+
+        //String dbenv=cache_dbs(db_bucket, db, part);
+
+        String[] results=traceback(jsonHSPs);
+        log("jni_traceback returned " + results.length + " results");
+        return results;
+    }
+
     public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String part, String params) {
         log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params);
         String dbenv=cache_dbs(db_bucket, db, part);
@@ -159,6 +173,7 @@ public class BlastJNI {
         String db_bucket=db + "_50mb_chunks";
         String params="blastn";
 
+        String hsp[]={""};
         for (int partnum=0; partnum <= 26; ++partnum)
         {
             String part=db + "_50M." + String.format("%02d", partnum);
@@ -167,7 +182,10 @@ public class BlastJNI {
 
             log("Java results[] has " + results.length + " entries:");
             log(Arrays.toString(results));
+            hsp=results;
         }
+
+        String[] tracebacks=new BlastJNI().jni_traceback(hsp);
     }
 }
 
