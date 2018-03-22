@@ -57,7 +57,7 @@ static void log(const char* msg)
     const bool debug = true;
 
     if (debug) {
-        const char* fname = "/tmp/blastjni.log";
+        const char* fname = "/tmp/blast/jni.log";
         FILE* fout = fopen(fname, "a");
         if (!fout) return;
         char pid[32];

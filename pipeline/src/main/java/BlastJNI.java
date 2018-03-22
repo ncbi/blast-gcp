@@ -62,7 +62,7 @@ public class BlastJNI {
     public static void log(String msg) {
         try {
             System.out.println(msg);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.log"), true));
+            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blast/jni.log"), true));
             pw.println("(java) "+ msg);
             pw.close();
         } catch(FileNotFoundException ex) {
@@ -79,59 +79,72 @@ public class BlastJNI {
 
         if(!Files.exists(Paths.get(donefile))) {
             try {
-            log(donefile + " doesn't exist.");
+                log(donefile + " doesn't exist.");
 
-            File dir=new File(dbdir);
-            dir.mkdirs();
+                File dir=new File(dbdir);
+                dir.mkdirs();
 
-            File scriptfile=File.createTempFile("cache-blast-",".sh");
-//            scriptfile.deleteOnExit();
-            String scriptname=scriptfile.getAbsolutePath();
-            log("Creating shell script:" + scriptname);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
-            pw.println("#!/usr/bin/env bash");
-            pw.println("BUCKET=$1");
-            pw.println("PART=$2");
-            pw.println("DIR=$3");
-            pw.println("LOCKFILE=$4");
-            pw.println("DONEFILE=$5");
-            pw.println("cd $DIR");
-            pw.println("exec >  >(tee -ia log)");
-            pw.println("exec 2> >(tee -ia log) >&2");
-            pw.println("date");
-            pw.println("echo \"BUCKET is   $BUCKET\" ");
-            pw.println("echo \"PART is     $PART\" ");
-            pw.println("echo \"DIR is      $DIR\" ");
-            pw.println("echo \"LOCKFILE is $LOCKFILE\" ");
-            pw.println("echo \"DONEFILE is $DONEFILE\" ");
-            pw.println("echo \"attempting to lock (pid=$$)\"");
-            pw.println("echo");
-            pw.println("pwd");
-            pw.println("echo");
-            pw.println("env");
-            pw.println("echo");
-            pw.println("#lockfile $LOCKFILE # blocks");
-            pw.println("if [ -e $DONEFILE ]; then");
-            pw.println("  echo \"already done (pid=$$)\"");
-            pw.println("  exit 0 # Another thread completed this.");
-            pw.println("fi");
-            pw.println("echo ----- Fetching files from Google Cloud Storage ---");
-            pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
-            pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
-            pw.println("touch $DONEFILE");
-            pw.println("rm -f $LOCKFILE");
-            pw.println("date");
-            pw.println("exit 0");
-            pw.close();
-            scriptfile.setExecutable(true,true);
+                File scriptfile=File.createTempFile("cache-blast-",".sh");
+                //            scriptfile.deleteOnExit();
+                String scriptname=scriptfile.getAbsolutePath();
+                log("Creating shell script:" + scriptname);
+                PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
+                pw.println("#!/usr/bin/env bash");
+                pw.println("BUCKET=$1");
+                pw.println("PART=$2");
+                pw.println("DIR=$3");
+                pw.println("LOCKFILE=$4");
+                pw.println("DONEFILE=$5");
+                pw.println("mkdir -p $DIR");
+                pw.println("cd $DIR");
+                pw.println("exec >  >(tee -ia log)");
+                pw.println("exec 2> >(tee -ia log) >&2");
+                pw.println("date");
+                pw.println("echo \"BUCKET is   $BUCKET\" ");
+                pw.println("echo \"PART is     $PART\" ");
+                pw.println("echo \"DIR is      $DIR\" ");
+                pw.println("echo \"LOCKFILE is $LOCKFILE\" ");
+                pw.println("echo \"DONEFILE is $DONEFILE\" ");
+                pw.println("echo");
+                pw.println("id");
+                pw.println("pwd");
+                pw.println("echo");
+                pw.println("env");
+                pw.println("echo");
+                pw.println("echo \"attempting to lock (pid=$$)\"");
+                pw.println("#lockfile $LOCKFILE # blocks");
+                pw.println("mkdir $LOCKFILE > /dev/null 2>&1");
+                pw.println("RET=$?");
+                pw.println("if [ $RET -eq 1 ]; then");
+                pw.println("  while [ ! -e $DONEFILE ]; do");
+                pw.println("    echo Waiting...");
+                pw.println("    date");
+                pw.println("    sleep 1");
+                pw.println("  done");
+                pw.println("fi");
+                pw.println("if [ -e $DONEFILE ]; then");
+                pw.println("  echo \"already done (pid=$$)\"");
+                pw.println("  exit 0 # Another thread completed this.");
+                pw.println("fi");
+                pw.println("echo \"Listing $BUCKET\"");
+                pw.println("gsutil ls gs://$BUCKET | head");
+                pw.println("echo ----- Fetching files from Google Cloud Storage  $BUCKET ---");
+                pw.println("#export HOME=/var/lib/hadoop-yarn");
+                pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
+                pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
+                pw.println("date >> $DONEFILE");
+                pw.println("date");
+                pw.println("exit 0");
+                pw.close();
+                scriptfile.setExecutable(true,true);
 
-            ProcessBuilder pb=new ProcessBuilder(scriptname,
-                    db_bucket,
-                    part,
-                    dbdir,
-                    lockfile,
-                    donefile);
-            Process p=pb.start();
+                ProcessBuilder pb=new ProcessBuilder(scriptname,
+                        db_bucket,
+                        part,
+                        dbdir,
+                        lockfile,
+                        donefile);
+                Process p=pb.start();
 
             } catch(Exception e) {
                 log("exception in cache method: " + e);
