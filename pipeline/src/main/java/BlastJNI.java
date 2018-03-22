@@ -21,6 +21,7 @@
  */
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.lang.String;
 import java.lang.System;
 import java.io.File;
@@ -146,13 +147,18 @@ public class BlastJNI {
         log("jni_traceback called with ");
         for (String s: jsonHSPs)
         {
-            log(s);
+            log("hsp:" + s);
         }
 
         //String dbenv=cache_dbs(db_bucket, db, part);
 
         String[] results=traceback(jsonHSPs);
-        log("jni_traceback returned " + results.length + " results");
+        log("jni_traceback returned " + results.length + " results:");
+        for (String s: results)
+        {
+            log("tb:" + s);
+        }
+
         return results;
     }
 
@@ -173,7 +179,7 @@ public class BlastJNI {
         String db_bucket=db + "_50mb_chunks";
         String params="blastn";
 
-        String hsp[]={""};
+        ArrayList<String> al=new ArrayList<String>();
         for (int partnum=0; partnum <= 26; ++partnum)
         {
             String part=db + "_50M." + String.format("%02d", partnum);
@@ -182,9 +188,10 @@ public class BlastJNI {
 
             log("Java results[] has " + results.length + " entries:");
             log(Arrays.toString(results));
-            hsp=results;
+            al.addAll(Arrays.asList(results));
         }
 
+        String hsp[]={""};
         String[] tracebacks=new BlastJNI().jni_traceback(hsp);
     }
 }

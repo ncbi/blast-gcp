@@ -211,7 +211,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     env->ReleaseStringUTFChars(db, cdb);
     env->ReleaseStringUTFChars(params, cparams);
     log("Leaving C++ Java_BlastJNI_prelim_1search\n");
-    return (ret);
+    return ret;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -221,12 +221,15 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
     log("Entered C++ Java_BlastJNI_traceback");
 
     int stringCount = env->GetArrayLength(stringArray);
+    sprintf(msg, "stringArray has %d elements", stringCount);
+    log(msg);
 
     for (int i = 0; i != stringCount; ++i) {
         jstring string
             = (jstring)(env->GetObjectArrayElement(stringArray, i));
         const char* cstring = env->GetStringUTFChars(string, NULL);
-        sprintf(msg, "%d: %s", i, cstring);
+        sprintf(msg, "element %d: %s", i, cstring);
+        log(msg);
         env->ReleaseStringUTFChars(string, cstring);
     }
 
@@ -235,10 +238,10 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
     ret = (jobjectArray)env->NewObjectArray(
         1, env->FindClass("java/lang/String"), NULL);
 
-    const char* buf = "{ \"foo\": \"bar\" }";
-    env->SetObjectArrayElement(ret, 0, env->NewStringUTF(buf));
+    const char* fake
+        = "{ \"score\": \"3\", \"asn1_hexblob\" : \"cafebabe010203\" }";
+    env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake));
 
     log("Leaving C++ Java_BlastJNI_traceback\n");
-
-    return 0;
+    return ret;
 }

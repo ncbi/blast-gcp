@@ -34,6 +34,7 @@ rm -f blastjni.o
 rm -rf gov
 rm -f *test.result
 rm -f BlastJNI.jar
+rm -f /tmp/blastjni.log
 
 
 # TODO: provided dependencies?
