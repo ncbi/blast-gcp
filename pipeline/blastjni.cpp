@@ -250,7 +250,7 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
         fake.append(buf);
     }
 
-    fake = "{ \"score\":\"3.14\", \"asn1_hexblob\":\"cafebabe010203 " + fake
+    fake = "{ \"score\":\"3.14\", \"asn1_hexblob\":\"cafebabe010203" + fake
         + "\" }";
     env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake.data()));
 
