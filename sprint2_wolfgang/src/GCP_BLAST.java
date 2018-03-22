@@ -54,7 +54,7 @@ public final class GCP_BLAST
    {
         final String appName = GCP_BLAST.class.getSimpleName();
         GCP_BLAST_SETTINGS settings;
-        if ( args.length() > 0 )
+        if ( args.length > 0 )
         {
             String ini_path = args[ 0 ];
             try
