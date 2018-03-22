@@ -36,16 +36,6 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.channels.FileLock;
 import java.nio.channels.FileChannel;
-/*
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Bucket;
-import com.google.cloud.storage.BucketInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.Storage.BlobListOption;
-import com.google.cloud.storage.StorageOptions;
-*/
 import org.apache.spark.*;
 import org.apache.spark.SparkFiles;
 
