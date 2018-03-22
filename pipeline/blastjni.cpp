@@ -81,8 +81,8 @@ static void iterate_HSPs(BlastHSPList* hsp_list, std::vector<std::string>& vs)
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
                 "\"sstop\": %d, "
-                "\"subject_gapped_start\": %d, "
-                "\"query_gapped_start\": %d ",
+                "\"sgapstart\": %d, "
+                "\"qgapstart\": %d ",
                 hsp_list->oid, hsp->score, hsp->query.offset, hsp->query.end,
                 hsp->subject.offset, hsp->subject.end,
                 hsp->subject.gapped_start, hsp->query.gapped_start);
@@ -181,8 +181,8 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
                 "\"sstop\": %d, "
-                "\"subject_gapped_start\": %d, "
-                "\"query_gapped_start\": %d ",
+                "\"sgapstart\": %d, "
+                "\"qgapstart\": %d ",
                 -1, -1, -1, -1, -1, -1, -1, -1);
         vs.push_back(buf);
     }
@@ -196,7 +196,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     for (size_t i = 0; i != vs.size(); ++i) {
         std::string json = "{ ";
         json += vs[i];
-        json += ", \"part\": \"" + sdbenv + "\" ";
+        json += ", \"part\": \"" + sdb + "\" ";
         if (false) // Not joined by Spark
         {
             json += ", \"RID\": \"" + srid + "\" ";
