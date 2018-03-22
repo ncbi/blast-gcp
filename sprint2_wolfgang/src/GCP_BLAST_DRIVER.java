@@ -99,7 +99,7 @@ class GCP_BLAST_DRIVER extends Thread
                 // ++++++ this is the where the work happens on the worker-nodes ++++++
                 
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                     String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.chunk.name ) );
+                                     String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.partition.name ) );
                 String[] search_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.partition.name, job.req.params );
                 Integer count = search_res.length;
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
@@ -158,18 +158,18 @@ class GCP_BLAST_DRIVER extends Thread
         try
         {
             SparkConf conf = new SparkConf();
-            conf.setAppName( this.appName );
+            conf.setAppName( settings.appName );
             conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
 
             JavaSparkContext sc = new JavaSparkContext( conf );
             sc.setLogLevel( "ERROR" );
 
             // send the given files to all nodes
-            for ( String a_file : files_to_transfer )
+            for ( String a_file : settings.files_to_transfer )
                 sc.addFile( a_file );
 
             // create a streaming-context from SparkContext given
-            jssc = new JavaStreamingContext( sc, Durations.seconds( this.batch_duration ) );
+            jssc = new JavaStreamingContext( sc, Durations.seconds( settings.batch_duration ) );
 
             stream_version();
         }
