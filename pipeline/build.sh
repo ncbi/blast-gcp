@@ -49,7 +49,10 @@ HDR="BlastJNI.h"
 echo "Creating BlastJNI header: $HDR"
 #javac -d . -h . src/main/java/BlastJNI.java
 #NOTE: javah deprecated in Java 9, removed in Java 10
-javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d /tmp -h . src/main/java/BlastJNI.java
+TMPDIR=`mktemp -d`
+javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d $TMPDIR -h . src/main/java/BlastJNI.java
+rm -f $TMPDIR/BlastJNI.class
+rmdir $TMPDIR
 
 if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling and linking blastjni.cpp"

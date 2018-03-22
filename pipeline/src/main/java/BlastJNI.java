@@ -28,6 +28,8 @@ import java.lang.System;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.file.attribute.PosixFilePermission;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
@@ -85,7 +87,7 @@ public class BlastJNI {
                 dir.mkdirs();
 
                 File scriptfile=File.createTempFile("cache-blast-",".sh");
-                //            scriptfile.deleteOnExit();
+                scriptfile.deleteOnExit();
                 String scriptname=scriptfile.getAbsolutePath();
                 log("Creating shell script:" + scriptname);
                 PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
@@ -138,6 +140,13 @@ public class BlastJNI {
                 pw.close();
                 scriptfile.setExecutable(true,true);
 
+                log("Calling shell script: " + scriptname +
+                        db_bucket + " " +
+                        part + " " +
+                        dbdir + " " +
+                        lockfile + " " +
+                        donefile + " " );
+
                 ProcessBuilder pb=new ProcessBuilder(scriptname,
                         db_bucket,
                         part,
@@ -145,6 +154,15 @@ public class BlastJNI {
                         lockfile,
                         donefile);
                 Process p=pb.start();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                String line;
+                while ((line = br.readLine()) != null) {
+                    log("script output\t" + line);
+                }
+                int errcode=p.waitFor();
+                log("Called shell script: " + scriptname + ":" + errcode);
 
             } catch(Exception e) {
                 log("exception in cache method: " + e);
@@ -154,7 +172,9 @@ public class BlastJNI {
             log(dbdir + " cached.");
         }
 
-        return dbdir;
+        //return dbdir.substring(0,dbdir.length()-1);
+        // Strip final slash
+        return dbdir.replaceFirst("/$","");
     }
 
     //private native String[] traceback(String[] jsonHSPs);
@@ -182,7 +202,8 @@ public class BlastJNI {
         log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params);
         String dbenv=cache_dbs(db_bucket, db, part);
 
-        String[] results=prelim_search(dbenv, rid, query, db, params);
+        String[] results=prelim_search(dbenv, rid, query, part, params);
+        //String[] results=prelim_search(part, rid, query, db, params);
         log("jni_prelim_search returned " + results.length + " results");
         return results;
     }
@@ -196,10 +217,11 @@ public class BlastJNI {
         String params="blastn";
 
         ArrayList<String> al=new ArrayList<String>();
-        for (int partnum=0; partnum <= 26; ++partnum)
+        for (int partnum=12; partnum <= 18; ++partnum)
         {
             String part=db + "_50M." + String.format("%02d", partnum);
 
+            log("----   Processing part " + partnum);
             String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, part, params);
 
             log("Java results[] has " + results.length + " entries:");

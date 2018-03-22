@@ -26,8 +26,10 @@ gcloud dataproc --region us-east4 \
     --scopes 'https://www.googleapis.com/auth/cloud-platform' \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
+    --region us-east4 \
+    --zone   us-east4-b \
     --image-version 1.2 \
     --initialization-actions \
     'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
     --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
-    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4  
+    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
