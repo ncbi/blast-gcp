@@ -191,7 +191,7 @@ public class BlastJNI {
             al.addAll(Arrays.asList(results));
         }
 
-        String hsp[]={""};
+        String hsp[]=al.toArray(new String[0]);
         String[] tracebacks=new BlastJNI().jni_traceback(hsp);
     }
 }

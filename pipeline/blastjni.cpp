@@ -238,9 +238,16 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
     ret = (jobjectArray)env->NewObjectArray(
         1, env->FindClass("java/lang/String"), NULL);
 
-    const char* fake
-        = "{ \"score\": \"3\", \"asn1_hexblob\" : \"cafebabe010203\" }";
-    env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake));
+    std::string fake;
+    for (int i=0; i != 100; ++i)
+    {
+        char buf[4];
+        sprintf(buf,"%02x",i);
+        fake.append(buf);
+    }
+
+    //const char* fake = "{ \"score\": \"3\", \"asn1_hexblob\" : \"cafebabe010203\" }";
+    env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake.data()));
 
     log("Leaving C++ Java_BlastJNI_traceback\n");
     return ret;
