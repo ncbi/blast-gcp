@@ -77,7 +77,7 @@ class GCP_BLAST_DRIVER extends Thread
             //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
             JavaDStream< String > LINES = jssc.textFileStream( settings.trigger_dir );
             
-            // persist in memory
+            // persist in memory --- prevent recomputing
             LINES.cache();
             
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
@@ -93,7 +93,7 @@ class GCP_BLAST_DRIVER extends Thread
                 return tmp.iterator();
             } );
 
-            // persist in memory
+            // persist in memory --- prevent recomputing
             JOBS.cache();
             
             // send it to the search-function, which turns it into HSP's
@@ -120,6 +120,9 @@ class GCP_BLAST_DRIVER extends Thread
                 return res.iterator();
             } );
 
+            // persist in memory --- prevent recomputing
+            SEARCH_RES.cache();
+            
             // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
             /*
             JavaDStream< GCP_BLAST_HSP > FILTERED = SEARCH_RES.filter( hsp ->
