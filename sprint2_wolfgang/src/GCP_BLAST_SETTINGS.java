@@ -26,6 +26,7 @@
 
 import java.util.*;
 import java.io.*;
+import java.net.*;
 
 public class GCP_BLAST_SETTINGS
 {
@@ -44,8 +45,16 @@ public class GCP_BLAST_SETTINGS
         batch_duration = 1;
         files_to_transfer = new ArrayList<>();
         
-        java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-        log_host = localMachine.getHostName();
+        try
+        {
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            log_host = localMachine.getHostName();
+        }
+        catch ( UnknownHostException e )
+        {
+            System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
+            log_host = "";
+        }
         log_port = 10011;
         
         final String username = System.getProperty( "user.name" );
