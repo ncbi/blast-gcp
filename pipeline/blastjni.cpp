@@ -192,7 +192,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         std::string json = "{ ";
         json += vs[i];
         json += ", \"part\": \"" + sdbenv + "\" ";
-        if (true) // Not joined by Spark
+        if (false) // Not joined by Spark
         {
             json += ", \"RID\": \"" + srid + "\" ";
             json += ", \"db\": \"" + sdb + "\" ";
