@@ -42,8 +42,8 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.cloud.storage.StorageOptions;
 
-//import org.apache.spark.*;
-//import org.apache.spark.SparkFiles;
+import org.apache.spark.*;
+import org.apache.spark.SparkFiles;
 
 public class BlastJNI {
     static {
@@ -52,7 +52,12 @@ public class BlastJNI {
             System.loadLibrary("blastjni");
             //System.load(SparkFiles.get("libblastjni.so"));
         } catch(Exception e) {
-            log("System.load() exception: " + e);
+            try {
+                log("Couldn't System.loadLibrary, trying System.load");
+                System.load(SparkFiles.get("libblastjni.so"));
+            } catch(Exception e) {
+                log("System.load() exception: " + e);
+            }
         }
     }
 

@@ -36,11 +36,11 @@ rm -f *test.result
 rm -f BlastJNI.jar
 
 
-echo "Maven packaging"
+echo "Maven packaging, can take a while if ~/.m2 cache is empty"
     mvn -q package
     mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
 
-# TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to 
+# TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to
 #packages,  but is required by g++ # at NCBI.
 HDR="BlastJNI.h"
 echo "Creating BlastJNI header: $HDR"
@@ -141,20 +141,23 @@ fi
 #javac -d . BlastJNI.java
 
 
-echo "Testing Blast Library"
-# More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
-    ./test_blast 1 \
-    CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG \
-    nt.04 blastn > blast_test.result
-    set +errexit
-    CMP=$(cmp blast_test.result blast_test.expected)
-    if [[ $? -ne 0 ]]; then
-        sdiff -w 70 blast_test.result blast_test.expected | head
-        echo "Testing Blast Library failed"
-        exit 1
-    fi
-    set -o errexit
-echo "Test OK"
+# TODO: Can this be run in both environments?
+if [ "$BUILDENV" = "google" ]; then
+    echo "Testing Blast Library"
+    # More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
+        ./test_blast 1 \
+        CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG \
+        nt.04 blastn > blast_test.result
+        set +errexit
+        CMP=$(cmp blast_test.result blast_test.expected)
+        if [[ $? -ne 0 ]]; then
+            sdiff -w 70 blast_test.result blast_test.expected | head
+            echo "Testing Blast Library failed"
+            exit 1
+        fi
+        set -o errexit
+    echo "Test OK"
+fi
 
 echo "Make_partitions.py"
     ./make_partitions.py > db_partitions.jsonl
@@ -206,8 +209,10 @@ gcloud dataproc --region us-east4 \
     --initialization-actions \
     'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
     --initialization-actions-timeout 60 # Default 10m \
-    --max-age=8h
-    --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S)
+    --max-age=8h \
+    --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
+    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4  \
+
 
 
     git clone https://github.com/ncbi/blast-gcp.git
