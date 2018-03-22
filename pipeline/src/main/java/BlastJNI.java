@@ -22,11 +22,13 @@
 
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.lang.ProcessBuilder;
 import java.lang.String;
 import java.lang.System;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.nio.file.attribute.PosixFilePermission;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
@@ -34,6 +36,7 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.channels.FileLock;
 import java.nio.channels.FileChannel;
+/*
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -42,7 +45,7 @@ import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.cloud.storage.StorageOptions;
-
+*/
 import org.apache.spark.*;
 import org.apache.spark.SparkFiles;
 
@@ -84,52 +87,59 @@ public class BlastJNI {
         String donefile=dbdir + "done";
         String lockfile=dbdir + "lock";
 
-        // This requires 118MB of .jars, could also just invoke cache_files.sh
-        // which would invoke gsutil
         if(!Files.exists(Paths.get(donefile))) {
-            log(donefile + " doesn't exist. Checking if locked...");
             try {
-                File dir=new File(dbdir);
-                dir.mkdirs();
+            log(donefile + " doesn't exist.");
 
-                File flock=new File(lockfile);
-                FileChannel channel=new RandomAccessFile(flock, "rw").getChannel();
-                FileLock lock=channel.lock();
-                // ^^^ blocks
-                if(!Files.exists(Paths.get(donefile))) {
-                    log(donefile + " still doesn't exist. This thread will lock and download.");
-                    Storage storage=StorageOptions.getDefaultInstance().getService();
+            File dir=new File(dbdir);
+            dir.mkdirs();
 
-                    log("Got storage for bucket " + db_bucket);
+            File scriptfile=File.createTempFile("blastjni-cache-",".sh");
+            scriptfile.deleteOnExit();
+            String scriptname=scriptfile.getAbsolutePath();
+            log("Creating shell script:" + scriptname);
+            PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
+            pw.println("#!/usr/bin/env bash");
+            pw.println("BUCKET=$1");
+            pw.println("PART=$2");
+            pw.println("DIR=$3");
+            pw.println("LOCKFILE=$4");
+            pw.println("DONEFILE=$5");
+            pw.println("cd $DIR");
+            pw.println("exec >  >(tee -ia log)");
+            pw.println("exec 2> >(tee -ia log) >&2");
+            pw.println("date");
+            pw.println("echo \"BUCKET is   $BUCKET\" ");
+            pw.println("echo \"PART is     $PART\" ");
+            pw.println("echo \"DIR is      $DIR\" ");
+            pw.println("echo \"LOCKFILE is $LOCKFILE\" ");
+            pw.println("echo \"DONEFILE is $DONEFILE\" ");
+            pw.println("echo \"attempting to lock (pid=$$)\"");
+            pw.println("#lockfile $LOCKFILE # blocks");
+            pw.println("if [ -e $DONEFILE ]; then");
+            pw.println("  echo \"already done (pid=$$)\"");
+            pw.println("  exit 0 # Another thread completed this.");
+            pw.println("fi");
+            pw.println("#gsutil ls -l gs://$BUCKET/$PART* ");
+            pw.println("#gsutil -m cp gs://$BUCKET/$PART .");
+            pw.println("#gsutil -m cp \"gs://$BUCKET/$PART.*\" .");
+            pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
+            pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
+            pw.println("touch $DONEFILE");
+            pw.println("rm -f $LOCKFILE");
+            pw.println("date");
+            pw.println("exit 0");
+            pw.close();
+            scriptfile.setExecutable(true,true);
 
-                    Bucket bucket=storage.get(db_bucket);
-                    for(Blob blob : bucket.list(
-                                Storage.BlobListOption.prefix(part + ".")).
-                            iterateAll()) {
-                        String dbfile=blob.getName();
-                        String ext=dbfile.substring(dbfile.length() - 4);
-                        if(ext.endsWith("sq") || ext.endsWith("in")) {
-                            Path path=Paths.get(dbdir + db + ext);
-                            log("    Downloading " + dbfile +
-                                    " -> " + path + " ...");
-                            blob.downloadTo(path);
-                        } else {
-                            log("    Skipping " + dbfile);
-                        }
-                            }
+            ProcessBuilder pb=new ProcessBuilder(scriptname,
+                    db_bucket,
+                    part,
+                    dbdir,
+                    lockfile,
+                    donefile);
+            Process p=pb.start();
 
-                    // Create donefile
-                    File fdone=new File(donefile);
-                    fdone.createNewFile();
-                    log("Created " + donefile);
-
-                    flock.delete();
-                }
-
-                if(lock != null) {
-                    lock.release();
-                }
-                channel.close();
             } catch(Exception e) {
                 log("exception in cache method: " + e);
             }
