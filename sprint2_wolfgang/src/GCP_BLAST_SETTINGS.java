@@ -69,9 +69,9 @@ public class GCP_BLAST_SETTINGS
         num_db_partitions = 10;
         num_job_partitions = 1;
         
-        log_request = True;
-        log_job_start = False;
-        log_job_done = False;
-        log_final = True;
+        log_request = true;
+        log_job_start = false;
+        log_job_done = false;
+        log_final = true;
     }
 }
