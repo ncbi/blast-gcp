@@ -13,9 +13,11 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 # gcloud dataproc jobs submit spark --cluster cluster-blast-vartanianmh --class org.apache.spark.examples.SparkPi --jars file:///usr/lib/spark/examples/jars/spark-examples.jar  --region=us-east4 --max-failures-per-hour 2
 
+# gcloud dataproc clusters diagnose cluster-name
 #--zone "" ?
 #--initialization-actions-timeout 60 # Default 10m \
 #--max-age=8h \
+#--single-node
 gcloud dataproc --region us-east4 \
     clusters create cluster-$USER \
     --master-machine-type n1-standard-4 --master-boot-disk-size 500 \
