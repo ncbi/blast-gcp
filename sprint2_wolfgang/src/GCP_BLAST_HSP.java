@@ -101,6 +101,6 @@ class GCP_BLAST_HSP implements Serializable
     
     @Override public String toString()
     {
-        return String.format( "%s (%d) %d-%d %d-%d (%d)", job.toString(), oid, qstart, qstop, sstart, sstop, score );
+        return String.format( "HSP( %s oid:%d %d-%d %d-%d score:%d )", job.toString(), oid, qstart, qstop, sstart, sstop, score );
     }
 }

@@ -29,16 +29,16 @@ import java.io.*;
 class GCP_BLAST_JOB implements Serializable
 {
     public final GCP_BLAST_REQUEST req;
-    public final GCP_BLAST_CHUNK chunk;
+    public final GCP_BLAST_PARTITION partition;
     
-    public GCP_BLAST_JOB( final GCP_BLAST_REQUEST req, final GCP_BLAST_CHUNK chunk )
+    public GCP_BLAST_JOB( final GCP_BLAST_REQUEST req, final GCP_BLAST_PARTITION partition )
     {
         this.req   = req;
-        this.chunk = chunk;
+        this.partition = partition;
     }
     
     @Override public String toString()
     {
-        return String.format( "%s %s", req.toString(), chunk.toString() );
+        return String.format( "job( %s %s )", req.toString(), partition.toString() );
     }
 }
