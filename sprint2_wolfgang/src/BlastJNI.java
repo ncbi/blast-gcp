@@ -106,6 +106,7 @@ public class BlastJNI {
             pw.println("echo \"DONEFILE is $DONEFILE\" ");
             pw.println("echo \"attempting to lock (pid=$$)\"");
             pw.println("echo");
+            pw.println("id");
             pw.println("pwd");
             pw.println("echo");
             pw.println("env");
@@ -116,6 +117,7 @@ public class BlastJNI {
             pw.println("  exit 0 # Another thread completed this.");
             pw.println("fi");
             pw.println("echo ----- Fetching files from Google Cloud Storage ---");
+            pw.println("export HOME=/home/$USER");
             pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
             pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
             pw.println("touch $DONEFILE");
