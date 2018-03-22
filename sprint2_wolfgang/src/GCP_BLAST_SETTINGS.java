@@ -37,7 +37,8 @@ public class GCP_BLAST_SETTINGS
     public Integer log_port;
     public String trigger_dir;
     public String save_dir;
-    public Integer num_partitions;
+    public Integer num_db_partitions;
+    public Integer num_job_partitions;
     
     public GCP_BLAST_SETTINGS( final String appName )
     {
@@ -61,6 +62,7 @@ public class GCP_BLAST_SETTINGS
         trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         
-        num_partitions = 10;
+        num_db_partitions = 10;
+        num_job_partitions = 1;
     }
 }

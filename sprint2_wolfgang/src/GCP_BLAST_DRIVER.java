@@ -64,7 +64,7 @@ class GCP_BLAST_DRIVER extends Thread
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
             List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
-            for ( int i = 0; i < settings.num_partitions; i++ )
+            for ( int i = 0; i < settings.num_db_partitions; i++ )
                 partitions.add( new GCP_BLAST_PARTITION( String.format( "nt.%02d", i + 1 ), i ) );
 
             // we broadcast this list to all nodes
@@ -96,8 +96,14 @@ class GCP_BLAST_DRIVER extends Thread
             // persist in memory --- prevent recomputing
             JOBS.cache();
             
+            // repartition with exactly n RDD-partition in each RDD of the Stream
+            JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
+            
+            // persist in memory --- prevent recomputing
+            REPARTITIONED_JOBS.cache();
+            
             // send it to the search-function, which turns it into HSP's
-            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = REPARTITIONED_JOBS.flatMap( job ->
             {
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
