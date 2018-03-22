@@ -42,8 +42,8 @@ class GCP_BLAST_REQUEST implements Serializable
     @Override public String toString()
     {
         if ( query.length() > 10 )
-            return String.format( "req( rid:'%s' db:'%s' query:'%s...' %s params:'%s' )", req_id, db, query.substring( 0, 10 ), tparams );
+            return String.format( "req( rid:'%s' db:'%s' query:'%s...' %s params:'%s' )", req_id, db, query.substring( 0, 10 ), params );
         else
-            return String.format( "req( rid:'%s' db:'%s' query:'%s' %s params:'%s' )", req_id, db, query, tparams );
+            return String.format( "req( rid:'%s' db:'%s' query:'%s' %s params:'%s' )", req_id, db, query, params );
     }
 }
