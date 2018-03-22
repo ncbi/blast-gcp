@@ -39,7 +39,11 @@ public class GCP_BLAST_SETTINGS
     public String save_dir;
     public Integer num_db_partitions;
     public Integer num_job_partitions;
-    
+    public Boolean log_request;
+    public Boolean log_job_start;
+    public Boolean log_job_done;
+    public Boolean log_final;
+
     public GCP_BLAST_SETTINGS( final String appName )
     {
         this.appName = appName;
@@ -64,5 +68,10 @@ public class GCP_BLAST_SETTINGS
         
         num_db_partitions = 10;
         num_job_partitions = 1;
+        
+        log_request = True;
+        log_job_start = False;
+        log_job_done = False;
+        log_final = True;
     }
 }
