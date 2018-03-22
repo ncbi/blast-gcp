@@ -246,7 +246,7 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
         fake.append(buf);
     }
 
-    //const char* fake = "{ \"score\": \"3\", \"asn1_hexblob\" : \"cafebabe010203\" }";
+    fake="{ \"score\":\"3\", \"asn1_hexblob\":\"cafebabe010203 " + fake + "\" }";
     env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake.data()));
 
     log("Leaving C++ Java_BlastJNI_traceback\n");
