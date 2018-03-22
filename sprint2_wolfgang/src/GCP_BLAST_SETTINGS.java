@@ -85,12 +85,12 @@ public class GCP_BLAST_SETTINGS
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            log_host = ini_file.getInt( "APP", "log_host", localMachine.getHostName() );
+            log_host = ini_file.getString( "APP", "log_host", localMachine.getHostName() );
         }
         catch ( UnknownHostException e )
         {
             System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
-            log_host = ini_file.getInt( "APP", "log_host", "localhost" );
+            log_host = ini_file.getString( "APP", "log_host", "localhost" );
         }
         
         log_port = ini_file.getInt( "APP", "log_port", 10011 );
@@ -123,8 +123,8 @@ public class GCP_BLAST_SETTINGS
         S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );
         S  =  S +  String.format( "num_job_partitions . %s\n", num_job_partitions );
         S  =  S +  String.format( "log_request ........ %s\n", Boolean.toString( log_request ) );
-        S  =  S +  String.format( "log_start .......... %s\n", Boolean.toString( log_start ) );
-        S  =  S +  String.format( "log_done ........... %s\n", Boolean.toString( log_done ) );
+        S  =  S +  String.format( "log_job_start ...... %s\n", Boolean.toString( log_job_start ) );
+        S  =  S +  String.format( "log_job_done ....... %s\n", Boolean.toString( log_job_done ) );
         S  =  S +  String.format( "log_final........... %s\n", Boolean.toString( log_final ) );
         return S;
     }
