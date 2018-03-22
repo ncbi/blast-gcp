@@ -81,7 +81,7 @@ static void iterate_HSPs(BlastHSPList* hsp_list, std::vector<std::string>& vs)
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
-                "\"sstop\": %d "
+                "\"sstop\": %d ",
                 hsp_list->oid, hsp->score, hsp->query.offset,
                 hsp->query.end, hsp->subject.offset, hsp->subject.end);
         vs.push_back(buf);
@@ -110,7 +110,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     const char* cparams = env->GetStringUTFChars(params, NULL);
     log(cparams);
 
-    std::string sparams(cdbenv);
+    std::string sdbenv(cdbenv);
     std::string srid(crid);
     std::string squery(cquery);
     std::string sdb(cdb);
@@ -189,11 +189,11 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         vs.size(), env->FindClass("java/lang/String"), NULL);
 
     for (size_t i = 0; i != vs.size(); ++i) {
-        str::string json=vs[i];
-        json+=", \"chunk\": \"" + sdbenv + "\"";
-        json+=", \"db\": \"" + sdb + "\"";
-        json+=", \"params\": \"" + sparams + "\";
-        json+=", \"query\": \"" + squery + "\"";
+        std::string json=vs[i];
+        json+=", \"chunk\": \"" + sdbenv + "\" ";
+        json+=", \"db\": \"" + sdb + "\" ";
+        json+=", \"params\": \"" + sparams + "\" ";
+        json+=", \"query\": \"" + squery + "\" ";
         json+="\n";
 
         const char* buf = json.data();

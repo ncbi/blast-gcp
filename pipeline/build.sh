@@ -36,15 +36,17 @@ rm -f *test.result
 rm -f BlastJNI.jar
 
 
-echo "Maven packaging, can take a while if ~/.m2 cache is empty"
-    mvn -q package
-    mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
+# TODO: provided dependencies?
+echo "Maven packaging: can take a while, especially if ~/.m2 cache is empty"
+mvn -q package
+mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
 
 # TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to
 #packages,  but is required by g++ # at NCBI.
 HDR="BlastJNI.h"
 echo "Creating BlastJNI header: $HDR"
 #javac -d . -h . src/main/java/BlastJNI.java
+#NOTE: javah deprecated in Java 9, removed in Java 10
 javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d /tmp -h . src/main/java/BlastJNI.java
 
 if [ "$BUILDENV" = "ncbi" ]; then
@@ -142,7 +144,7 @@ fi
 
 
 # TODO: Can this be run in both environments?
-if [ "$BUILDENV" = "google" ]; then
+if [ "$BUILDENV" = "ncbi" ]; then
     echo "Testing Blast Library"
     # More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
         ./test_blast 1 \
@@ -189,37 +191,13 @@ exit 0
 
 
 <<HINTS
- gcloud auth login (copy/paste from web)
- gcloud dataproc clusters list  --region=us-east4
- gcloud dataproc jobs list
- gcloud dataproc jobs submit spark --cluster XXX --jar foo.jar arg1 arg2
- gcloud dataproc jobs submit spark --cluster cluster-blast-vartanianmh --class org.apache.spark.examples.SparkPi --region=us-east4
+gcloud auth application-default login --no-launch-browser
 
- gcloud dataproc jobs submit spark --cluster cluster-blast-vartanianmh --class org.apache.spark.examples.SparkPi --jars file:///usr/lib/spark/examples/jars/spark-examples.jar  --region=us-east4 --max-failures-per-hour 2
-
-gcloud dataproc --region us-east4 \
-    clusters create cluster-3941 \
-    --subnet t --zone us-east4-b \ # --zone "" ?
-    --master-machine-type n1-standard-4 --master-boot-disk-size 500 \
-    --num-workers 2 \
-    --worker-machine-type n1-standard-4 --worker-boot-disk-size 500 \
-    --scopes 'https://www.googleapis.com/auth/cloud-platform' \
-    --project ncbi-sandbox-blast \
-    --labels owner=vartanianmh \
-    --initialization-actions \
-    'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
-    --initialization-actions-timeout 60 # Default 10m \
-    --max-age=8h \
-    --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
-    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4  \
-
-
-
-    git clone https://github.com/ncbi/blast-gcp.git
-    cd blast-gcp
-    git checkout engineering
-    git config --global user.email "Mike.Vartanian@nih.gov"
-    git config --global user.name "Mike Vartanian"
+git clone https://github.com/ncbi/blast-gcp.git
+cd blast-gcp
+git checkout engineering
+git config --global user.email "Mike.Vartanian@nih.gov"
+git config --global user.name "Mike Vartanian"
 
 
 # Can be useful for debugging
@@ -234,15 +212,20 @@ gcloud dataproc --region us-east4 \
 # could be replaced by
  -conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast"
 
-# gcloud dataproc clusters diagnose cluster-name
 
-
-# gcloud dataproc clusters create args --single-node
-
-# gcloud dataproc jobs submit <job type> args --max-failures-per-hour number
-
-$ yarn logs
+$ yarn logs --allicationID <appID>
 yarn.nodemanager.delete.debug-delay-sec property Spark History Server
+ with the yarn.log-aggregation-enable config
+ Once the job has completed the NodeManager will keep the log for each
+ container for ${yarn.nodemanager.log.retain-seconds} which is
+ 10800 seconds by default ( 3 hours ) and delete them once they have expired.
+ But if ${yarn.log-aggregation-enable} is enabled then the NodeManager
+ will immediately concatenate all of the containers logs into one file
+ and upload them into HDFS in
+   ${yarn.nodemanager.remote-app-log-dir}/${user.name}/logs/ and delete
+   them from the local userlogs directory
+
+
 
 
  spark-submit \
@@ -252,7 +235,7 @@ yarn.nodemanager.delete.debug-delay-sec property Spark History Server
      --class BlastSpark \
      --master yarn \
      target/blastjni-0.0314.jar \
-	$PIPELINEBUCKET/input/query.jsonl
+    $PIPELINEBUCKET/input/query.jsonl
      #/user/vartanianmh/query.jsonl
 
 

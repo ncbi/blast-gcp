@@ -55,8 +55,8 @@ public class BlastJNI {
             try {
                 log("Couldn't System.loadLibrary, trying System.load");
                 System.load(SparkFiles.get("libblastjni.so"));
-            } catch(Exception e) {
-                log("System.load() exception: " + e);
+            } catch(Exception e2) {
+                log("System.load() exception: " + e2);
             }
         }
     }
