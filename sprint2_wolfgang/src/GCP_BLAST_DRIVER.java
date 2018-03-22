@@ -38,30 +38,12 @@ import org.apache.spark.SparkFiles;
 
 class GCP_BLAST_DRIVER extends Thread
 {
-    private final String appName;
-    private final Integer batch_duration;
-    private final List< String > files_to_transfer;
-    private final String log_host;
-    private final Integer log_port;
-    private final String trigger_dir;
-    private final String save_dir;
-    
+    private final GCP_BLAST_SETTINGS settings;
     private JavaStreamingContext jssc;
 
-    public GCP_BLAST_DRIVER( final String appName,
-                             final Integer batch_duration,
-                             final List< String > files_to_transfer,
-                             final String log_host, final Integer log_port,
-                             final String trigger_dir,
-                             final String save_dir )
+    public GCP_BLAST_DRIVER( final GCP_BLAST_SETTINGS settings )
     {
-        this.appName = appName;
-        this.batch_duration = batch_duration;
-        this.files_to_transfer = files_to_transfer;
-        this.log_host = log_host;
-        this.log_port = log_port;
-        this.trigger_dir = trigger_dir;
-        this.save_dir = save_dir;
+        this.settings = settings;
     }
 
     public void stop_blast()
@@ -81,20 +63,19 @@ class GCP_BLAST_DRIVER extends Thread
         try
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
-            int num_chunks = 20;
-            List< GCP_BLAST_CHUNK > chunk_list = new ArrayList<>();
-            for ( int i = 0; i < num_chunks; i++ )
-                chunk_list.add( new GCP_BLAST_CHUNK( String.format( "nt.%02d", i + 1 ), i ) );
+            List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
+            for ( int i = 0; i < settings.num_partitions; i++ )
+                partitions.add( new GCP_BLAST_PARTITION( String.format( "nt.%02d", i + 1 ), i ) );
 
             // we broadcast this list to all nodes
-            Broadcast< List< GCP_BLAST_CHUNK > > CHUNKS = jssc.sparkContext().broadcast( chunk_list );
-            Broadcast< String > LOG_HOST = jssc.sparkContext().broadcast( this.log_host );
-            Broadcast< Integer > LOG_PORT = jssc.sparkContext().broadcast( this.log_port );
-            Broadcast< String > SAVE_DIR = jssc.sparkContext().broadcast( this.save_dir );
+            Broadcast< List< GCP_BLAST_PARTITION > > PARTITIONS = jssc.sparkContext().broadcast( partitions );
+            Broadcast< String > LOG_HOST = jssc.sparkContext().broadcast( settings.log_host );
+            Broadcast< Integer > LOG_PORT = jssc.sparkContext().broadcast( settings.log_port );
+            Broadcast< String > SAVE_DIR = jssc.sparkContext().broadcast( settings.save_dir );
             
             // Create a DStream listening on port name-of-master-node.9999
             //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
-            JavaDStream< String > lines = jssc.textFileStream( trigger_dir );
+            JavaDStream< String > lines = jssc.textFileStream( settings.trigger_dir );
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
@@ -104,8 +85,8 @@ class GCP_BLAST_DRIVER extends Thread
                 ArrayList< GCP_BLAST_JOB > tmp = new ArrayList<>();
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line );
                 // we are using the broadcasted ArrayList called 'CHUNKS' to create the jobs
-                for ( GCP_BLAST_CHUNK chunk : CHUNKS.getValue() )
-                    tmp.add( new GCP_BLAST_JOB( req, chunk ) );
+                for ( GCP_BLAST_PARTITION partition : PARTITIONS.getValue() )
+                    tmp.add( new GCP_BLAST_JOB( req, partition ) );
                 return tmp.iterator();
             } );
 
@@ -119,13 +100,13 @@ class GCP_BLAST_DRIVER extends Thread
                 
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                      String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.chunk.name ) );
-                String[] blast_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.chunk.name, job.req.params );
-                Integer count = blast_res.length;
+                String[] search_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.partition.name, job.req.params );
+                Integer count = search_res.length;
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                     String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.chunk.name, count ) );
+                                     String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.name, count ) );
                 if ( count > 0 )
                 {
-                    for ( String S : blast_res )
+                    for ( String S : search_res )
                         res.add( new GCP_BLAST_HSP( job, S ) );
                 }
                 else
@@ -150,12 +131,12 @@ class GCP_BLAST_DRIVER extends Thread
                 if ( count > 0 )
                 {
                     rdd.saveAsTextFile( SAVE_DIR.getValue() );
-                    rdd.foreachPartition( part -> {
+                    rdd.foreachPartition( rdd_part -> {
                         int i = 0;
-                        while( part.hasNext() && ( i < 10 ) )
+                        while( rdd_part.hasNext() && ( i < 10 ) )
                         {
                             GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                                 String.format( "[ %d of %d ] %s", i, count, part.next() ) );
+                                                 String.format( "[ %d of %d ] %s", i, count, rdd_part.next() ) );
                             i += 1;
                         }
                     } );

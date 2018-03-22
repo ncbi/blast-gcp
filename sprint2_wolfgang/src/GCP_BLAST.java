@@ -52,21 +52,13 @@ public final class GCP_BLAST
 
    public static void main( String[] args ) throws Exception
    {
-        final String appName = GCP_BLAST.class.getSimpleName();
-        final Integer batch_duration = 1;
+        final GCP_BLAST_SETTINGS settings = new GCP_BLAST_SETTINGS( GCP_BLAST.class.getSimpleName() );
+        settings.files_to_transfer.add( "libblastjni.so" );
+        settings.log_host = "wolfgang-cluster-m";
+        settings.trigger_dir = "hdfs:///user/raetzw/todo/";
+        settings.save_dir = "hdfs:///user/raetzw/results/";
         
-        List< String > files_to_transfer = new ArrayList<>();
-        files_to_transfer.add( "libblastjni.so" );
-
-        final String log_host = "wolfgang-cluster-m";
-        final Integer log_port = 10011;
-        
-        final String trigger_dir = "hdfs:///user/raetzw/todo/";
-        final String save_dir = "hdfs:///user/raetzw/results/";
-        
-        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, batch_duration,
-                    files_to_transfer,
-                    log_host, log_port, trigger_dir, save_dir  );
+        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( settings );
         driver.start();
         try
         {
