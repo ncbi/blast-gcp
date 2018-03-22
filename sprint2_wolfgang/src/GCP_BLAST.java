@@ -54,9 +54,15 @@ public final class GCP_BLAST
    {
         final GCP_BLAST_SETTINGS settings = new GCP_BLAST_SETTINGS( GCP_BLAST.class.getSimpleName() );
         settings.files_to_transfer.add( "libblastjni.so" );
-        settings.log_host = "wolfgang-cluster-m";
-        settings.trigger_dir = "hdfs:///user/raetzw/todo/";
-        settings.save_dir = "hdfs:///user/raetzw/results/";
+        
+        java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+        System.out.println( "Hostname of local machine: " + localMachine.getHostName() );
+        settings.log_host = localMachine.getHostName();
+        
+        final String username = System.getProperty( "user.name" );
+        System.out.println( "username: " + username );
+        settings.trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
+        settings.save_dir = String.format( "hdfs:///user/%s/results/", username );
         
         GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( settings );
         driver.start();
