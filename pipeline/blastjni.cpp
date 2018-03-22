@@ -80,9 +80,12 @@ static void iterate_HSPs(BlastHSPList* hsp_list, std::vector<std::string>& vs)
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
-                "\"sstop\": %d ",
+                "\"sstop\": %d, "
+                "\"subject_gapped_start\": %d, "
+                "\"query_gapped_start\": %d ",
                 hsp_list->oid, hsp->score, hsp->query.offset, hsp->query.end,
-                hsp->subject.offset, hsp->subject.end);
+                hsp->subject.offset, hsp->subject.end,
+                hsp->subject.gapped_start, hsp->query.gapped_start);
         vs.push_back(buf);
     }
 }
@@ -177,8 +180,10 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
                 "\"sstart\": %d, "
-                "\"sstop\": %d ",
-                -1, -1, -1, -1, -1, -1);
+                "\"sstop\": %d, "
+                "\"subject_gapped_start\": %d, "
+                "\"query_gapped_start\": %d ",
+                -1, -1, -1, -1, -1, -1, -1, -1);
         vs.push_back(buf);
     }
 
@@ -239,14 +244,14 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
         1, env->FindClass("java/lang/String"), NULL);
 
     std::string fake;
-    for (int i=0; i != 100; ++i)
-    {
+    for (int i = 0; i != 100; ++i) {
         char buf[4];
-        sprintf(buf,"%02x",i);
+        sprintf(buf, "%02x", i);
         fake.append(buf);
     }
 
-    fake="{ \"score\":\"3.14\", \"asn1_hexblob\":\"cafebabe010203 " + fake + "\" }";
+    fake = "{ \"score\":\"3.14\", \"asn1_hexblob\":\"cafebabe010203 " + fake
+        + "\" }";
     env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake.data()));
 
     log("Leaving C++ Java_BlastJNI_traceback\n");
