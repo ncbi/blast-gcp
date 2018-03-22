@@ -114,7 +114,19 @@ public class GCP_BLAST_SETTINGS
 
     @Override public String toString()
     {
-        return String.format( "HSP( %s oid:%d %d-%d %d-%d score:%d )", job.toString(), oid, qstart, qstop, sstart, sstop, score );
+        String S = String.format( "appName ............ %s\n", appName );
+        S  =  S +  String.format( "batch_duration ..... %d\n", batch_duration );
+        S  =  S +  String.format( "log_host ........... %s\n", log_host );
+        S  =  S +  String.format( "log_port ........... %d\n", log_port );
+        S  =  S +  String.format( "trigger_dir ........ %s\n", trigger_dir );
+        S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
+        S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );
+        S  =  S +  String.format( "num_job_partitions . %s\n", num_job_partitions );
+        S  =  S +  String.format( "log_request ........ %s\n", Boolean.toString( log_request ) );
+        S  =  S +  String.format( "log_start .......... %s\n", Boolean.toString( log_start ) );
+        S  =  S +  String.format( "log_done ........... %s\n", Boolean.toString( log_done ) );
+        S  =  S +  String.format( "log_final........... %s\n", Boolean.toString( log_final ) );
+        return S;
     }
     
 }

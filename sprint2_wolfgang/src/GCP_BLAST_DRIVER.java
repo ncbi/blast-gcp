@@ -119,7 +119,7 @@ class GCP_BLAST_DRIVER extends Thread
                                      String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.partition.name ) );
 
                 String[] search_res = blaster.jni_prelim_search( "nt_50mb_chunks",
-			job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
+                    job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
                 Integer count = search_res.length;
                 
                 if ( LOG_JOB_DONE.getValue() )
