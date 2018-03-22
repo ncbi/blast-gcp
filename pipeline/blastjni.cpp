@@ -229,6 +229,8 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
     sprintf(msg, "stringArray has %d elements", stringCount);
     log(msg);
 
+    std::vector<ncbi::blast::SFlatHSP> flat_hsp_list;
+
     for (int i = 0; i != stringCount; ++i) {
         jstring string
             = (jstring)(env->GetObjectArrayElement(stringArray, i));
@@ -236,7 +238,19 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
         sprintf(msg, "element %d: %s", i, cstring);
         log(msg);
         env->ReleaseStringUTFChars(string, cstring);
+        /* nt oid;
+    int score;
+    int query_start;
+    int query_end;
+    int query_frame;
+    int subject_start;
+    int subject_end;
+    int subject_frame;
+    */
+
     }
+
+    ncbi::blast::TIntermediateAlignments alignments;
 
     // TODO: env->ReleaseStringUTFChars(all the strings, cstring)
     jobjectArray ret;

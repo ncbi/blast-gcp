@@ -1,4 +1,4 @@
-/*  $Id: blast4spark.hpp 560220 2018-03-20 15:58:33Z boratyng $
+/*  $Id: blast4spark.hpp 560346 2018-03-21 20:54:19Z camacho $
  * ===========================================================================
  *
  *                            PUBLIC DOMAIN NOTICE
@@ -35,8 +35,11 @@
 
 #include <corelib/ncbistd.hpp>
 #include <algo/blast/core/blast_export.h>
-#include <algo/blast/core/blast_hspstream.h>
 
+extern "C" {
+    struct BlastHSPStream;
+    struct BlastSeg;
+}
 
 /** @addtogroup AlgoBlast
  *
@@ -47,7 +50,7 @@ BEGIN_NCBI_SCOPE
 BEGIN_SCOPE(blast)
 
 
-/// Simplified HSP returned from prelimiray search in spark
+/// Simplified HSP returned from preliminary search in spark
 struct SFlatHSP
 {
     int oid;
@@ -55,27 +58,33 @@ struct SFlatHSP
     int query_start;
     int query_end;
     int query_frame;
+    int query_gapped_start;
     int subject_start;
     int subject_end;
     int subject_frame;
+    int subject_gapped_start;
+
+    /// Default constructor initializes structured as an invalid HSP
+    SFlatHSP();
+    SFlatHSP(int oid, int score, const BlastSeg& q, const BlastSeg& s);
 };
 
 
-NCBI_XBLAST_EXPORT
+NCBI_XBLAST_EXPORT 
 BlastHSPStream*
-PrelimSearch(const std::string& single_query,
+PrelimSearch(const std::string& single_query, 
         const std::string& database_name,
         const std::string& program_name);
 
 
-
-NCBI_XBLAST_EXPORT
+typedef std::vector<std::pair<double, std::string>> TIntermediateAlignments;
+NCBI_XBLAST_EXPORT 
 int
 TracebackSearch(const std::string& single_query,
                 const std::string& database_name,
                 const std::string& program_name,
                 std::vector<SFlatHSP>& flat_hsp_list,
-                vector< pair<double, string> >& alignments);
+                TIntermediateAlignments& alignments);
 
 
 END_SCOPE(blast)
