@@ -117,7 +117,7 @@ public class BlastJNI {
             pw.println("  exit 0 # Another thread completed this.");
             pw.println("fi");
             pw.println("echo ----- Fetching files from Google Cloud Storage ---");
-            pw.println("export HOME=/home/$USER");
+            pw.println("export HOME=/var/lib/hadoop-yarn");
             pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
             pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
             pw.println("touch $DONEFILE");
