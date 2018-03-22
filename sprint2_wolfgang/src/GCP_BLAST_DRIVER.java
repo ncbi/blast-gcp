@@ -39,6 +39,7 @@ import org.apache.spark.SparkFiles;
 class GCP_BLAST_DRIVER extends Thread
 {
     private final String appName;
+    private final Integer batch_duration;
     private final List< String > files_to_transfer;
     private final String log_host;
     private final Integer log_port;
@@ -48,12 +49,14 @@ class GCP_BLAST_DRIVER extends Thread
     private JavaStreamingContext jssc;
 
     public GCP_BLAST_DRIVER( final String appName,
+                             final Integer batch_duration,
                              final List< String > files_to_transfer,
                              final String log_host, final Integer log_port,
                              final String trigger_dir,
                              final String save_dir )
     {
         this.appName = appName;
+        this.batch_duration = batch_duration;
         this.files_to_transfer = files_to_transfer;
         this.log_host = log_host;
         this.log_port = log_port;
@@ -185,7 +188,7 @@ class GCP_BLAST_DRIVER extends Thread
                 sc.addFile( a_file );
 
             // create a streaming-context from SparkContext given
-            jssc = new JavaStreamingContext( sc, Durations.seconds( 1 ) );
+            jssc = new JavaStreamingContext( sc, Durations.seconds( this.batch_duration ) );
 
             stream_version();
         }

@@ -53,17 +53,19 @@ public final class GCP_BLAST
    public static void main( String[] args ) throws Exception
    {
         final String appName = GCP_BLAST.class.getSimpleName();
-
+        final Integer batch_duration = 1;
+        
         List< String > files_to_transfer = new ArrayList<>();
         files_to_transfer.add( "libblastjni.so" );
 
-        String log_host = "wolfgang-cluster-m";
-        Integer log_port = 10011;
+        final String log_host = "wolfgang-cluster-m";
+        final Integer log_port = 10011;
         
-        String trigger_dir = "hdfs:///user/raetzw/todo/";
-        String save_dir = "hdfs:///user/raetzw/results/";
+        final String trigger_dir = "hdfs:///user/raetzw/todo/";
+        final String save_dir = "hdfs:///user/raetzw/results/";
         
-        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, files_to_transfer,
+        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( appName, batch_duration,
+                    files_to_transfer,
                     log_host, log_port, trigger_dir, save_dir  );
         driver.start();
         try
