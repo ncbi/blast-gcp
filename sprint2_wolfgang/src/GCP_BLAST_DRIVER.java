@@ -75,10 +75,13 @@ class GCP_BLAST_DRIVER extends Thread
             
             // Create a DStream listening on port name-of-master-node.9999
             //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
-            JavaDStream< String > lines = jssc.textFileStream( settings.trigger_dir );
-
+            JavaDStream< String > LINES = jssc.textFileStream( settings.trigger_dir );
+            
+            // persist in memory
+            LINES.cache();
+            
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
-            JavaDStream< GCP_BLAST_JOB > JOBS = lines.flatMap( line ->
+            JavaDStream< GCP_BLAST_JOB > JOBS = LINES.flatMap( line ->
             {
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received", line ) );
                 
@@ -90,6 +93,9 @@ class GCP_BLAST_DRIVER extends Thread
                 return tmp.iterator();
             } );
 
+            // persist in memory
+            JOBS.cache();
+            
             // send it to the search-function, which turns it into HSP's
             JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
             {

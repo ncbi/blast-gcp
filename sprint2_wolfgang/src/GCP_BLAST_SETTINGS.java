@@ -43,10 +43,15 @@ public class GCP_BLAST_SETTINGS
         this.appName = appName;
         batch_duration = 1;
         files_to_transfer = new ArrayList<>();
-        log_host = "";
+        
+        java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+        log_host = localMachine.getHostName();
         log_port = 10011;
-        trigger_dir = "";
-        save_dir = "";
+        
+        final String username = System.getProperty( "user.name" );
+        trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
+        save_dir = String.format( "hdfs:///user/%s/results/", username );
+        
         num_partitions = 10;
     }
 }
