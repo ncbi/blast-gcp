@@ -84,8 +84,8 @@ public class BlastJNI {
             File dir=new File(dbdir);
             dir.mkdirs();
 
-            File scriptfile=File.createTempFile("blastjni-cache-",".sh");
-            scriptfile.deleteOnExit();
+            File scriptfile=File.createTempFile("cache-blast-",".sh");
+//            scriptfile.deleteOnExit();
             String scriptname=scriptfile.getAbsolutePath();
             log("Creating shell script:" + scriptname);
             PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
@@ -105,14 +105,17 @@ public class BlastJNI {
             pw.println("echo \"LOCKFILE is $LOCKFILE\" ");
             pw.println("echo \"DONEFILE is $DONEFILE\" ");
             pw.println("echo \"attempting to lock (pid=$$)\"");
+            pw.println("echo");
+            pw.println("pwd");
+            pw.println("echo");
+            pw.println("env");
+            pw.println("echo");
             pw.println("#lockfile $LOCKFILE # blocks");
             pw.println("if [ -e $DONEFILE ]; then");
             pw.println("  echo \"already done (pid=$$)\"");
             pw.println("  exit 0 # Another thread completed this.");
             pw.println("fi");
-            pw.println("#gsutil ls -l gs://$BUCKET/$PART* ");
-            pw.println("#gsutil -m cp gs://$BUCKET/$PART .");
-            pw.println("#gsutil -m cp \"gs://$BUCKET/$PART.*\" .");
+            pw.println("echo ----- Fetching files from Google Cloud Storage ---");
             pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
             pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
             pw.println("touch $DONEFILE");
