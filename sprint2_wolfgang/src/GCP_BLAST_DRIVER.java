@@ -144,9 +144,8 @@ class GCP_BLAST_DRIVER extends Thread
                     {
                         for ( String S : search_res )
                         {
-                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "HSP: '%s'", S ) );
+                            //GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "HSP: '%s'", S ) );
                             res.add( new GCP_BLAST_HSP( job, S ) );
-                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "length of res : %d", res.size() ) );
                         }
                     }
                 }
@@ -156,7 +155,6 @@ class GCP_BLAST_DRIVER extends Thread
                                          String.format( "request exeption: '%s'", e ) );
                 }
 
-                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "final length of res : %d", res.size() ) );
                 if ( count == 0 )
                    res.add( new GCP_BLAST_HSP( job ) ); // empty job
                 
