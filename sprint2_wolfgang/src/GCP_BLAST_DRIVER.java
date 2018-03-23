@@ -177,10 +177,10 @@ class GCP_BLAST_DRIVER extends Thread
 
             // print the FINAL ( this runs on a workernode! )
             SEARCH_RES.foreachRDD( rdd -> {
+                rdd.cache();
                 long count = rdd.count();
                 if ( count > 0 )
                 {
-                    rdd.cache();
                     rdd.saveAsTextFile( SAVE_DIR.getValue() );
                     if ( LOG_FINAL.getValue() )
                     {
@@ -194,8 +194,8 @@ class GCP_BLAST_DRIVER extends Thread
                             }
                         } );
                     }
-                    rdd.unpersist( true );
                 }
+                rdd.unpersist( true );
             } );
 
            jssc.start();               // Start the computation
