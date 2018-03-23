@@ -1,28 +1,29 @@
 #!/bin/bash
+set -euxo pipefail
 
 apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
 
-BLASTTMP=/tmp/blast/test
+BLASTTMP=/tmp/blast/
 BLASTDBDIR=$BLASTTMP/db
 
 # Copy stuff from GCS
 mkdir -p $BLASTDBDIR/nt.04
-cd $BLASTDBIR/nt.04
+cd $BLASTDBDIR/nt.04
 gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
 tar -xvf nt04.tar
 rm -f nt04.tar
 
-mkdir -p $BLASTDBDIR/all
-cd $BLASTDBDIR/all
-gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt_all.tar .
-tar -xvf nt_all.tar
-rm -f nt_all.tar
+#mkdir -p $BLASTDBDIR/all
+#cd $BLASTDBDIR/all
+#gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt_all.tar .
+#tar -xvf nt_all.tar
+#rm -f nt_all.tar
 
 parts=`gsutil ls gs://nt_50mb_chunks/  | cut -d'.' -f2 | sort -nu`
 for part in $parts; do
     piece="nt_50M.$part"
     mkdir -p $BLASTDBDIR/$piece
-    cd $BLASTDBIR/$piece
+    cd $BLASTDBDIR/$piece
     mkdir lock
     gsutil -m cp gs://nt_50mb_chunks/$piece.*in .
     gsutil -m cp gs://nt_50mb_chunks/$piece.*sq .
@@ -61,8 +62,8 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # Below is historical
 
 
-set -euxo pipefail
 
+set -euxo pipefail
 
 set -o errexit
 set -o nounset
