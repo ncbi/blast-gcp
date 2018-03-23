@@ -34,9 +34,14 @@ public class GCP_BLAST_SETTINGS
     public String bucket;
     public Integer batch_duration;
     public List< String > files_to_transfer;
+    
     public String log_host;
     public Integer log_port;
+    
+    public String trigger_host;
+    public Integer trigger_port;
     public String trigger_dir;
+
     public String save_dir;
     public Integer num_db_partitions;
     public Integer num_job_partitions;
@@ -55,7 +60,9 @@ public class GCP_BLAST_SETTINGS
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            log_host = localMachine.getHostName();
+            String local_host = localMachine.getHostName();
+            log_host     = local_host;
+            trigger_host = local_host;
         }
         catch ( UnknownHostException e )
         {
@@ -63,6 +70,7 @@ public class GCP_BLAST_SETTINGS
             log_host = "";
         }
         log_port = 10011;
+        trigger_port = 0;
         
         final String username = System.getProperty( "user.name" );
         trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
@@ -89,7 +97,9 @@ public class GCP_BLAST_SETTINGS
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            log_host = ini_file.getString( ini_section, "log_host", localMachine.getHostName() );
+            String local_host = localMachine.getHostName();
+            log_host     = ini_file.getString( ini_section, "log_host", local_host );
+            trigger_host = ini_file.getString( ini_section, "trigger_host", local_host );
         }
         catch ( UnknownHostException e )
         {
@@ -97,7 +107,8 @@ public class GCP_BLAST_SETTINGS
             log_host = ini_file.getString( ini_section, "log_host", "localhost" );
         }
         
-        log_port = ini_file.getInt( ini_section, "log_port", 10011 );
+        log_port     = ini_file.getInt( ini_section, "log_port", 10011 );
+        trigger_port = ini_file.getInt( ini_section, "trigger_port", 0 );
         
         final String username = System.getProperty( "user.name" );
         
@@ -122,6 +133,8 @@ public class GCP_BLAST_SETTINGS
         S  =  S +  String.format( "batch_duration ..... %d\n", batch_duration );
         S  =  S +  String.format( "log_host ........... %s\n", log_host );
         S  =  S +  String.format( "log_port ........... %d\n", log_port );
+        S  =  S +  String.format( "trigger_host ....... %s\n", trigger_host );
+        S  =  S +  String.format( "trigger_port ....... %d\n", trigger_port );
         S  =  S +  String.format( "trigger_dir ........ %s\n", trigger_dir );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
         S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );

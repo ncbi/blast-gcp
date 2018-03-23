@@ -85,9 +85,11 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_JOB_DONE   = jssc.sparkContext().broadcast( settings.log_job_done );
             Broadcast< Boolean > LOG_FINAL      = jssc.sparkContext().broadcast( settings.log_final );
             
-            // Create a DStream listening on port name-of-master-node.9999
-            //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
-            JavaDStream< String > LINES = jssc.textFileStream( settings.trigger_dir );
+            JavaDStream< String > LINES
+            if ( settings.trigger_port > 0 )
+                LINES = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
+            else
+                JavaDStream< String > LINES = jssc.textFileStream( settings.trigger_dir );
             
             // persist in memory --- prevent recomputing
             LINES.cache();
