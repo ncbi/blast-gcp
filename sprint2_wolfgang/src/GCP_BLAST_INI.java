@@ -162,11 +162,14 @@ public class GCP_BLAST_INI
             String value = kv.get( key );
             if ( value != null )
             {
-                res = Boolean.parseBoolean( value );
-            }
-            catch ( Exception e )
-            {
-                res = defaultvalue;
+                try
+                {
+                    res = Boolean.parseBoolean( value );
+                }
+                catch ( Exception e )
+                {
+                    res = defaultvalue;
+                }
             }
         }
         return res;
