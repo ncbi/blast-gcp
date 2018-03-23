@@ -180,6 +180,7 @@ class GCP_BLAST_DRIVER extends Thread
                 long count = rdd.count();
                 if ( count > 0 )
                 {
+                    rdd.cache();
                     rdd.saveAsTextFile( SAVE_DIR.getValue() );
                     if ( LOG_FINAL.getValue() )
                     {
@@ -193,6 +194,7 @@ class GCP_BLAST_DRIVER extends Thread
                             }
                         } );
                     }
+                    rdd.unpersist( true );
                 }
             } );
 
