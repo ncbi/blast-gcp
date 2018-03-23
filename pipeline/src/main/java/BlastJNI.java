@@ -59,7 +59,7 @@ public class BlastJNI {
 
     private native String[] prelim_search(String dbenv, String rid, String query, String db_part, String params);
 
-    private native String[] traceback(String[] jsonHSPs);
+    private native String[] traceback(String dbenv, String[] jsonHSPs);
 
     public static void log(String msg) {
         try {
@@ -187,8 +187,9 @@ public class BlastJNI {
         }
 
         //String dbenv=cache_dbs(db_bucket, db, part);
+        String dbenv="/tmp/blast/nt.04";
 
-        String[] results=traceback(jsonHSPs);
+        String[] results=traceback(dbenv, jsonHSPs);
         log("jni_traceback returned " + results.length + " results:");
         for (String s: results)
         {

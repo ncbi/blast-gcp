@@ -230,10 +230,20 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
+Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jstring dbenv, jobjectArray stringArray)
 {
     char msg[4096];
     log("Entered C++ Java_BlastJNI_traceback");
+
+    const char* cdbenv = env->GetStringUTFChars(dbenv, NULL);
+    log(cdbenv);
+    std::string sdbenv(cdbenv);
+
+    if (setenv("BLASTDB", cdbenv, 1)) {
+        sprintf(msg, "Couldn't setenv BLASTDB=%s, errno:%d", cdbenv, errno);
+        log(msg);
+    }
+
 
     int stringCount = env->GetArrayLength(stringArray);
     sprintf(msg, "stringArray has %d elements", stringCount);
@@ -316,10 +326,6 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
 
     ncbi::blast::TIntermediateAlignments alignments;
 
-    const char* BLASTDB = "/tmp/blast/nt.04";
-    setenv("BLASTDB", BLASTDB, 1);
-    log(BLASTDB);
-
     sprintf(msg, "Calling TracebackSearch(%s %s %s)...", query.data(),
             db.data(), program.data());
     db = "nt.04";
@@ -369,6 +375,7 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(json.data()));
     }
 
+    env->ReleaseStringUTFChars(dbenv, cdbenv);
     log("Leaving C++ Java_BlastJNI_traceback\n");
     return ret;
 }
