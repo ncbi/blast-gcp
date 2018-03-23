@@ -2,3 +2,8 @@ target/
 *.result
 BlastJNI.jar
 
+*.out
+typescript*
+cscope.*
+vim.paths
+tags
