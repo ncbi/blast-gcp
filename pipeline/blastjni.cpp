@@ -242,12 +242,6 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jstring dbenv, jobjectArray s
     log(cdbenv);
     std::string sdbenv(cdbenv);
 
-    if (setenv("BLASTDB", cdbenv, 1)) {
-        sprintf(msg, "Couldn't setenv BLASTDB=%s, errno:%d", cdbenv, errno);
-        log(msg);
-    }
-
-
     int stringCount = env->GetArrayLength(stringArray);
     sprintf(msg, "stringArray has %d elements", stringCount);
     log(msg);
@@ -328,6 +322,16 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jstring dbenv, jobjectArray s
     log(msg);
 
     ncbi::blast::TIntermediateAlignments alignments;
+
+    if (setenv("BLASTDB", cdbenv, 1)) {
+        sprintf(msg, "Couldn't setenv BLASTDB=%s, errno:%d", cdbenv, errno);
+        log(msg);
+    }
+
+    if (getenv("BLASTDB")) {
+        sprintf(msg, "  $BLASTDB is now %s", getenv("BLASTDB"));
+        log(msg);
+    }
 
     sprintf(msg, "Calling TracebackSearch(%s %s %s)...", query.data(),
             db.data(), program.data());
