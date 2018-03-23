@@ -70,8 +70,8 @@ public class GCP_BLAST_SETTINGS
         num_job_partitions = 1;
         
         log_request = true;
-        log_job_start = false;
-        log_job_done = false;
+        log_job_start = true;
+        log_job_done = true;
         log_final = true;
     }
     
@@ -107,8 +107,8 @@ public class GCP_BLAST_SETTINGS
         num_job_partitions  = ini_file.getInt( "APP", "num_job_partitions", 1 );
         
         log_request     = ini_file.getBoolean( "APP", "log_request", true );
-        log_job_start   = ini_file.getBoolean( "APP", "log_start", false );
-        log_job_done    = ini_file.getBoolean( "APP", "log_done", false );
+        log_job_start   = ini_file.getBoolean( "APP", "log_start", true );
+        log_job_done    = ini_file.getBoolean( "APP", "log_done", true );
         log_final       = ini_file.getBoolean( "APP", "log_final", false );
     }
 
