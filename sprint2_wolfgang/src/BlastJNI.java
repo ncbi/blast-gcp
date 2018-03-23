@@ -212,11 +212,12 @@ public class BlastJNI {
     }
 
     public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String part, String params) {
-        log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params);
+        log( "jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params );
         String dbenv=cache_dbs( db_bucket, db, part );
+        log( "---dbenf = " + dbenv );
         String full_db = String.format( "%s/%s", dbenv, part ); 
         
-        String[] results=prelim_search( full_db, rid, query, part, params);
+        String[] results=prelim_search( dbenv, rid, query, part, params);
         //String[] results=prelim_search(part, rid, query, db, params);
         log("jni_prelim_search returned " + results.length + " results");
         return results;
