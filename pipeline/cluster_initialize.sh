@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+#set -euo pipefail
 
 apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
 
@@ -19,23 +19,33 @@ rm -f nt04.tar
 #tar -xvf nt_all.tar
 #rm -f nt_all.tar
 
+MAXJOBS=8
 parts=`gsutil ls gs://nt_50mb_chunks/  | cut -d'.' -f2 | sort -nu`
 for part in $parts; do
     piece="nt_50M.$part"
     mkdir -p $BLASTDBDIR/$piece
     cd $BLASTDBDIR/$piece
-    mkdir lock
-    gsutil -m cp gs://nt_50mb_chunks/$piece.*in .
-    gsutil -m cp gs://nt_50mb_chunks/$piece.*sq .
+    #mkdir lock
+    gsutil -m cp gs://nt_50mb_chunks/$piece.*in . &
+    gsutil -m cp gs://nt_50mb_chunks/$piece.*sq . &
     touch done
-    rmdir lock
+    #rmdir lock
+
+    j=`jobs | wc -l`
+    while [ $j -ge $MAXJOBS ]; do
+        j=`jobs | wc -l`
+        echo "$j waiting ..."
+        sleep 0.5
+    done
 done
+
 
 # Set lax permissions
 cd $BLASTTMP
 chown -R spark:spark $BLASTTMP
 chmod -R ugo+rw $BLASTTMP
 
+ls -laR $BLASTTMP
 
 echo Cluster Initialized
 date
