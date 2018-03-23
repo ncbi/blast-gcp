@@ -35,9 +35,12 @@ public class GCP_BLAST_SEND
     {
         try
         {
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            String local_host = localMachine.getHostName();
+            
             Socket socket = new Socket( host, port );
             PrintWriter out = new PrintWriter( socket.getOutputStream(), true );
-            out.println( msg );
+            out.println( String.format( "[%s] %s", local_host, msg ) );
             socket.close();
         }
         catch ( Exception e )

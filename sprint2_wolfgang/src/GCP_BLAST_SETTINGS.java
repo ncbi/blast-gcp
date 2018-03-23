@@ -30,12 +30,24 @@ import java.net.*;
 
 public class GCP_BLAST_SETTINGS
 {
+    // --------------------keys and constants -------------------------------------
+    public static final String appName_key = "appName";
+    public static final String default_bucket = "nt_50mb_chunks";
+    public static final String bucket_key = "bucket";
+    
+    // ----------------------------------------------------------------------------
     public String appName;
+    public String bucket;
     public Integer batch_duration;
     public List< String > files_to_transfer;
+    
     public String log_host;
     public Integer log_port;
+    
+    public String trigger_host;
+    public Integer trigger_port;
     public String trigger_dir;
+
     public String save_dir;
     public Integer num_db_partitions;
     public Integer num_job_partitions;
@@ -47,13 +59,16 @@ public class GCP_BLAST_SETTINGS
     public GCP_BLAST_SETTINGS( final String appName )
     {
         this.appName = appName;
+        bucket = default_bucket;
         batch_duration = 1;
         files_to_transfer = new ArrayList<>();
         
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            log_host = localMachine.getHostName();
+            String local_host = localMachine.getHostName();
+            log_host     = local_host;
+            trigger_host = local_host;
         }
         catch ( UnknownHostException e )
         {
@@ -61,6 +76,7 @@ public class GCP_BLAST_SETTINGS
             log_host = "";
         }
         log_port = 10011;
+        trigger_port = 10012;
         
         final String username = System.getProperty( "user.name" );
         trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
@@ -77,39 +93,44 @@ public class GCP_BLAST_SETTINGS
     
     public GCP_BLAST_SETTINGS( final GCP_BLAST_INI ini_file, final String appName )
     {
-        this.appName = ini_file.getString( "APP", "appName", appName );
-        batch_duration = ini_file.getInt( "APP", "batch_duration", 1 );
+        final String ini_section = "APP";
+        this.appName = ini_file.getString( ini_section, appName_key, appName );
+        bucket = ini_file.getString( ini_section, bucket_key, default_bucket );
+        batch_duration = ini_file.getInt( ini_section, "batch_duration", 1 );
 
         files_to_transfer = new ArrayList<>();
 
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            log_host = ini_file.getString( "APP", "log_host", localMachine.getHostName() );
+            String local_host = localMachine.getHostName();
+            log_host     = ini_file.getString( ini_section, "log_host", local_host );
+            trigger_host = ini_file.getString( ini_section, "trigger_host", local_host );
         }
         catch ( UnknownHostException e )
         {
             System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
-            log_host = ini_file.getString( "APP", "log_host", "localhost" );
+            log_host = ini_file.getString( ini_section, "log_host", "localhost" );
         }
         
-        log_port = ini_file.getInt( "APP", "log_port", 10011 );
+        log_port     = ini_file.getInt( ini_section, "log_port", 10011 );
+        trigger_port = ini_file.getInt( ini_section, "trigger_port", 10012 );
         
         final String username = System.getProperty( "user.name" );
         
         trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
-        trigger_dir = ini_file.getString( "APP", "trigger_dir", trigger_dir );
+        trigger_dir = ini_file.getString( ini_section, "trigger_dir", trigger_dir );
         
         save_dir = String.format( "hdfs:///user/%s/results/", username );
-        save_dir = ini_file.getString( "APP", "save_dir", save_dir );
+        save_dir = ini_file.getString( ini_section, "save_dir", save_dir );
         
-        num_db_partitions   = ini_file.getInt( "APP", "num_db_partitions", 10 );
-        num_job_partitions  = ini_file.getInt( "APP", "num_job_partitions", 1 );
+        num_db_partitions   = ini_file.getInt( ini_section, "num_db_partitions", 10 );
+        num_job_partitions  = ini_file.getInt( ini_section, "num_job_partitions", 1 );
         
-        log_request     = ini_file.getBoolean( "APP", "log_request", true );
-        log_job_start   = ini_file.getBoolean( "APP", "log_start", false );
-        log_job_done    = ini_file.getBoolean( "APP", "log_done", false );
-        log_final       = ini_file.getBoolean( "APP", "log_final", false );
+        log_request     = ini_file.getBoolean( ini_section, "log_request", true );
+        log_job_start   = ini_file.getBoolean( ini_section, "log_start", false );
+        log_job_done    = ini_file.getBoolean( ini_section, "log_done", false );
+        log_final       = ini_file.getBoolean( ini_section, "log_final", true );
     }
 
     @Override public String toString()
@@ -118,6 +139,8 @@ public class GCP_BLAST_SETTINGS
         S  =  S +  String.format( "batch_duration ..... %d\n", batch_duration );
         S  =  S +  String.format( "log_host ........... %s\n", log_host );
         S  =  S +  String.format( "log_port ........... %d\n", log_port );
+        S  =  S +  String.format( "trigger_host ....... %s\n", trigger_host );
+        S  =  S +  String.format( "trigger_port ....... %d\n", trigger_port );
         S  =  S +  String.format( "trigger_dir ........ %s\n", trigger_dir );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
         S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );

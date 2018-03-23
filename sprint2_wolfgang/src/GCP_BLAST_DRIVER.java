@@ -64,7 +64,7 @@ class GCP_BLAST_DRIVER extends Thread
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
             List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
-            for ( int i = 0; i < settings.num_db_partitions; i++ )
+            for ( int i = 1; i < settings.num_db_partitions; i++ )
             {
                 String part_name;
                 if ( i < 10 )
@@ -76,6 +76,7 @@ class GCP_BLAST_DRIVER extends Thread
             
             // we broadcast this list to all nodes
             Broadcast< List< GCP_BLAST_PARTITION > > PARTITIONS = jssc.sparkContext().broadcast( partitions );
+            Broadcast< String > BUCKET          = jssc.sparkContext().broadcast( settings.bucket );
             Broadcast< String > LOG_HOST        = jssc.sparkContext().broadcast( settings.log_host );
             Broadcast< Integer > LOG_PORT       = jssc.sparkContext().broadcast( settings.log_port );
             Broadcast< String > SAVE_DIR        = jssc.sparkContext().broadcast( settings.save_dir );
@@ -84,9 +85,11 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_JOB_DONE   = jssc.sparkContext().broadcast( settings.log_job_done );
             Broadcast< Boolean > LOG_FINAL      = jssc.sparkContext().broadcast( settings.log_final );
             
-            // Create a DStream listening on port name-of-master-node.9999
-            //JavaReceiverInputDStream< String > lines = jssc.socketTextStream( trigger_host, trigger_port );
-            JavaDStream< String > LINES = jssc.textFileStream( settings.trigger_dir );
+            JavaDStream< String > LINES;
+            if ( settings.trigger_port > 0 )
+                LINES = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
+            else
+                LINES = jssc.textFileStream( settings.trigger_dir );
             
             // persist in memory --- prevent recomputing
             LINES.cache();
@@ -108,13 +111,13 @@ class GCP_BLAST_DRIVER extends Thread
             JOBS.cache();
             
             // repartition with exactly n RDD-partition in each RDD of the Stream
-            JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
+            //JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
             
             // persist in memory --- prevent recomputing
-            REPARTITIONED_JOBS.cache();
+            //REPARTITIONED_JOBS.cache();
             
             // send it to the search-function, which turns it into HSP's
-            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = REPARTITIONED_JOBS.flatMap( job ->
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
             {
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
@@ -125,21 +128,36 @@ class GCP_BLAST_DRIVER extends Thread
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                      String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.partition.name ) );
 
-                String[] search_res = blaster.jni_prelim_search( "nt_50mb_chunks",
-                    job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
-                Integer count = search_res.length;
-                
-                if ( LOG_JOB_DONE.getValue() )
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                     String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.name, count ) );
-
-                if ( count > 0 )
+                Integer count = 0;
+                try
                 {
-                    for ( String S : search_res )
-                        res.add( new GCP_BLAST_HSP( job, S ) );
+                    String[] search_res = blaster.jni_prelim_search( BUCKET.getValue(),
+                                                job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
+
+                    count = search_res.length;
+                
+                    if ( LOG_JOB_DONE.getValue() )
+                        GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                         String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.name, count ) );
+
+                    if ( count > 0 )
+                    {
+                        for ( String S : search_res )
+                        {
+                            //GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "HSP: '%s'", S ) );
+                            res.add( new GCP_BLAST_HSP( job, S ) );
+                        }
+                    }
                 }
-                else
-                   res.add( new GCP_BLAST_HSP( job ) );
+                catch ( Exception e )
+                {
+                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                         String.format( "request exeption: '%s'", e ) );
+                }
+
+                if ( count == 0 )
+                   res.add( new GCP_BLAST_HSP( job ) ); // empty job
+                
                 return res.iterator();
             } );
 
@@ -155,10 +173,11 @@ class GCP_BLAST_DRIVER extends Thread
            */
 
             // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
-            /* JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() ); */
-
+            JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() );
+            FINAL.cache();
+            
             // print the FINAL ( this runs on a workernode! )
-            SEARCH_RES.foreachRDD( rdd -> {
+            FINAL.foreachRDD( rdd -> {
                 long count = rdd.count();
                 if ( count > 0 )
                 {

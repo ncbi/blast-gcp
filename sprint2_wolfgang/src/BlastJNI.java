@@ -28,6 +28,8 @@ import java.lang.System;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.file.attribute.PosixFilePermission;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
@@ -44,7 +46,6 @@ public class BlastJNI {
         try {
             // Java will look for libblastjni.so
             System.loadLibrary("blastjni");
-            //System.load(SparkFiles.get("libblastjni.so"));
         } catch(Exception e) {
             try {
                 log("Couldn't System.loadLibrary, trying System.load");
@@ -57,83 +58,123 @@ public class BlastJNI {
 
     private native String[] prelim_search(String dbenv, String rid, String query, String db_part, String params);
 
-    private native String[] traceback(String[] jsonHSPs);
+    private native String[] traceback(String dbenv, String[] jsonHSPs);
 
-    public static void log(String msg) {
+    private static void log(String msg) {
         try {
             System.out.println(msg);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.log"), true));
+            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blast/jni.log"), true));
             pw.println("(java) "+ msg);
             pw.close();
         } catch(FileNotFoundException ex) {
         }
     }
 
+/*
+    public static byte[] hexToBytes(String blob) {
+        // TODO
+        byte[] ret=new byte[1];
+        return ret;
+    }
+
+    public static byte[] SeqAlignToSeqAnnot(byte[][]) {
+        // TODO
+        byte[] ret=new byte[1];
+        return ret;
+    }
+*/
     private String cache_dbs(String db_bucket, String db, String part) {
         log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", part=" + part + ")");
 
-        String localdir="/tmp/blast/";
+        String localdir="/tmp/blast/db/";
         String dbdir=localdir + part + "/";
         String donefile=dbdir + "done";
         String lockfile=dbdir + "lock";
 
-        if(!Files.exists(Paths.get(donefile))) {
+        if(false || !Files.exists(Paths.get(donefile))) {
             try {
-            log(donefile + " doesn't exist.");
+                log(donefile + " doesn't exist.");
 
-            File dir=new File(dbdir);
-            dir.mkdirs();
+                File dir=new File(dbdir);
+                dir.mkdirs();
 
-            File scriptfile=File.createTempFile("cache-blast-",".sh");
-//            scriptfile.deleteOnExit();
-            String scriptname=scriptfile.getAbsolutePath();
-            log("Creating shell script:" + scriptname);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
-            pw.println("#!/usr/bin/env bash");
-            pw.println("BUCKET=$1");
-            pw.println("PART=$2");
-            pw.println("DIR=$3");
-            pw.println("LOCKFILE=$4");
-            pw.println("DONEFILE=$5");
-            pw.println("cd $DIR");
-            pw.println("exec >  >(tee -ia log)");
-            pw.println("exec 2> >(tee -ia log) >&2");
-            pw.println("date");
-            pw.println("echo \"BUCKET is   $BUCKET\" ");
-            pw.println("echo \"PART is     $PART\" ");
-            pw.println("echo \"DIR is      $DIR\" ");
-            pw.println("echo \"LOCKFILE is $LOCKFILE\" ");
-            pw.println("echo \"DONEFILE is $DONEFILE\" ");
-            pw.println("echo \"attempting to lock (pid=$$)\"");
-            pw.println("echo");
-            pw.println("id");
-            pw.println("pwd");
-            pw.println("echo");
-            pw.println("env");
-            pw.println("echo");
-            pw.println("#lockfile $LOCKFILE # blocks");
-            pw.println("if [ -e $DONEFILE ]; then");
-            pw.println("  echo \"already done (pid=$$)\"");
-            pw.println("  exit 0 # Another thread completed this.");
-            pw.println("fi");
-            pw.println("echo ----- Fetching files from Google Cloud Storage ---");
-            pw.println("export HOME=/var/lib/hadoop-yarn");
-            pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
-            pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
-            pw.println("touch $DONEFILE");
-            pw.println("rm -f $LOCKFILE");
-            pw.println("date");
-            pw.println("exit 0");
-            pw.close();
-            scriptfile.setExecutable(true,true);
+                File scriptfile=File.createTempFile("cache-blast-",".sh");
+                scriptfile.deleteOnExit();
+                String scriptname=scriptfile.getAbsolutePath();
+                log("Creating shell script:" + scriptname);
+                PrintWriter pw=new PrintWriter(new FileOutputStream(scriptfile, true));
+                pw.println("#!/usr/bin/env bash");
+                pw.println("BUCKET=$1");
+                pw.println("PART=$2");
+                pw.println("DIR=$3");
+                pw.println("LOCKFILE=$4");
+                pw.println("DONEFILE=$5");
+                pw.println("mkdir -p $DIR");
+                pw.println("cd $DIR");
+                pw.println("exec >  >(tee -ia log)");
+                pw.println("exec 2> >(tee -ia log) >&2");
+                pw.println("date");
+                pw.println("echo \"BUCKET is   $BUCKET\" ");
+                pw.println("echo \"PART is     $PART\" ");
+                pw.println("echo \"DIR is      $DIR\" ");
+                pw.println("echo \"LOCKFILE is $LOCKFILE\" ");
+                pw.println("echo \"DONEFILE is $DONEFILE\" ");
+                pw.println("echo");
+                pw.println("id");
+                pw.println("pwd");
+                pw.println("echo");
+                pw.println("env");
+                pw.println("echo");
+                pw.println("echo \"attempting to lock (pid=$$)\"");
+                pw.println("#lockfile $LOCKFILE # blocks");
+                pw.println("mkdir $LOCKFILE > /dev/null 2>&1");
+                pw.println("RET=$?");
+                pw.println("if [ $RET -eq 1 ]; then");
+                pw.println("  while [ ! -e $DONEFILE ]; do");
+                pw.println("    echo Waiting...");
+                pw.println("    date");
+                pw.println("    sleep 1");
+                pw.println("  done");
+                pw.println("fi");
+                pw.println("if [ -e $DONEFILE ]; then");
+                pw.println("  echo \"already done (pid=$$)\"");
+                pw.println("  exit 0 # Another thread completed this.");
+                pw.println("fi");
+                pw.println("echo \"Listing $BUCKET\"");
+                pw.println("gsutil ls gs://$BUCKET | head");
+                pw.println("echo ----- Fetching files from Google Cloud Storage  $BUCKET ---");
+                pw.println("#export HOME=/var/lib/hadoop-yarn");
+                pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*in\" .");
+                pw.println("gsutil -m cp \"gs://$BUCKET/$PART.*sq\" .");
+                pw.println("date >> $DONEFILE");
+                pw.println("date");
+                pw.println("exit 0");
+                pw.close();
+                scriptfile.setExecutable(true,true);
 
-            ProcessBuilder pb=new ProcessBuilder(scriptname,
-                    db_bucket,
-                    part,
-                    dbdir,
-                    lockfile,
-                    donefile);
-            Process p=pb.start();
+                log("Calling shell script: " + scriptname +
+                        db_bucket + " " +
+                        part + " " +
+                        dbdir + " " +
+                        lockfile + " " +
+                        donefile + " " );
+
+                ProcessBuilder pb=new ProcessBuilder(scriptname,
+                        db_bucket,
+                        part,
+                        dbdir,
+                        lockfile,
+                        donefile);
+                Process p=pb.start();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                String line;
+                while ((line = br.readLine()) != null) {
+                    log("script output\t" + line);
+                }
+                int errcode=p.waitFor();
+                log("Called shell script: " + scriptname + ":" + errcode);
 
             } catch(Exception e) {
                 log("exception in cache method: " + e);
@@ -143,7 +184,9 @@ public class BlastJNI {
             log(dbdir + " cached.");
         }
 
-        return dbdir;
+        //return dbdir.substring(0,dbdir.length()-1);
+        // Strip final slash
+        return dbdir.replaceFirst("/$","");
     }
 
     //private native String[] traceback(String[] jsonHSPs);
@@ -156,22 +199,23 @@ public class BlastJNI {
         }
 
         //String dbenv=cache_dbs(db_bucket, db, part);
+        String dbenv="/tmp/blast/nt.04";
 
-        String[] results=traceback(jsonHSPs);
+        String[] results=traceback(dbenv, jsonHSPs);
         log("jni_traceback returned " + results.length + " results:");
         for (String s: results)
         {
-            log("tb:" + s);
+            log("traceback:" + s);
         }
 
         return results;
     }
 
     public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String part, String params) {
-        log("jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params);
-        String dbenv=cache_dbs(db_bucket, db, part);
-
-        String[] results=prelim_search(dbenv, rid, query, db, params);
+        log( "jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params );
+        String dbenv=cache_dbs( db_bucket, db, part );
+        
+        String[] results=prelim_search( dbenv, rid, query, part, params);
         log("jni_prelim_search returned " + results.length + " results");
         return results;
     }
@@ -184,20 +228,26 @@ public class BlastJNI {
         String db_bucket=db + "_50mb_chunks";
         String params="blastn";
 
+        // Prelim_search test
         ArrayList<String> al=new ArrayList<String>();
-        for (int partnum=0; partnum <= 26; ++partnum)
+        // Keep it manageble, above query has hits in partitions #14 & 18
+        for (int partnum=12; partnum <= 18; ++partnum)
         {
             String part=db + "_50M." + String.format("%02d", partnum);
 
+            log("----   Processing part " + partnum);
             String results[]=new BlastJNI().jni_prelim_search(db_bucket, db, rid, query, part, params);
 
             log("Java results[] has " + results.length + " entries:");
             log(Arrays.toString(results));
             al.addAll(Arrays.asList(results));
         }
-
         String hsp[]=al.toArray(new String[0]);
+
+        // Traceback test
         String[] tracebacks=new BlastJNI().jni_traceback(hsp);
+        log("Java traceback[] has " + tracebacks.length + " entries:");
+        log(Arrays.toString(tracebacks));
     }
 }
 

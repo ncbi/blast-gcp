@@ -46,7 +46,6 @@ public class BlastJNI {
         try {
             // Java will look for libblastjni.so
             System.loadLibrary("blastjni");
-            //System.load(SparkFiles.get("libblastjni.so"));
         } catch(Exception e) {
             try {
                 log("Couldn't System.loadLibrary, trying System.load");
@@ -61,7 +60,7 @@ public class BlastJNI {
 
     private native String[] traceback(String dbenv, String[] jsonHSPs);
 
-    public static void log(String msg) {
+    private static void log(String msg) {
         try {
             System.out.println(msg);
             PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blast/jni.log"), true));
@@ -71,15 +70,28 @@ public class BlastJNI {
         }
     }
 
+/*
+    public static byte[] hexToBytes(String blob) {
+        // TODO
+        byte[] ret=new byte[1];
+        return ret;
+    }
+
+    public static byte[] SeqAlignToSeqAnnot(byte[][]) {
+        // TODO
+        byte[] ret=new byte[1];
+        return ret;
+    }
+*/
     private String cache_dbs(String db_bucket, String db, String part) {
         log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", part=" + part + ")");
 
-        String localdir="/tmp/blast/";
+        String localdir="/tmp/blast/db/";
         String dbdir=localdir + part + "/";
         String donefile=dbdir + "done";
         String lockfile=dbdir + "lock";
 
-        if(!Files.exists(Paths.get(donefile))) {
+        if(false || !Files.exists(Paths.get(donefile))) {
             try {
                 log(donefile + " doesn't exist.");
 
