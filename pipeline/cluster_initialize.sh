@@ -2,11 +2,47 @@
 
 apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
 
+BLASTTMP=/tmp/blast/test
+BLASTDBDIR=$BLASTTMP/db
+
+# Copy stuff from GCS
+mkdir -p $BLASTDBDIR/nt.04
+cd $BLASTDBIR/nt.04
+gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
+tar -xvf nt04.tar
+rm -f nt04.tar
+
+mkdir -p $BLASTDBDIR/all
+cd $BLASTDBDIR/all
+gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt_all.tar .
+tar -xvf nt_all.tar
+rm -f nt_all.tar
+
+parts=`gsutil ls gs://nt_50mb_chunks/  | cut -d'.' -f2 | sort -nu`
+for part in $parts; do
+    piece="nt_50M.$part"
+    mkdir -p $BLASTDBDIR/$piece
+    cd $BLASTDBIR/$piece
+    mkdir lock
+    gsutil -m cp gs://nt_50mb_chunks/$piece.*in .
+    gsutil -m cp gs://nt_50mb_chunks/$piece.*sq .
+    touch done
+    rmdir lock
+done
+
+# Set lax permissions
+cd $BLASTTMP
+chown -R spark:spark $BLASTTMP
+chmod -R ugo+rw $BLASTTMP
+
+
+echo Cluster Initialized
+date
 exit 0
 
 # Copy to bucket with:
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
-gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
+#gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
 
 
 
@@ -44,23 +80,6 @@ cd /tmp
 shutdown -h +1440
 
 <<"SKIP"
-    # Set lax permissions for /tmp/blast
-    mkdir -p /tmp/blast/db
-    cd /tmp/blast/
-    chown -R spark:spark /tmp/blast/
-    chmod -R ugo+rw /tmp/blast
-
-    # Copy stuff from GCS
-    gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
-    cd /tmp/blast/db
-    tar -xvf ../nt04.tar
-    rm -f ../nt04.tar
-    cd /tmp/blast
-    #gsutil cp gs://blastgcp-pipeline-test/libs/* .
-    #chmod ugo+rx *.so
-    chown -R spark:spark /tmp/blast/
-    chmod -R ugo+rw /tmp/blast
-
 
     # For master node only below this:
     ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
@@ -71,8 +90,5 @@ shutdown -h +1440
         apt-get install maven -y
     fi
 SKIP
-
-echo Cluster Initialized
-date
 
 exit 0
