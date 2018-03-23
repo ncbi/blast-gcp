@@ -74,6 +74,13 @@ static void log(const char* msg)
     }
 }
 
+static void jnithrow(JNIEnv * env, const char * msg)
+{
+    log("--- Exception ---");
+    log(msg);
+    env->ThrowNew(env->FindClass("java/lang/Exception"), msg);
+}
+
 static void iterate_HSPs(BlastHSPList* hsp_list, std::vector<std::string>& vs)
 {
     for (int i = 0; i < hsp_list->hspcnt; ++i) {
@@ -146,7 +153,6 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     std::vector<std::string> vs;
 
-    // TODO: Exceptions: env->Throw(...)
     if (hsp_stream != NULL) {
         BlastHSPList* hsp_list = NULL;
         int status = BlastHSPStreamRead(hsp_stream, &hsp_list);
@@ -154,8 +160,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         log(msg);
 
         if (status == kBlastHSPStream_Error) {
-            log("TODO: Exception from BlastHSPStreamRead");
-            // TODO: Exception
+            jnithrow(env, "Exception from BlastHSPStreamRead");
         }
 
         while (status == kBlastHSPStream_Success && hsp_list != NULL) {
@@ -164,16 +169,14 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
             iterate_HSPs(hsp_list, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
             if (status == kBlastHSPStream_Error) {
-                log("TODO: Exception from BlastHSPStreamRead");
-                // TODO: Exception
+                jnithrow(env,"Exception from BlastHSPStreamRead");
             }
         }
 
         Blast_HSPListFree(hsp_list);
         BlastHSPStreamFree(hsp_stream);
     } else {
-        log("NULL hsp_stream");
-        // TODO: Exception
+        jnithrow(env,"NULL hsp_stream");
     }
 
     sprintf(msg, "  Have %lu elements", vs.size());
