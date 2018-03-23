@@ -217,7 +217,9 @@ public class BlastJNI {
         String db_bucket=db + "_50mb_chunks";
         String params="blastn";
 
+        // Prelim_search test
         ArrayList<String> al=new ArrayList<String>();
+        // Keep it manageble, above query has hits in partitions #14 & 18
         for (int partnum=12; partnum <= 18; ++partnum)
         {
             String part=db + "_50M." + String.format("%02d", partnum);
@@ -229,9 +231,12 @@ public class BlastJNI {
             log(Arrays.toString(results));
             al.addAll(Arrays.asList(results));
         }
-
         String hsp[]=al.toArray(new String[0]);
+
+        // Traceback test
         String[] tracebacks=new BlastJNI().jni_traceback(hsp);
+        log("Java traceback[] has " + tracebacks.length + " entries:");
+        log(Arrays.toString(tracebacks));
     }
 }
 
