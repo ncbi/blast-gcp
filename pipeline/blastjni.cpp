@@ -74,7 +74,7 @@ static void log(const char* msg)
     }
 }
 
-static void jnithrow(JNIEnv * env, const char * msg)
+static void jnithrow(JNIEnv* env, const char* msg)
 {
     log("--- Exception ---");
     log(msg);
@@ -169,14 +169,14 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
             iterate_HSPs(hsp_list, vs);
             status = BlastHSPStreamRead(hsp_stream, &hsp_list);
             if (status == kBlastHSPStream_Error) {
-                jnithrow(env,"Exception from BlastHSPStreamRead");
+                jnithrow(env, "Exception from BlastHSPStreamRead");
             }
         }
 
         Blast_HSPListFree(hsp_list);
         BlastHSPStreamFree(hsp_stream);
     } else {
-        jnithrow(env,"NULL hsp_stream");
+        jnithrow(env, "NULL hsp_stream");
     }
 
     sprintf(msg, "  Have %lu elements", vs.size());
@@ -232,8 +232,8 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
     return ret;
 }
 
-JNIEXPORT jobjectArray JNICALL
-Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jstring dbenv, jobjectArray stringArray)
+JNIEXPORT jobjectArray JNICALL Java_BlastJNI_traceback(
+    JNIEnv* env, jobject jobj, jstring dbenv, jobjectArray stringArray)
 {
     char msg[4096];
     log("Entered C++ Java_BlastJNI_traceback");
@@ -281,6 +281,8 @@ Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jstring dbenv, jobjectArray s
             std::getline(colonstream, value, ':');
             sprintf(msg, "key=%s, value=%s", key.data(), value.data());
             log(msg);
+
+            // TODO: a std::set might be better
             if (key == "oid") hsp.oid = std::stoi(value);
             if (key == "score") hsp.score = std::stoi(value);
 

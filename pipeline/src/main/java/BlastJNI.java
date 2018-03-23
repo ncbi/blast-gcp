@@ -193,7 +193,7 @@ public class BlastJNI {
         log("jni_traceback returned " + results.length + " results:");
         for (String s: results)
         {
-            log("tb:" + s);
+            log("traceback:" + s);
         }
 
         return results;
