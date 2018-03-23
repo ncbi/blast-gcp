@@ -70,7 +70,7 @@ class GCP_BLAST_DRIVER extends Thread
                 if ( i < 10 )
                     part_name = String.format( "nt_50M.%02d", i );
                 else
-                    part_name = String.format( "nt_50M.d", i );
+                    part_name = String.format( "nt_50M.%d", i );
                 partitions.add( new GCP_BLAST_PARTITION( part_name, i ) );
             }
             
