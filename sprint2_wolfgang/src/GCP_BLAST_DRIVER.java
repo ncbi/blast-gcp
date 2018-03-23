@@ -89,7 +89,7 @@ class GCP_BLAST_DRIVER extends Thread
             if ( settings.trigger_port > 0 )
                 LINES = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
             else
-                JavaDStream< String > LINES = jssc.textFileStream( settings.trigger_dir );
+                LINES = jssc.textFileStream( settings.trigger_dir );
             
             // persist in memory --- prevent recomputing
             LINES.cache();
