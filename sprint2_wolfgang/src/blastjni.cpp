@@ -181,25 +181,25 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 
     sprintf(msg, "  Have %lu elements", vs.size());
     log(msg);
-
-    if (!vs.size()) {
-        char buf[256];
-        log("  Empty hsp_list, emitting sentinel");
-        sprintf(buf,
-                "\"oid\": %d, "
-                "\"score\": %d, "
-                "\"qstart\": %d, "
-                "\"qstop\": %d, "
-                "\"qframe\": %d, "
-                "\"qgapstart\": %d, "
-                "\"sstart\": %d, "
-                "\"sstop\": %d, "
-                "\"sframe\": %d, "
-                "\"sgapstart\": %d, ",
-                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
-        vs.push_back(buf);
-    }
-
+    /*
+        if (!vs.size()) {
+            char buf[256];
+            log("  Empty hsp_list, emitting sentinel");
+            sprintf(buf,
+                    "\"oid\": %d, "
+                    "\"score\": %d, "
+                    "\"qstart\": %d, "
+                    "\"qstop\": %d, "
+                    "\"qframe\": %d, "
+                    "\"qgapstart\": %d, "
+                    "\"sstart\": %d, "
+                    "\"sstop\": %d, "
+                    "\"sframe\": %d, "
+                    "\"sgapstart\": %d, ",
+                    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
+            vs.push_back(buf);
+        }
+    */
     jobjectArray ret;
     ret = (jobjectArray)env->NewObjectArray(
         vs.size(), env->FindClass("java/lang/String"), NULL);
@@ -210,7 +210,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         std::string json = "{ ";
         json += vs[i];
         json += ", \"part\": \"" + sdb + "\" ";
-        if (true) // Not joined by Spark
+        if (false) // Not joined by Spark
         {
             json += ", \"RID\": \"" + srid + "\" ";
             json += ", \"db\": \"" + sdb + "\" ";
