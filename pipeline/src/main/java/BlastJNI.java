@@ -86,7 +86,7 @@ public class BlastJNI {
     private String cache_dbs(String db_bucket, String db, String part) {
         log("cache_dbs(db_bucket=" + db_bucket + ", db=" + db + ", part=" + part + ")");
 
-        String localdir="/tmp/blast/db";
+        String localdir="/tmp/blast/db/";
         String dbdir=localdir + part + "/";
         String donefile=dbdir + "done";
         String lockfile=dbdir + "lock";
