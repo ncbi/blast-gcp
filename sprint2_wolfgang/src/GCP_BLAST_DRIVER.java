@@ -162,7 +162,7 @@ class GCP_BLAST_DRIVER extends Thread
             } );
 
             // persist in memory --- prevent recomputing
-            //SEARCH_RES.cache();
+            SEARCH_RES.cache();
             
             // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
             /*
@@ -173,11 +173,11 @@ class GCP_BLAST_DRIVER extends Thread
            */
 
             // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
-            /* JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() ); */
-
+            JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() );
+            FINAL.cache();
+            
             // print the FINAL ( this runs on a workernode! )
-            SEARCH_RES.foreachRDD( rdd -> {
-                rdd.cache();
+            FINAL.foreachRDD( rdd -> {
                 long count = rdd.count();
                 if ( count > 0 )
                 {
@@ -189,13 +189,12 @@ class GCP_BLAST_DRIVER extends Thread
                             while( rdd_part.hasNext() && ( i < 10 ) )
                             {
                                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                                     String.format( "[ %d of %d ] %s", i, count, rdd_part.next().toString() ) );
+                                                     String.format( "[ %d of %d ] %s", i, count, rdd_part.next() ) );
                                 i += 1;
                             }
                         } );
                     }
                 }
-                rdd.unpersist( true );
             } );
 
            jssc.start();               // Start the computation
