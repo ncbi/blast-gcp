@@ -64,7 +64,7 @@ class GCP_BLAST_DRIVER extends Thread
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
             List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
-            for ( int i = 0; i < settings.num_db_partitions; i++ )
+            for ( int i = 1; i < settings.num_db_partitions; i++ )
             {
                 String part_name;
                 if ( i < 10 )
