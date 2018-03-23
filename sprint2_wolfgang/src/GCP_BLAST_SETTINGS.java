@@ -30,6 +30,12 @@ import java.net.*;
 
 public class GCP_BLAST_SETTINGS
 {
+    // --------------------keys and constants -------------------------------------
+    public static final String appName_key = "appName";
+    public static final String default_bucket = "nt_50mb_chunks";
+    public static final String bucket_key = "bucket";
+    
+    // ----------------------------------------------------------------------------
     public String appName;
     public String bucket;
     public Integer batch_duration;
@@ -53,7 +59,7 @@ public class GCP_BLAST_SETTINGS
     public GCP_BLAST_SETTINGS( final String appName )
     {
         this.appName = appName;
-        bucket = "nt_50mb_chunks";
+        bucket = default_bucket;
         batch_duration = 1;
         files_to_transfer = new ArrayList<>();
         
@@ -70,7 +76,7 @@ public class GCP_BLAST_SETTINGS
             log_host = "";
         }
         log_port = 10011;
-        trigger_port = 0;
+        trigger_port = 10012;
         
         final String username = System.getProperty( "user.name" );
         trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
@@ -88,8 +94,8 @@ public class GCP_BLAST_SETTINGS
     public GCP_BLAST_SETTINGS( final GCP_BLAST_INI ini_file, final String appName )
     {
         final String ini_section = "APP";
-        this.appName = ini_file.getString( ini_section, "appName", appName );
-        bucket = ini_file.getString( ini_section, "bucket", "nt_50mb_chunks" );
+        this.appName = ini_file.getString( ini_section, appName_key, appName );
+        bucket = ini_file.getString( ini_section, bucket_key, default_bucket );
         batch_duration = ini_file.getInt( ini_section, "batch_duration", 1 );
 
         files_to_transfer = new ArrayList<>();
@@ -108,7 +114,7 @@ public class GCP_BLAST_SETTINGS
         }
         
         log_port     = ini_file.getInt( ini_section, "log_port", 10011 );
-        trigger_port = ini_file.getInt( ini_section, "trigger_port", 0 );
+        trigger_port = ini_file.getInt( ini_section, "trigger_port", 10012 );
         
         final String username = System.getProperty( "user.name" );
         

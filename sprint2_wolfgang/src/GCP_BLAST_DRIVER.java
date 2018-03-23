@@ -128,22 +128,33 @@ class GCP_BLAST_DRIVER extends Thread
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                      String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.partition.name ) );
 
-                String[] search_res = blaster.jni_prelim_search( BUCKET.getValue(),
-                                            job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
-                                            
-                Integer count = search_res.length;
-                
-                if ( LOG_JOB_DONE.getValue() )
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                     String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.name, count ) );
-
-                if ( count > 0 )
+                Integer count = 0;
+                try
                 {
-                    for ( String S : search_res )
-                        res.add( new GCP_BLAST_HSP( job, S ) );
+                    String[] search_res = blaster.jni_prelim_search( BUCKET.getValue(),
+                                                job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
+
+                    count = search_res.length;
+                
+                    if ( LOG_JOB_DONE.getValue() )
+                        GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                         String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.name, count ) );
+
+                    if ( count > 0 )
+                    {
+                        for ( String S : search_res )
+                            res.add( new GCP_BLAST_HSP( job, S ) );
+                    }
                 }
-                else
-                   res.add( new GCP_BLAST_HSP( job ) );
+                catch ( Exception e )
+                {
+                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                         String.format( "request exeption: '%s', e ) );
+                }
+
+                if ( count == 0 )
+                   res.add( new GCP_BLAST_HSP( job ) ); // empty job
+                   
                 return res.iterator();
             } );
 
