@@ -162,7 +162,7 @@ class GCP_BLAST_DRIVER extends Thread
             } );
 
             // persist in memory --- prevent recomputing
-            SEARCH_RES.cache();
+            //SEARCH_RES.cache();
             
             // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
             /*
