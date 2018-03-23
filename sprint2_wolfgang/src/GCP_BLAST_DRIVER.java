@@ -143,7 +143,10 @@ class GCP_BLAST_DRIVER extends Thread
                     if ( count > 0 )
                     {
                         for ( String S : search_res )
+                        {
+                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "HSP: '%s'", S ) );
                             res.add( new GCP_BLAST_HSP( job, S ) );
+                        }
                     }
                 }
                 catch ( Exception e )
