@@ -111,13 +111,13 @@ class GCP_BLAST_DRIVER extends Thread
             JOBS.cache();
             
             // repartition with exactly n RDD-partition in each RDD of the Stream
-            JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
+            //JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
             
             // persist in memory --- prevent recomputing
-            REPARTITIONED_JOBS.cache();
+            //REPARTITIONED_JOBS.cache();
             
             // send it to the search-function, which turns it into HSP's
-            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = REPARTITIONED_JOBS.flatMap( job ->
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
             {
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
