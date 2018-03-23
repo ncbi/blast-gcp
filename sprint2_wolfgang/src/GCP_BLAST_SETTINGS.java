@@ -130,7 +130,7 @@ public class GCP_BLAST_SETTINGS
         log_request     = ini_file.getBoolean( ini_section, "log_request", true );
         log_job_start   = ini_file.getBoolean( ini_section, "log_start", false );
         log_job_done    = ini_file.getBoolean( ini_section, "log_done", false );
-        log_final       = ini_file.getBoolean( ini_section, "log_final", false );
+        log_final       = ini_file.getBoolean( ini_section, "log_final", true );
     }
 
     @Override public String toString()
