@@ -74,43 +74,101 @@ public class GCP_BLAST_INI
       }
    }
 
-   public String getString( final String section, final String key, final String defaultvalue )
-   {
-      Map< String, String > kv = _entries.get( section );
-      if ( kv == null )
-         return defaultvalue;
-      return kv.get( key );
+    public String getString( final String section, final String key, final String defaultvalue )
+    {
+        String res = defaultvalue;
+        Map< String, String > kv = _entries.get( section );
+        if ( kv != null )
+        {
+            String value = kv.get( key );
+            if ( value != null )
+                res = value;
+        }
+        return res;
    }
 
-   public int getInt( final String section, final String key, int defaultvalue )
-   {
-      Map< String, String > kv = _entries.get( section );
-      if ( kv == null )
-         return defaultvalue;
-      return Integer.parseInt( kv.get( key ) );
+    public int getInt( final String section, final String key, int defaultvalue )
+    {
+        int res = defaultvalue;
+        Map< String, String > kv = _entries.get( section );
+        if ( kv != null )
+        {
+            String value = kv.get( key );
+            if ( value != null )
+            {
+                try
+                {
+                    res = Integer.parseInt( value );
+                }
+                catch ( Exception e )
+                {
+                    res = defaultvalue;
+                }
+            }
+        }
+        return res;
    }
 
-   public float getFloat( final String section, final String key, float defaultvalue )
-   {
-      Map< String, String > kv = _entries.get( section );
-      if ( kv == null )
-         return defaultvalue;
-      return Float.parseFloat( kv.get( key ) );
-   }
+    public float getFloat( final String section, final String key, float defaultvalue )
+    {
+        float res = defaultvalue;
+        Map< String, String > kv = _entries.get( section );
+        if ( kv != null )
+        {
+            String value = kv.get( key );
+            if ( value != null )
+            {
+                try
+                {
+                    res = Float.parseFloat( value );
+                }
+                catch ( Exception e )
+                {
+                    res = defaultvalue;
+                }
+            }
+        }
+        return res;
+    }
 
-   public double getDouble( final String section, final String key, double defaultvalue )
-   {
-      Map< String, String > kv = _entries.get( section );
-      if ( kv == null )
-         return defaultvalue;
-      return Double.parseDouble( kv.get( key ) );
+    public double getDouble( final String section, final String key, double defaultvalue )
+    {
+        double res = defaultvalue;
+        Map< String, String > kv = _entries.get( section );
+        if ( kv != null )
+        {
+            String value = kv.get( key );
+            if ( value != null )
+            {
+                try
+                {
+                    res = Double.parseDouble( value );
+                }
+                catch ( Exception e )
+                {
+                    res = defaultvalue;
+                }
+            }
+        }
+        return res;
    }
    
-   public Boolean getBoolean( final String section, final String key, Boolean defaultvalue )
-   {
-      Map< String, String > kv = _entries.get( section );
-      if ( kv == null )
-         return defaultvalue;
-      return Boolean.parseBoolean( kv.get( key ) );
+    public Boolean getBoolean( final String section, final String key, Boolean defaultvalue )
+    {
+        Boolean res = defaultvalue;
+        Map< String, String > kv = _entries.get( section );
+        if ( kv != null )
+        {
+            String value = kv.get( key );
+            if ( value != null )
+            {
+                res = Boolean.parseBoolean( value );
+            }
+            catch ( Exception e )
+            {
+                res = defaultvalue;
+            }
+        }
+        return res;
    }
 }
