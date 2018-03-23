@@ -368,7 +368,7 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_traceback(
         std::string hex;
         for (size_t b = 0; b != asn.size(); ++b) {
             char buf[8];
-            sprintf(buf, "%02x", asn[b]);
+            sprintf(buf, "%02x", (unsigned char)asn[b]);
             hex.append(buf);
         }
 
