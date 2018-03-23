@@ -15,7 +15,6 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 # gcloud dataproc clusters diagnose cluster-name
 #--zone "" ?
-#--initialization-actions-timeout 60 # Default 10m \
 #--max-age=8h \
 #--single-node
 gcloud dataproc --region us-east4 \
@@ -29,6 +28,7 @@ gcloud dataproc --region us-east4 \
     --region us-east4 \
     --zone   us-east4-b \
     --image-version 1.2 \
+    --initialization-action-timeout 30m \
     --initialization-actions \
     'gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh' \
     --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
