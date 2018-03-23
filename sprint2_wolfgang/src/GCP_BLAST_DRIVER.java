@@ -188,7 +188,7 @@ class GCP_BLAST_DRIVER extends Thread
                             while( rdd_part.hasNext() && ( i < 10 ) )
                             {
                                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                                     String.format( "[ %d of %d ] %s", i, count, rdd_part.next() ) );
+                                                     String.format( "[ %d of %d ] %s", i, count, rdd_part.next().toString() ) );
                                 i += 1;
                             }
                         } );
