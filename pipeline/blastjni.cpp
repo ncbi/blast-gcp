@@ -36,7 +36,11 @@
 #include <algo/blast/api/objmgrfree_query_data.hpp>
 #include <algo/blast/api/prelim_stage.hpp>
 #include <algo/blast/core/blast_hspstream.h>
+#include <algorithm>
 #include <ctype.h>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
 #include <ncbi_pch.hpp>
 #include <objects/seq/Bioseq.hpp>
 #include <objects/seq/Seq_data.hpp>
@@ -45,6 +49,7 @@
 #include <objects/seqloc/Seq_id.hpp>
 #include <objects/seqset/Bioseq_set.hpp>
 #include <objects/seqset/Seq_entry.hpp>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -79,13 +84,16 @@ static void iterate_HSPs(BlastHSPList* hsp_list, std::vector<std::string>& vs)
                 "\"score\": %d, "
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
+                "\"qframe\": %d, "
+                "\"qgapstart\": %d, "
                 "\"sstart\": %d, "
                 "\"sstop\": %d, "
-                "\"sgapstart\": %d, "
-                "\"qgapstart\": %d ",
+                "\"sframe\": %d, "
+                "\"sgapstart\": %d, ",
                 hsp_list->oid, hsp->score, hsp->query.offset, hsp->query.end,
-                hsp->subject.offset, hsp->subject.end,
-                hsp->subject.gapped_start, hsp->query.gapped_start);
+                hsp->query.frame, hsp->query.gapped_start,
+                hsp->subject.offset, hsp->subject.end, hsp->subject.frame,
+                hsp->subject.gapped_start);
         vs.push_back(buf);
     }
 }
@@ -179,11 +187,13 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
                 "\"score\": %d, "
                 "\"qstart\": %d, "
                 "\"qstop\": %d, "
+                "\"qframe\": %d, "
+                "\"qgapstart\": %d, "
                 "\"sstart\": %d, "
                 "\"sstop\": %d, "
-                "\"sgapstart\": %d, "
-                "\"qgapstart\": %d ",
-                -1, -1, -1, -1, -1, -1, -1, -1);
+                "\"sframe\": %d, "
+                "\"sgapstart\": %d, ",
+                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
         vs.push_back(buf);
     }
 
@@ -197,14 +207,14 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
         std::string json = "{ ";
         json += vs[i];
         json += ", \"part\": \"" + sdb + "\" ";
-        if (false) // Not joined by Spark
+        if (true) // Not joined by Spark
         {
             json += ", \"RID\": \"" + srid + "\" ";
             json += ", \"db\": \"" + sdb + "\" ";
             json += ", \"params\": \"" + sparams + "\" ";
             json += ", \"query\": \"" + squery + "\" ";
         }
-        json += " } \n";
+        json += " }\n";
 
         const char* buf = json.data();
         env->SetObjectArrayElement(ret, i, env->NewStringUTF(buf));
@@ -222,51 +232,142 @@ JNIEXPORT jobjectArray JNICALL Java_BlastJNI_prelim_1search(
 JNIEXPORT jobjectArray JNICALL
 Java_BlastJNI_traceback(JNIEnv* env, jobject jobj, jobjectArray stringArray)
 {
-    char msg[256];
+    char msg[4096];
     log("Entered C++ Java_BlastJNI_traceback");
 
     int stringCount = env->GetArrayLength(stringArray);
     sprintf(msg, "stringArray has %d elements", stringCount);
     log(msg);
 
-    std::vector<ncbi::blast::SFlatHSP> flat_hsp_list;
+    std::vector<ncbi::blast::SFlatHSP> hsps;
 
+    std::string query, db, program, rid;
     for (int i = 0; i != stringCount; ++i) {
         jstring string
             = (jstring)(env->GetObjectArrayElement(stringArray, i));
         const char* cstring = env->GetStringUTFChars(string, NULL);
         sprintf(msg, "element %d: %s", i, cstring);
         log(msg);
-        env->ReleaseStringUTFChars(string, cstring);
-        /* nt oid;
-    int score;
-    int query_start;
-    int query_end;
-    int query_frame;
-    int subject_start;
-    int subject_end;
-    int subject_frame;
-    */
 
+        // TODO: SUPER FRAGILE, get a real C++ JSON parser
+        std::string json(cstring);
+        env->ReleaseStringUTFChars(string, cstring);
+
+        if (json.size() < 10) continue;
+        json.erase(std::remove(json.begin(), json.end(), '{'), json.end());
+        json.erase(std::remove(json.begin(), json.end(), '}'), json.end());
+        json.erase(std::remove(json.begin(), json.end(), '"'), json.end());
+        json.erase(std::remove(json.begin(), json.end(), ' '), json.end());
+        json.erase(std::remove(json.begin(), json.end(), '\n'), json.end());
+
+        ncbi::blast::SFlatHSP hsp;
+
+        std::istringstream commastream(json);
+        std::string kv;
+        while (std::getline(commastream, kv, ',')) {
+            sprintf(msg, "Got token %s", kv.data());
+            log(msg);
+
+            std::istringstream colonstream(kv);
+            std::string key, value;
+            std::getline(colonstream, key, ':');
+            std::getline(colonstream, value, ':');
+            sprintf(msg, "key=%s, value=%s", key.data(), value.data());
+            log(msg);
+            if (key == "oid") hsp.oid = std::stoi(value);
+            if (key == "score") hsp.score = std::stoi(value);
+
+            if (key == "qstart") hsp.query_start = std::stoi(value);
+            if (key == "qstop") hsp.query_end = std::stoi(value);
+            if (key == "qframe") hsp.query_frame = std::stoi(value);
+            if (key == "qgapstart") hsp.query_gapped_start = std::stoi(value);
+
+            if (key == "sstart") hsp.subject_start = std::stoi(value);
+            if (key == "sstop") hsp.subject_end = std::stoi(value);
+            if (key == "sframe") hsp.subject_frame = std::stoi(value);
+            if (key == "sgapstart")
+                hsp.subject_gapped_start = std::stoi(value);
+
+            // TODO: Check if any below change, indicating multiple queries in
+            // one HSP
+            /*            if (key == "query" && query != value)
+                        {
+                            log("    ERROR dup query");
+                            log(query.data());
+                            log(value.data());
+                        } else */
+            if (key == "query") query = value;
+            if (key == "db") db = value;
+            if (key == "params") program = value;
+            if (key == "RID") rid = value;
+        }
+        if (hsp.oid >= 0) {
+            sprintf(msg, "SFlatHSP=%d %d  %d %d %d %d  %d %d %d %d", hsp.oid,
+                    hsp.score, hsp.query_start, hsp.query_end,
+                    hsp.query_frame, hsp.query_gapped_start,
+                    hsp.subject_start, hsp.subject_end, hsp.subject_frame,
+                    hsp.subject_gapped_start);
+            log(msg);
+            hsps.push_back(hsp);
+        }
     }
+    sprintf(msg, "Have %lu HSPs ready for TracebackSearch", hsps.size());
+    log(msg);
 
     ncbi::blast::TIntermediateAlignments alignments;
 
-    // TODO: env->ReleaseStringUTFChars(all the strings, cstring)
-    jobjectArray ret;
-    ret = (jobjectArray)env->NewObjectArray(
-        1, env->FindClass("java/lang/String"), NULL);
+    const char* BLASTDB = "/tmp/blast/nt.04";
+    setenv("BLASTDB", BLASTDB, 1);
+    log(BLASTDB);
 
-    std::string fake;
-    for (int i = 0; i != 100; ++i) {
-        char buf[4];
-        sprintf(buf, "%02x", i);
-        fake.append(buf);
+    sprintf(msg, "Calling TracebackSearch(%s %s %s)...", query.data(),
+            db.data(), program.data());
+    db = "nt.04";
+    log(msg);
+    int rv = TracebackSearch(query, db, program, hsps, alignments);
+    if (rv) {
+        sprintf(msg, "TracebackSearch returned %d", rv);
+        log(msg);
     }
 
-    fake = "{ \"score\":\"3.14\", \"asn1_hexblob\":\"cafebabe010203" + fake
-        + "\" }";
-    env->SetObjectArrayElement(ret, 0, env->NewStringUTF(fake.data()));
+    sprintf(msg, "TracebackSearch returned %lu alignments",
+            alignments.size());
+    log(msg);
+
+    if (!alignments.size()) {
+        log("Adding fake");
+        std::pair<double, std::string> fake;
+        fake.first = 2.78;
+        fake.second = "This is a fake ASN.1";
+        alignments.push_back(fake);
+    }
+
+    jobjectArray ret;
+    ret = (jobjectArray)env->NewObjectArray(
+        alignments.size(), env->FindClass("java/lang/String"), NULL);
+
+    for (size_t i = 0; i != alignments.size(); ++i) {
+        double evalue = alignments[i].first;
+        std::string asn = alignments[i].second;
+
+        std::string hex;
+        for (size_t b = 0; b != asn.size(); ++b) {
+            char buf[8];
+            sprintf(buf, "%02x", asn[b]);
+            hex.append(buf);
+        }
+
+        sprintf(msg, "alignment %lu: %f : %.40s\n", i, evalue, hex.data());
+        log(msg);
+
+        std::string json = "{";
+        json += "\"score\": " + std::to_string(evalue) + ",";
+        json += " \"asn1_hexblob\": \"" + hex + "\"";
+        json += "}";
+        log(json.data());
+
+        env->SetObjectArrayElement(ret, i, env->NewStringUTF(json.data()));
+    }
 
     log("Leaving C++ Java_BlastJNI_traceback\n");
     return ret;
