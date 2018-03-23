@@ -65,8 +65,15 @@ class GCP_BLAST_DRIVER extends Thread
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
             List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
             for ( int i = 0; i < settings.num_db_partitions; i++ )
-                partitions.add( new GCP_BLAST_PARTITION( String.format( "nt.%02d", i + 1 ), i ) );
-
+            {
+                String part_name;
+                if ( i < 10 )
+                    part_name = String.format( "nt_50M.%02d", i );
+                else
+                    part_name = String.format( "nt_50M.d", i );
+                partitions.add( new GCP_BLAST_PARTITION( part_name, i ) );
+            }
+            
             // we broadcast this list to all nodes
             Broadcast< List< GCP_BLAST_PARTITION > > PARTITIONS = jssc.sparkContext().broadcast( partitions );
             Broadcast< String > LOG_HOST        = jssc.sparkContext().broadcast( settings.log_host );
