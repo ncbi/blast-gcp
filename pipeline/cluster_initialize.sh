@@ -43,7 +43,7 @@ done
 # Set lax permissions
 cd $BLASTTMP
 chown -R spark:spark $BLASTTMP
-chmod -R ugo+rw $BLASTTMP
+chmod -R ugo+rxw $BLASTTMP
 
 ls -laR $BLASTTMP
 
