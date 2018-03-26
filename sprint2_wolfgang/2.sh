@@ -38,6 +38,5 @@ fi
 # get rid of compiled classes after packing them
 rm -rf *.class
 
-#spark-submit --files libblastjni.so --master local[4] --class $MAIN_CLASS $MAIN_JAR
-#spark-submit --files libblastjni.so --class $MAIN_CLASS $MAIN_JAR
+#spark-submit --master local[4] --class $MAIN_CLASS $MAIN_JAR test.ini
 spark-submit --class $MAIN_CLASS $MAIN_JAR test.ini
