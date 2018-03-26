@@ -32,8 +32,8 @@ for part in $parts; do
     done
 done
 
-chown -R spark:spark /tmp/blast/
-chmod -R ugo+rw /tmp/blast
+sudo chown -R spark:spark /tmp/blast/
+sudo chmod -R ugo+rw /tmp/blast
 
 echo Cluster Initialized
 date

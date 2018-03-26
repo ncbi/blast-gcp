@@ -35,6 +35,12 @@ public class GCP_BLAST_SETTINGS
     public static final String default_bucket = "nt_50mb_chunks";
     public static final String bucket_key = "bucket";
     
+    public static final Integer default_batch_duration = 1;
+    public static final Integer default_log_port = 10011;
+    public static final Integer default_trigger_port = 10012;
+    public static final Integer default_num_db_partitions = 10;
+    public static final Integer default_num_job_partitions = 1;
+    
     // ----------------------------------------------------------------------------
     public String appName;
     public String bucket;
@@ -60,7 +66,7 @@ public class GCP_BLAST_SETTINGS
     {
         this.appName = appName;
         bucket = default_bucket;
-        batch_duration = 1;
+        batch_duration = default_batch_duration;
         files_to_transfer = new ArrayList<>();
         
         try
@@ -75,15 +81,15 @@ public class GCP_BLAST_SETTINGS
             System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
             log_host = "";
         }
-        log_port = 10011;
-        trigger_port = 10012;
+        log_port = default_log_port;
+        trigger_port = default_trigger_port;
         
         final String username = System.getProperty( "user.name" );
         trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         
-        num_db_partitions = 10;
-        num_job_partitions = 1;
+        num_db_partitions = default_num_db_partitions;
+        num_job_partitions = default_num_job_partitions;
         
         log_request = true;
         log_job_start = false;
@@ -96,7 +102,7 @@ public class GCP_BLAST_SETTINGS
         final String ini_section = "APP";
         this.appName = ini_file.getString( ini_section, appName_key, appName );
         bucket = ini_file.getString( ini_section, bucket_key, default_bucket );
-        batch_duration = ini_file.getInt( ini_section, "batch_duration", 1 );
+        batch_duration = ini_file.getInt( ini_section, "batch_duration", default_batch_duration );
 
         files_to_transfer = new ArrayList<>();
 
@@ -113,8 +119,8 @@ public class GCP_BLAST_SETTINGS
             log_host = ini_file.getString( ini_section, "log_host", "localhost" );
         }
         
-        log_port     = ini_file.getInt( ini_section, "log_port", 10011 );
-        trigger_port = ini_file.getInt( ini_section, "trigger_port", 10012 );
+        log_port     = ini_file.getInt( ini_section, "log_port", default_log_port );
+        trigger_port = ini_file.getInt( ini_section, "trigger_port", default_trigger_port );
         
         final String username = System.getProperty( "user.name" );
         
@@ -124,8 +130,8 @@ public class GCP_BLAST_SETTINGS
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         save_dir = ini_file.getString( ini_section, "save_dir", save_dir );
         
-        num_db_partitions   = ini_file.getInt( ini_section, "num_db_partitions", 10 );
-        num_job_partitions  = ini_file.getInt( ini_section, "num_job_partitions", 1 );
+        num_db_partitions   = ini_file.getInt( ini_section, "num_db_partitions", default_num_db_partitions );
+        num_job_partitions  = ini_file.getInt( ini_section, "num_job_partitions", default_num_job_partitions );
         
         log_request     = ini_file.getBoolean( ini_section, "log_request", true );
         log_job_start   = ini_file.getBoolean( ini_section, "log_start", false );
