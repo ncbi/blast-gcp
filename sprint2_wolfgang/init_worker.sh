@@ -32,6 +32,8 @@ for part in $parts; do
     done
 done
 
+sleep 20
+
 sudo chown -R spark:spark /tmp/blast/
 sudo chmod -R ugo+rw /tmp/blast
 

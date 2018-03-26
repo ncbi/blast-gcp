@@ -35,7 +35,7 @@ public class GCP_BLAST_SETTINGS
     public static final String default_bucket = "nt_50mb_chunks";
     public static final String bucket_key = "bucket";
     
-    public static final Integer default_batch_duration = 1;
+    public static final Integer default_batch_duration = 10;
     public static final Integer default_log_port = 10011;
     public static final Integer default_trigger_port = 10012;
     public static final Integer default_num_db_partitions = 10;
@@ -60,7 +60,7 @@ public class GCP_BLAST_SETTINGS
     public Boolean log_request;
     public Boolean log_job_start;
     public Boolean log_job_done;
-    public Boolean log_final;
+    public Boolean log_final;   
 
     public GCP_BLAST_SETTINGS( final String appName )
     {
