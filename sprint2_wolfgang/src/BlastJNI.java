@@ -211,12 +211,17 @@ public class BlastJNI {
         return results;
     }
 
-    public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String part, String params) {
+    public String[] jni_prelim_search( String db_bucket, String db, String rid, String query, String part, String params )
+    {
         log( "jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params );
-        //String dbenv=cache_dbs( db_bucket, db, part );
-        String dbenv = "/tmp/blast/db/" + part;
-        String[] results=prelim_search( dbenv, rid, query, part, params );
-        log("jni_prelim_search returned " + results.length + " results");
+
+        // we will take care of caching the partition later:
+        // String dbenv=cache_dbs( db_bucket, db, part );
+
+        String[] results=prelim_search( "", rid, query, "/tmp/blast/db/" + part, params );
+        
+        log( "jni_prelim_search returned " + results.length + " results" );
+        
         return results;
     }
 

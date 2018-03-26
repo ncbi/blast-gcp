@@ -92,7 +92,7 @@ class GCP_BLAST_DRIVER extends Thread
                 LINES = jssc.textFileStream( settings.trigger_dir );
             
             // persist in memory --- prevent recomputing
-            LINES.persist();
+            LINES.cache();
             
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = LINES.flatMap( line ->
@@ -108,16 +108,16 @@ class GCP_BLAST_DRIVER extends Thread
             } );
 
             // persist in memory --- prevent recomputing
-            JOBS.persist();
+            JOBS.cache();
             
             // repartition with exactly n RDD-partition in each RDD of the Stream
-            //JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
+            JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
             
             // persist in memory --- prevent recomputing
-            //REPARTITIONED_JOBS.persist();
+            REPARTITIONED_JOBS.cache();
             
             // send it to the search-function, which turns it into HSP's
-            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = REPARTITIONED_JOBS.flatMap( job ->
             {
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
@@ -162,7 +162,7 @@ class GCP_BLAST_DRIVER extends Thread
             } );
 
             // persist in memory --- prevent recomputing
-            SEARCH_RES.persist();
+            SEARCH_RES.cache();
             
             // filter SEARCH_RES by min_score into FILTERED ( mocked filtering by score, should by take top N higher than score )
             /*
@@ -174,7 +174,7 @@ class GCP_BLAST_DRIVER extends Thread
 
             // map FILTERED via simulated Backtrace into FINAL ( mocked by calling toString )
             JavaDStream< String > FINAL = SEARCH_RES.map( hsp -> hsp.toString() );
-            FINAL.persist();
+            FINAL.cache();
             
             // print the FINAL ( this runs on a workernode! )
             FINAL.foreachRDD( rdd -> {
