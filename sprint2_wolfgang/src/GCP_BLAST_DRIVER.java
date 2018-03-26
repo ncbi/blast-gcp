@@ -148,7 +148,7 @@ class GCP_BLAST_DRIVER extends Thread
                 catch ( Exception e )
                 {
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                         String.format( "request exeption: '%s'", e ) );
+                                         String.format( "request exeption: '%s' for '%s'", e, job.req.toString() ) );
                 }
 
                 if ( count == 0 )
