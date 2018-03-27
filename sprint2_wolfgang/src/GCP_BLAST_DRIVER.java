@@ -148,7 +148,9 @@ class GCP_BLAST_DRIVER extends Thread
                 if ( count == 0 )
                    res.add( new GCP_BLAST_HSP( job ) ); // empty job
                 */
-                ArrayList< GCP_BLAST_HSP > res = make_hsp( job, 3, 10101 );
+                
+                GCP_BLAST_JNI_EMULATOR emu = new GCP_BLAST_JNI_EMULATOR();
+                ArrayList< GCP_BLAST_HSP > res = emu.make_hsp( job, 3, 10101 );
                 return res.iterator();
             } );
 
