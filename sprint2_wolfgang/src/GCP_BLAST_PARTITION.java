@@ -28,7 +28,7 @@ import java.io.*;
 
 class GCP_BLAST_PARTITION implements Serializable
 {
-    public final String nr;
+    public final Integer nr;
     public final String db_spec;    
     
     // location  : '/tmp/blast/db'
