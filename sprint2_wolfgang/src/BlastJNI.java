@@ -42,16 +42,23 @@ import org.apache.spark.*;
 import org.apache.spark.SparkFiles;
 
 public class BlastJNI {
-    static {
-        try {
+    static
+    {
+        try
+        {
             // Java will look for libblastjni.so
-            System.loadLibrary("blastjni");
-        } catch(Exception e) {
-            try {
-                log("Couldn't System.loadLibrary, trying System.load");
-                System.load(SparkFiles.get("libblastjni.so"));
-            } catch(Exception e2) {
-                log("System.load() exception: " + e2);
+            System.loadLibrary( "blastjni" );
+        }
+        catch ( Exception e )
+        {
+            try
+            {
+                log( "Couldn't System.loadLibrary, trying System.load" );
+                System.load( SparkFiles.get( "libblastjni.so" ) );
+            }
+            catch ( Exception e2 )
+            {
+                log( "System.load() exception: " + e2 );
             }
         }
     }
