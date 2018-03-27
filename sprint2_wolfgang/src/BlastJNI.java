@@ -46,10 +46,11 @@ public class BlastJNI {
         try {
             // Java will look for libblastjni.so
             System.loadLibrary("blastjni");
-        } catch(Exception e) {
+        } catch(Throwable e) {
             try {
-                log("Couldn't System.loadLibrary, trying System.load");
-                System.load(SparkFiles.get("libblastjni.so"));
+                String path = SparkFiles.get("libblastjni.so");
+                log(String.format("Couldn't System.loadLibrary, trying System.load(%s)", path));
+                System.load(path);
             } catch(Exception e2) {
                 log("System.load() exception: " + e2);
             }
@@ -211,12 +212,17 @@ public class BlastJNI {
         return results;
     }
 
-    public String[] jni_prelim_search(String db_bucket, String db, String rid, String query, String part, String params) {
+    public String[] jni_prelim_search( String db_bucket, String db, String rid, String query, String part, String params )
+    {
         log( "jni_prelim_search called with " + db_bucket + "," + db + "," + rid + "," + query + "," + part + "," + params );
-        //String dbenv=cache_dbs( db_bucket, db, part );
-        dbenv = "/tmp/blast/db/" + part;
-        String[] results=prelim_search( dbenv, rid, query, part, params);
-        log("jni_prelim_search returned " + results.length + " results");
+
+        // we will take care of caching the partition later:
+        // String dbenv=cache_dbs( db_bucket, db, part );
+
+        String[] results=prelim_search( "", rid, query, "/tmp/blast/db/" + part, params );
+        
+        log( "jni_prelim_search returned " + results.length + " results" );
+        
         return results;
     }
 

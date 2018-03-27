@@ -50,7 +50,8 @@ class GCP_BLAST_DRIVER extends Thread
     {
         try
         {
-            jssc.stop( true, true );
+            if (jssc != null)
+                jssc.stop( true, true );
         }
         catch ( Exception e )
         {
@@ -85,11 +86,7 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_JOB_DONE   = jssc.sparkContext().broadcast( settings.log_job_done );
             Broadcast< Boolean > LOG_FINAL      = jssc.sparkContext().broadcast( settings.log_final );
             
-            JavaDStream< String > LINES;
-            if ( settings.trigger_port > 0 )
-                LINES = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
-            else
-                LINES = jssc.textFileStream( settings.trigger_dir );
+            JavaDStream< String > LINES = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
             
             // persist in memory --- prevent recomputing
             LINES.cache();
@@ -111,13 +108,13 @@ class GCP_BLAST_DRIVER extends Thread
             JOBS.cache();
             
             // repartition with exactly n RDD-partition in each RDD of the Stream
-            //JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
+            JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
             
             // persist in memory --- prevent recomputing
-            //REPARTITIONED_JOBS.cache();
+            REPARTITIONED_JOBS.cache();
             
             // send it to the search-function, which turns it into HSP's
-            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = REPARTITIONED_JOBS.flatMap( job ->
             {
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
@@ -152,7 +149,7 @@ class GCP_BLAST_DRIVER extends Thread
                 catch ( Exception e )
                 {
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                         String.format( "request exeption: '%s'", e ) );
+                                         String.format( "request exeption: '%s' for '%s'", e, job.toString() ) );
                 }
 
                 if ( count == 0 )

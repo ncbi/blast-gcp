@@ -52,8 +52,7 @@ public class GCP_BLAST_SETTINGS
     
     public String trigger_host;
     public Integer trigger_port;
-    public String trigger_dir;
-
+    
     public String save_dir;
     public Integer num_db_partitions;
     public Integer num_job_partitions;
@@ -85,7 +84,6 @@ public class GCP_BLAST_SETTINGS
         trigger_port = default_trigger_port;
         
         final String username = System.getProperty( "user.name" );
-        trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         
         num_db_partitions = default_num_db_partitions;
@@ -124,9 +122,6 @@ public class GCP_BLAST_SETTINGS
         
         final String username = System.getProperty( "user.name" );
         
-        trigger_dir = String.format( "hdfs:///user/%s/todo/", username );
-        trigger_dir = ini_file.getString( ini_section, "trigger_dir", trigger_dir );
-        
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         save_dir = ini_file.getString( ini_section, "save_dir", save_dir );
         
@@ -147,7 +142,6 @@ public class GCP_BLAST_SETTINGS
         S  =  S +  String.format( "log_port ........... %d\n", log_port );
         S  =  S +  String.format( "trigger_host ....... %s\n", trigger_host );
         S  =  S +  String.format( "trigger_port ....... %d\n", trigger_port );
-        S  =  S +  String.format( "trigger_dir ........ %s\n", trigger_dir );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
         S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );
         S  =  S +  String.format( "num_job_partitions . %s\n", num_job_partitions );
