@@ -180,7 +180,7 @@ class GCP_BLAST_DRIVER extends Thread
                     {
                         rdd.foreachPartition( rdd_part -> {
                             int i = 0;
-                            while( rdd_part.hasNext() && ( i < 10 ) )
+                            while( rdd_part.hasNext() /* && ( i < 10 ) */ )
                             {
                                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                                      String.format( "[ %d of %d ] %s", i, count, rdd_part.next() ) );
