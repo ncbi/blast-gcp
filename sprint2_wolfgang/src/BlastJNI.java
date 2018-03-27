@@ -28,12 +28,12 @@ class BlastJNI
 {
     String [] jni_prelim_search ( String query, String db_spec, String program, String params )
     {
-        lib . jni_prelim_search ( query, db_spec, program, params );
+        return lib . jni_prelim_search ( query, db_spec, program, params );
     }
 
     String [] jni_traceback ( String query, String db_spec, String program, String params, final String [] jsonHSPs )
     {
-        lib . jni_traceback ( query, db_spec, program, params, jsonHSPs );
+        return lib . jni_traceback ( query, db_spec, program, params, jsonHSPs );
     }
     
     void setLogWriter ( PrintWriter writer )
