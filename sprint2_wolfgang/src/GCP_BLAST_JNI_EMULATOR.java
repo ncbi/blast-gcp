@@ -24,12 +24,10 @@
 *
 */
 
-import java.io.*;
-import java.util.Random;
-import java.util.*;
+import java.util.ArrayList;
 
 
-class GCP_BLAST_JNI_EMULATOR
+class GCP_BLAST_JNI_EMULATOR implements Serializable
 {
     public ArrayList< GCP_BLAST_HSP > make_hsp( final GCP_BLAST_JOB job, Integer count, Long oid )
     {

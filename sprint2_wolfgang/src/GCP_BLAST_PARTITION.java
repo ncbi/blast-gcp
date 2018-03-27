@@ -24,8 +24,6 @@
 *
 */
 
-import java.io.*;
-
 class GCP_BLAST_PARTITION implements Serializable
 {
     public final Integer nr;

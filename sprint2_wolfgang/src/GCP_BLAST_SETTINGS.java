@@ -151,8 +151,8 @@ public class GCP_BLAST_SETTINGS
     {
         String S = String.format( "appName ............ %s\n", appName );
         S  =  S +  String.format( "db_location ........ %s\n", db_location );
-        S  =  S +  String.format( "db_pattern .>....... %s\n", db_pattern );
-        S  =  S +  String.format( "batch_duration ..... %d\n", batch_duration );
+        S  =  S +  String.format( "db_pattern ......... %s\n", db_pattern );
+        S  =  S +  String.format( "batch_duration ..... %d seconds\n", batch_duration );
         S  =  S +  String.format( "log_host ........... %s:%d\n", log_host, log_port );
         S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
