@@ -59,16 +59,28 @@ class GCP_BLAST_HSP implements Serializable
         this.score  = 0;
     }
     
+    public long nextLong( Random rand, long n )
+    {
+        // error checking and 2^x checking removed for simplicity.
+        long bits, val;
+        do
+        {
+            bits = (rng.nextLong() << 1) >>> 1;
+            val = bits % n;
+        } while ( bits - val + ( n - 1 ) < 0L );
+        return val;
+    }
+    
     public GCP_BLAST_HSP( final GCP_BLAST_JOB job, final Long oid )
     {
         this.job    = job;
         this.oid    = oid;
         
         Random rand = new Random();
-        qstart = (long)rand.nextInt( job.req.query.length() );
-        qstop  = qstart + (long)rand.nextInt( job.req.query.length() - qstart );
-        sstart = (long)rand.nextInt( 1000000 );
-        sstop  = sstart + (long)rand.nextInt( 1000000 - qstart );
+        qstart = nextLong( rand, (long)job.req.query.length() );
+        qstop  = qstart + nextLong( rand, (long)job.req.query.length() - qstart );
+        sstart = nextLong( rand, 1000000L );
+        sstop  = sstart + nextLong( rand, 1000000L - qstart );
         score  = rand.nextInt( 1000 );
     }
     
