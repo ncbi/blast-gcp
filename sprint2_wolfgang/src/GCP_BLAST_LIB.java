@@ -53,7 +53,7 @@ class GCP_BLAST_LIB
 
         if ( log_writer != null )
         {
-            log ( "jni_traceback returned " + result . length + " result:" );
+            log ( "jni_traceback returned " + results . length + " result:" );
             for ( String s : results )
                 log ( "traceback: " + s );
         }

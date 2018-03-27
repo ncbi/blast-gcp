@@ -27,15 +27,15 @@
 import java.io.*;
 import java.util.Random;
 
-class GCP_BLAST_JNI_EMULATOR implements Serializable
+import org.apache.spark.*;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.streaming.*;
+import org.apache.spark.streaming.api.java.*;
+
+class GCP_BLAST_JNI_EMULATOR
 {
-    private Random rand;
-    
-    public GCP_BLAST_JNI_EMULATOR()
-    {
-        rand = new Random();
-    }
-    
     public ArrayList< GCP_BLAST_HSP > make_hsp( final GCP_BLAST_JOB job, Integer count, Long oid )
     {
         ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
