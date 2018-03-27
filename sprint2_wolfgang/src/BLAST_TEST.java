@@ -49,7 +49,7 @@ public class BlastJNI {
         }
         catch ( Exception e )
         {
-            log( "System.load() exception: " + e );
+            System.out.println( "System.load() exception: " + e );
         }
     }
 
