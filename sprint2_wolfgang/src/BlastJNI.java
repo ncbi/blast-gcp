@@ -67,13 +67,17 @@ public class BlastJNI {
 
     private native String[] traceback(String dbenv, String[] jsonHSPs);
 
-    private static void log(String msg) {
-        try {
-            System.out.println(msg);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blast/jni.log"), true));
-            pw.println("(java) "+ msg);
+    private static void log( String msg )
+    {
+        try
+        {
+            System.out.println( msg );
+            PrintWriter pw = new PrintWriter( new FileOutputStream( new File( "/tmp/blast/jni.log" ), true ) );
+            pw.println( "(java) "+ msg );
             pw.close();
-        } catch(FileNotFoundException ex) {
+        }
+        catch ( FileNotFoundException ex )
+        {
         }
     }
 
