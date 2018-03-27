@@ -91,7 +91,7 @@ class GCP_BLAST_LIB
             }
             catch ( Throwable e2 )
             {
-                invalid = new ExceptionInInitializerError ( e2 )
+                invalid = new ExceptionInInitializerError ( e2 );
             }
         }
     }
