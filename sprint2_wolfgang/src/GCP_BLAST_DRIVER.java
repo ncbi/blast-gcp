@@ -108,6 +108,7 @@ class GCP_BLAST_DRIVER extends Thread
             // send it to the search-function, which turns it into HSP's
             JavaDStream< GCP_BLAST_HSP > SEARCH_RES = REPARTITIONED_JOBS.flatMap( job ->
             {
+                /*
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
                 BlastJNI blaster = new BlastJNI ();
@@ -120,7 +121,7 @@ class GCP_BLAST_DRIVER extends Thread
                 Integer count = 0;
                 try
                 {
-                    /* query, db_spec, program, params */
+                    //query, db_spec, program, params 
                     String[] search_res = blaster.jni_prelim_search( job.req.query, job.partition.db_spec, job.req.program, job.req.params );
 
                     count = search_res.length;
@@ -146,7 +147,8 @@ class GCP_BLAST_DRIVER extends Thread
 
                 if ( count == 0 )
                    res.add( new GCP_BLAST_HSP( job ) ); // empty job
-                
+                */
+                ArrayList< GCP_BLAST_HSP > res = make_hsp( job, 3, 10101 );
                 return res.iterator();
             } );
 
