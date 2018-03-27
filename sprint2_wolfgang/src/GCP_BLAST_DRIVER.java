@@ -150,7 +150,7 @@ class GCP_BLAST_DRIVER extends Thread
                 */
                 
                 GCP_BLAST_JNI_EMULATOR emu = new GCP_BLAST_JNI_EMULATOR();
-                ArrayList< GCP_BLAST_HSP > res = emu.make_hsp( job, 3, 10101 );
+                ArrayList< GCP_BLAST_HSP > res = emu.make_hsp( job, 3, 10101L );
                 return res.iterator();
             } );
 
