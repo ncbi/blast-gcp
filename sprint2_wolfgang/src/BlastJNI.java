@@ -42,7 +42,24 @@ import org.apache.spark.*;
 import org.apache.spark.SparkFiles;
 
 public class BlastJNI {
+  
+    private static String localBlastDbDir = "/tmp/blast/db";
+    private static String localLogFile = "/tmp/blast/jni.log";
+    
     static {
+         try {
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            final String fqhn = localMachine.getCanonicalHostName();
+            if (fqhn.contains("ncbi.nlm.nih.gov")) {
+                final String username = System.getProperty( "user.name" );
+                localLogFile = String.format("/net/snowman/vol/export2/%s/blast-spark.log", username); 
+                localBlastDbDir = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M";
+                log(String.format("Running at %s; BLASTDB=%s", fqhn, localBlastDbDir));
+            }
+        } catch (java.net.UnknownHostException e) {
+            log("Failed to get host information: " + e.getMessage());
+        }
+      
         try {
             // Java will look for libblastjni.so
             System.loadLibrary("blastjni");
@@ -64,7 +81,7 @@ public class BlastJNI {
     private static void log(String msg) {
         try {
             System.out.println(msg);
-            PrintWriter pw=new PrintWriter(new FileOutputStream(new File("/tmp/blast/jni.log"), true));
+            PrintWriter pw=new PrintWriter(new FileOutputStream(new File(localLogFile), true));
             pw.println("(java) "+ msg);
             pw.close();
         } catch(FileNotFoundException ex) {
@@ -219,7 +236,7 @@ public class BlastJNI {
         // we will take care of caching the partition later:
         // String dbenv=cache_dbs( db_bucket, db, part );
 
-        String[] results=prelim_search( "", rid, query, "/tmp/blast/db/" + part, params );
+        String[] results=prelim_search( "", rid, query, localBlastDbDir + part, params );
         
         log( "jni_prelim_search returned " + results.length + " results" );
         
