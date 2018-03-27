@@ -57,11 +57,11 @@ public class BlastJNI {
 
     public String[] jni_prelim_search( String rid, String query, String part, String params )
     {
-        System.out.println(( String.format( "jni_prelim_search( rid:'%s', query:'%s', part:'%s', params:'%s'", rid, query, part, params );
+        System.out.println( String.format( "jni_prelim_search( rid:'%s', query:'%s', part:'%s', params:'%s'", rid, query, part, params ) );
 
         String[] results=prelim_search( "", rid, query, part, params );
         
-        System.out.println(( "jni_prelim_search returned " + results.length + " results" );
+        System.out.println( "jni_prelim_search returned " + results.length + " results" );
 
         return results;
     }
@@ -73,7 +73,7 @@ public class BlastJNI {
         
         String rid    = "ReqID123";
         String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-        String part   = String.format( "/home/%s/spark/db", username ) ;
+        String part   = String.format( "/home/%s/spark/db", usernam ) ;
         String params = "blastn";
 
         if ( args.length > 0 )
