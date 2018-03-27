@@ -68,7 +68,7 @@ class GCP_BLAST_HSP implements Serializable
         qstart = rand.nextLong( job.req.query.length() );
         qstop  = qstart + rand.nextLong( job.req.query.length() - qstart );
         sstart = rand.nextLong( 1000000 );
-        sstop  = sstart + rand.nextLong( 1000000 - qstart )
+        sstop  = sstart + rand.nextLong( 1000000 - qstart );
         score  = rand.nextInt( 1000 );
     }
     
