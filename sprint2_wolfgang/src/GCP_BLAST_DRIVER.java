@@ -118,7 +118,7 @@ class GCP_BLAST_DRIVER extends Thread
             {
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
-                BlastJNI blaster = new BlastJNI();
+                BlastJNI blaster = new BlastJNI ();
                 // ++++++ this is the where the work happens on the worker-nodes ++++++
 
                 if ( LOG_JOB_START.getValue() )
