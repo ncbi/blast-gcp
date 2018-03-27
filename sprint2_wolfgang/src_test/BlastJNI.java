@@ -78,7 +78,7 @@ public class BlastJNI {
 
         if ( args.length > 0 )
         {
-            String[] req = args[ 1 ].split( "\\:" );
+            String[] req = args[ 0 ].split( "\\:" );
             if ( req.length > 0 ) part = req[ 0 ];
             if ( req.length > 1 ) rid  = req[ 1 ];
             if ( req.length > 2 ) query = req[ 2 ];
