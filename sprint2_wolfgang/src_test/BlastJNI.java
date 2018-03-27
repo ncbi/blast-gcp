@@ -73,7 +73,7 @@ public class BlastJNI {
         
         String rid    = "ReqID123";
         String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-        String part   = String.format( "/home/%s/spark/db", username ) ;
+        String part   = "/tmp/blast/db/nt_50M.00";
         String params = "blastn";
 
         if ( args.length > 0 )
