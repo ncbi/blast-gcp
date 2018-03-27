@@ -41,11 +41,11 @@ class GCP_BLAST_PARTITION implements Serializable
         
         String fmt;
         if ( nr < 100 )
-            fmt = "%s/%s.%.02d/%s.%.02d";
+            fmt = "%s/%s.%02d/%s.%02d";
         else
             fmt = "%s/%s.%d/%s.%d";
-        db_spec = "a spec";
-        //db_spec = String.format( fmt, location, db_pat, nr, db_pat, nr  );
+        //db_spec = "a spec";
+        db_spec = String.format( fmt, location, db_pat, nr, db_pat, nr  );
     }
 
     @Override public String toString()
