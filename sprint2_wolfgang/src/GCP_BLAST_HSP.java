@@ -61,7 +61,8 @@ class GCP_BLAST_HSP implements Serializable
     
     public long nextLong( Random rand, long range )
     {
-        return ( long )( rand.nextDouble() * range );
+        return 100L;
+        //return ( long )( rand.nextDouble() * range );
     }
     
     public GCP_BLAST_HSP( final GCP_BLAST_JOB job, final Long oid )
