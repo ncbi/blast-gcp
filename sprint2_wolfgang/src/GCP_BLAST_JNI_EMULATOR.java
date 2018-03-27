@@ -41,7 +41,7 @@ class GCP_BLAST_JNI_EMULATOR implements Serializable
         ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
         
         for ( int i = 1; i < count; i++ )
-            partitions.add( new GCP_BLAST_HSP( job, oid ) );
+            res.add( new GCP_BLAST_HSP( job, oid ) );
             
         return res;
     }
