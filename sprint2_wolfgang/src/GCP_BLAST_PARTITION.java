@@ -28,17 +28,27 @@ import java.io.*;
 
 class GCP_BLAST_PARTITION implements Serializable
 {
-    public final String name;
-    public final Integer id;
+    public final String nr;
+    public final String db_spec;    
     
-    public GCP_BLAST_PARTITION( final String name, final Integer id )
+    // location  : '/tmp/blast/db'
+    // db_pat    : 'nt_50M'
+    // nr        : 102
+    // db_spec --> '/tmp/blast/db/nt_50M.102/nt_50M.102'
+    public GCP_BLAST_PARTITION( final String location, final String db_pat, final Integer nr )
     {
-        this.name = name;
-        this.id = id;
+        this.nr = nr;
+        
+        String fmt;
+        if ( nr < 100 )
+            fmt = "%s/%s.%.02d/%s.%.02d";
+        else
+            fmt = "%s/%s.%d/%s.%d";
+        db_spec = String.format( fmt, location, db_pat, nr, db_pat, nr  );
     }
 
     @Override public String toString()
     {
-        return String.format( "part( %s.%d )", this.name, this.id );
+        return String.format( "part( %d: '%s' )", this.id, this.db_spec );
     }
 }

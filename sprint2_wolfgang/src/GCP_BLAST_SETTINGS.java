@@ -32,9 +32,13 @@ public class GCP_BLAST_SETTINGS
 {
     // --------------------keys and constants -------------------------------------
     public static final String appName_key = "appName";
-    public static final String default_bucket = "nt_50mb_chunks";
-    public static final String bucket_key = "bucket";
     
+    public static final String default_db_location = "/tmp/blast/db";
+    public static final String db_location_key = "db_location";
+    
+    public static final String default_db_pattern = "nt_50M";
+    public static final String db_pattern_key = "db_pattern";
+
     public static final Integer default_batch_duration = 10;
     public static final Integer default_log_port = 10011;
     public static final Integer default_trigger_port = 10012;
@@ -43,7 +47,10 @@ public class GCP_BLAST_SETTINGS
     
     // ----------------------------------------------------------------------------
     public String appName;
-    public String bucket;
+    
+    public String db_location;
+    public String db_pattern;
+    
     public Integer batch_duration;
     public List< String > files_to_transfer;
     
@@ -64,7 +71,10 @@ public class GCP_BLAST_SETTINGS
     public GCP_BLAST_SETTINGS( final String appName )
     {
         this.appName = appName;
-        bucket = default_bucket;
+        
+        db_location = default_db_location;
+        db_pattern  = default_db_pattern;
+        
         batch_duration = default_batch_duration;
         files_to_transfer = new ArrayList<>();
         
@@ -99,7 +109,10 @@ public class GCP_BLAST_SETTINGS
     {
         final String ini_section = "APP";
         this.appName = ini_file.getString( ini_section, appName_key, appName );
-        bucket = ini_file.getString( ini_section, bucket_key, default_bucket );
+        
+        db_location = ini_file.getString( ini_section, db_location_key, default_db_location );
+        db_pattern  = ini_file.getString( ini_section, db_pattern_key, default_db_pattern );
+        
         batch_duration = ini_file.getInt( ini_section, "batch_duration", default_batch_duration );
 
         files_to_transfer = new ArrayList<>();
@@ -137,11 +150,11 @@ public class GCP_BLAST_SETTINGS
     @Override public String toString()
     {
         String S = String.format( "appName ............ %s\n", appName );
+        S  =  S +  String.format( "db_location ........ %s\n", db_location );
+        S  =  S +  String.format( "db_pattern .>....... %s\n", db_pattern );
         S  =  S +  String.format( "batch_duration ..... %d\n", batch_duration );
-        S  =  S +  String.format( "log_host ........... %s\n", log_host );
-        S  =  S +  String.format( "log_port ........... %d\n", log_port );
-        S  =  S +  String.format( "trigger_host ....... %s\n", trigger_host );
-        S  =  S +  String.format( "trigger_port ....... %d\n", trigger_port );
+        S  =  S +  String.format( "log_host ........... %s:%d\n", log_host, log_port );
+        S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
         S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );
         S  =  S +  String.format( "num_job_partitions . %s\n", num_job_partitions );

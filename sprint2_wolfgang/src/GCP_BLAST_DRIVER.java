@@ -50,7 +50,7 @@ class GCP_BLAST_DRIVER extends Thread
     {
         try
         {
-            if (jssc != null)
+            if ( jssc != null )
                 jssc.stop( true, true );
         }
         catch ( Exception e )
@@ -65,19 +65,11 @@ class GCP_BLAST_DRIVER extends Thread
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
             List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
-            for ( int i = 1; i < settings.num_db_partitions; i++ )
-            {
-                String part_name;
-                if ( i < 10 )
-                    part_name = String.format( "nt_50M.%02d", i );
-                else
-                    part_name = String.format( "nt_50M.%d", i );
-                partitions.add( new GCP_BLAST_PARTITION( part_name, i ) );
-            }
+            for ( int i = 0; i < settings.num_db_partitions; i++ )
+                partitions.add( new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) );
             
             // we broadcast this list to all nodes
             Broadcast< List< GCP_BLAST_PARTITION > > PARTITIONS = jssc.sparkContext().broadcast( partitions );
-            Broadcast< String > BUCKET          = jssc.sparkContext().broadcast( settings.bucket );
             Broadcast< String > LOG_HOST        = jssc.sparkContext().broadcast( settings.log_host );
             Broadcast< Integer > LOG_PORT       = jssc.sparkContext().broadcast( settings.log_port );
             Broadcast< String > SAVE_DIR        = jssc.sparkContext().broadcast( settings.save_dir );
@@ -123,19 +115,19 @@ class GCP_BLAST_DRIVER extends Thread
 
                 if ( LOG_JOB_START.getValue() )
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                     String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.partition.name ) );
+                                     String.format( "starting request: '%s' at '%s' ", job.req.req_id, job.partition.db_spec ) );
 
                 Integer count = 0;
                 try
                 {
-                    String[] search_res = blaster.jni_prelim_search( BUCKET.getValue(),
-                                                job.req.db, job.req.req_id, job.req.query, job.partition.name, job.req.params );
+                    /* query, db_spec, program, params */
+                    String[] search_res = blaster.jni_prelim_search( job.req.query, job.partition.db_spec, job.req.program, job.req.params );
 
                     count = search_res.length;
                 
                     if ( LOG_JOB_DONE.getValue() )
                         GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                         String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.name, count ) );
+                                         String.format( "request '%s'.'%s' done -> count = %d", job.req.req_id, job.partition.db_spec, count ) );
 
                     if ( count > 0 )
                     {
