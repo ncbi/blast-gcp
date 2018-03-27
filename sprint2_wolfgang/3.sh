@@ -17,8 +17,8 @@ MAIN_JAR="sprint2.jar"
 rm -rf *.class
 
 echo "compiling java-classes"
-TEST="BLAST_TEST"
-javac -Xlint:unchecked -cp $DEPENDS  -d . src/$TEST.java
+TEST="BlastJNI"
+javac -Xlint:unchecked -cp $DEPENDS  -d . src_test/$TEST.java
 retval=$?
 if [[ $retval -ne 0 ]]; then
     echo "compiling java-classes failed"
