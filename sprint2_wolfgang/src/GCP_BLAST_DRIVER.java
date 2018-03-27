@@ -93,6 +93,7 @@ class GCP_BLAST_DRIVER extends Thread
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( line );
                 for ( GCP_BLAST_PARTITION partition : PARTITIONS.getValue() )
                     tmp.add( new GCP_BLAST_JOB( req, partition ) );
+
                 return tmp.iterator();
             } );
 
@@ -196,7 +197,7 @@ class GCP_BLAST_DRIVER extends Thread
         }
         catch ( Exception e )
         {
-            //System.out.println( "stream_version() exception: " + e );
+            System.out.println( "stream_version() exception: " + e );
         }
     }
 
