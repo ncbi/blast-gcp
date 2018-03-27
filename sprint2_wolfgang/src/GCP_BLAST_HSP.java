@@ -59,16 +59,9 @@ class GCP_BLAST_HSP implements Serializable
         this.score  = 0;
     }
     
-    public long nextLong( Random rand, long n )
+    public long nextLong( Random rand, long range )
     {
-        // error checking and 2^x checking removed for simplicity.
-        long bits, val;
-        do
-        {
-            bits = (rng.nextLong() << 1) >>> 1;
-            val = bits % n;
-        } while ( bits - val + ( n - 1 ) < 0L );
-        return val;
+        return ( long )( rand.nextDouble() * range );
     }
     
     public GCP_BLAST_HSP( final GCP_BLAST_JOB job, final Long oid )
