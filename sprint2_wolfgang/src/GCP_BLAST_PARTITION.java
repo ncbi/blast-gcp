@@ -49,6 +49,6 @@ class GCP_BLAST_PARTITION implements Serializable
 
     @Override public String toString()
     {
-        return String.format( "part( %d: '%s' )", this.id, this.db_spec );
+        return String.format( "part( %d: '%s' )", this.nr, this.db_spec );
     }
 }
