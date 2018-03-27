@@ -46,10 +46,11 @@ public class BlastJNI {
         try {
             // Java will look for libblastjni.so
             System.loadLibrary("blastjni");
-        } catch(Exception e) {
+        } catch(Throwable e) {
             try {
-                log("Couldn't System.loadLibrary, trying System.load");
-                System.load(SparkFiles.get("libblastjni.so"));
+                String path = SparkFiles.get("libblastjni.so");
+                log(String.format("Couldn't System.loadLibrary, trying System.load(%s)", path));
+                System.load(path);
             } catch(Exception e2) {
                 log("System.load() exception: " + e2);
             }

@@ -50,7 +50,8 @@ class GCP_BLAST_DRIVER extends Thread
     {
         try
         {
-            jssc.stop( true, true );
+            if (jssc != null)
+                jssc.stop( true, true );
         }
         catch ( Exception e )
         {
