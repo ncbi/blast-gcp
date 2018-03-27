@@ -39,7 +39,7 @@ import java.nio.file.Files;
 import java.nio.channels.FileLock;
 import java.nio.channels.FileChannel;
 
-public class BlastJNI {
+public class BLAST_TEST {
     static
     {
         try
@@ -91,7 +91,7 @@ public class BlastJNI {
         S  =  S +  String.format( "params ...... %s\n", params );
         System.out.println( S );
         
-        BlastJNI blaster = new BlastJNI();
+        BLAST_TEST blaster = new BLAST_TEST();
         String results[] = blaster.jni_prelim_search( rid, query, part, params );
     }
 }
