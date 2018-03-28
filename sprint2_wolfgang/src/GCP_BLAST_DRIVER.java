@@ -27,6 +27,8 @@
 import java.util.*;
 import java.io.*;
 
+import scala.Tuple2;
+
 import org.apache.spark.*;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
@@ -64,12 +66,15 @@ class GCP_BLAST_DRIVER extends Thread
         try
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
-            List< GCP_BLAST_PARTITION > partitions = new ArrayList<>();
+            List< Tuple2< Integer, GCP_BLAST_PARTITION > > partition_list = new ArrayList<>();
             for ( int i = 0; i < settings.num_db_partitions; i++ )
-                partitions.add( new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) );
+                partition_list.add( new Tuple2<>( i, new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) ) );
+            
+            JavaPairRDD< Integer, GCP_BLAST_PARTITION > PARTITIONS = jssc.parallelize( partition_list );
+            PARTITIONS.persist();
             
             // we broadcast this list to all nodes
-            Broadcast< List< GCP_BLAST_PARTITION > > PARTITIONS = jssc.sparkContext().broadcast( partitions );
+            //Broadcast< List< GCP_BLAST_PARTITION > > PARTITIONS = jssc.sparkContext().broadcast( partition_list );
             Broadcast< String > LOG_HOST        = jssc.sparkContext().broadcast( settings.log_host );
             Broadcast< Integer > LOG_PORT       = jssc.sparkContext().broadcast( settings.log_port );
             Broadcast< String > SAVE_DIR        = jssc.sparkContext().broadcast( settings.save_dir );
@@ -82,6 +87,7 @@ class GCP_BLAST_DRIVER extends Thread
             
             // persist in memory --- prevent recomputing
             LINES.cache();
+
             
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = LINES.flatMap( line ->

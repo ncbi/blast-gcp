@@ -33,7 +33,7 @@ class GCP_BLAST_JNI_EMULATOR
     {
         ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
         
-        for ( int i = 1; i < count; i++ )
+        for ( int i = 0; i < count; i++ )
             res.add( new GCP_BLAST_HSP( job, oid ) );
             
         return res;
