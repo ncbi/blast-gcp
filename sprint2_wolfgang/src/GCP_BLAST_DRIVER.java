@@ -24,27 +24,33 @@
 *
 */
 
-import java.util.*;
-import java.io.*;
+import java.util.List;
+import java.util.ArrayList;
 
 import scala.Tuple2;
 
-import org.apache.spark.*;
-import org.apache.spark.storage.StorageLevel;
+import org.apache.spark.api.java.Optional;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.streaming.*;
-import org.apache.spark.streaming.api.java.*;
+
+import org.apache.spark.streaming.Durations;
+import org.apache.spark.streaming.api.java.JavaStreamingContext;
+import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
+
+import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.SparkConf;
 import org.apache.spark.SparkFiles;
+
 
 class GCP_BLAST_DRIVER extends Thread
 {
     private final GCP_BLAST_SETTINGS settings;
-    private JavaStreamingContext jssc;
     private JavaSparkContext sc;
+    private JavaStreamingContext jssc;
 
     public GCP_BLAST_DRIVER( final GCP_BLAST_SETTINGS settings )
     {
@@ -109,21 +115,20 @@ class GCP_BLAST_DRIVER extends Thread
             PAIRED_INPUT_STREAM.cache();
 
             // join the PARTITIONS with the PAIRED_LINES, to trigger reshuffling
-            JavaPairDStream< Integer, Tuple2< String, GCP_BLAST_PARTITION > > JOINED_PARTITIONS = PAIRED_INPUT_STREAM.transformToPair( rdd ->
+            JavaPairDStream< Integer, Tuple2< String, Optional< GCP_BLAST_PARTITION > > > JOINED_PARTITIONS = PAIRED_INPUT_STREAM.transformToPair( rdd ->
             {
-                // return rdd.join( PARTITIONS, NUM_WORKERS.getValue() );
-                return rdd.join( PARTITIONS, NUM_WORKERS.getValue() );
+                return rdd.leftOuterJoin( PARTITIONS, NUM_WORKERS.getValue() );
             } );
             JOINED_PARTITIONS.cache();
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = JOINED_PARTITIONS.map( j ->
             {
-                Integer key                 = j._1();
+                Integer jkey                = j._1();
                 String req_line             = j._2()._1();
-                GCP_BLAST_PARTITION part    = j._2()._2();
+                GCP_BLAST_PARTITION part    = j._2()._2().get();
                 if ( LOG_REQUEST.getValue() )
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (%d)(%s)", req_line, key, part.toString() ) );
+                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (%d)(%s)", req_line, jkey, part.toString() ) );
                 
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( req_line );
                 return new GCP_BLAST_JOB( req, part );
@@ -131,12 +136,6 @@ class GCP_BLAST_DRIVER extends Thread
 
             // persist in memory --- prevent recomputing
             JOBS.cache();
-            
-            // repartition with exactly n RDD-partition in each RDD of the Stream
-            //JavaDStream< GCP_BLAST_JOB > REPARTITIONED_JOBS = JOBS.repartition( settings.num_job_partitions );
-            
-            // persist in memory --- prevent recomputing
-            //REPARTITIONED_JOBS.cache();
             
             // send it to the search-function, which turns it into HSP's
             JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->

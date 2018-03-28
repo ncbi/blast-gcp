@@ -24,27 +24,64 @@
 *
 */
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.BufferedOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 
 public class GCP_BLAST_SEND
 {
-    public static void send( final String host, final int port, final String msg )
+    private static GCP_BLAST_SEND instance = null;
+
+    private final String host;
+    private final int port;
+
+    private String localName;
+
+    private GCP_BLAST_SEND( final String host, final int port )
     {
+        this.host = host;
+        this.port = port;
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            String local_host = localMachine.getHostName();
-            
+            localName = localMachine.getHostName();
+        }
+        catch ( Exception e )
+        {
+            localName = "unknown";
+        }
+    }
+
+    public static GCP_BLAST_SEND getInstance( final String host, final int port )
+    {
+        if ( instance == null )
+        {
+            instance = new GCP_BLAST_SEND( host, port );
+        }
+        return instance;
+    }
+
+    private void send_msg( final String msg )
+    {
+        try
+        {
             Socket socket = new Socket( host, port );
-            PrintWriter out = new PrintWriter( socket.getOutputStream(), true );
-            out.println( String.format( "[%s] %s", local_host, msg ) );
+            PrintStream ps = new PrintStream( socket.getOutputStream() );
+            ps.printf( "[%s] %s\n", localName, msg );
             socket.close();
         }
         catch ( Exception e )
         {
         }
     }
+
+    public static void send( final String host, final int port, final String msg )
+    {
+        GCP_BLAST_SEND inst = getInstance( host, port );
+        if ( inst != null )
+            inst.send_msg( msg );
+    }
 }
+

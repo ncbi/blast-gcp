@@ -24,7 +24,7 @@
 *
 */
 
-import java.io.*;
+import java.io.Serializable;
 
 class GCP_BLAST_REQUEST implements Serializable
 {

@@ -24,7 +24,7 @@
 *
 */
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.Random;
 
 class GCP_BLAST_HSP implements Serializable

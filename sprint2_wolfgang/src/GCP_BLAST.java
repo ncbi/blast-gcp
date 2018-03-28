@@ -24,8 +24,8 @@
 *
 */
 
-import java.util.*;
-import java.io.*;
+import java.io.Console;
+import java.io.IOException;
 
 public final class GCP_BLAST
 {
@@ -82,9 +82,14 @@ public final class GCP_BLAST
             driver.stop_blast();
             driver.join();
         }
-        catch ( InterruptedException e )
+        catch ( InterruptedException e1 )
         {
-            System.out.println( String.format( "driver interrupted: %s", e ) );
+            System.out.println( String.format( "driver interrupted: %s", e1 ) );
+        }
+        catch( Exception e2 )
+        {
+            System.out.println( String.format( "stopping driver: %s", e2 ) );
         }
    }
 }
+
