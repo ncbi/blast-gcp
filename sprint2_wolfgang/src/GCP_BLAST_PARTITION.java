@@ -39,17 +39,15 @@ class GCP_BLAST_PARTITION implements Serializable
     public GCP_BLAST_PARTITION( final String location, final String db_pat, final Integer nr )
     {
         this.nr = nr;
-        
-        String fmt;
         if ( nr < 100 )
-            fmt = "%s/%s.%02d/%s.%02d";
+            name = String.format( "%s.%02d", db_pat, nr  );
         else
-            fmt = "%s/%s.%d/%s.%d";
-        db_spec = String.format( fmt, location, db_pat, nr, db_pat, nr  );
+            name = String.format( "%s.%d", db_pat, nr );
+        db_spec = String.format( "%s/%s/%s", location, name, name );
     }
 
     @Override public String toString()
     {
-        return String.format( "part( %d: '%s' )", this.nr, this.db_spec );
+        return String.format( "part( %d: '%s' )", this.nr, this.name );
     }
 }

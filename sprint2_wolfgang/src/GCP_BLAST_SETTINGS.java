@@ -44,6 +44,7 @@ public class GCP_BLAST_SETTINGS
     public static final Integer default_trigger_port = 10012;
     public static final Integer default_num_db_partitions = 10;
     public static final Integer default_num_job_partitions = 1;
+    public static final Integer default_num_workers = 2;
     
     // ----------------------------------------------------------------------------
     public String appName;
@@ -63,6 +64,8 @@ public class GCP_BLAST_SETTINGS
     public String save_dir;
     public Integer num_db_partitions;
     public Integer num_job_partitions;
+    public Integer num_workers;
+
     public Boolean log_request;
     public Boolean log_job_start;
     public Boolean log_job_done;
@@ -96,9 +99,10 @@ public class GCP_BLAST_SETTINGS
         final String username = System.getProperty( "user.name" );
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         
-        num_db_partitions = default_num_db_partitions;
-        num_job_partitions = default_num_job_partitions;
-        
+        num_db_partitions   = default_num_db_partitions;
+        num_job_partitions  = default_num_job_partitions;
+        num_workers         = default_num_workers;
+
         log_request = true;
         log_job_start = false;
         log_job_done = false;
@@ -140,6 +144,7 @@ public class GCP_BLAST_SETTINGS
         
         num_db_partitions   = ini_file.getInt( ini_section, "num_db_partitions", default_num_db_partitions );
         num_job_partitions  = ini_file.getInt( ini_section, "num_job_partitions", default_num_job_partitions );
+        num_workers         = ini_file.getInt( ini_section, "num_workers", default_num_workers );
         
         log_request     = ini_file.getBoolean( ini_section, "log_request", true );
         log_job_start   = ini_file.getBoolean( ini_section, "log_start", false );
@@ -156,8 +161,9 @@ public class GCP_BLAST_SETTINGS
         S  =  S +  String.format( "log_host ........... %s:%d\n", log_host, log_port );
         S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
-        S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );
-        S  =  S +  String.format( "num_job_partitions . %s\n", num_job_partitions );
+        S  =  S +  String.format( "num_db_partitions .. %d\n", num_db_partitions );
+        S  =  S +  String.format( "num_job_partitions . %d\n", num_job_partitions );
+        S  =  S +  String.format( "num_workers ........ %d\n", num_workers );
         S  =  S +  String.format( "log_request ........ %s\n", Boolean.toString( log_request ) );
         S  =  S +  String.format( "log_job_start ...... %s\n", Boolean.toString( log_job_start ) );
         S  =  S +  String.format( "log_job_done ....... %s\n", Boolean.toString( log_job_done ) );
