@@ -73,7 +73,7 @@ public class BlastJNI {
         
         String rid    = "ReqID123";
         String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-        String part   = "/tmp/blast/db/nt_50M.00";
+        String part   = "/tmp/blast/db/nt_50M.04";
         String params = "blastn";
 
         if ( args.length > 0 )

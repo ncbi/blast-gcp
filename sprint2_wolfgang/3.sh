@@ -28,4 +28,4 @@ fi
 CURDIR=`pwd`
 JAVA_LIB_PATH="-Djava.library.path=$CURDIR"
 JAVA_CLASS_PATH="-cp $DEPENDS"
-java $JAVA_LIB_PATH $JAVA_CLASS_PATH $TEST /tmp/blast/db/nt_50M.00/nt_50M.00:ttt
+java $JAVA_LIB_PATH $JAVA_CLASS_PATH $TEST /tmp/blast/db/nt_50M.04/nt_50M.04:ttt

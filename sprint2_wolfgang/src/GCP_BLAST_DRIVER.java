@@ -85,25 +85,29 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_FINAL      = jssc.sparkContext().broadcast( settings.log_final );
 
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
-            List< Tuple2< String, GCP_BLAST_PARTITION > > partition_list = new ArrayList<>();
+            List< Tuple2< String, GCP_BLAST_PARTITION > > db_sec_list = new ArrayList<>();
             String key = "nt";
             for ( int i = 0; i < settings.num_db_partitions; i++ )
-                partition_list.add( new Tuple2<>( key, new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) ) );
+                db_sec_list.add( new Tuple2<>( key, new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) ) );
 
-            JavaPairRDD< String, GCP_BLAST_PARTITION > PARTITIONS = sc.parallelizePairs( partition_list, settings.num_workers );
-            PARTITIONS.persist( StorageLevel.MEMORY_ONLY() );
+            JavaPairRDD< String, GCP_BLAST_PARTITION > DB_SEC = sc.parallelizePairs( db_sec_list, settings.num_workers );
+            DB_SEC.persist( StorageLevel.MEMORY_ONLY() );
 
+            // report about the DB_SEC - PairRDD
             GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                    String.format( "PARTITONS.partitions: %d", PARTITIONS.getNumPartitions() ) );
+                    String.format( "PARTITONS.partitions: %d", DB_SEC.getNumPartitions() ) );
+            List< List< Tuple2< String, GCP_BLAST_PARTITION > > > lP = DB_SEC.glom().collect();
+            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                    String.format( "PARTITONS.partitions: %s", lP ) );
 
             //HashPartitioner PARTI = new HashPartitioner( settings.num_workers );
 
             // receive one or multiple lines from the source
-            JavaDStream< String >INPUT_STREAM = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
-            INPUT_STREAM.cache();
+            JavaDStream< String > REQ_STREAM = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
+            REQ_STREAM.cache();
 
             // transform the source-lines into a pair-stream consisting of an worker-id and the line
-            JavaPairDStream< String, String > PAIRED_INPUT_STREAM = INPUT_STREAM.flatMapToPair( line ->
+            JavaPairDStream< String, String > PAIRED_REQ_STREAM = REQ_STREAM.flatMapToPair( line ->
             {
                 if ( LOG_REQUEST.getValue() )
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (1)", line ) );
@@ -113,18 +117,19 @@ class GCP_BLAST_DRIVER extends Thread
                     tmp.add( new Tuple2<>( "nt", line ) );
                 return tmp.iterator();
             } );
-            PAIRED_INPUT_STREAM.cache();
+            PAIRED_REQ_STREAM.cache();
 
             // join the PARTITIONS with the PAIRED_LINES, to trigger reshuffling
-            JavaPairDStream< String, Tuple2< String, Optional< GCP_BLAST_PARTITION > > > JOINED_PARTITIONS = PAIRED_INPUT_STREAM.transformToPair( rdd ->
+            JavaPairDStream< String, Tuple2< String, Optional< GCP_BLAST_PARTITION > > > JOINED_REQ_STREAM
+                = PAIRED_REQ_STREAM.transformToPair( rdd ->
             {
-                return rdd.leftOuterJoin( PARTITIONS );
+                return rdd.leftOuterJoin( DB_SEC );
             } );
-            JOINED_PARTITIONS.repartition( settings.num_workers );
-            JOINED_PARTITIONS.cache();
+            //JOINED_PARTITIONS.repartition( settings.num_workers );
+            JOINED_REQ_STREAM.cache();
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
-            JavaDStream< GCP_BLAST_JOB > JOBS = JOINED_PARTITIONS.map( j ->
+            JavaPairDStream< String, GCP_BLAST_JOB > JOBS = JOINED_REQ_STREAM.mapToPair( j ->
             {
                 String jkey                 = j._1();
                 String req_line             = j._2()._1();
@@ -133,16 +138,24 @@ class GCP_BLAST_DRIVER extends Thread
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (%s)(%s)", req_line, jkey, part.toString() ) );
                 
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( req_line );
-                return new GCP_BLAST_JOB( req, part );
+                return new Tuple2<>( part.name, new GCP_BLAST_JOB( req, part ) );
             } );
-
             // persist in memory --- prevent recomputing
             JOBS.cache();
-            
+
+
+            //JavaPairDStream< String, GCP_BLAST_JOB > PJOBS = JOBS.repartition( 2 );
+            //PJOBS.cache();
+
+
+            //List< List< Tuple2< String, GCP_BLAST_JOB > > > lPj = PJOBS.glom().collect();
+            //GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+            //        String.format( "PJOBS.partitions: %s", lPj ) );
+
             // send it to the search-function, which turns it into HSP's
-            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job ->
+            JavaDStream< GCP_BLAST_HSP > SEARCH_RES = JOBS.flatMap( job_pair ->
             {
-                /*
+                GCP_BLAST_JOB job = job_pair._2();
                 ArrayList< GCP_BLAST_HSP > res = new ArrayList<>();
 
                 BlastJNI blaster = new BlastJNI ();
@@ -156,7 +169,7 @@ class GCP_BLAST_DRIVER extends Thread
                 try
                 {
                     //query, db_spec, program, params 
-                    String[] search_res = blaster.jni_prelim_search( job.req.query, job.partition.db_spec, job.req.program, job.req.params );
+                    String[] search_res = blaster.jni_prelim_search( job.req.req_id, job.req.query, job.partition.db_spec, job.req.params );
 
                     count = search_res.length;
                 
@@ -181,15 +194,15 @@ class GCP_BLAST_DRIVER extends Thread
 
                 if ( count == 0 )
                    res.add( new GCP_BLAST_HSP( job ) ); // empty job
-                */
-                
+
+                /*                
                 GCP_BLAST_JNI_EMULATOR emu = new GCP_BLAST_JNI_EMULATOR();
-                ArrayList< GCP_BLAST_HSP > res = emu.make_hsp( job, 3, 10101L );
+                ArrayList< GCP_BLAST_HSP > res = emu.make_hsp( job._2(), 3, 10101L );
 
                 if ( LOG_JOB_DONE.getValue() )
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                         String.format( "emu.done : '%s'", job.toString() ) );
-
+                                         String.format( "emu.done : '%s'", job._2().toString() ) );
+                */
                 return res.iterator();
             } );
 
