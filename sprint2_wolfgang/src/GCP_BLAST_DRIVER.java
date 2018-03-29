@@ -44,7 +44,7 @@ import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkFiles;
-
+import org.apache.spark.HashPartitioner;
 
 class GCP_BLAST_DRIVER extends Thread
 {
@@ -75,18 +75,17 @@ class GCP_BLAST_DRIVER extends Thread
         try
         {
             // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
-            List< Tuple2< Integer, GCP_BLAST_PARTITION > > partition_list = new ArrayList<>();
+            List< Tuple2< String, GCP_BLAST_PARTITION > > partition_list = new ArrayList<>();
             Integer per_worker = settings.num_db_partitions / settings.num_workers;
-            int key = 0;
+            String key = "nt";
             for ( int i = 0; i < settings.num_db_partitions; i++ )
-            {
                 partition_list.add( new Tuple2<>( key, new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) ) );
-                if ( i % per_worker == 0 ) key++;
-            }
 
-            JavaPairRDD< Integer, GCP_BLAST_PARTITION > PARTITIONS = sc.parallelizePairs( partition_list );
+            JavaPairRDD< String, GCP_BLAST_PARTITION > PARTITIONS = sc.parallelizePairs( partition_list );
             PARTITIONS.persist( StorageLevel.MEMORY_ONLY() );
             
+            HashPartitioner PARTI = new HashPartitioner( settings.num_workers );
+
             // we broadcast this list to all nodes
             Broadcast< Integer > NUM_WORKERS    = jssc.sparkContext().broadcast( settings.num_workers );
             Broadcast< String > LOG_HOST        = jssc.sparkContext().broadcast( settings.log_host );
@@ -102,33 +101,33 @@ class GCP_BLAST_DRIVER extends Thread
             INPUT_STREAM.cache();
 
             // transform the source-lines into a pair-stream consisting of an worker-id and the line
-            JavaPairDStream< Integer, String > PAIRED_INPUT_STREAM = INPUT_STREAM.flatMapToPair( line ->
+            JavaPairDStream< String, String > PAIRED_INPUT_STREAM = INPUT_STREAM.flatMapToPair( line ->
             {
                 if ( LOG_REQUEST.getValue() )
                     GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (1)", line ) );
 
-                List< Tuple2< Integer, String > > tmp = new ArrayList<>();
-                for ( int i = 0; i < NUM_WORKERS.getValue(); i++ )
-                    tmp.add( new Tuple2<>( i, line ) );
+                List< Tuple2< String, String > > tmp = new ArrayList<>();
+                //for ( int i = 0; i < NUM_WORKERS.getValue(); i++ )
+                    tmp.add( new Tuple2<>( "nt", line ) );
                 return tmp.iterator();
             } );
             PAIRED_INPUT_STREAM.cache();
 
             // join the PARTITIONS with the PAIRED_LINES, to trigger reshuffling
-            JavaPairDStream< Integer, Tuple2< String, Optional< GCP_BLAST_PARTITION > > > JOINED_PARTITIONS = PAIRED_INPUT_STREAM.transformToPair( rdd ->
+            JavaPairDStream< String, Tuple2< String, Optional< GCP_BLAST_PARTITION > > > JOINED_PARTITIONS = PAIRED_INPUT_STREAM.transformToPair( rdd ->
             {
-                return rdd.leftOuterJoin( PARTITIONS, NUM_WORKERS.getValue() );
+                return rdd.leftOuterJoin( PARTITIONS, PARTI );
             } );
             JOINED_PARTITIONS.cache();
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
             JavaDStream< GCP_BLAST_JOB > JOBS = JOINED_PARTITIONS.map( j ->
             {
-                Integer jkey                = j._1();
+                String jkey                 = j._1();
                 String req_line             = j._2()._1();
                 GCP_BLAST_PARTITION part    = j._2()._2().get();
                 if ( LOG_REQUEST.getValue() )
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (%d)(%s)", req_line, jkey, part.toString() ) );
+                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "Request: %s received (%s)(%s)", req_line, jkey, part.toString() ) );
                 
                 GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( req_line );
                 return new GCP_BLAST_JOB( req, part );
@@ -203,7 +202,7 @@ class GCP_BLAST_DRIVER extends Thread
                 long count = rdd.count();
                 if ( count > 0 )
                 {
-                    //rdd.saveAsTextFile( SAVE_DIR.getValue() );
+                    rdd.saveAsTextFile( SAVE_DIR.getValue() );
                     if ( LOG_FINAL.getValue() )
                     {
                         rdd.foreachPartition( rdd_part -> {
