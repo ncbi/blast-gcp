@@ -74,18 +74,6 @@ class GCP_BLAST_DRIVER extends Thread
     {
         try
         {
-            // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
-            List< Tuple2< String, GCP_BLAST_PARTITION > > partition_list = new ArrayList<>();
-            Integer per_worker = settings.num_db_partitions / settings.num_workers;
-            String key = "nt";
-            for ( int i = 0; i < settings.num_db_partitions; i++ )
-                partition_list.add( new Tuple2<>( key, new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) ) );
-
-            JavaPairRDD< String, GCP_BLAST_PARTITION > PARTITIONS = sc.parallelizePairs( partition_list );
-            PARTITIONS.persist( StorageLevel.MEMORY_ONLY() );
-            
-            HashPartitioner PARTI = new HashPartitioner( settings.num_workers );
-
             // we broadcast this list to all nodes
             Broadcast< Integer > NUM_WORKERS    = jssc.sparkContext().broadcast( settings.num_workers );
             Broadcast< String > LOG_HOST        = jssc.sparkContext().broadcast( settings.log_host );
@@ -95,6 +83,20 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_JOB_START  = jssc.sparkContext().broadcast( settings.log_job_start );
             Broadcast< Boolean > LOG_JOB_DONE   = jssc.sparkContext().broadcast( settings.log_job_done );
             Broadcast< Boolean > LOG_FINAL      = jssc.sparkContext().broadcast( settings.log_final );
+
+            // create a list with N chunks for the database nt04, to be used later for creating jobs out of a request
+            List< Tuple2< String, GCP_BLAST_PARTITION > > partition_list = new ArrayList<>();
+            String key = "nt";
+            for ( int i = 0; i < settings.num_db_partitions; i++ )
+                partition_list.add( new Tuple2<>( key, new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i ) ) );
+
+            JavaPairRDD< String, GCP_BLAST_PARTITION > PARTITIONS = sc.parallelizePairs( partition_list, settings.num_workers );
+            PARTITIONS.persist( StorageLevel.MEMORY_ONLY() );
+
+            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                    String.format( "PARTITONS.partitions: %d", PARTITIONS.getNumPartitions() ) );
+
+            //HashPartitioner PARTI = new HashPartitioner( settings.num_workers );
 
             // receive one or multiple lines from the source
             JavaDStream< String >INPUT_STREAM = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
@@ -116,8 +118,9 @@ class GCP_BLAST_DRIVER extends Thread
             // join the PARTITIONS with the PAIRED_LINES, to trigger reshuffling
             JavaPairDStream< String, Tuple2< String, Optional< GCP_BLAST_PARTITION > > > JOINED_PARTITIONS = PAIRED_INPUT_STREAM.transformToPair( rdd ->
             {
-                return rdd.leftOuterJoin( PARTITIONS, PARTI );
+                return rdd.leftOuterJoin( PARTITIONS );
             } );
+            JOINED_PARTITIONS.repartition( settings.num_workers );
             JOINED_PARTITIONS.cache();
 
             // create jobs from a request, a request comes in via the socket as 'job_id:db:query:params'
