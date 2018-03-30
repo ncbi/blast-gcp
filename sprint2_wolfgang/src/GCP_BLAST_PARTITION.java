@@ -50,4 +50,11 @@ class GCP_BLAST_PARTITION implements Serializable
     {
         return String.format( "part( %d: '%s' )", this.nr, this.name );
     }
+
+    public Integer getPartition(Integer num_of_partitions)
+    {
+		if(num_of_partitions > 0 ) { return nr % num_of_partitions; }
+		else { return 0; }
+    }
+    public Integer getSize(){return 1000000;}
 }

@@ -38,6 +38,8 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.channels.FileLock;
 import java.nio.channels.FileChannel;
+import org.apache.spark.SparkFiles;
+
 
 public class BlastJNI {
     static
@@ -45,7 +47,8 @@ public class BlastJNI {
         try
         {
             // Java will look for libblastjni.so
-            System.loadLibrary( "blastjni" );
+            System.load( SparkFiles.get( "libblastjni.so" ) );
+            // System.loadLibrary( "blastjni" );
         }
         catch ( Exception e )
         {
@@ -73,7 +76,7 @@ public class BlastJNI {
         
         String rid    = "ReqID123";
         String query  = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-        String part   = "/tmp/blast/db/nt_50M.04";
+        String part   = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M";
         String params = "blastn";
 
         if ( args.length > 0 )

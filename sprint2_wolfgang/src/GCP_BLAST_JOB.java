@@ -41,4 +41,8 @@ class GCP_BLAST_JOB implements Serializable
     {
         return String.format( "job( %s %s )", req.toString(), partition.toString() );
     }
+	public Integer getPartition(Integer num_of_partitions)
+    {
+		return partition.getPartition(num_of_partitions);
+    }
 }

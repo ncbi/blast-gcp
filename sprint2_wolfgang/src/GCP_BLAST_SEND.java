@@ -32,6 +32,7 @@ import java.net.Socket;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import org.apache.spark.SparkEnv;
 
 public class GCP_BLAST_SEND
 {
@@ -39,9 +40,7 @@ public class GCP_BLAST_SEND
 
     private final String host;
     private final int port;
-
     private String localName;
-    //private InetAddress ihost;
 
     private GCP_BLAST_SEND( final String host, final int port )
     {
@@ -50,7 +49,6 @@ public class GCP_BLAST_SEND
         try
         {
             InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            //ihost = InetAddress.getByName( host );
             localName = localMachine.getHostName();
         }
         catch ( Exception e )
@@ -72,17 +70,9 @@ public class GCP_BLAST_SEND
     {
         try
         {
-            /*
-            DatagramSocket udp_sock = new DatagramSocket();
-            String s = String.format( "[%s] %s\n", localName, msg );
-            byte[] b = s.getBytes();
-            DatagramPacket dp = new DatagramPacket( b , b.length , ihost , port );
-            udp_sock.send( dp );
-            udp_sock.close();
-            */
             Socket socket = new Socket( host, port );
             PrintStream ps = new PrintStream( socket.getOutputStream() );
-            ps.printf( "[%s] %s\n", localName, msg );
+            ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId() ,msg );
             socket.close();
         
         }

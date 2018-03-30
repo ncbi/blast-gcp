@@ -14,6 +14,12 @@
 MAIN_CLASS="GCP_BLAST"
 MAIN_JAR="sprint2.jar"
 
+#
+# on google-cluster:
+#   --num-executers X   : X should match the number or worker-nodes
+#   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
+#
+
 #spark-submit --master local[4] --class $MAIN_CLASS $MAIN_JAR test.ini
-spark-submit --executor-cores 2 --class $MAIN_CLASS $MAIN_JAR test.ini
+spark-submit --master yarn --num-executors 2 --executor-cores 4 --class $MAIN_CLASS $MAIN_JAR test.ini
 

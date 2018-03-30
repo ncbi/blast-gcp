@@ -37,7 +37,7 @@ class GCP_BLAST_REQUEST implements Serializable
         this.db_selector = ( parts.length > 1 ) ? parts[ 1 ] : "nt";
         this.query       = ( parts.length > 2 ) ? parts[ 2 ] : "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
         this.program     = ( parts.length > 3 ) ? parts[ 3 ] : "blastn";
-        this.params      = ( parts.length > 4 ) ? parts[ 4 ] : "";
+        this.params      = ( parts.length > 4 ) ? parts[ 4 ] : "blastn";
     }
     
     @Override public String toString()
