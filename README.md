@@ -5,8 +5,8 @@ Please use the [gitflow branching model](https://www.atlassian.com/git/tutorials
 
 * Do not check into the `master` branch.
 * The `engineering` branch is the main development area, it should be kept stable (i.e.: builds, all tests pass) at all times.
-* For each sprint, a branch is created from the `engineering` branch and is the starting point for other branches for individual development.
-* Developers: merge into the sprint branch
+* For each sprint, a branch is created from the `engineering` branch and is the starting point for other (feature) branches for individual development.
+* Developers merge their changes into the sprint branch as they become stable.
 * At the end of each sprint: the sprint branch is merged into engineering.
 
 ### Contact:
