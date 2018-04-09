@@ -1,7 +1,14 @@
 #!/bin/bash
 #set -euo pipefail
 
-apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
+#apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
+apt-get install libdw-dev -y
+
+exit 0
+
+
+
+
 
 BLASTTMP=/tmp/blast/
 BLASTDBDIR=$BLASTTMP/db
@@ -28,6 +35,7 @@ for part in $parts; do
     #mkdir lock
     gsutil -m cp gs://nt_50mb_chunks/$piece.*in . &
     gsutil -m cp gs://nt_50mb_chunks/$piece.*sq . &
+    gsutil -m cp gs://nt_50mb_chunks/$piece.*hr . &
     touch done
     #rmdir lock
 
@@ -65,6 +73,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # pre-warm databases
 # Schedule things (cron or systemd timer)
 # Configure user environments
+# Create tmpfs RAM disk
 # Submit stream, keep it alive:
 #     https://github.com/GoogleCloudPlatform/dataproc-initialization-actions/tree/master/post-init
 
