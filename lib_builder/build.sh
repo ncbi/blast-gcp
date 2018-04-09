@@ -3,6 +3,8 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+tput reset
+
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 set +errexit
@@ -14,14 +16,20 @@ if [ "$distro" -ne 0 ]; then
     export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
     export PATH="$JAVA_HOME/bin:$PATH"
     export BLASTDB=/tmp/blast/
+    export SPARK_HOME=/usr/lib/spark/
+    export LD_LIBRARY_PATH=".:$PWD/ext"
 else
     export DISTRO="CentOS 7"
     export BUILDENV="ncbi"
     export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
-    export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/"
+    #export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/:/home/vartanianmh/blast-gcp/pipeline/ext"
+    export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/:$PWD/ext"
     export BLASTDB=/net/frosty/vol/blast/db/blast
-    BLASTBYDATE=/netopt/ncbi_tools64/c++.stable/
+#    BLASTBYDATE=/netopt/ncbi_tools64/c++.stable/
 #    BLASTBYDATE=/netopt/ncbi_tools64/c++.by-date/20180319/
+    BLASTBYDATE="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/"
+    export SPARK_HOME=/usr/local/spark/2.2.0/
+
 fi
 
 echo "Building at $BUILDENV on $DISTRO"
@@ -29,46 +37,54 @@ echo "Building at $BUILDENV on $DISTRO"
 JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
-rm -f BlastJNI.class
+rm -f *.class
 rm -f blastjni.o
 rm -rf gov
 rm -f *test.result
-rm -f BlastJNI.jar
-rm -f /tmp/blastjni.log
+rm -f *.jar
+rm -f /tmp/blast*.log
+rm -f signatures
+rm -f core.* hs_err_* output.*
 
-
-# TODO: provided dependencies?
-echo "Maven packaging..."
-echo "  (can take a while, especially if ~/.m2 cache is empty)"
-mvn -q package
-mvn -q assembly:assembly -DdescriptorId=jar-with-dependencies
 
 # TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to
-#packages,  but is required by g++ # at NCBI.
-HDR="BlastJNI.h"
-echo "Creating BlastJNI header: $HDR"
-#javac -d . -h . src/main/java/BlastJNI.java
+#packages,  but is required by g++ # at NCBI. Revisit after Jira BG-21
+DEPENDS="$SPARK_HOME/jars/*:."
+MAIN_JAR="sprint3.jar"
+echo "Compiling Java and creating JNI header"
 #NOTE: javah deprecated in Java 9, removed in Java 10
-TMPDIR=`mktemp -d`
-javac -cp target/blastjni-0.0314-jar-with-dependencies.jar  -d $TMPDIR -h . src/main/java/BlastJNI.java
-rm -f $TMPDIR/BlastJNI.class
-rmdir $TMPDIR
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+    GCP_BLAST_REQUEST.java \
+    GCP_BLAST_PARTITION.java \
+    GCP_BLAST_HSP_LIST.java \
+    GCP_BLAST_TB_LIST.java \
+    GCP_BLAST_LIB.java
+javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_LIB.class >> signatures
+javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_HSP_LIST.class >> signatures
+javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_TB_LIST.class >> signatures
+
+echo "Creating JAR"
+jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
+rm -rf gov
 
 if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling and linking blastjni.cpp"
     # Note: Library order important
     #       lmdb previously built at NCBI as static .a in /ext/
     #       Hidden dl_open for libdw
+    # Eugene has:
+    #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
+        #-ldbapi_driver -lncbi_xreader \
     g++ blastjni.cpp \
-        -L./int/blast/libs \
         -std=gnu++11 \
-        -Wall -g  -I . \
+        -Wall -O  -I . \
         -shared \
         -fPIC \
         $JAVA_INC \
+        -L./int/blast/libs \
         -I $BLASTBYDATE/include \
-        -I $BLASTBYDATE/GCC493-ReleaseMT/inc \
-        -L $BLASTBYDATE/GCC493-ReleaseMT/lib \
+        -I $BLASTBYDATE/ReleaseMT/inc \
+        -L $BLASTBYDATE/ReleaseMT/lib \
         -L . \
         -L ext \
         -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
@@ -81,9 +97,9 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -lvariation -lcreaders -lsubmit -lxnetblastcli \
         -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
         -lncbi_xloader_genbank -lncbi_xreader_id1 \
-        -lncbi_xreader_id2 -lncbi_xreader_cache \
-        -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader \
-        -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr \
+        -lncbi_xreader \
+        -lncbi_xreader_id2 \
+        -lxconnect -lid1 -lid2 -lxobjmgr \
         -lgenome_collection -lseqedit -lseqsplit -lsubmit \
         -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
         -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
@@ -94,24 +110,36 @@ if [ "$BUILDENV" = "ncbi" ]; then
 fi
 
 
-if [ "$BUILDENV" = "google" ]; then
+#if [ "$BUILDENV" = "google" ]; then
     echo "Testing JNI"
-    #java -cp target/blastjni-0.0314.jar BlastJNI
-    java -cp target/blastjni-0.0314-jar-with-dependencies.jar \
-        BlastJNI | grep qstart | sort > test.result
-#    java -Djava.library.path=$PWD -cp . BlastJNI > test.result 2>&1
-    CMP=$(cmp test.result test.expected)
     set +errexit
+    ldd libblastjni.so | grep found
+    if [[ $? -ne 1 ]]; then
+        echo "Missing a shared library"
+        echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
+        exit 1
+    fi
+        #-verbose:jni \
+    java -Djava.library.path="." \
+    -Xcheck:jni -Xdiag -Xfuture \
+        -cp $MAIN_JAR:.  \
+        gov.nih.nlm.ncbi.blastjni.GCP_BLAST_LIB \
+        > output.$$ 2>&1
+    sort output.$$ | grep -e "000 " > test.result
+    CMP=$(cmp test.result test.expected)
     if [[ $? -ne 0 ]]; then
+        cat -tn output.$$
+        #rm -f output.$$
         sdiff -w 70 test.result test.expected
         echo "Testing of JNI failed"
         exit 1
     fi
+    rm -f output.$$
     set -o errexit
     echo "Test OK"
-fi
+#fi
 
-if [ "$BUILDENV" = "ncbi" ]; then
+if [ "1" = "0" ] && [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling and linking test_blast.cpp"
     rm -f test_blast
     g++ test_blast.cpp -L./int/blast/libs \
@@ -146,7 +174,7 @@ fi
 
 
 # TODO: Can this be run in both environments?
-if [ "$BUILDENV" = "ncbi" ]; then
+if [ "1" = "0" ]  && [ "$BUILDENV" = "ncbi" ]; then
     echo "Testing Blast Library"
     # More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
         ./test_blast 1 \
@@ -163,26 +191,11 @@ if [ "$BUILDENV" = "ncbi" ]; then
     echo "Test OK"
 fi
 
-echo "Make_partitions.py"
-    ./make_partitions.py > db_partitions.jsonl
-
-#echo "Creating JAR"
-#    jar cf BlastJNI.jar BlastJNI.class libblastjni.so
-#    unzip -v BlastJNI.jar
-
 if [ "$BUILDENV" = "google" ]; then
     echo "Copying to Cloud Storage Bucket"
     gsutil cp \
         cluster_initialize.sh \
         "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
-
-    gsutil cp \
-        db_partitions.jsonl \
-        "$PIPELINEBUCKET/dbs/db_partitions.jsonl"
-
-    gsutil cp \
-        query.jsonl \
-        "$PIPELINEBUCKET/input/query.jsonl"
 fi
 
 echo "Build Complete"
@@ -199,6 +212,7 @@ gcloud auth application-default login --no-launch-browser
 git clone https://github.com/ncbi/blast-gcp.git
 cd blast-gcp
 git checkout engineering
+sudo apt-get install libdw-dev -y
 git config --global user.email "Mike.Vartanian@nih.gov"
 git config --global user.name "Mike Vartanian"
 
