@@ -137,20 +137,24 @@ class GCP_BLAST_LIB {
       GCP_BLAST_REQUEST requestobj) {
     throwIfBad();
 
+    /*
     log("\nJava jni_traceback called with");
     log("  query   : " + requestobj.query );
     log("  db_spec : " + partitionobj.db_spec);
     log("  program : " + requestobj.program );
+    */
     long starttime = System.currentTimeMillis();
     GCP_BLAST_TB_LIST[] ret = traceback( requestobj.query, partitionobj.db_spec, requestobj.program, hspl );
     long finishtime = System.currentTimeMillis();
+    /*
     log("jni_traceback returned in " + (finishtime - starttime) + " ms.");
     log("jni_traceback returned " + ret.length + " TB_LISTs:");
+    */
     int i = 0;
     for (GCP_BLAST_TB_LIST t : ret) {
       t.partitionobj = partitionobj;
       t.requestobj = requestobj;
-      log("#" + i + ": " + t.toString());
+      //log("#" + i + ": " + t.toString());
       ++i;
     }
 
