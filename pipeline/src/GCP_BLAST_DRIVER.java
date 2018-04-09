@@ -117,7 +117,7 @@ class GCP_BLAST_DRIVER extends Thread
 
 
     /* ===========================================================================================
-            perform prelim search
+            perform prelim search / key = String.format( "%d %s", part.nr, req_req_id )
        =========================================================================================== */
     private JavaPairDStream< String, GCP_BLAST_HSP_LIST > perform_prelim_search(
             final JavaPairDStream< GCP_BLAST_PARTITION, String > SRC,
@@ -154,15 +154,6 @@ class GCP_BLAST_DRIVER extends Thread
 
                 for ( GCP_BLAST_HSP_LIST S : search_res )
                     ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.req_id ), S ) );
-
-                /*
-                if ( ret.isEmpty() )
-                {
-                    // if we have no hsps at all, insert an empty one
-                    ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.req_id ),
-                                           new GCP_BLAST_HSP_LIST( req, part, elapsed ) ) );
-                }
-                */
             }
             catch ( Exception e )
             {
@@ -241,30 +232,42 @@ class GCP_BLAST_DRIVER extends Thread
             GCP_BLAST_HSP_LIST hsps = item._2()._1();
             Integer cutoff = item._2()._2();
             return ( cutoff == 0 || hsps.max_score >= cutoff );
-        });
+        }).cache();
     }
 
 
     /* ===========================================================================================
             perform traceback
        =========================================================================================== */
-    private JavaDStream< String > perform_traceback( JavaPairDStream< String, Tuple2< GCP_BLAST_HSP_LIST, Integer > > HSPS )
+    private JavaPairDStream< String, GCP_BLAST_TB_LIST > perform_traceback( 
+            JavaPairDStream< String, Tuple2< GCP_BLAST_HSP_LIST, Integer > > HSPS,
+            Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
-        return HSPS.flatMap( item -> {
-            ArrayList< String > ret = new ArrayList<>();
+        JavaPairDStream< String, GCP_BLAST_HSP_LIST > temp1 = HSPS.mapValues( item -> item._1() );
 
-            // this is a proxy for the traceback, right now it just converts a HSP_LIST into a string
-            GCP_BLAST_HSP_LIST [] a = new GCP_BLAST_HSP_LIST[ 1 ];
-            a[ 0 ] = item._2()._1();
+        JavaPairDStream< String, Iterable< GCP_BLAST_HSP_LIST > > temp2 = temp1.groupByKey();
 
+        return temp2.flatMapToPair( item ->
+        {
+            String key = item._1();
+
+            // 
+            ArrayList< GCP_BLAST_HSP_LIST > all_gcps = new ArrayList<>();
+            for( GCP_BLAST_HSP_LIST e : item._2() )
+                all_gcps.add( e );
+
+            GCP_BLAST_HSP_LIST [] a = new GCP_BLAST_HSP_LIST[ all_gcps.size() ];
+            int i = 0;
+            for( GCP_BLAST_HSP_LIST e : all_gcps )
+                a[ i++ ] = e;
+            
             GCP_BLAST_LIB blaster = new GCP_BLAST_LIB();
             GCP_BLAST_TB_LIST [] results = blaster.jni_traceback( a, a[ 0 ].partitionobj, a[ 0 ].requestobj );
-            
-            for ( GCP_BLAST_TB_LIST L : results )
-                ret.add( L.toString() );
 
-            //return hsps.toString_limit( 5 );
-            //return hsps.tabulated();
+            ArrayList< Tuple2< String, GCP_BLAST_TB_LIST> > ret = new ArrayList<>();            
+            for ( GCP_BLAST_TB_LIST L : results )
+                ret.add( new Tuple2<>( key, L ) );
+
             return ret.iterator();
         }).cache();
     };
@@ -273,7 +276,7 @@ class GCP_BLAST_DRIVER extends Thread
     /* ===========================================================================================
             write results
        =========================================================================================== */
-    private void write_results( JavaDStream< String > SEQANNOT,
+    private void write_results( JavaPairDStream< String, GCP_BLAST_TB_LIST > SEQANNOT,
                                 Broadcast< String > SAVE_DIR, Broadcast< Boolean > LOG_FINAL,
                                 Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
@@ -285,7 +288,12 @@ class GCP_BLAST_DRIVER extends Thread
                 {
                     rdd.foreachPartition( iter -> {
                         while( iter.hasNext() )
-                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), iter.next() );
+                        {
+                            Tuple2< String, GCP_BLAST_TB_LIST > item = iter.next();
+                            String key = item._1();
+                            GCP_BLAST_TB_LIST L = item._2();
+                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "key: %s\n%s", key, L.toString() ) );
+                        }
                     } );
                 }
                 GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
@@ -352,7 +360,7 @@ class GCP_BLAST_DRIVER extends Thread
                                          LOG_JOB_START, LOG_JOB_DONE );
 
             /* ===========================================================================================
-                    calculate cutoff
+                    calculate cutoff ( top-score )
                =========================================================================================== */
             final JavaPairDStream< String, Integer > CUTOFF = calculate_cutoff( HSPS, LOG_HOST, LOG_PORT );
 
@@ -365,12 +373,62 @@ class GCP_BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     perform traceback
                =========================================================================================== */
-            final JavaDStream< String > SEQANNOT = perform_traceback( FILTERED );
+            final JavaPairDStream< String, GCP_BLAST_TB_LIST > SEQANNOT
+                = perform_traceback( FILTERED, LOG_HOST, LOG_PORT );
+
+            // key is now req-id
+            final JavaPairDStream< String, GCP_BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
+            {
+                String key = item._1();
+                return new Tuple2<>( key.substring( key.indexOf( ' ' ), key.length() ), item._2() );
+            } );
+
+            final JavaPairDStream< String, Integer > SEQANNOT2 = SEQANNOT1.groupByKey().mapValues( item ->
+            {
+                ArrayList< GCP_BLAST_TB_LIST > all = new ArrayList<>();   
+                int sum = 0;
+                for ( GCP_BLAST_TB_LIST e : item )
+                {
+                    all.add( e );
+                    sum += e.asn1_blob.length;
+                }
+                Collections.sort( all );
+                return sum;
+                /*
+                byte[] res = new byte[ sum ];
+                for ( int i = 0; i < top_n; i++ )
+                {
+
+                }
+                */
+            } );
+
+            SEQANNOT2.foreachRDD( rdd -> {
+                long count = rdd.count();
+                if ( count > 0 )
+                {
+                    if ( LOG_FINAL.getValue() )
+                    {
+                        rdd.foreachPartition( iter -> {
+                            while( iter.hasNext() )
+                            {
+                                Tuple2< String, Integer > item = iter.next();
+                                String key = item._1();
+                                Integer value = item._2();
+                                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "%s : %d", key, value ) );
+                            }
+                        } );
+                    }
+                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                    String.format( "REQUEST DONE: %d (%d)", count, rdd.id() ) );
+                    rdd.saveAsTextFile( String.format( "%s%d", SAVE_DIR.getValue(), rdd.id() ) );
+                }
+            } );
 
             /* ===========================================================================================
                     write results
                =========================================================================================== */
-            write_results( SEQANNOT, SAVE_DIR, LOG_FINAL, LOG_HOST, LOG_PORT );
+            //write_results( SEQANNOT, SAVE_DIR, LOG_FINAL, LOG_HOST, LOG_PORT );
 
             /* ===========================================================================================
                     start the streaming

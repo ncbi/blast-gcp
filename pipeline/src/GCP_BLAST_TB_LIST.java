@@ -27,6 +27,7 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -37,22 +38,25 @@ import java.nio.file.Paths;
  *  where the hsps will be in ASN.1, essentially.
  */
 
-class GCP_BLAST_TB_LIST implements Serializable {
-  public GCP_BLAST_PARTITION partitionobj;
-  public GCP_BLAST_REQUEST requestobj;
-  public int oid;
-  public double evalue;
-  public byte[] asn1_blob;
+class GCP_BLAST_TB_LIST implements Serializable, Comparable< GCP_BLAST_TB_LIST >
+{
+    public GCP_BLAST_PARTITION partitionobj;
+    public GCP_BLAST_REQUEST requestobj;
+    public int oid;
+    public double evalue;
+    public byte[] asn1_blob;
 
-  public GCP_BLAST_TB_LIST(int oid, double evalue, byte[] asn1_blob) {
-    this.oid = oid;
-    this.evalue = evalue;
-    this.asn1_blob = asn1_blob;
-  }
+    public GCP_BLAST_TB_LIST( int oid, double evalue, byte[] asn1_blob )
+    {
+        this.oid = oid;
+        this.evalue = evalue;
+        this.asn1_blob = asn1_blob;
+    }
 
-  public Boolean isEmpty() {
-    return (asn1_blob.length == 0);
-  }
+    public Boolean isEmpty()
+    {
+        return (asn1_blob.length == 0);
+    }
 
   // CMT - I'm not sure you're supposed to combine the ASN.1 here, or after
   // reduction by evalue, or both.
@@ -105,6 +109,7 @@ class GCP_BLAST_TB_LIST implements Serializable {
     return true;
   }
 
+
   public static String toHex(byte[] blob) {
     String res = "";
     res += "\n        ";
@@ -118,6 +123,18 @@ class GCP_BLAST_TB_LIST implements Serializable {
     res += "\n";
     return res;
   }
+
+    public int compareTo( GCP_BLAST_TB_LIST other )
+    {
+		//ascending order
+        double v = this.evalue - other.evalue;
+        if ( v == 0.0 )
+            return 0;
+        else if ( v < 0.0 )
+            return -1;
+        else
+            return 1;
+	}
 
   @Override
   public String toString() {
