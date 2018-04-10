@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
 import org.apache.spark.SparkFiles;
 
 /* FIX and GENERAL COMMENTS
@@ -199,7 +200,8 @@ class BLAST_LIB {
     BLAST_LIB blaster = new BLAST_LIB();
 
     try {
-      PrintWriter pw = new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.log"), true));
+      String pid=ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+      PrintWriter pw = new PrintWriter(new FileOutputStream(new File("/tmp/blastjni." + pid + ".log"), true));
       blaster.setLogWriter(pw);
     } catch (FileNotFoundException ex) {
       System.err.println("Couldn't create log");

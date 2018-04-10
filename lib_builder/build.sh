@@ -195,9 +195,10 @@ if [ "$BUILDENV" = "google" ]; then
     echo "Copying to Cloud Storage Bucket"
     gsutil cp \
         cluster_initialize.sh \
-        "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
+        "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
 fi
 
+mv libblastjni.so ../pipeline
 echo "Build Complete"
 date
 echo
@@ -221,7 +222,7 @@ git config --global user.name "Mike Vartanian"
  export SPARK_PRINT_LAUNCH_COMMAND=1
 
 # To manually populate /tmp on workers:
- cd /tmp;gsutil cp gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh .;chmod +x cluster_initialize.sh; sudo ./cluster_initialize.sh
+ cd /tmp;gsutil cp gs://blastgcp-pipeline-test/scripts/cluster_initialize.sh .;chmod +x cluster_initialize.sh; sudo ./cluster_initialize.sh
 
 # Not sure if needed
  sudo vi /etc/spark/conf.dist/spark-env.sh

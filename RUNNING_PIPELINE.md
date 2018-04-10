@@ -3,12 +3,16 @@
 From your google cloud shell (the >_) box in upper right, paste
 (ctrl-shift-v in my browser, very finicky)
 ```shell
+# Copied from lib_builder/make_cluster.sh
 gcloud dataproc --region us-east4 \
     clusters create cluster-$USER-$(date +%Y%m%d) \
-    --master-machine-type n1-standard-8 --master-boot-disk-size 100 \
+    --master-machine-type n1-standard-8 \
+        --master-boot-disk-size 100 \
     --num-workers 2 \
-    --worker-machine-type n1-standard-32 --worker-boot-disk-size 100 \
-    --num-preemptible-workers 2 --preemptible-worker-boot-disk-size 100 \
+    --worker-machine-type n1-standard-32 \
+        --worker-boot-disk-size 100 \
+    --num-preemptible-workers 2 \
+        --preemptible-worker-boot-disk-size 100 \
     --scopes 'https://www.googleapis.com/auth/cloud-platform' \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
@@ -17,10 +21,9 @@ gcloud dataproc --region us-east4 \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "gs://blastgcp-pipeline-test/scipts/cluster_initialize.sh" \
+    "gs://blastgcp-pipeline-test/scripts/cluster_initialize.sh" \
     --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
-# Copied from lib_builder/make_cluster.sh
 ```
 
 * Once cluster has begun, click on [ DataProc ->  Clusters ](https://console.cloud.google.com/dataproc/clusters?project=ncbi-sandbox-blast)
