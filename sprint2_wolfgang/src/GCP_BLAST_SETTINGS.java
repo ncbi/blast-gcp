@@ -24,26 +24,34 @@
 *
 */
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class GCP_BLAST_SETTINGS
 {
     // --------------------keys and constants -------------------------------------
     public static final String appName_key = "appName";
-    public static final String default_bucket = "nt_50mb_chunks";
-    public static final String bucket_key = "bucket";
     
+    public static final String default_db_location = "/tmp/blast/db";
+    public static final String db_location_key = "db_location";
+    
+    public static final String default_db_pattern = "nt_50M";
+    public static final String db_pattern_key = "db_pattern";
+
     public static final Integer default_batch_duration = 10;
     public static final Integer default_log_port = 10011;
     public static final Integer default_trigger_port = 10012;
     public static final Integer default_num_db_partitions = 10;
-    public static final Integer default_num_job_partitions = 1;
+    public static final Integer default_num_workers = 2;
     
     // ----------------------------------------------------------------------------
     public String appName;
-    public String bucket;
+    
+    public String db_location;
+    public String db_pattern;
+    
     public Integer batch_duration;
     public List< String > files_to_transfer;
     
@@ -55,7 +63,8 @@ public class GCP_BLAST_SETTINGS
     
     public String save_dir;
     public Integer num_db_partitions;
-    public Integer num_job_partitions;
+    public Integer num_workers;
+
     public Boolean log_request;
     public Boolean log_job_start;
     public Boolean log_job_done;
@@ -64,7 +73,10 @@ public class GCP_BLAST_SETTINGS
     public GCP_BLAST_SETTINGS( final String appName )
     {
         this.appName = appName;
-        bucket = default_bucket;
+        
+        db_location = default_db_location;
+        db_pattern  = default_db_pattern;
+        
         batch_duration = default_batch_duration;
         files_to_transfer = new ArrayList<>();
         
@@ -86,9 +98,9 @@ public class GCP_BLAST_SETTINGS
         final String username = System.getProperty( "user.name" );
         save_dir = String.format( "hdfs:///user/%s/results/", username );
         
-        num_db_partitions = default_num_db_partitions;
-        num_job_partitions = default_num_job_partitions;
-        
+        num_db_partitions   = default_num_db_partitions;
+        num_workers         = default_num_workers;
+
         log_request = true;
         log_job_start = false;
         log_job_done = false;
@@ -99,7 +111,10 @@ public class GCP_BLAST_SETTINGS
     {
         final String ini_section = "APP";
         this.appName = ini_file.getString( ini_section, appName_key, appName );
-        bucket = ini_file.getString( ini_section, bucket_key, default_bucket );
+        
+        db_location = ini_file.getString( ini_section, db_location_key, default_db_location );
+        db_pattern  = ini_file.getString( ini_section, db_pattern_key, default_db_pattern );
+        
         batch_duration = ini_file.getInt( ini_section, "batch_duration", default_batch_duration );
 
         files_to_transfer = new ArrayList<>();
@@ -126,7 +141,7 @@ public class GCP_BLAST_SETTINGS
         save_dir = ini_file.getString( ini_section, "save_dir", save_dir );
         
         num_db_partitions   = ini_file.getInt( ini_section, "num_db_partitions", default_num_db_partitions );
-        num_job_partitions  = ini_file.getInt( ini_section, "num_job_partitions", default_num_job_partitions );
+        num_workers         = ini_file.getInt( ini_section, "num_workers", default_num_workers );
         
         log_request     = ini_file.getBoolean( ini_section, "log_request", true );
         log_job_start   = ini_file.getBoolean( ini_section, "log_start", false );
@@ -137,14 +152,14 @@ public class GCP_BLAST_SETTINGS
     @Override public String toString()
     {
         String S = String.format( "appName ............ %s\n", appName );
-        S  =  S +  String.format( "batch_duration ..... %d\n", batch_duration );
-        S  =  S +  String.format( "log_host ........... %s\n", log_host );
-        S  =  S +  String.format( "log_port ........... %d\n", log_port );
-        S  =  S +  String.format( "trigger_host ....... %s\n", trigger_host );
-        S  =  S +  String.format( "trigger_port ....... %d\n", trigger_port );
+        S  =  S +  String.format( "db_location ........ %s\n", db_location );
+        S  =  S +  String.format( "db_pattern ......... %s\n", db_pattern );
+        S  =  S +  String.format( "batch_duration ..... %d seconds\n", batch_duration );
+        S  =  S +  String.format( "log_host ........... %s:%d\n", log_host, log_port );
+        S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );
         S  =  S +  String.format( "save_dir ........... %s\n", save_dir );
-        S  =  S +  String.format( "num_db_partitions .. %s\n", num_db_partitions );
-        S  =  S +  String.format( "num_job_partitions . %s\n", num_job_partitions );
+        S  =  S +  String.format( "num_db_partitions .. %d\n", num_db_partitions );
+        S  =  S +  String.format( "num_workers ........ %d\n", num_workers );
         S  =  S +  String.format( "log_request ........ %s\n", Boolean.toString( log_request ) );
         S  =  S +  String.format( "log_job_start ...... %s\n", Boolean.toString( log_job_start ) );
         S  =  S +  String.format( "log_job_done ....... %s\n", Boolean.toString( log_job_done ) );

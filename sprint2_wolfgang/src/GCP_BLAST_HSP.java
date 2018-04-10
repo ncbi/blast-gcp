@@ -24,7 +24,8 @@
 *
 */
 
-import java.io.*;
+import java.io.Serializable;
+import java.util.Random;
 
 class GCP_BLAST_HSP implements Serializable
 {
@@ -56,6 +57,24 @@ class GCP_BLAST_HSP implements Serializable
         this.sstart = 0L;
         this.sstop  = 0L;
         this.score  = 0;
+    }
+    
+    public long nextLong( Random rand, long range )
+    {
+        return ( long )( rand.nextDouble() * range );
+    }
+    
+    public GCP_BLAST_HSP( final GCP_BLAST_JOB job, final Long oid )
+    {
+        this.job    = job;
+        this.oid    = oid;
+        
+        Random rand = new Random();
+        qstart = nextLong( rand, (long)job.req.query.length() );
+        qstop  = qstart + nextLong( rand, (long)job.req.query.length() - qstart );
+        sstart = nextLong( rand, 1000000L );
+        sstop  = sstart + nextLong( rand, 1000000L - qstart );
+        score  = rand.nextInt( 1000 );
     }
     
     public GCP_BLAST_HSP( final GCP_BLAST_JOB job, final String blast_res )

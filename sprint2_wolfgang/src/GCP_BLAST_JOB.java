@@ -24,7 +24,7 @@
 *
 */
 
-import java.io.*;
+import java.io.Serializable;
 
 class GCP_BLAST_JOB implements Serializable
 {
@@ -40,5 +40,9 @@ class GCP_BLAST_JOB implements Serializable
     @Override public String toString()
     {
         return String.format( "job( %s %s )", req.toString(), partition.toString() );
+    }
+	public Integer getPartition(Integer num_of_partitions)
+    {
+		return partition.getPartition(num_of_partitions);
     }
 }

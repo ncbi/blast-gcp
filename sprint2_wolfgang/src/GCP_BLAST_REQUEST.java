@@ -24,26 +24,29 @@
 *
 */
 
-import java.io.*;
+import java.io.Serializable;
 
 class GCP_BLAST_REQUEST implements Serializable
 {
-    public final String req_id, db, query, params;
+    public final String req_id, db_selector, query, program, params;
     
     public GCP_BLAST_REQUEST( final String line )
     {
         String[] parts = line.split( "\\:" );
-        this.req_id = ( parts.length > 0 ) ? parts[ 0 ] : "Req_Id_0001";
-        this.db     = ( parts.length > 1 ) ? parts[ 1 ] : "nt";
-        this.query  = ( parts.length > 2 ) ? parts[ 2 ] : "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-        this.params = ( parts.length > 3 ) ? parts[ 3 ] : "blastn";
+        this.req_id      = ( parts.length > 0 ) ? parts[ 0 ] : "Req_Id_0001";
+        this.db_selector = ( parts.length > 1 ) ? parts[ 1 ] : "nt";
+        this.query       = ( parts.length > 2 ) ? parts[ 2 ] : "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+        this.program     = ( parts.length > 3 ) ? parts[ 3 ] : "blastn";
+        this.params      = ( parts.length > 4 ) ? parts[ 4 ] : "blastn";
     }
     
     @Override public String toString()
     {
         if ( query.length() > 10 )
-            return String.format( "req( rid:'%s' db:'%s' query:'%s...' params:'%s' )", req_id, db, query.substring( 0, 10 ), params );
+            return String.format( "req( rid:'%s' dbsel:'%s' query:'%s...' prog:'%s' params:'%s' )",
+                                  req_id, db_selector, query.substring( 0, 10 ), program, params );
         else
-            return String.format( "req( rid:'%s' db:'%s' query:'%s' params:'%s' )", req_id, db, query, params );
+            return String.format( "req( rid:'%s' dbsel:'%s' query:'%s' prog:'%s' params:'%s' )",
+                                  req_id, db_selector, query, program, params );
     }
 }

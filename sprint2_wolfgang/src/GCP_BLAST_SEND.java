@@ -24,27 +24,68 @@
 *
 */
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.BufferedOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
+import java.net.InetAddress;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
+import org.apache.spark.SparkEnv;
 
 public class GCP_BLAST_SEND
 {
-    public static void send( final String host, final int port, final String msg )
+    private static GCP_BLAST_SEND instance = null;
+
+    private final String host;
+    private final int port;
+    private String localName;
+
+    private GCP_BLAST_SEND( final String host, final int port )
+    {
+        this.host = host;
+        this.port = port;
+        try
+        {
+            InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            localName = localMachine.getHostName();
+        }
+        catch ( Exception e )
+        {
+            localName = "unknown";
+        }
+    }
+
+    public static GCP_BLAST_SEND getInstance( final String host, final int port )
+    {
+        if ( instance == null )
+        {
+            instance = new GCP_BLAST_SEND( host, port );
+        }
+        return instance;
+    }
+
+    private void send_msg( final String msg )
     {
         try
         {
-            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            String local_host = localMachine.getHostName();
-            
             Socket socket = new Socket( host, port );
-            PrintWriter out = new PrintWriter( socket.getOutputStream(), true );
-            out.println( String.format( "[%s] %s", local_host, msg ) );
+            PrintStream ps = new PrintStream( socket.getOutputStream() );
+            ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId() ,msg );
             socket.close();
+        
         }
         catch ( Exception e )
         {
         }
     }
+
+    public static void send( final String host, final int port, final String msg )
+    {
+        GCP_BLAST_SEND inst = getInstance( host, port );
+        if ( inst != null )
+            inst.send_msg( msg );
+    }
 }
+

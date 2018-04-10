@@ -24,21 +24,37 @@
 *
 */
 
-import java.io.*;
+import java.io.Serializable;
 
 class GCP_BLAST_PARTITION implements Serializable
 {
+    public final Integer nr;
+    public final String db_spec;
     public final String name;
-    public final Integer id;
     
-    public GCP_BLAST_PARTITION( final String name, final Integer id )
+    // location  : '/tmp/blast/db'
+    // db_pat    : 'nt_50M'
+    // nr        : 102
+    // db_spec --> '/tmp/blast/db/nt_50M.102/nt_50M.102'
+    public GCP_BLAST_PARTITION( final String location, final String db_pat, final Integer nr )
     {
-        this.name = name;
-        this.id = id;
+        this.nr = nr;
+        if ( nr < 100 )
+            name = String.format( "%s.%02d", db_pat, nr  );
+        else
+            name = String.format( "%s.%d", db_pat, nr );
+        db_spec = String.format( "%s/%s/%s", location, name, name );
     }
 
     @Override public String toString()
     {
-        return String.format( "part( %s.%d )", this.name, this.id );
+        return String.format( "part( %d: '%s' )", this.nr, this.name );
     }
+
+    public Integer getPartition(Integer num_of_partitions)
+    {
+		if(num_of_partitions > 0 ) { return nr % num_of_partitions; }
+		else { return 0; }
+    }
+    public Integer getSize(){return 1000000;}
 }
