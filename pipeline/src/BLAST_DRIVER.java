@@ -59,14 +59,14 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
 */
 
-class GCP_BLAST_DRIVER extends Thread
+class BLAST_DRIVER extends Thread
 {
-    private final GCP_BLAST_SETTINGS settings;
+    private final BLAST_SETTINGS settings;
     private final JavaSparkContext sc;
     private final JavaStreamingContext jssc;
-    private final List< GCP_BLAST_PARTITION > db_sec_list;
+    private final List< BLAST_PARTITION > db_sec_list;
 
-    public GCP_BLAST_DRIVER( final GCP_BLAST_SETTINGS settings )
+    public BLAST_DRIVER( final BLAST_SETTINGS settings )
     {
         this.settings = settings;
 
@@ -107,11 +107,11 @@ class GCP_BLAST_DRIVER extends Thread
         }
     }
 
-    private List< GCP_BLAST_PARTITION > create_db_secs()
+    private List< BLAST_PARTITION > create_db_secs()
     {
-        List< GCP_BLAST_PARTITION > res = new ArrayList<>();
+        List< BLAST_PARTITION > res = new ArrayList<>();
         for ( int i = 0; i < settings.num_db_partitions; i++ )
-            res.add( new GCP_BLAST_PARTITION( settings.db_location, settings.db_pattern, i, settings.flat_db_layout ) );
+            res.add( new BLAST_PARTITION( settings.db_location, settings.db_pattern, i, settings.flat_db_layout ) );
         return res;
     }
 
@@ -119,21 +119,21 @@ class GCP_BLAST_DRIVER extends Thread
     /* ===========================================================================================
             perform prelim search / key = String.format( "%d %s", part.nr, req_req_id )
        =========================================================================================== */
-    private JavaPairDStream< String, GCP_BLAST_HSP_LIST > perform_prelim_search(
-            final JavaPairDStream< GCP_BLAST_PARTITION, String > SRC,
+    private JavaPairDStream< String, BLAST_HSP_LIST > perform_prelim_search(
+            final JavaPairDStream< BLAST_PARTITION, String > SRC,
             Broadcast< Integer > TOP_N,
             Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT,
             Broadcast< Boolean > LOG_JOB_START, Broadcast< Boolean > LOG_JOB_DONE )
     {
         return SRC.flatMapToPair( item -> {
-            ArrayList< Tuple2< String, GCP_BLAST_HSP_LIST > > ret = new ArrayList<>();
+            ArrayList< Tuple2< String, BLAST_HSP_LIST > > ret = new ArrayList<>();
 
-            GCP_BLAST_PARTITION part = item._1();
-            GCP_BLAST_REQUEST req = new GCP_BLAST_REQUEST( item._2(), TOP_N.getValue() ); // REQ-LINE to REQUEST
+            BLAST_PARTITION part = item._1();
+            BLAST_REQUEST req = new BLAST_REQUEST( item._2(), TOP_N.getValue() ); // REQ-LINE to REQUEST
 
             // ++++++ this is the where the work happens on the worker-nodes ++++++
             if ( LOG_JOB_START.getValue() )
-                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                  String.format( "starting request: '%s' at '%s' ", req.req_id, part.db_spec ) );
 
             Integer count = 0;
@@ -142,22 +142,22 @@ class GCP_BLAST_DRIVER extends Thread
                 String rid = req.req_id;
 
                 long startTime = System.currentTimeMillis();
-                GCP_BLAST_LIB blaster = new GCP_BLAST_LIB();
-                GCP_BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req );
+                BLAST_LIB blaster = new BLAST_LIB();
+                BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req );
                 long elapsed = System.currentTimeMillis() - startTime;
 
                 count = search_res.length;
             
                 if ( LOG_JOB_DONE.getValue() )
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                    BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                      String.format( "request '%s'.'%s' done -> count = %d", rid, part.db_spec, count ) );
 
-                for ( GCP_BLAST_HSP_LIST S : search_res )
+                for ( BLAST_HSP_LIST S : search_res )
                     ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.req_id ), S ) );
             }
             catch ( Exception e )
             {
-                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                                      String.format( "request exeption: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
             }
             return ret.iterator();
@@ -168,22 +168,22 @@ class GCP_BLAST_DRIVER extends Thread
     /* ===========================================================================================
             calculate cutoff
        =========================================================================================== */
-    private JavaPairDStream< String, Integer > calculate_cutoff( final JavaPairDStream< String, GCP_BLAST_HSP_LIST > HSPS,
+    private JavaPairDStream< String, Integer > calculate_cutoff( final JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
              Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
         // key   : req_id
         // value : scores, each having a copy of N for picking the cutoff value
-        final JavaPairDStream< String, GCP_BLAST_RID_SCORE > TEMP1 = HSPS.mapToPair( item -> {
-            GCP_BLAST_RID_SCORE ris = new GCP_BLAST_RID_SCORE( item._2().max_score, item._2().requestobj.top_n );
+        final JavaPairDStream< String, BLAST_RID_SCORE > TEMP1 = HSPS.mapToPair( item -> {
+            BLAST_RID_SCORE ris = new BLAST_RID_SCORE( item._2().max_score, item._2().req.top_n );
             String key = item._1();
             String req_id = key.substring( key.indexOf( ' ' ), key.length() );
-            return new Tuple2< String, GCP_BLAST_RID_SCORE >( req_id, ris );
+            return new Tuple2< String, BLAST_RID_SCORE >( req_id, ris );
         }).cache();
 
         // key   : req_id
         // value : list of scores, each having a copy of N for picking the cutoff value
-        // this will conentrate all GCP_BLAST_RID_SCORE instances for a given req_id on one worker node
-        final JavaPairDStream< String, Iterable< GCP_BLAST_RID_SCORE > > TEMP2 = TEMP1.groupByKey().cache();
+        // this will conentrate all BLAST_RID_SCORE instances for a given req_id on one worker node
+        final JavaPairDStream< String, Iterable< BLAST_RID_SCORE > > TEMP2 = TEMP1.groupByKey().cache();
 
         // key   : req_id
         // value : the cutoff value
@@ -192,7 +192,7 @@ class GCP_BLAST_DRIVER extends Thread
             Integer cutoff = 0;
             Integer top_n = 0;
             ArrayList< Integer > lst = new ArrayList<>();
-            for( GCP_BLAST_RID_SCORE s : item._2() )
+            for( BLAST_RID_SCORE s : item._2() )
             {
                 if ( top_n == 0 )
                     top_n = s.top_n;
@@ -203,7 +203,7 @@ class GCP_BLAST_DRIVER extends Thread
                 Collections.sort( lst, Collections.reverseOrder() );
                 cutoff = lst.get( top_n - 1 );                    
             }
-            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+            BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                              String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
             return new Tuple2<>( item._1(), cutoff );
 
@@ -214,10 +214,10 @@ class GCP_BLAST_DRIVER extends Thread
     /* ===========================================================================================
             filter by cutoff
        =========================================================================================== */
-    private JavaPairDStream< String, Tuple2< GCP_BLAST_HSP_LIST, Integer > > filter_by_cutoff(
-                                JavaPairDStream< String, GCP_BLAST_HSP_LIST > HSPS,
+    private JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > filter_by_cutoff(
+                                JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
                                 JavaPairDStream< String, Integer > CUTOFF,
-                                Broadcast< GCP_BLAST_CustomPartitioner2 > CUST_PART2,
+                                Broadcast< BLAST_PARTITIONER2 > PARTITIONER2,
                                 Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
 		JavaPairDStream< String, String > ACTIVE_PARTITIONS = 
@@ -227,9 +227,9 @@ class GCP_BLAST_DRIVER extends Thread
         JavaPairDStream< String, Integer > CUTOFF2 = 
 			ACTIVE_PARTITIONS.join( CUTOFF ).mapToPair( item -> item._2() );
 
-        return HSPS.join( CUTOFF2, CUST_PART2.getValue() ) . filter( item ->
+        return HSPS.join( CUTOFF2, PARTITIONER2.getValue() ) . filter( item ->
         {
-            GCP_BLAST_HSP_LIST hsps = item._2()._1();
+            BLAST_HSP_LIST hsps = item._2()._1();
             Integer cutoff = item._2()._2();
             return ( cutoff == 0 || hsps.max_score >= cutoff );
         }).cache();
@@ -239,33 +239,33 @@ class GCP_BLAST_DRIVER extends Thread
     /* ===========================================================================================
             perform traceback
        =========================================================================================== */
-    private JavaPairDStream< String, GCP_BLAST_TB_LIST > perform_traceback( 
-            JavaPairDStream< String, Tuple2< GCP_BLAST_HSP_LIST, Integer > > HSPS,
+    private JavaPairDStream< String, BLAST_TB_LIST > perform_traceback( 
+            JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > HSPS,
             Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
-        JavaPairDStream< String, GCP_BLAST_HSP_LIST > temp1 = HSPS.mapValues( item -> item._1() );
+        JavaPairDStream< String, BLAST_HSP_LIST > temp1 = HSPS.mapValues( item -> item._1() );
 
-        JavaPairDStream< String, Iterable< GCP_BLAST_HSP_LIST > > temp2 = temp1.groupByKey();
+        JavaPairDStream< String, Iterable< BLAST_HSP_LIST > > temp2 = temp1.groupByKey();
 
         return temp2.flatMapToPair( item ->
         {
             String key = item._1();
 
             // 
-            ArrayList< GCP_BLAST_HSP_LIST > all_gcps = new ArrayList<>();
-            for( GCP_BLAST_HSP_LIST e : item._2() )
+            ArrayList< BLAST_HSP_LIST > all_gcps = new ArrayList<>();
+            for( BLAST_HSP_LIST e : item._2() )
                 all_gcps.add( e );
 
-            GCP_BLAST_HSP_LIST [] a = new GCP_BLAST_HSP_LIST[ all_gcps.size() ];
+            BLAST_HSP_LIST [] a = new BLAST_HSP_LIST[ all_gcps.size() ];
             int i = 0;
-            for( GCP_BLAST_HSP_LIST e : all_gcps )
+            for( BLAST_HSP_LIST e : all_gcps )
                 a[ i++ ] = e;
             
-            GCP_BLAST_LIB blaster = new GCP_BLAST_LIB();
-            GCP_BLAST_TB_LIST [] results = blaster.jni_traceback( a, a[ 0 ].partitionobj, a[ 0 ].requestobj );
+            BLAST_LIB blaster = new BLAST_LIB();
+            BLAST_TB_LIST [] results = blaster.jni_traceback( a, a[ 0 ].part, a[ 0 ].req );
 
-            ArrayList< Tuple2< String, GCP_BLAST_TB_LIST> > ret = new ArrayList<>();            
-            for ( GCP_BLAST_TB_LIST L : results )
+            ArrayList< Tuple2< String, BLAST_TB_LIST> > ret = new ArrayList<>();            
+            for ( BLAST_TB_LIST L : results )
                 ret.add( new Tuple2<>( key, L ) );
 
             return ret.iterator();
@@ -276,7 +276,7 @@ class GCP_BLAST_DRIVER extends Thread
     /* ===========================================================================================
             write results
        =========================================================================================== */
-    private void write_results( JavaPairDStream< String, GCP_BLAST_TB_LIST > SEQANNOT,
+    private void write_results( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
                                 Broadcast< String > SAVE_DIR, Broadcast< Boolean > LOG_FINAL,
                                 Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
@@ -289,14 +289,14 @@ class GCP_BLAST_DRIVER extends Thread
                     rdd.foreachPartition( iter -> {
                         while( iter.hasNext() )
                         {
-                            Tuple2< String, GCP_BLAST_TB_LIST > item = iter.next();
+                            Tuple2< String, BLAST_TB_LIST > item = iter.next();
                             String key = item._1();
-                            GCP_BLAST_TB_LIST L = item._2();
-                            GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "key: %s\n%s", key, L.toString() ) );
+                            BLAST_TB_LIST L = item._2();
+                            BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "key: %s\n%s", key, L.toString() ) );
                         }
                     } );
                 }
-                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                 String.format( "REQUEST DONE: %d (%d)", count, rdd.id() ) );
                 rdd.saveAsTextFile( String.format( "%s%d", SAVE_DIR.getValue(), rdd.id() ) );
             }
@@ -318,15 +318,15 @@ class GCP_BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_JOB_DONE = sc.broadcast( settings.log_job_done );
             Broadcast< Boolean > LOG_FINAL = sc.broadcast( settings.log_final );
             Broadcast< Integer > TOP_N = sc.broadcast( settings.top_n );
-            Broadcast< GCP_BLAST_CustomPartitioner > CUST_PART = sc.broadcast(
-                                            new GCP_BLAST_CustomPartitioner( settings.num_workers ) );
-            Broadcast< GCP_BLAST_CustomPartitioner2 > CUST_PART2 = sc.broadcast(
-                                            new GCP_BLAST_CustomPartitioner2( settings.num_workers ) );
+            Broadcast< BLAST_PARTITIONER1 > PARTITIONER1 = sc.broadcast(
+                                            new BLAST_PARTITIONER1( settings.num_workers ) );
+            Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 = sc.broadcast(
+                                            new BLAST_PARTITIONER2( settings.num_workers ) );
 
             /* ===========================================================================================
                     create database-sections as a static RDD
                =========================================================================================== */
-            final JavaRDD< GCP_BLAST_PARTITION > DB_SECS = sc.parallelize( db_sec_list ).cache();
+            final JavaRDD< BLAST_PARTITION > DB_SECS = sc.parallelize( db_sec_list ).cache();
 			final Integer numbases = DB_SECS.map( bp -> bp.getSize() ).reduce( ( x, y ) -> x + y );
 
             /* ===========================================================================================
@@ -348,14 +348,14 @@ class GCP_BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     join request-line from data-source with database-sections
                =========================================================================================== */
-            final JavaPairDStream< GCP_BLAST_PARTITION, String > JOINED_REQ_STREAM
+            final JavaPairDStream< BLAST_PARTITION, String > JOINED_REQ_STREAM
                 = REQ_STREAM.transformToPair( rdd -> 
-                            DB_SECS.cartesian( rdd ).partitionBy( CUST_PART.getValue() ) ).cache();
+                            DB_SECS.cartesian( rdd ).partitionBy( PARTITIONER1.getValue() ) ).cache();
 
             /* ===========================================================================================
                     perform prelim search
                =========================================================================================== */
-            final JavaPairDStream< String, GCP_BLAST_HSP_LIST > HSPS
+            final JavaPairDStream< String, BLAST_HSP_LIST > HSPS
                 = perform_prelim_search( JOINED_REQ_STREAM, TOP_N, LOG_HOST, LOG_PORT,
                                          LOG_JOB_START, LOG_JOB_DONE );
 
@@ -367,17 +367,17 @@ class GCP_BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     filter by cutoff
                =========================================================================================== */
-            final JavaPairDStream< String, Tuple2< GCP_BLAST_HSP_LIST, Integer> > FILTERED 
-                = filter_by_cutoff( HSPS, CUTOFF, CUST_PART2, LOG_HOST, LOG_PORT );
+            final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED 
+                = filter_by_cutoff( HSPS, CUTOFF, PARTITIONER2, LOG_HOST, LOG_PORT );
 
             /* ===========================================================================================
                     perform traceback
                =========================================================================================== */
-            final JavaPairDStream< String, GCP_BLAST_TB_LIST > SEQANNOT
+            final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT
                 = perform_traceback( FILTERED, LOG_HOST, LOG_PORT );
 
             // key is now req-id
-            final JavaPairDStream< String, GCP_BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
+            final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
             {
                 String key = item._1();
                 return new Tuple2<>( key.substring( key.indexOf( ' ' ), key.length() ), item._2() );
@@ -385,9 +385,9 @@ class GCP_BLAST_DRIVER extends Thread
 
             final JavaPairDStream< String, Integer > SEQANNOT2 = SEQANNOT1.groupByKey().mapValues( item ->
             {
-                ArrayList< GCP_BLAST_TB_LIST > all = new ArrayList<>();   
+                ArrayList< BLAST_TB_LIST > all = new ArrayList<>();   
                 int sum = 0;
-                for ( GCP_BLAST_TB_LIST e : item )
+                for ( BLAST_TB_LIST e : item )
                 {
                     all.add( e );
                     sum += e.asn1_blob.length;
@@ -415,11 +415,11 @@ class GCP_BLAST_DRIVER extends Thread
                                 Tuple2< String, Integer > item = iter.next();
                                 String key = item._1();
                                 Integer value = item._2();
-                                GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "%s : %d", key, value ) );
+                                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "%s : %d", key, value ) );
                             }
                         } );
                     }
-                    GCP_BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                    BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
                     String.format( "REQUEST DONE: %d (%d)", count, rdd.id() ) );
                     rdd.saveAsTextFile( String.format( "%s%d", SAVE_DIR.getValue(), rdd.id() ) );
                 }

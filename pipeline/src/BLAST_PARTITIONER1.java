@@ -30,11 +30,11 @@ import org.apache.spark.Partitioner;
 import scala.Tuple2;
 
 
-class GCP_BLAST_CustomPartitioner extends Partitioner
+class BLAST_PARTITIONER1 extends Partitioner
 {
 	private int numParts;
 	
-	public GCP_BLAST_CustomPartitioner( int i )
+	public BLAST_PARTITIONER1( int i )
     {
 		numParts = i;
 	}
@@ -46,6 +46,6 @@ class GCP_BLAST_CustomPartitioner extends Partitioner
 
 	@Override public int getPartition( Object key )
     {
-		return ( ( GCP_BLAST_PARTITION ) key ).getPartition( numParts );
+		return ( ( BLAST_PARTITION ) key ).getPartition( numParts );
     }
 }

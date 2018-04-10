@@ -27,45 +27,29 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 
-class GCP_BLAST_PARTITION implements Serializable
+class BLAST_REQUEST implements Serializable
 {
-    public final Integer nr;
-    public final String db_spec;
-    public final String name;
+    public final String req_id, db_selector, query, program, params;
+    public final Integer top_n;
 
-    // location  : '/tmp/blast/db'
-    // db_pat    : 'nt_50M'
-    // nr        : 102
-    // db_spec --> '/tmp/blast/db/nt_50M.102/nt_50M.102'
-    public GCP_BLAST_PARTITION( final String location, final String db_pat, final Integer nr, final Boolean flat )
+    public BLAST_REQUEST( final String line, final Integer top_n )
     {
-        this.nr = nr;
-        if ( nr < 100 )
-            name = String.format( "%s.%02d", db_pat, nr  );
-        else
-            name = String.format( "%s.%d", db_pat, nr );
-        if ( flat )
-            db_spec = String.format( "%s/%s", location, name );
-        else
-            db_spec = String.format( "%s/%s/%s", location, name, name );
+        String[] parts = line.split( "\\:" );
+        this.req_id      = ( parts.length > 0 ) ? parts[ 0 ] : "Req_Id_0001";
+        this.query       = ( parts.length > 1 ) ? parts[ 1 ] : "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+        this.top_n       = ( parts.length > 2 ) ? Integer.parseInt( parts[ 2 ] ) : top_n;
+        this.db_selector = ( parts.length > 3 ) ? parts[ 3 ] : "nt";
+        this.program     = ( parts.length > 4 ) ? parts[ 4 ] : "blastn";
+        this.params      = ( parts.length > 5 ) ? parts[ 5 ] : "blastn";
     }
 
     @Override public String toString()
     {
-        return String.format( "part( %d: '%s' )", this.nr, this.name );
-    }
-
-    public Integer getPartition( Integer num_of_partitions )
-    {
-        if ( num_of_partitions > 0 )
-            return nr % num_of_partitions;
+        if ( query.length() > 10 )
+            return String.format( "req( rid:'%s' dbsel:'%s' query:'%s...' prog:'%s' params:'%s' )",
+                    req_id, db_selector, query.substring( 0, 10 ), program, params );
         else
-            return 0;
-    }
-
-    public Integer getSize()
-    {
-        return 1000000;
+            return String.format( "req( rid:'%s' dbsel:'%s' query:'%s' prog:'%s' params:'%s' )",
+                    req_id, db_selector, query, program, params );
     }
 }
-

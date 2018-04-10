@@ -35,15 +35,15 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import org.apache.spark.SparkEnv;
 
-public class GCP_BLAST_SEND
+public class BLAST_SEND
 {
-    private static GCP_BLAST_SEND instance = null;
+    private static BLAST_SEND instance = null;
 
     private final String host;
     private final int port;
     private String localName;
 
-    private GCP_BLAST_SEND( final String host, final int port )
+    private BLAST_SEND( final String host, final int port )
     {
         this.host = host;
         this.port = port;
@@ -58,11 +58,11 @@ public class GCP_BLAST_SEND
         }
     }
 
-    public static GCP_BLAST_SEND getInstance( final String host, final int port )
+    public static BLAST_SEND getInstance( final String host, final int port )
     {
         if ( instance == null )
         {
-            instance = new GCP_BLAST_SEND( host, port );
+            instance = new BLAST_SEND( host, port );
         }
         return instance;
     }
@@ -84,7 +84,7 @@ public class GCP_BLAST_SEND
 
     public static void send( final String host, final int port, final String msg )
     {
-        GCP_BLAST_SEND inst = getInstance( host, port );
+        BLAST_SEND inst = getInstance( host, port );
         if ( inst != null )
             inst.send_msg( msg );
     }

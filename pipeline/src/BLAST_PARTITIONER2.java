@@ -30,11 +30,11 @@ import org.apache.spark.Partitioner;
 import java.lang.String;
 
 
-class GCP_BLAST_CustomPartitioner2 extends Partitioner
+class BLAST_PARTITIONER2 extends Partitioner
 {
 	private int numParts;
 	
-	public GCP_BLAST_CustomPartitioner2( int i )
+	public BLAST_PARTITIONER2( int i )
     {
 		numParts = i;
 	}
@@ -48,7 +48,7 @@ class GCP_BLAST_CustomPartitioner2 extends Partitioner
     {
 		String pjob=( String )key;
 		Integer pnum = Integer.valueOf( pjob.substring( 0, pjob.indexOf( ' ' ) ) );
-		return pnum%numParts;
+		return pnum % numParts;
     }
 }
 

@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class GCP_BLAST_SETTINGS
+public class BLAST_SETTINGS
 {
     // ------------------- keys in INI-file ---------------------------------------
     public static final String key_appName = "appName";
@@ -120,7 +120,7 @@ public class GCP_BLAST_SETTINGS
         return String.format( "hdfs:///user/%s/results/", username );
     }
 
-    public GCP_BLAST_SETTINGS( final String appName )
+    public BLAST_SETTINGS( final String appName )
     {
         this.appName = appName;
         
@@ -168,7 +168,7 @@ public class GCP_BLAST_SETTINGS
         subscript_id    = dflt_subscript_id;
     }
     
-    public GCP_BLAST_SETTINGS( final GCP_BLAST_INI ini_file, final String appName )
+    public BLAST_SETTINGS( final BLAST_INI ini_file, final String appName )
     {
         final String ini_section = "APP";
         this.appName = ini_file.getString( ini_section, key_appName, appName );

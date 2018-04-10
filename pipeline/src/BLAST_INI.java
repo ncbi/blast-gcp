@@ -34,14 +34,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GCP_BLAST_INI
+public class BLAST_INI
 {
 
    private Pattern _section  = Pattern.compile( "\\s*\\[([^]]*)\\]\\s*" );
    private Pattern _keyValue = Pattern.compile( "\\s*([^=]*)=(.*)" );
    private Map< String, Map< String, String > > _entries  = new HashMap<>();
 
-   public GCP_BLAST_INI( final String path ) throws IOException
+   public BLAST_INI( final String path ) throws IOException
    {
       load( path );
    }

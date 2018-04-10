@@ -65,48 +65,51 @@ import java.io.Serializable;
 *  Java allocate it, and then use its internal memory for storage
 *  post factum.
 */
-class GCP_BLAST_HSP_LIST implements Serializable {
-  public GCP_BLAST_PARTITION partitionobj;
-  public GCP_BLAST_REQUEST requestobj;
-  public int oid;
-  public int max_score;
-  public byte[] hsp_blob;
+class BLAST_HSP_LIST implements Serializable
+{
+    public BLAST_PARTITION part;
+    public BLAST_REQUEST req;
+    public int oid;
+    public int max_score;
+    public byte[] hsp_blob;
 
   // CMT - would expect that the constructor would take oid, max-score and size of hsp_blob as
   // parameters
   // the idea behind size of hsp_blob was that you would use that memory to flatten the HSP set, but
   // if that's
   // not practical, then...
-  public GCP_BLAST_HSP_LIST() {
-    this.oid = -1;
-    this.max_score = -1;
-    hsp_blob = new byte[0];
-  }
-
-  public Boolean isEmpty() {
-    if (hsp_blob == null) return true;
-
-    return (hsp_blob.length == 0);
-  }
-
-  @Override
-  public String toString() {
-    String res = "";
-    res +=
-        String.format(
-            "  HSPLIST( partition=%s request=%s )", partitionobj.toString(), requestobj.toString());
-    res += "\n         oid = " + oid;
-    res += "\n   max_score = " + max_score;
-    res += "\n" + String.format("        blob = %d bytes:", hsp_blob.length);
-    res += "\n      ";
-    int brk = 0;
-    for (int i = 0; i != hsp_blob.length; ++i) {
-      byte b = hsp_blob[i];
-      res += String.format("%02x", b);
-      ++brk;
-      if ((brk % 4) == 0) res += " ";
+    public BLAST_HSP_LIST()
+    {
+        this.oid = -1;
+        this.max_score = -1;
+        hsp_blob = new byte[ 0 ];
     }
-    res += "\n";
-    return res;
-  }
+
+    public Boolean isEmpty()
+    {
+        if ( hsp_blob == null ) return true;
+        return ( hsp_blob.length == 0 );
+    }
+
+    @Override public String toString()
+    {
+        String res = "";
+        res +=
+            String.format(
+            "  HSPLIST( partition=%s request=%s )", part.toString(), req.toString() );
+        res += "\n         oid = " + oid;
+        res += "\n   max_score = " + max_score;
+        res += "\n" + String.format("        blob = %d bytes:", hsp_blob.length );
+        res += "\n      ";
+        int brk = 0;
+        for ( int i = 0; i != hsp_blob.length; ++i )
+        {
+            byte b = hsp_blob[ i ];
+            res += String.format( "%02x", b );
+            ++brk;
+            if ( ( brk % 4 ) == 0 ) res += " ";
+        }
+        res += "\n";
+        return res;
+    }
 }

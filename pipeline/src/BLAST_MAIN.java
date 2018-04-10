@@ -29,7 +29,7 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.io.Console;
 import java.io.IOException;
 
-public final class GCP_BLAST
+public final class BLAST_MAIN
 {
     private static void wait_for_console( final String exit_string, Integer sleeptime_ms )
     {
@@ -54,29 +54,29 @@ public final class GCP_BLAST
 
    public static void main( String[] args ) throws Exception
    {
-        final String appName = GCP_BLAST.class.getSimpleName();
-        GCP_BLAST_SETTINGS settings;
+        final String appName = BLAST_MAIN.class.getSimpleName();
+        BLAST_SETTINGS settings;
         if ( args.length > 0 )
         {
             String ini_path = args[ 0 ];
             try
             {
-                GCP_BLAST_INI ini = new GCP_BLAST_INI( ini_path );
-                settings = new GCP_BLAST_SETTINGS( ini, appName );
+                BLAST_INI ini = new BLAST_INI( ini_path );
+                settings = new BLAST_SETTINGS( ini, appName );
                 System.out.println( String.format( "settings read from '%s'", ini_path ) );
             }
             catch( IOException e )
             {
-                settings = new GCP_BLAST_SETTINGS( appName );
+                settings = new BLAST_SETTINGS( appName );
             }
         }
         else
-            settings = new GCP_BLAST_SETTINGS( appName );
+            settings = new BLAST_SETTINGS( appName );
         settings.files_to_transfer.add( "libblastjni.so" );
         
         System.out.println( settings.toString() );
         
-        GCP_BLAST_DRIVER driver = new GCP_BLAST_DRIVER( settings );
+        BLAST_DRIVER driver = new BLAST_DRIVER( settings );
         driver.start();
         try
         {

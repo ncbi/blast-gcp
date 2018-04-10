@@ -31,12 +31,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.io.Serializable;
 
-class GCP_BLAST_RID_SCORE implements Serializable
+class BLAST_RID_SCORE implements Serializable
 {
     Integer score;
     Integer top_n;
 
-    public GCP_BLAST_RID_SCORE( final Integer score, final Integer top_n )
+    public BLAST_RID_SCORE( final Integer score, final Integer top_n )
     {
         this.score = score;
         this.top_n = top_n;
