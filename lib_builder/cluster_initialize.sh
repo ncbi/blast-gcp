@@ -7,7 +7,7 @@
 #exec 2> >(tee -ia /tmp/cluster_initialize.log >&2)
 
 # Copy this script to GS bucket with:
-# gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
+# gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
 
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 
