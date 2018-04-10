@@ -3,8 +3,9 @@
 tput reset
 
 SPARK_HOME="/usr/lib/spark/jars/*"
+HADOOP_FS_HOME="/usr/lib/hadoop/*"
 PUBSUB_JAR="$HOME/bigdata-interop/pubsub/target/*"
-SPARK_BLAST_DEPEND="$SPARK_HOME:$PUBSUB_JAR:."
+SPARK_BLAST_DEPEND="$SPARK_HOME:$HADOOP_FS_HOME:$PUBSUB_JAR:."
 SPARK_BLAST_SRC="src/*.java"
 SPARK_BLAST_JAR="spark_blast.jar"
 GOOGLE_JARS="$HOME/google_cloud_jars/*"

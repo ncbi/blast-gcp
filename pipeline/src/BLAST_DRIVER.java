@@ -29,8 +29,21 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.Random;
+
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
 import scala.Tuple2;
 
@@ -274,6 +287,156 @@ class BLAST_DRIVER extends Thread
 
 
     /* ===========================================================================================
+            collect and write traceback
+       =========================================================================================== */
+    private void write_traceback( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
+                                Broadcast< String > SAVE_DIR,
+                                Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+    {
+        // key is now req-id
+        final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
+        {
+            String key = item._1();
+            return new Tuple2<>( key.substring( key.indexOf( ' ' ), key.length() ), item._2() );
+        } );
+
+        final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > SEQANNOT2 = SEQANNOT1.groupByKey();
+
+        SEQANNOT2.foreachRDD( rdd ->
+        {
+            long count = rdd.count();
+            if ( count > 0 )
+            {
+                HashMap< String, ArrayList< BLAST_TB_LIST > > map = new HashMap<>();
+
+                rdd.foreachPartition( iter ->
+                {
+                    while( iter.hasNext() )
+                    {
+                        Tuple2< String, Iterable< BLAST_TB_LIST > > item = iter.next();
+
+                        String key = item._1();
+                        Iterable< BLAST_TB_LIST > item_iter = item._2();
+
+                        if ( map.containsKey( key ) )
+                        {
+                            ArrayList< BLAST_TB_LIST > a = map.get( key );
+                            for ( BLAST_TB_LIST e : item_iter )
+                                a.add( e );
+                        }
+                        else
+                        {
+                            ArrayList< BLAST_TB_LIST > a = new ArrayList<>();
+                            for ( BLAST_TB_LIST e : item_iter )
+                                a.add( e );
+                            map.put( key, a );
+                        }
+                    }
+                } );
+
+                Configuration conf = new Configuration();
+                FileSystem fs = FileSystem.get( conf );
+                Iterator< String > it = map.keySet().iterator();
+                while ( it.hasNext() )
+                {
+                    String key = it.next();
+                    ArrayList< BLAST_TB_LIST > a = map.get( key );
+                    try
+                    {
+                        String filename = String.format( "%sreq_%s_%d.txt", SAVE_DIR.getValue(), rdd.id(), key );
+                        //Path filename = new Path( String.format( "gs://blastgcp-pipeline-test/output/ReqID_%s.seq-annot.asn1", req_id ) );
+                        OutputStream os = fs.create(  new Path( filename ) );
+                        for ( BLAST_TB_LIST e : a )
+                            os.write( e.asn1_blob );
+                        os.close();
+                        BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                         String.format( "written: %s", filename ) );
+
+                    }
+                    catch ( Exception e )
+                    {
+                        BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "fs-ex : %s", e.toString() ) );
+                    }
+                }
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                 String.format( "REQUEST DONE: count  = %d ( rdd.id = %d )", count, rdd.id() ) );
+            }
+        } );
+    }
+
+    private void write_traceback2( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
+                                Broadcast< String > SAVE_DIR,
+                                Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+    {
+        // key is now req-id
+        final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
+        {
+            String key = item._1();
+            return new Tuple2<>( key.substring( key.indexOf( ' ' ), key.length() ), item._2() );
+        } );
+
+        final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > SEQANNOT2 = SEQANNOT1.groupByKey();
+
+        final JavaPairDStream< String, Integer > RESULTS = SEQANNOT2.mapValues( item ->
+        {
+            ArrayList< BLAST_TB_LIST > seq_annots = new ArrayList<>();
+            String req_id = "";
+            int sum = 0;
+            for ( BLAST_TB_LIST e : item )
+            {
+                seq_annots.add( e );
+                if ( req_id.isEmpty() )
+                    req_id = e.req.req_id;
+                sum += e.asn1_blob.length;
+            }
+            Collections.sort( seq_annots );
+            
+            // try to write to the hdfs-filesystem:
+            Configuration conf = new Configuration();
+            FileSystem fs = FileSystem.get( conf );
+            try
+            {
+                Random rnd = new Random();
+                String filename = String.format( "%sreq_%s.%d.txt", SAVE_DIR.getValue(), req_id, rnd.nextInt() );
+
+                //Path filename = new Path( String.format( "gs://blastgcp-pipeline-test/output/ReqID_%s.seq-annot.asn1", req_id ) );
+
+                OutputStream os = fs.create( new Path( filename ) );
+                for ( BLAST_TB_LIST e : seq_annots )
+                    os.write( e.asn1_blob );
+                os.close();
+
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "written : %s", filename ) );
+            }
+            catch ( Exception e )
+            {
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "fs-ex : %s", e.toString() ) );
+            }
+
+            return sum;
+        } );
+
+        RESULTS.foreachRDD( rdd -> {
+            long count = rdd.count();
+            if ( count > 0 )
+            {
+                rdd.foreachPartition( iter -> {
+                    while( iter.hasNext() )
+                    {
+                        Tuple2< String, Integer > item = iter.next();
+                        String key = item._1();
+                        Integer value = item._2();
+                        BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "%s : %d", key, value ) );
+                    }
+                } );
+                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                                 String.format( "REQUEST DONE: %d (%d)", count, rdd.id() ) );
+            }
+        } );
+
+    }
+
+    /* ===========================================================================================
             write results
        =========================================================================================== */
     private void write_results( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
@@ -376,59 +539,10 @@ class BLAST_DRIVER extends Thread
             final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT
                 = perform_traceback( FILTERED, LOG_HOST, LOG_PORT );
 
-            // key is now req-id
-            final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
-            {
-                String key = item._1();
-                return new Tuple2<>( key.substring( key.indexOf( ' ' ), key.length() ), item._2() );
-            } );
-
-            final JavaPairDStream< String, Integer > SEQANNOT2 = SEQANNOT1.groupByKey().mapValues( item ->
-            {
-                ArrayList< BLAST_TB_LIST > all = new ArrayList<>();   
-                int sum = 0;
-                for ( BLAST_TB_LIST e : item )
-                {
-                    all.add( e );
-                    sum += e.asn1_blob.length;
-                }
-                Collections.sort( all );
-                return sum;
-                /*
-                byte[] res = new byte[ sum ];
-                for ( int i = 0; i < top_n; i++ )
-                {
-
-                }
-                */
-            } );
-
-            SEQANNOT2.foreachRDD( rdd -> {
-                long count = rdd.count();
-                if ( count > 0 )
-                {
-                    if ( LOG_FINAL.getValue() )
-                    {
-                        rdd.foreachPartition( iter -> {
-                            while( iter.hasNext() )
-                            {
-                                Tuple2< String, Integer > item = iter.next();
-                                String key = item._1();
-                                Integer value = item._2();
-                                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "%s : %d", key, value ) );
-                            }
-                        } );
-                    }
-                    BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                    String.format( "REQUEST DONE: %d (%d)", count, rdd.id() ) );
-                    rdd.saveAsTextFile( String.format( "%s%d", SAVE_DIR.getValue(), rdd.id() ) );
-                }
-            } );
-
             /* ===========================================================================================
-                    write results
+                    collect traceback
                =========================================================================================== */
-            //write_results( SEQANNOT, SAVE_DIR, LOG_FINAL, LOG_HOST, LOG_PORT );
+            write_traceback2( SEQANNOT, SAVE_DIR, LOG_HOST, LOG_PORT );
 
             /* ===========================================================================================
                     start the streaming
