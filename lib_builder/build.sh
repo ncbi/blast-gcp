@@ -198,6 +198,7 @@ if [ "$BUILDENV" = "google" ]; then
         "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
 fi
 
+mv libblastjni.so ../pipeline
 echo "Build Complete"
 date
 echo
