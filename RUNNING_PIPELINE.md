@@ -62,17 +62,19 @@ In the terminal with "ncat -lk 10012", type in a query ("T1" as an test)
 
 # Viewing results
 ```console
-$ hadoop fs -ls -R results
-drwxr-xr-x   - vartanianmh hadoop          0 2018-04-09 21:54 results/1341
--rw-r--r--   2 vartanianmh hadoop          0 2018-04-09 21:54 results/1341/_SUCCESS
--rw-r--r--   2 vartanianmh hadoop          0 2018-04-09 21:54 results/1341/part-00000
--rw-r--r--   2 vartanianmh hadoop          0 2018-04-09 21:54 results/1341/part-00001
--rw-r--r--   2 vartanianmh hadoop         11 2018-04-09 21:54 results/1341/part-00002
--rw-r--r--   2 vartanianmh hadoop          0 2018-04-09 21:54 results/1341/part-00003
-drwxr-xr-x   - vartanianmh hadoop          0 2018-04-09 21:53 results/208
+$ hadoop fs -ls results
+-rw-r--r--   2 vartanianmh hadoop       4499 2018-04-10 20:05 results/req_.-1387756121.txt
 
-$ hadoop fs -cat results/1341/part-00002
-( T2,4499)
+$ asntool  -m /am/ncbiapdata/asn/asn.all -t Seq-align -p stdout -d req_.-1387756121.txt  | head
+Seq-align ::= {
+  type partial ,
+  dim 2 ,
+  score {
+    {
+      id
+        str "score" ,
+
+
 ```
 
 # Shutdown your cluster
