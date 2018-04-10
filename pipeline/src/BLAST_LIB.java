@@ -41,145 +41,121 @@ import org.apache.spark.SparkFiles;
  *  on a black background.
  */
 
-class BLAST_LIB
-{
+class BLAST_LIB {
 
   // FIX - we need to ensure that this is locked down with regard to multi-threading
-  // if a GCP_BLAST_LIB object is instantiated as a static member of an outer class,
+  // if a BLAST_LIB object is instantiated as a static member of an outer class,
   // this is known to work (i.e. lock up the JVM to serialize)
 
-    BLAST_LIB()
-    {
-        System.err.println( "In Java GCP_BLAST_LIB ctor" );
-        try
-        {
-            // Java will look for libblastjni.so
-            System.loadLibrary("blastjni");
-        }
-        catch ( Throwable e )
-        {
-            try
-            {
-                System.err.println( "Nope #1" );
-                System.load( SparkFiles.get( "libblastjni.so" ) );
-            }
-            catch ( ExceptionInInitializerError x )
-            {
-                System.err.println( "Nope #2" );
-                invalid = x;
-            }
-            catch ( Throwable e2 )
-            {
-                System.err.println( "Nope #3" );
-                invalid = new ExceptionInInitializerError( e2 );
-            }
-        }
+  BLAST_LIB() {
+    System.err.println("In Java BLAST_LIB ctor");
+    try {
+      // Java will look for libblastjni.so
+      System.loadLibrary("blastjni");
+    } catch (Throwable e) {
+      try {
+        System.err.println("Nope #1");
+        System.load(SparkFiles.get("libblastjni.so"));
+      } catch (ExceptionInInitializerError x) {
+        System.err.println("Nope #2");
+        invalid = x;
+      } catch (Throwable e2) {
+        System.err.println("Nope #3");
+        invalid = new ExceptionInInitializerError(e2);
+      }
+    }
+  }
+
+  void throwIfBad() {
+    if (invalid != null) {
+      System.err.println("invalid");
+      throw invalid;
+    }
+  }
+
+  public synchronized void setLogWriter(PrintWriter writer) {
+    log_writer = writer;
+  }
+
+  // Warning: If below signature changes, update blastjni.cpp
+  // CMT - not really a fix, but an observation that now that you're
+  // generating signatures, you might booby-trap the build script to
+  // catch any deviation in the signature of this method. And I'd
+  // make the warning MUCH harder to avoid seeing/reading.
+  private synchronized void log(String msg) {
+    if (log_writer != null) {
+      try {
+        log_writer.println(msg);
+        log_writer.flush();
+      } catch (Throwable t) {
+      }
+    } else {
+      System.err.println(msg);
+    }
+  }
+
+  BLAST_HSP_LIST[] jni_prelim_search(BLAST_PARTITION part, BLAST_REQUEST req) {
+
+    // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
+    throwIfBad();
+
+    // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
+    /*
+    log( "\nJava jni_prelim_search called with" );
+    log( "  query   : " + query );
+    log( "  db_spec : " + db_spec );
+    log( "  program : " + program );
+    log( "  params  : " + params );
+    log( "  topn    : " + topn );
+    */
+
+    long starttime = System.currentTimeMillis();
+    BLAST_HSP_LIST[] ret =
+        prelim_search(req.query, part.db_spec, req.program, req.params, req.top_n);
+
+    long finishtime = System.currentTimeMillis();
+    // log( "jni_prelim_search returned in " + ( finishtime - starttime ) + " ms." );
+    // log( "jni_prelim_search returned " + ret.length + " HSP_LISTs:" );
+    int i = 0;
+    for (BLAST_HSP_LIST h : ret) {
+      h.part = part;
+      h.req = req;
+      // log( "#" + i + ": " + h.toString() );
+      ++i;
     }
 
-    void throwIfBad()
-    {
-        if ( invalid != null )
-        {
-            System.err.println( "invalid" );
-            throw invalid;
-        }
+    // CMT - I think we will want to add some sort of a tracing facility gated upon verbosity
+    // and perhaps some other switches so that we can look inside of a running cluster from
+    // time to time. This is, of course, later.
+    return ret;
+  }
+
+  BLAST_TB_LIST[] jni_traceback(BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req) {
+    throwIfBad();
+
+    /*
+    log("\nJava jni_traceback called with");
+    log("  query   : " + requestobj.query );
+    log("  db_spec : " + partitionobj.db_spec);
+    log("  program : " + requestobj.program );
+    */
+    long starttime = System.currentTimeMillis();
+    BLAST_TB_LIST[] ret = traceback(req.query, part.db_spec, req.program, hspl);
+    long finishtime = System.currentTimeMillis();
+    /*
+    log("jni_traceback returned in " + (finishtime - starttime) + " ms.");
+    log("jni_traceback returned " + ret.length + " TB_LISTs:");
+    */
+    int i = 0;
+    for (BLAST_TB_LIST t : ret) {
+      t.part = part;
+      t.req = req;
+      // log( "#" + i + ": " + t.toString() );
+      ++i;
     }
 
-    public synchronized void setLogWriter( PrintWriter writer )
-    {
-        log_writer = writer;
-    }
-
-    // Warning: If below signature changes, update blastjni.cpp
-    // CMT - not really a fix, but an observation that now that you're
-    // generating signatures, you might booby-trap the build script to
-    // catch any deviation in the signature of this method. And I'd
-    // make the warning MUCH harder to avoid seeing/reading.
-    private synchronized void log( String msg )
-    {
-        if ( log_writer != null )
-        {
-            try
-            {
-                log_writer.println( msg );
-                log_writer.flush();
-            }
-            catch ( Throwable t )
-            {
-            }
-        }
-        else
-        {
-            System.err.println( msg );
-        }
-    }
-
-    BLAST_HSP_LIST[] jni_prelim_search( BLAST_PARTITION part, BLAST_REQUEST req ) 
-    {
-
-        // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
-        throwIfBad();
-
-        // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-        /*
-        log( "\nJava jni_prelim_search called with" );
-        log( "  query   : " + query );
-        log( "  db_spec : " + db_spec );
-        log( "  program : " + program );
-        log( "  params  : " + params );
-        log( "  topn    : " + topn );
-        */
-
-        long starttime = System.currentTimeMillis();
-        BLAST_HSP_LIST[] ret = prelim_search( req.query, part.db_spec, req.program, req.params, req.top_n );
-
-        long finishtime = System.currentTimeMillis();
-        // log( "jni_prelim_search returned in " + ( finishtime - starttime ) + " ms." );
-        // log( "jni_prelim_search returned " + ret.length + " HSP_LISTs:" );
-        int i = 0;
-        for ( BLAST_HSP_LIST h : ret )
-        {
-            h.part = part;
-            h.req = req;
-            //log( "#" + i + ": " + h.toString() );
-            ++i;
-        }
-
-        // CMT - I think we will want to add some sort of a tracing facility gated upon verbosity
-        // and perhaps some other switches so that we can look inside of a running cluster from
-        // time to time. This is, of course, later.
-        return ret;
-    }
-
-    BLAST_TB_LIST[] jni_traceback( BLAST_HSP_LIST[] hspl, BLAST_PARTITION part,
-                                   BLAST_REQUEST req )
-    {
-        throwIfBad();
-
-        /*
-        log("\nJava jni_traceback called with");
-        log("  query   : " + requestobj.query );
-        log("  db_spec : " + partitionobj.db_spec);
-        log("  program : " + requestobj.program );
-        */
-        long starttime = System.currentTimeMillis();
-        BLAST_TB_LIST[] ret = traceback( req.query, part.db_spec, req.program, hspl );
-        long finishtime = System.currentTimeMillis();
-        /*
-        log("jni_traceback returned in " + (finishtime - starttime) + " ms.");
-        log("jni_traceback returned " + ret.length + " TB_LISTs:");
-        */
-        int i = 0;
-        for ( BLAST_TB_LIST t : ret )
-        {
-            t.part = part;
-            t.req = req;
-            //log( "#" + i + ": " + t.toString() );
-            ++i;
-        }
-
-        return ret;
-    }
+    return ret;
+  }
 
   private ExceptionInInitializerError invalid;
   private PrintWriter log_writer;
@@ -188,19 +164,19 @@ class BLAST_LIB
       String query, String db_spec, String program, String params, int topn);
 
   private native BLAST_TB_LIST[] traceback(
-      String query, String db_spec, String program, BLAST_HSP_LIST[] hspl );
+      String query, String db_spec, String program, BLAST_HSP_LIST[] hspl);
 
   public static void main(String[] args) {
-    /*
-    final String username = System.getProperty("user.name");
-
     String rid = "ReqID123";
     String query = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
     String part =
         "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/nt_50M.14"; // 14 & 18
+    final String location = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
+    final String db_part = "nt_50M";
     // have hits
     String params = "nt";
-    String program = "blastn";
+    final String program = "blastn";
+    final Integer top_n = 100;
 
     if (args.length > 0) {
       String[] req = args[0].split("\\:");
@@ -216,11 +192,11 @@ class BLAST_LIB
     S = S + String.format("params ...... %s\n", params);
     System.err.println(S);
 
-    GCP_BLAST_REQUEST requestobj =
-        new GCP_BLAST_REQUEST(rid + ":" + query + ":nt:" + params + ":" + params);
-    GCP_BLAST_PARTITION partitionobj = new GCP_BLAST_PARTITION("", "", 0, true);
+    BLAST_REQUEST requestobj = new BLAST_REQUEST(rid + ":" + query, top_n);
+    //        new BLAST_REQUEST(rid + ":" + query + ":nt:" + params + ":" + params, top_n);
+    BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
-    GCP_BLAST_LIB blaster = new GCP_BLAST_LIB();
+    BLAST_LIB blaster = new BLAST_LIB();
 
     try {
       PrintWriter pw = new PrintWriter(new FileOutputStream(new File("/tmp/blastjni.log"), true));
@@ -229,36 +205,33 @@ class BLAST_LIB
       System.err.println("Couldn't create log");
     }
 
-    GCP_BLAST_HSP_LIST hspl[] =
-        blaster.jni_prelim_search(query, part, program, params, 100, partitionobj, requestobj);
+    BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj);
     System.out.println("--- PRELIM_SEARCH RESULTS ---");
     if (hspl != null) {
       System.out.println(" prelim_search returned " + hspl.length + " HSP lists:");
-      for (GCP_BLAST_HSP_LIST hsp : hspl) {
+      for (BLAST_HSP_LIST hsp : hspl) {
         System.out.println(hsp.toString());
       }
     } else {
       System.out.println("NULL hspl");
     }
 
-    GCP_BLAST_TB_LIST[] tbs =
-        blaster.jni_traceback(query, part, program, hspl, partitionobj, requestobj);
+    BLAST_TB_LIST[] tbs = blaster.jni_traceback(hspl, partitionobj, requestobj);
 
     System.out.println("traceback done");
     System.out.println("--- TRACEBACK RESULTS ---");
 
     if (tbs != null) {
-      for (GCP_BLAST_TB_LIST tb : tbs) {
+      for (BLAST_TB_LIST tb : tbs) {
         System.out.println(tb.toString());
       }
 
       byte[][] oneasn = new byte[1][0];
       oneasn[0] = tbs[0].asn1_blob;
-      GCP_BLAST_TB_LIST.save(rid + ".seq-annot.asn1", oneasn);
+      BLAST_TB_LIST.save(rid + ".seq-annot.asn1", oneasn);
       System.out.println("Dumped " + rid + " to file.");
     } else {
       System.out.println("NULL asn1");
     }
-    */
   }
 }

@@ -1,52 +1,62 @@
 #!/bin/bash
-#set -euo pipefail
+#set -euxo pipefail
+#set -o errexit
+#set -o nounset
+#set -o xtrace
+#exec >  >(tee -ia /tmp/cluster_initialize.log)
+#exec 2> >(tee -ia /tmp/cluster_initialize.log >&2)
 
-#apt-get install asn1c python-pyasn1 dumpasn1 libtasn1-bin maven libdw-dev -y
-apt-get install libdw-dev -y
+# Copy this script to GS bucket with:
+# gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
 
-exit 0
+ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
+
+apt-get install libdw-dev nmap netcat -y
+
+# /mnt/ram-disk
+#phymem=$(free|awk '/^Mem:/{print $2}')
+sudo mkdir /mnt/ram-disk
+echo 'tmpfs /mnt/ram-disk tmpfs nodev,nosuid,noexec,nodiratime,size=50% 0 0' \
+    | sudo tee -a /etc/fstab
+sudo mount -t tmpfs -o size=50% /mnt/ram-disk
 
 
-
-
-
+PIPELINEBUCKET="gs://blastgcp-pipeline-test"
+DBBUCKET="gs://nt_50mb_chunks/"
 BLASTTMP=/tmp/blast/
 BLASTDBDIR=$BLASTTMP/db
 
-# Copy stuff from GCS
-mkdir -p $BLASTDBDIR/nt.04
-cd $BLASTDBDIR/nt.04
-gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt04.tar .
-tar -xvf nt04.tar
-rm -f nt04.tar
+mkdir -p $BLASTDBDIR
 
-#mkdir -p $BLASTDBDIR/all
-#cd $BLASTDBDIR/all
-#gsutil -m cp gs://blastgcp-pipeline-test/dbs/nt_all.tar .
-#tar -xvf nt_all.tar
-#rm -f nt_all.tar
+if [[ "${ROLE}" == 'Master' ]]; then
+    # For master node only, skip copy
+    echo "master node, skipping DB copy"
+    # Auto terminate cluster
+    sudo shutdown -h +14400
+else
+    # Worker node, copy DBs from GCS
+    # TODO: Future mapper will compute db lengths needed by Blast libraries
+    MAXJOBS=8
+    parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -nu`
+    for part in $parts; do
+        piece="nt_50M.$part"
+        mkdir -p $BLASTDBDIR/$piece
+        cd $BLASTDBDIR/$piece
+        #mkdir lock
+        gsutil -m cp $DBBUCKET$piece.*in . &
+        gsutil -m cp $DBBUCKET$piece.*sq . &
+        gsutil -m cp $DBBUCKET$piece.*hr . &
+        touch done
+        #rmdir lock
 
-MAXJOBS=8
-parts=`gsutil ls gs://nt_50mb_chunks/  | cut -d'.' -f2 | sort -nu`
-for part in $parts; do
-    piece="nt_50M.$part"
-    mkdir -p $BLASTDBDIR/$piece
-    cd $BLASTDBDIR/$piece
-    #mkdir lock
-    gsutil -m cp gs://nt_50mb_chunks/$piece.*in . &
-    gsutil -m cp gs://nt_50mb_chunks/$piece.*sq . &
-    gsutil -m cp gs://nt_50mb_chunks/$piece.*hr . &
-    touch done
-    #rmdir lock
-
-    j=`jobs | wc -l`
-    while [ $j -ge $MAXJOBS ]; do
         j=`jobs | wc -l`
-        echo "$j waiting ..."
-        sleep 0.5
+        while [ $j -ge $MAXJOBS ]; do
+            j=`jobs | wc -l`
+            echo "$j waiting ..."
+            sleep 0.5
+        done
     done
-done
-
+fi
 
 # Set lax permissions
 cd $BLASTTMP
@@ -57,58 +67,17 @@ ls -laR $BLASTTMP
 
 echo Cluster Initialized
 date
+
 exit 0
-
-# Copy to bucket with:
-PIPELINEBUCKET="gs://blastgcp-pipeline-test"
-#gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scipts/cluster_initialize.sh"
-
 
 
 # TODOS:
-# Separate master/worker configuration
-# Auto terminate cluster (shutdown -h +14400)
+# run-init-actions-early? To get RAM before Spark/YARN?
 # Cheap Chaos Monkey (shutdown -h +$RANDOM)
 # Start daemons
 # pre-warm databases
 # Schedule things (cron or systemd timer)
 # Configure user environments
-# Create tmpfs RAM disk
 # Submit stream, keep it alive:
 #     https://github.com/GoogleCloudPlatform/dataproc-initialization-actions/tree/master/post-init
 
-
-# Below is historical
-
-
-
-set -euxo pipefail
-
-set -o errexit
-set -o nounset
-set -o xtrace
-
-exec >  >(tee -ia /tmp/cluster_initialize.log)
-exec 2> >(tee -ia /tmp/cluster_initialize.log >&2)
-echo Initializing Cluster
-date
-
-cd /tmp
-# Need libdw for Blast library, maven for building
-
-# Autokill cluster in 24 hours
-shutdown -h +1440
-
-<<"SKIP"
-
-    # For master node only below this:
-    ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
-    if [[ "${ROLE}" == 'Master' ]]; then
-        echo "master only now"
-
-        # Need maven for building
-        apt-get install maven -y
-    fi
-SKIP
-
-exit 0

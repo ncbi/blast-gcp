@@ -29,7 +29,7 @@ import java.io.Serializable;
 
 /*
 * FIX or CONVINCE ME
-*  The GCP_BLAST_HSP_LIST should not try to represent the entire result of
+*  The BLAST_HSP_LIST should not try to represent the entire result of
 *  a preliminary search. Rather, it is the result of a SINGLE PAIRING between
 *  the query sequence and a single sequence within the db.
 *
@@ -45,13 +45,13 @@ import java.io.Serializable;
 *
 *  Here's more along the lines of what I expected:
 
-   class GCP_BLAST_HSP_LIST implements Serializable
+   class BLAST_HSP_LIST implements Serializable
    {
        public int max_score;
        public byte [] hsp_blob;
        public long elapsed;
 
-       GCP_BLAST_HSP_LIST ( int max_score, long blob_size, long elapsed )
+       BLAST_HSP_LIST ( int max_score, long blob_size, long elapsed )
        {
            ...
            hsp_blob = new byte [ blob_size ];

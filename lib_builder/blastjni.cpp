@@ -24,8 +24,7 @@
  *
  */
 
-#include "gov_nih_nlm_ncbi_blastjni_GCP_BLAST_LIB.h"
-
+#include "gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h"
 #include <algo/blast/api/blast4spark.hpp>
 #include <algo/blast/api/blast_advprot_options.hpp>
 #include <algo/blast/api/blast_exception.hpp>
@@ -151,7 +150,7 @@ static void jni_log(JNIEnv* jenv, jobject jthis, jmethodID jlog_method, const ch
 static jmethodID getlogger(JNIEnv* jenv, jobject jthis)
 {
     // Obtain signature via (build.sh makes file 'signatures'):
-    //   $ javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_LIB.class
+    //   $ javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class
     jclass thiscls = jenv->GetObjectClass(jthis);
     if (!thiscls) fprintf(stderr, "couldn't log %p\n", thiscls);
     jmethodID jlog_method = jenv->GetMethodID(thiscls, "log", "(Ljava/lang/String;)V");
@@ -174,10 +173,10 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
     // leaking?
     // if (jenv->EnsureLocalCapacity(64)) fprintf(stderr, "not enough local?\n");
 
-    jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/GCP_BLAST_HSP_LIST");
+    jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST");
     if (!hsplclass) throw std::runtime_error("Can't get hspl class");
 
-    // FIX - if we can get a real constuctor for the GCP_BLAST_HSP_LIST, then field population is
+    // FIX - if we can get a real constuctor for the BLAST_HSP_LIST, then field population is
     // largely gone
     jfieldID hspl_oid_fid = jenv->GetFieldID(hsplclass, "oid", "I");
     if (!hspl_oid_fid) throw std::runtime_error("Can't get oid fieldID");
@@ -189,7 +188,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
     if (!hspl_blob_fid) throw std::runtime_error("Can't get hsp_blob fieldID");
 
     // jmethodID hspl_ctor_id=env->GetMethodID(hsplclass,
-    // "gov.nih.nlm.ncbi.blastjni.GCP_BLAST_HSP_LIST()", "()V");
+    // "gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST()", "()V");
     jmethodID hspl_ctor_id = jenv->GetMethodID(hsplclass, "<init>", "()V");
     if (!hspl_ctor_id) throw std::runtime_error("Can't find ctor method");
 
@@ -400,7 +399,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
             const BlastHSPList* hsp_list = hsp_lists[i];
             size_t blob_size = hsp_list->hspcnt * sizeof(ncbi::blast::SFlatHSP);
 
-            // FIX - I would like to see about creating the GCP_BLAST_HSP_LIST using
+            // FIX - I would like to see about creating the BLAST_HSP_LIST using
             // a constructor that takes job, oid, max-score and blob size as parameters,
             // let the JVM allocate the blob, and then pull it out to populate.
             // alternatively, we build it and then turn it into a byte[]..
@@ -568,12 +567,12 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, jmethodID jlog_me
 }
 
 /*
- * Class:     gov_nih_nlm_ncbi_blastjni_GCP_BLAST_LIB
+ * Class:     gov_nih_nlm_ncbi_blastjni_BLAST_LIB
  * Method:    prelim_search
  * Signature:
- * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILgov/nih/nlm/ncbi/blastjni/GCP_BLAST_HSP_LIST;)Z
+ * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;)Z
  */
-JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_GCP_1BLAST_1LIB_prelim_1search(
+JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_1search(
     JNIEnv* jenv, jobject jthis, jstring jquery, jstring jdb_spec, jstring jprogram,
     jstring jparams, jint topn)
 {
@@ -624,7 +623,7 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
     jsize hspl_sz = jenv->GetArrayLength(hspl_obj);
     jni_log(jenv, jthis, jlog_method, "  hsp_lists: %d", hspl_sz);
 
-    jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/GCP_BLAST_HSP_LIST");
+    jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST");
     if (!hsplclass) throw std::runtime_error("Can't get hspl class");
 
     jfieldID hspl_blob_fid = jenv->GetFieldID(hsplclass, "hsp_blob", "[B");
@@ -666,7 +665,7 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
             result, num_alignments);
 
     // Get class for TB_LIST
-    jclass tbcls = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/GCP_BLAST_TB_LIST");
+    jclass tbcls = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST");
     if (!tbcls) throw std::runtime_error("Can't get tb class");
 
     jmethodID tb_ctor_id = jenv->GetMethodID(tbcls, "<init>", "(ID[B)V");
@@ -694,12 +693,12 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
 }
 
 /*
- * Class:     gov_nih_nlm_ncbi_blastjni_GCP_BLAST_LIB
+ * Class:     gov_nih_nlm_ncbi_blastjni_BLAST_LIB
  * Method:    traceback
  * Signature:
- * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Lgov/nih/nlm/ncbi/blastjni/GCP_BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/GCP_BLAST_JOB;)[Lgov/nih/nlm/ncbi/blastjni/GCP_BLAST_TB_LIST;
+ * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_JOB;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
  */
-JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_GCP_1BLAST_1LIB_traceback(
+JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceback(
     JNIEnv* jenv, jobject jthis, jstring jquery, jstring jdb_spec, jstring jprogram,
     jobjectArray hspl)
 {

@@ -54,14 +54,14 @@ MAIN_JAR="sprint3.jar"
 echo "Compiling Java and creating JNI header"
 #NOTE: javah deprecated in Java 9, removed in Java 10
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
-    GCP_BLAST_REQUEST.java \
-    GCP_BLAST_PARTITION.java \
-    GCP_BLAST_HSP_LIST.java \
-    GCP_BLAST_TB_LIST.java \
-    GCP_BLAST_LIB.java
-javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_LIB.class >> signatures
-javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_HSP_LIST.class >> signatures
-javap -p -s gov/nih/nlm/ncbi/blastjni/GCP_BLAST_TB_LIST.class >> signatures
+    BLAST_REQUEST.java \
+    BLAST_PARTITION.java \
+    BLAST_HSP_LIST.java \
+    BLAST_TB_LIST.java \
+    BLAST_LIB.java
+javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
+javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
+javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
 
 echo "Creating JAR"
 jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
@@ -123,7 +123,7 @@ fi
     java -Djava.library.path="." \
     -Xcheck:jni -Xdiag -Xfuture \
         -cp $MAIN_JAR:.  \
-        gov.nih.nlm.ncbi.blastjni.GCP_BLAST_LIB \
+        gov.nih.nlm.ncbi.blastjni.BLAST_LIB \
         > output.$$ 2>&1
     sort output.$$ | grep -e "000 " > test.result
     CMP=$(cmp test.result test.expected)
