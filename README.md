@@ -1,7 +1,7 @@
 # BLAST+GCP Integration Project
 
 ## Building and Running
-Please see the document [RUNNING_PIPELINE.md](https://github.com/ncbi/blast-gcp/RUNNING_PIPELINE.md).
+Please see the document [RUNNING_PIPELINE.md](https://github.com/ncbi/blast-gcp/engineering/RUNNING_PIPELINE.md).
 
 ## Contributing
 Please use the [gitflow branching model](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow):
