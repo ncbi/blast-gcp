@@ -1,6 +1,6 @@
 target/
 *.result
 BlastJNI.jar
-sprint3.jar
+sprint*.jar
 Req*asn1
 output*
