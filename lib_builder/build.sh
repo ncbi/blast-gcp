@@ -44,7 +44,7 @@ rm -f core.* hs_err_* output.*
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
 #packages,  but is required by g++ # at NCBI. Revisit after Jira BG-21
 DEPENDS="$SPARK_HOME/jars/*:."
-MAIN_JAR="sprint3.jar"
+MAIN_JAR="sprint4.jar"
 echo "Compiling Java and creating JNI header"
 #NOTE: javah deprecated in Java 9, removed in Java 10
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
@@ -146,60 +146,4 @@ echo "Build Complete"
 date
 echo
 exit 0
-
-
-
-
-<<HINTS
-gcloud auth application-default login --no-launch-browser
-
-git clone https://github.com/ncbi/blast-gcp.git
-cd blast-gcp
-git checkout engineering
-sudo apt-get install libdw-dev -y
-git config --global user.email "Mike.Vartanian@nih.gov"
-git config --global user.name "Mike Vartanian"
-
-
-# Can be useful for debugging
- export SPARK_PRINT_LAUNCH_COMMAND=1
-
-# To manually populate /tmp on workers:
- cd /tmp;gsutil cp gs://blastgcp-pipeline-test/scripts/cluster_initialize.sh .;chmod +x cluster_initialize.sh; sudo ./cluster_initialize.sh
-
-# Not sure if needed
- sudo vi /etc/spark/conf.dist/spark-env.sh
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/blast
-# could be replaced by
- -conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast"
-
-
-$ yarn logs --allicationID <appID>
-yarn.nodemanager.delete.debug-delay-sec property Spark History Server
- with the yarn.log-aggregation-enable config
- Once the job has completed the NodeManager will keep the log for each
- container for ${yarn.nodemanager.log.retain-seconds} which is
- 10800 seconds by default ( 3 hours ) and delete them once they have expired.
- But if ${yarn.log-aggregation-enable} is enabled then the NodeManager
- will immediately concatenate all of the containers logs into one file
- and upload them into HDFS in
-   ${yarn.nodemanager.remote-app-log-dir}/${user.name}/logs/ and delete
-   them from the local userlogs directory
-
-
-
-
- spark-submit \
-     --conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast" \
-     --files libblastjni.so  \
-     --jars BlastJNI.jar \
-     --class BlastSpark \
-     --master yarn \
-     target/blastjni-0.0314.jar \
-    $PIPELINEBUCKET/input/query.jsonl
-     #/user/vartanianmh/query.jsonl
-
-
-HINTS
-
 
