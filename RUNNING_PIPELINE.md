@@ -56,7 +56,7 @@ cd ~/blast-gcp/pipeline
 ```
 In the log (output) terminal: ncat -lk 10011 to see the log-output
 In the job (input) terminal: ncat -lk 10012 to trigger jobs
-In the spark (application) terminal: ./run_spark.sh to start Spark
+In the spark (application) terminal: cd ~/blast-gcp;./run_spark.sh to start Spark
 In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as an test)
 ```
 
