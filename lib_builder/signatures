@@ -1,20 +1,39 @@
 Compiled from "BLAST_LIB.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
+  public static final int LOG_TRACE;
+    descriptor: I
+  public static final int LOG_DEBUG;
+    descriptor: I
+  public static final int LOG_INFO;
+    descriptor: I
+  public static final int LOG_WARN;
+    descriptor: I
+  public static final int LOG_ERROR;
+    descriptor: I
+  public static final int LOG_FATAL;
+    descriptor: I
   private java.lang.ExceptionInInitializerError invalid;
     descriptor: Ljava/lang/ExceptionInInitializerError;
   private java.io.PrintWriter log_writer;
     descriptor: Ljava/io/PrintWriter;
+  private java.lang.String processID;
+    descriptor: Ljava/lang/String;
+  private int loglevel;
+    descriptor: I
   gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
     descriptor: ()V
 
   void throwIfBad();
     descriptor: ()V
 
+  public void setLogLevel(int);
+    descriptor: (I)V
+
   public synchronized void setLogWriter(java.io.PrintWriter);
     descriptor: (Ljava/io/PrintWriter;)V
 
-  private synchronized void log(java.lang.String);
-    descriptor: (Ljava/lang/String;)V
+  private synchronized void log(int, java.lang.String);
+    descriptor: (ILjava/lang/String;)V
 
   gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST);
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;

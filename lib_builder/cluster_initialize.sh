@@ -31,11 +31,11 @@ mkdir -p $BLASTDBDIR
 if [[ "${ROLE}" == 'Master' ]]; then
     # For master node only, skip copy
     echo "master node, skipping DB copy"
-    # Auto terminate cluster
-    sudo shutdown -h +14400
+    # Auto terminate cluster in 8 hours
+    sudo shutdown -h +480
 else
     # Worker node, copy DBs from GCS
-    # TODO: Future mapper will compute db lengths needed by Blast libraries
+    # FIX: Future mapper will compute db lengths needed by Blast libraries
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -nu`
     for part in $parts; do
@@ -71,7 +71,7 @@ date
 exit 0
 
 
-# TODOS:
+# Future enhancements:
 # run-init-actions-early? To get RAM before Spark/YARN?
 # Cheap Chaos Monkey (shutdown -h +$RANDOM)
 # Start daemons

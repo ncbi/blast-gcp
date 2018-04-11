@@ -2,3 +2,4 @@ target/
 *.result
 BlastJNI.jar
 sprint3.jar
+Req*asn1
