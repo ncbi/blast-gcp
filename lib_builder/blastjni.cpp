@@ -551,8 +551,10 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, jmethodID jlog_me
 
     jni_log(jenv, jthis, jlog_method, LOG_INFO, "Blast prelim_search returned");
 
-    if (!hsp_stream)
+    if (!hsp_stream) {
+        jni_log(jenv, jthis, jlog_method, LOG_ERROR, "NULL hsp_stream");
         throw std::runtime_error("prelim_search - NULL hsp_stream");
+    }
 
     std::vector<BlastHSPList*> hsp_lists;
 

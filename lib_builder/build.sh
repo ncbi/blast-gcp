@@ -3,8 +3,6 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
-tput reset
-
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 set +errexit
