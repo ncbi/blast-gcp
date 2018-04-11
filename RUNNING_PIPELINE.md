@@ -49,8 +49,9 @@ cd ~/blast-gcp/pipeline
 ./make_jar.sh
 ```
 # Setting up test environment
-``` In the log (output) terminal: `ncat -lk 10011` to see the log-output
-In the job (input) terminal: `ncat -lk 10012` to trigger jobs
+```
+In the log (output) terminal: ncat -lk 10011 to see the log-output
+In the job (input) terminal: ncat -lk 10012 to trigger jobs
 ```
 
 * Edit the file 'test.ini' to adjust the settings.
