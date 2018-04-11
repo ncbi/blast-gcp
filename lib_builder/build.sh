@@ -35,7 +35,6 @@ JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
 rm -f *.class
-rm -f libblastjni.o ../pipeline/libblastjni.so
 rm -rf gov
 rm -f *test.result
 rm -f *.jar
@@ -65,6 +64,7 @@ jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
 rm -rf gov
 
 if [ "$BUILDENV" = "ncbi" ]; then
+    rm -f libblastjni.o ../pipeline/libblastjni.so
     echo "Compiling and linking blastjni.cpp"
     # Note: Library order important
     #       Hidden dl_open for libdw
