@@ -57,23 +57,26 @@ cd ~/blast-gcp/pipeline
 In the log (output) terminal: ncat -lk 10011 to see the log-output
 In the job (input) terminal: ncat -lk 10012 to trigger jobs
 In the spark (application) terminal: cd ~/blast-gcp/pipeline;./run_spark.sh to start Spark
-In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as an test)
+In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as a test Request-ID)
 ```
 
 # Viewing results
 ```console
 $ hadoop fs -ls results
--rw-r--r--   2 userid hadoop       4499 2018-04-10 20:05 results/req_.-1387756121.txt
-$ cd ~/
-$ hadoop fs -copyToLocal results/... test.asn1
-$ asntool  -m ~/blast-gcp/lib_builder/asn.all -t Seq-annot -p stdout -d test.asn1
-Seq-align ::= {
-  type partial ,
-  dim 2 ,
-  score {
-    {
-      id
-        str "score" ,
+-rw-r--r--   2 userid hadoop       7550 2018-04-11 14:11 results/req_T1.txt
+$ cd ~/blast-gcp/lib_builder/
+$ hadoop fs -copyToLocal results/req_T1.txt req_T1.txt
+$ ./asntool -m asn.all -t Seq-an stdout -d req_T1.txt 
+Seq-annot ::= {
+  data
+    align {
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
 ```
 
 # Shutdown your cluster
