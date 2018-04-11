@@ -38,11 +38,11 @@ JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
 rm -f *.class
-rm -f blastjni.o
+rm -f libblastjni.o ../pipeline/libblastjni.so
 rm -rf gov
 rm -f *test.result
 rm -f *.jar
-rm -f /tmp/blast*.log
+rm -f /tmp/blast*$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
 
@@ -70,7 +70,6 @@ rm -rf gov
 if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling and linking blastjni.cpp"
     # Note: Library order important
-    #       lmdb previously built at NCBI as static .a in /ext/
     #       Hidden dl_open for libdw
     # Eugene has:
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
@@ -85,6 +84,8 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -I $BLASTBYDATE/include \
         -I $BLASTBYDATE/ReleaseMT/inc \
         -L $BLASTBYDATE/ReleaseMT/lib \
+        -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+        -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
         -L . \
         -L ext \
         -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
@@ -103,7 +104,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -lgenome_collection -lseqedit -lseqsplit -lsubmit \
         -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
         -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
-        -llmdb -lpthread -lz -lbz2 \
+        -llmdb-static -lpthread -lz -lbz2 \
         -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
         -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
         -o libblastjni.so
@@ -138,58 +139,6 @@ fi
     set -o errexit
     echo "Test OK"
 #fi
-
-if [ "1" = "0" ] && [ "$BUILDENV" = "ncbi" ]; then
-    echo "Compiling and linking test_blast.cpp"
-    rm -f test_blast
-    g++ test_blast.cpp -L./int/blast/libs \
-        -std=gnu++11 \
-        -Wall -g -fPIC -I . \
-        -I $BLASTBYDATE/include \
-        -I $BLASTBYDATE/GCC493-ReleaseMT/inc \
-        -L $BLASTBYDATE/GCC493-ReleaseMT/lib \
-        -L . \
-        -L ext \
-        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
-        -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
-        -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
-        -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
-        -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
-        -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
-        -lblast_services -lxalnmgr -lxobjutil -lxobjread \
-        -lvariation -lcreaders -lsubmit -lxnetblastcli \
-        -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
-        -lncbi_xloader_genbank -lncbi_xreader_id1 \
-        -lncbi_xreader_id2 -lncbi_xreader_cache \
-        -lncbi_xreader_pubseqos -ldbapi_driver -lncbi_xreader \
-        -lxconnext -lxconnect -lid1 -lid2 -lxobjmgr \
-        -lgenome_collection -lseqedit -lseqsplit -lsubmit \
-        -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
-        -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
-        -llmdb -lpthread -lz -lbz2 \
-        -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
-        -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
-        -o test_blast
-fi
-
-
-# TODO: Can this be run in both environments?
-if [ "1" = "0" ]  && [ "$BUILDENV" = "ncbi" ]; then
-    echo "Testing Blast Library"
-    # More tests at https://www.ncbi.nlm.nih.gov/nuccore/JN166001.1?report=fasta
-        ./test_blast 1 \
-        CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG \
-        nt.04 blastn > blast_test.result
-        set +errexit
-        CMP=$(cmp blast_test.result blast_test.expected)
-        if [[ $? -ne 0 ]]; then
-            sdiff -w 70 blast_test.result blast_test.expected | head
-            echo "Testing Blast Library failed"
-            exit 1
-        fi
-        set -o errexit
-    echo "Test OK"
-fi
 
 if [ "$BUILDENV" = "google" ]; then
     echo "Copying to Cloud Storage Bucket"
