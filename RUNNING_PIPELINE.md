@@ -66,10 +66,13 @@ In the job (input) terminal: ncat -lk 10012 to trigger jobs
 In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as an test)
 
 # Viewing results
-```console
+```
+console
 $ hadoop fs -ls results
 -rw-r--r--   2 vartanianmh hadoop       4499 2018-04-10 20:05 results/req_.-1387756121.txt
-
+```
+The results can be copied back into NCBI for viewing with the `asntool`:
+```
 $ asntool  -m /am/ncbiapdata/asn/asn.all -t Seq-align -p stdout -d req_.-1387756121.txt  | head
 Seq-align ::= {
   type partial ,
