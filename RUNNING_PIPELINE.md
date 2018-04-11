@@ -34,6 +34,8 @@ gcloud dataproc --region us-east4 \
 Click on the cluster name, and then "VM instances", and then click on your
 master node and open an SSH session on it. If using another ssh client, note that you want the "External IP", marked "(ephemeral)."
 
+We highly recommend creating 4 ssh sessions with an external client into the master node, and arranging them so that all 4 can be viewed on your monitor at the same time. If you have not yet created/registered a key pair with GCP, you will need to do this before connecting with an external client.
+
 # Checkout git repository
 ```shell
 git clone https://github.com/ncbi/blast-gcp.git
@@ -46,11 +48,13 @@ git checkout engineering
 cd ~/blast-gcp/pipeline
 ./make_jar.sh
 ```
+# Setting up test environment
+``` In the log (output) terminal: `ncat -lk 10011` to see the log-output
+In the job (input) terminal: `ncat -lk 10012` to trigger jobs
+```
 
 * Edit the file 'test.ini' to adjust the settings.
 * Edit the script run_spark.sh to adjust local/yarn, number of executors/cores
-* In another terminal: ```ncat -lk 10011``` to see the log-output
-* In another terminal: ```ncat -lk 10012``` to trigger jobs
 * on google-cluster:  --num-executers X   : X should match the number or worker-nodes
   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
 
@@ -58,7 +62,7 @@ cd ~/blast-gcp/pipeline
 ./run_spark.sh
 ```
 
-In the terminal with "ncat -lk 10012", type in a query ("T1" as an test)
+In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as an test)
 
 # Viewing results
 ```console
