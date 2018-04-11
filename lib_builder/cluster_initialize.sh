@@ -31,8 +31,8 @@ mkdir -p $BLASTDBDIR
 if [[ "${ROLE}" == 'Master' ]]; then
     # For master node only, skip copy
     echo "master node, skipping DB copy"
-    # Auto terminate cluster
-    sudo shutdown -h +14400
+    # Auto terminate cluster in 8 hours
+    sudo shutdown -h +480
 else
     # Worker node, copy DBs from GCS
     # FIX: Future mapper will compute db lengths needed by Blast libraries
