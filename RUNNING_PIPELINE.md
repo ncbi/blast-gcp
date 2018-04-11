@@ -43,37 +43,29 @@ cd blast-gcp
 git checkout engineering
 ```
 
-# Start SPARK
+# Producing Spark Application
 ```shell
 cd ~/blast-gcp/pipeline
 ./make_jar.sh
 ```
+
 # Setting up test environment
+* (optional) Edit the file 'test.ini' to adjust the settings.
+* (optional) Edit the script run_spark.sh to adjust local/yarn, number of executors/cores
+** on google-cluster:  --num-executers X   : X should match the number or worker-nodes --executor-cores Y  : Y should match the number of vCPU's per worker-node 
 ```
 In the log (output) terminal: ncat -lk 10011 to see the log-output
 In the job (input) terminal: ncat -lk 10012 to trigger jobs
-```
-
-* Edit the file 'test.ini' to adjust the settings.
-* Edit the script run_spark.sh to adjust local/yarn, number of executors/cores
-* on google-cluster:  --num-executers X   : X should match the number or worker-nodes
-  --executor-cores Y  : Y should match the number of vCPU's per worker-node 
-
-```shell
-./run_spark.sh
-```
-
+In the spark (application) terminal: ./run_spark.sh to start Spark
 In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as an test)
+```
 
 # Viewing results
-```
-console
+```console
 $ hadoop fs -ls results
--rw-r--r--   2 vartanianmh hadoop       4499 2018-04-10 20:05 results/req_.-1387756121.txt
-```
-The results can be copied back into NCBI for viewing with the `asntool`:
-```
-$ asntool  -m /am/ncbiapdata/asn/asn.all -t Seq-align -p stdout -d req_.-1387756121.txt  | head
+-rw-r--r--   2 userid hadoop       4499 2018-04-10 20:05 results/req_.-1387756121.txt
+$ hadoop fs -copyToLocal results/... test.asn1
+$ asntool  -m ~/blast-gcp/lib_builder/asn.all -t Seq-annot -p stdout -d test.asn1
 Seq-align ::= {
   type partial ,
   dim 2 ,
@@ -81,13 +73,12 @@ Seq-align ::= {
     {
       id
         str "score" ,
-
-
 ```
 
 # Shutdown your cluster
 **All data not stored in a Google Cloud Storage bucket will be lost.**
 ```console
+In the spark (application terminal : exit
 gcloud dataproc --region us-east4 clusters list
 gcloud dataproc --region us-east4 clusters delete cluster-$USER-...
 ```
