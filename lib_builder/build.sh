@@ -22,11 +22,8 @@ else
     export DISTRO="CentOS 7"
     export BUILDENV="ncbi"
     export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
-    #export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/:/home/vartanianmh/blast-gcp/pipeline/ext"
-    export LD_LIBRARY_PATH=".:/opt/ncbi/gcc/4.9.3/lib64/:$PWD/ext"
+    export LD_LIBRARY_PATH="../pipeline:/opt/ncbi/gcc/4.9.3/lib64/:$PWD/ext"
     export BLASTDB=/net/frosty/vol/blast/db/blast
-#    BLASTBYDATE=/netopt/ncbi_tools64/c++.stable/
-#    BLASTBYDATE=/netopt/ncbi_tools64/c++.by-date/20180319/
     BLASTBYDATE="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/"
     export SPARK_HOME=/usr/local/spark/2.2.0/
 
@@ -54,11 +51,11 @@ MAIN_JAR="sprint3.jar"
 echo "Compiling Java and creating JNI header"
 #NOTE: javah deprecated in Java 9, removed in Java 10
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
-    BLAST_REQUEST.java \
-    BLAST_PARTITION.java \
-    BLAST_HSP_LIST.java \
-    BLAST_TB_LIST.java \
-    BLAST_LIB.java
+    ../pipeline/src/BLAST_REQUEST.java \
+    ../pipeline/src/BLAST_PARTITION.java \
+    ../pipeline/src/BLAST_HSP_LIST.java \
+    ../pipeline/src/BLAST_TB_LIST.java \
+    ../pipeline/src/BLAST_LIB.java
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
@@ -107,21 +104,21 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -llmdb-static -lpthread -lz -lbz2 \
         -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
         -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
-        -o libblastjni.so
+        -o ../pipeline/libblastjni.so
 fi
 
 
 #if [ "$BUILDENV" = "google" ]; then
     echo "Testing JNI"
     set +errexit
-    ldd libblastjni.so | grep found
+    ldd ../pipeline/libblastjni.so | grep found
     if [[ $? -ne 1 ]]; then
         echo "Missing a shared library"
         echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
         exit 1
     fi
         #-verbose:jni \
-    java -Djava.library.path="." \
+    java -Djava.library.path="../pipeline" \
     -Xcheck:jni -Xdiag -Xfuture \
         -cp $MAIN_JAR:.  \
         gov.nih.nlm.ncbi.blastjni.BLAST_LIB \
@@ -147,7 +144,6 @@ if [ "$BUILDENV" = "google" ]; then
         "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
 fi
 
-mv libblastjni.so ../pipeline
 echo "Build Complete"
 date
 echo
