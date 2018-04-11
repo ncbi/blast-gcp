@@ -31,9 +31,9 @@ import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.InetAddress;
-import java.net.DatagramSocket;
-import java.net.DatagramPacket;
+
 import org.apache.spark.SparkEnv;
+import org.apache.spark.broadcast.Broadcast;
 
 public class BLAST_SEND
 {
@@ -88,5 +88,11 @@ public class BLAST_SEND
         if ( inst != null )
             inst.send_msg( msg );
     }
+
+    public static void send( final Broadcast< String > host, final Broadcast< Integer > port, final String msg )
+    {
+        send( host.getValue(), port.getValue(), msg );
+    }
+
 }
 

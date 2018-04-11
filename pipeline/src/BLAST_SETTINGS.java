@@ -54,6 +54,7 @@ public class BLAST_SETTINGS
     public static final String key_log_request = "log_request";
     public static final String key_log_start = "log_start";
     public static final String key_log_done = "log_done";
+    public static final String key_log_cutoff = "log_cutoff";
     public static final String key_log_final = "log_final";
     public static final String key_project_id = "project_id";
     public static final String key_subscript_id = "subscript_id";
@@ -77,6 +78,7 @@ public class BLAST_SETTINGS
     public static final Boolean dflt_log_request = false;
     public static final Boolean dflt_log_start = false;
     public static final Boolean dflt_log_done = false;
+    public static final Boolean dflt_log_cutoff = true;
     public static final Boolean dflt_log_final = true;
     public static final String  dflt_project_id = "ncbi-sandbox-blast";
     public static final String  dflt_subscript_id = "spart-test-subscript";
@@ -109,6 +111,7 @@ public class BLAST_SETTINGS
     public Boolean log_request;
     public Boolean log_job_start;
     public Boolean log_job_done;
+    public Boolean log_cutoff;
     public Boolean log_final;   
 
     public String project_id;
@@ -162,6 +165,7 @@ public class BLAST_SETTINGS
         log_request         = dflt_log_request;
         log_job_start       = dflt_log_start;
         log_job_done        = dflt_log_done;
+        log_cutoff          = dflt_log_cutoff;
         log_final           = dflt_log_final;
 
         project_id      = dflt_project_id;
@@ -213,6 +217,7 @@ public class BLAST_SETTINGS
         log_request     = ini_file.getBoolean( ini_section, key_log_request, dflt_log_request );
         log_job_start   = ini_file.getBoolean( ini_section, key_log_start, dflt_log_start );
         log_job_done    = ini_file.getBoolean( ini_section, key_log_done, dflt_log_done );
+        log_cutoff      = ini_file.getBoolean( ini_section, key_log_cutoff, dflt_log_cutoff );
         log_final       = ini_file.getBoolean( ini_section, key_log_final, dflt_log_final );
 
         project_id      = ini_file.getString( ini_section, key_project_id, dflt_project_id);
@@ -241,6 +246,7 @@ public class BLAST_SETTINGS
         S  =  S +  String.format( "log_request ........ %s\n", Boolean.toString( log_request ) );
         S  =  S +  String.format( "log_job_start ...... %s\n", Boolean.toString( log_job_start ) );
         S  =  S +  String.format( "log_job_done ....... %s\n", Boolean.toString( log_job_done ) );
+        S  =  S +  String.format( "log_cutoff ......... %s\n", Boolean.toString( log_cutoff ) );
         S  =  S +  String.format( "log_final........... %s\n", Boolean.toString( log_final ) );
         return S;
     }

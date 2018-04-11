@@ -34,8 +34,10 @@ import java.util.Iterator;
 import java.util.Collections;
 import java.util.Random;
 
+import static java.lang.Math.min;
+
 import java.io.OutputStream;
-import java.nio.charset.Charset;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -146,7 +148,7 @@ class BLAST_DRIVER extends Thread
 
             // ++++++ this is the where the work happens on the worker-nodes ++++++
             if ( LOG_JOB_START.getValue() )
-                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                BLAST_SEND.send( LOG_HOST, LOG_PORT,
                                  String.format( "starting request: '%s' at '%s' ", req.req_id, part.db_spec ) );
 
             Integer count = 0;
@@ -162,7 +164,7 @@ class BLAST_DRIVER extends Thread
                 count = search_res.length;
             
                 if ( LOG_JOB_DONE.getValue() )
-                    BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                    BLAST_SEND.send( LOG_HOST, LOG_PORT,
                                      String.format( "request '%s'.'%s' done -> count = %d", rid, part.db_spec, count ) );
 
                 for ( BLAST_HSP_LIST S : search_res )
@@ -170,7 +172,7 @@ class BLAST_DRIVER extends Thread
             }
             catch ( Exception e )
             {
-                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+                BLAST_SEND.send( LOG_HOST, LOG_PORT,
                                      String.format( "request exeption: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
             }
             return ret.iterator();
@@ -182,7 +184,7 @@ class BLAST_DRIVER extends Thread
             calculate cutoff
        =========================================================================================== */
     private JavaPairDStream< String, Integer > calculate_cutoff( final JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
-             Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+             Broadcast< Boolean > LOG_CUTOFF, Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
         // key   : req_id
         // value : scores, each having a copy of N for picking the cutoff value
@@ -216,8 +218,8 @@ class BLAST_DRIVER extends Thread
                 Collections.sort( lst, Collections.reverseOrder() );
                 cutoff = lst.get( top_n - 1 );                    
             }
-            BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                             String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
+            if ( LOG_CUTOFF.getValue() )
+                BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
             return new Tuple2<>( item._1(), cutoff );
 
         }).cache();
@@ -290,7 +292,7 @@ class BLAST_DRIVER extends Thread
             collect and write traceback
        =========================================================================================== */
     private void write_traceback( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
-                                Broadcast< String > SAVE_DIR,
+                                Broadcast< String > SAVE_DIR, Broadcast< Boolean > LOG_FINAL,
                                 Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
     {
         // key is now req-id
@@ -302,7 +304,32 @@ class BLAST_DRIVER extends Thread
 
         final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > SEQANNOT2 = SEQANNOT1.groupByKey();
 
-        SEQANNOT2.foreachRDD( rdd ->
+        final JavaPairDStream< String, ByteBuffer > SEQANNOT3 = SEQANNOT2.mapValues( item ->
+        {
+            List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
+            for ( BLAST_TB_LIST e : item )
+                all_seq_annots.add( e );
+
+            Collections.sort( all_seq_annots );
+            Integer top_n = all_seq_annots.get( 0 ).req.top_n;
+
+            List< BLAST_TB_LIST > top_n_seq_annots = all_seq_annots.subList( 0, min( all_seq_annots.size(), top_n ) );
+            int sum = 0;
+            for ( BLAST_TB_LIST e : top_n_seq_annots )
+                sum += e.asn1_blob.length;
+
+			ByteBuffer ret = ByteBuffer.allocate( sum + 8 + 4 );
+			byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+			ret.put( seq_annot_prefix );
+			for ( BLAST_TB_LIST e : top_n_seq_annots )
+				ret.put( e.asn1_blob );
+    		byte[] seq_annot_suffix = { 0, 0, 0, 0 };
+			ret.put( seq_annot_suffix );
+
+			return ret;
+        });
+
+        SEQANNOT3.foreachRDD( rdd ->
         {
             long count = rdd.count();
             if ( count > 0 )
@@ -311,50 +338,37 @@ class BLAST_DRIVER extends Thread
                 {
                     while( iter.hasNext() )
                     {
-                        Tuple2< String, Iterable< BLAST_TB_LIST > > item = iter.next();
+                        Tuple2< String, ByteBuffer > item = iter.next();
                         String req_id = item._1();
-                        Iterable< BLAST_TB_LIST > item_iter = item._2();
+                        ByteBuffer value = item._2();
 
-                        ArrayList< BLAST_TB_LIST > annots = new ArrayList<>();
+                        if ( LOG_FINAL.getValue() )
+                            BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "%s : %s", req_id, value.toString() ) );
 
-                        for ( BLAST_TB_LIST e : item_iter )
-                            annots.add( e );
-
-                        if ( !annots.isEmpty() )
+                        String filename = String.format( "%sreq_%s.txt", SAVE_DIR.getValue(), req_id );
+                        //String filename = String.format( "gs:///blastgcp-pipeline-test/output/ReqID_%s.seq-annot.asn1", key );
+                        try
                         {
-                            Collections.sort( annots );
-                            Integer top_n = annots.get( 0 ).req.top_n;
-                            String filename = String.format( "%sreq_%s.txt", SAVE_DIR.getValue(), req_id );
-                            //String filename = String.format( "gs:///blastgcp-pipeline-test/output/ReqID_%s.seq-annot.asn1", key );
-                            try
-                            {
-                                Integer n = 0;
-                                Configuration conf = new Configuration();
-                                FileSystem fs = FileSystem.get( conf );
+                            Configuration conf = new Configuration();
+                            FileSystem fs = FileSystem.get( conf );
+                            OutputStream os = fs.create( new Path( filename ) );
+                            os.write( value.array() );
+                            os.close();
 
-                                OutputStream os = fs.create( new Path( filename ) );
-                                for ( BLAST_TB_LIST e : annots )
-                                {
-                                    if ( n < top_n )
-                                    {
-                                        os.write( e.asn1_blob );
-                                        n++;
-                                    }
-                                }
-                                os.close();
-
-                                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
-                                    String.format( "%d items written: %s", n, filename ) );
-                            }
-                            catch ( Exception e )
-                            {
-                                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(), String.format( "fs-ex : %s", e.toString() ) );
-                            }
+                            int n_bytes = value.array().length;
+                            BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "%d bytes written: %s", n_bytes, filename ) );
+                        }
+                        catch ( Exception e )
+                        {
+                            BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "fs-ex : %s", e.toString() ) );
                         }
                     }
                 } );
-                BLAST_SEND.send( LOG_HOST.getValue(), LOG_PORT.getValue(),
+
+                if ( LOG_FINAL.getValue() )
+                    BLAST_SEND.send( LOG_HOST, LOG_PORT,
                                  String.format( "REQUEST DONE: count  = %d ( rdd.id = %d )", count, rdd.id() ) );
+
             }
         } );
     }
@@ -372,6 +386,7 @@ class BLAST_DRIVER extends Thread
             Broadcast< Boolean > LOG_REQUEST = sc.broadcast( settings.log_request );
             Broadcast< Boolean > LOG_JOB_START = sc.broadcast( settings.log_job_start );
             Broadcast< Boolean > LOG_JOB_DONE = sc.broadcast( settings.log_job_done );
+            Broadcast< Boolean > LOG_CUTOFF = sc.broadcast( settings.log_cutoff );
             Broadcast< Boolean > LOG_FINAL = sc.broadcast( settings.log_final );
             Broadcast< Integer > TOP_N = sc.broadcast( settings.top_n );
             Broadcast< BLAST_PARTITIONER1 > PARTITIONER1 = sc.broadcast(
@@ -418,7 +433,8 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     calculate cutoff ( top-score )
                =========================================================================================== */
-            final JavaPairDStream< String, Integer > CUTOFF = calculate_cutoff( HSPS, LOG_HOST, LOG_PORT );
+            final JavaPairDStream< String, Integer > CUTOFF 
+                = calculate_cutoff( HSPS, LOG_CUTOFF, LOG_HOST, LOG_PORT );
 
             /* ===========================================================================================
                     filter by cutoff
@@ -435,7 +451,7 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     collect traceback
                =========================================================================================== */
-            write_traceback( SEQANNOT, SAVE_DIR, LOG_HOST, LOG_PORT );
+            write_traceback( SEQANNOT, SAVE_DIR, LOG_FINAL, LOG_HOST, LOG_PORT );
 
             /* ===========================================================================================
                     start the streaming
