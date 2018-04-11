@@ -65,6 +65,19 @@ class BLAST_LIB {
         invalid = new ExceptionInInitializerError(e2);
       }
     }
+
+    String username = System.getProperty("user.name", "unk");
+    String log_filename = "/tmp/blastjni." + username + ".log";
+
+    try {
+      // FIX - When Dataproc/Spark goes to Java 9+, replace with
+      // Process.getPid()
+      this.processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+      PrintWriter pw = new PrintWriter(new FileOutputStream(new File(log_filename), true));
+      this.setLogWriter(pw);
+    } catch (FileNotFoundException ex) {
+      System.err.println("Couldn't create log");
+    }
   }
 
   void throwIfBad() {
@@ -86,6 +99,7 @@ class BLAST_LIB {
   private synchronized void log(String msg) {
     if (log_writer != null) {
       try {
+        msg = "(" + this.processID + ") " + msg;
         log_writer.println(msg);
         log_writer.flush();
       } catch (Throwable t) {
@@ -160,6 +174,7 @@ class BLAST_LIB {
 
   private ExceptionInInitializerError invalid;
   private PrintWriter log_writer;
+  private String processID;
 
   private native BLAST_HSP_LIST[] prelim_search(
       String query, String db_spec, String program, String params, int topn);
@@ -198,14 +213,6 @@ class BLAST_LIB {
     BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
     BLAST_LIB blaster = new BLAST_LIB();
-
-    try {
-      String pid=ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-      PrintWriter pw = new PrintWriter(new FileOutputStream(new File("/tmp/blastjni." + pid + ".log"), true));
-      blaster.setLogWriter(pw);
-    } catch (FileNotFoundException ex) {
-      System.err.println("Couldn't create log");
-    }
 
     BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj);
     System.out.println("--- PRELIM_SEARCH RESULTS ---");

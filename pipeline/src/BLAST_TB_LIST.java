@@ -30,13 +30,6 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-/*
- * FIX
- *  You're still going to be passing back a list of tuples
- *     ( job, oid, min-evalue, hsps [] )
- *  where the hsps will be in ASN.1, essentially.
- */
-
 class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LIST> {
   public BLAST_PARTITION part;
   public BLAST_REQUEST req;

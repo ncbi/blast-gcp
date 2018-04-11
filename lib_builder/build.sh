@@ -43,7 +43,7 @@ rm -f signatures
 rm -f core.* hs_err_* output.*
 
 
-# TODO: Unfortunately, BlastJNI.h can only be built @ Google, due to
+# FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
 #packages,  but is required by g++ # at NCBI. Revisit after Jira BG-21
 DEPENDS="$SPARK_HOME/jars/*:."
 MAIN_JAR="sprint3.jar"

@@ -4,6 +4,8 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
     descriptor: Ljava/lang/ExceptionInInitializerError;
   private java.io.PrintWriter log_writer;
     descriptor: Ljava/io/PrintWriter;
+  private java.lang.String processID;
+    descriptor: Ljava/lang/String;
   gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
     descriptor: ()V
 

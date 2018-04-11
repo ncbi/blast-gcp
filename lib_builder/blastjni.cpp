@@ -101,7 +101,8 @@ static void jni_throw(JNIEnv* jenv, uint32_t xtype, const char* fmt, va_list arg
     }
 
     // if not a known type, must throw RuntimeException
-    if (!jexcept_cls) jexcept_cls = jenv->FindClass("java/lang/RuntimeException");
+    if (!jexcept_cls)
+        jexcept_cls = jenv->FindClass("java/lang/RuntimeException");
 
     jni_throw(jenv, jexcept_cls, fmt, args);
 }
@@ -138,9 +139,10 @@ static void jni_log(JNIEnv* jenv, jobject jthis, jmethodID jlog_method, const ch
     if (jlog_method != 0) {
         // make String object, JVM will garbage collect the jstring
         jstring jstr = jenv->NewStringUTF(buffer);
-        if (!jstr) fprintf(stderr, "Can't create JVM string\n");
+        if (!jstr)
+            fprintf(stderr, "Can't create JVM string\n");
         jenv->CallVoidMethod(jthis, jlog_method, jstr);
-        if (jenv->ExceptionCheck()) // Mostly to silence -Xcheck:jni
+        if (jenv->ExceptionCheck())  // Mostly to silence -Xcheck:jni
             fprintf(stderr, "Log method threw an exception, which it should never do.\n");
     } else {
         fprintf(stderr, "%s", buffer);
@@ -152,7 +154,8 @@ static jmethodID getlogger(JNIEnv* jenv, jobject jthis)
     // Obtain signature via (build.sh makes file 'signatures'):
     //   $ javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class
     jclass thiscls = jenv->GetObjectClass(jthis);
-    if (!thiscls) fprintf(stderr, "couldn't log %p\n", thiscls);
+    if (!thiscls)
+        fprintf(stderr, "couldn't log %p\n", thiscls);
     jmethodID jlog_method = jenv->GetMethodID(thiscls, "log", "(Ljava/lang/String;)V");
     if (jlog_method) {
         jni_log(jenv, jthis, jlog_method, "Logger method %p, pid=%04d", jlog_method, getpid());
@@ -169,28 +172,29 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
 {
     jni_log(jenv, jthis, jlog_method, "\niterate_HSPs has %lu HSP lists:", hsp_lists.size());
 
-    // FIX: Why is default (16) insufficient to prevent warning, are we
-    // leaking?
-    // if (jenv->EnsureLocalCapacity(64)) fprintf(stderr, "not enough local?\n");
-
     jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST");
-    if (!hsplclass) throw std::runtime_error("Can't get hspl class");
+    if (!hsplclass)
+        throw std::runtime_error("Can't get hspl class");
 
     // FIX - if we can get a real constuctor for the BLAST_HSP_LIST, then field population is
     // largely gone
     jfieldID hspl_oid_fid = jenv->GetFieldID(hsplclass, "oid", "I");
-    if (!hspl_oid_fid) throw std::runtime_error("Can't get oid fieldID");
+    if (!hspl_oid_fid)
+        throw std::runtime_error("Can't get oid fieldID");
 
     jfieldID hspl_max_score_fid = jenv->GetFieldID(hsplclass, "max_score", "I");
-    if (!hspl_max_score_fid) throw std::runtime_error("Can't get max_score fieldID");
+    if (!hspl_max_score_fid)
+        throw std::runtime_error("Can't get max_score fieldID");
 
     jfieldID hspl_blob_fid = jenv->GetFieldID(hsplclass, "hsp_blob", "[B");
-    if (!hspl_blob_fid) throw std::runtime_error("Can't get hsp_blob fieldID");
+    if (!hspl_blob_fid)
+        throw std::runtime_error("Can't get hsp_blob fieldID");
 
     // jmethodID hspl_ctor_id=env->GetMethodID(hsplclass,
     // "gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST()", "()V");
     jmethodID hspl_ctor_id = jenv->GetMethodID(hsplclass, "<init>", "()V");
-    if (!hspl_ctor_id) throw std::runtime_error("Can't find ctor method");
+    if (!hspl_ctor_id)
+        throw std::runtime_error("Can't find ctor method");
 
     /*
         But first, an explanation of what we have, and what we need to return:
@@ -290,7 +294,8 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
     int min_score = INT_MIN;
 
     jclass bclass = jenv->FindClass("[B");
-    if (!bclass) throw std::runtime_error("can't create byte array");
+    if (!bclass)
+        throw std::runtime_error("can't create byte array");
 
     // jobjectArray tuples = jenv->NewObjectArray(num_tuples, bclass, jenv->NewByteArray(0));
 
@@ -321,7 +326,8 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
             int hsp_score = hsp_list->hsp_array[h]->score;
             jni_log(jenv, jthis, jlog_method, "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score,
                     hsp_score);
-            if (max_score < hsp_score) max_score = hsp_score;
+            if (max_score < hsp_score)
+                max_score = hsp_score;
         }
         max_scores.push_back(max_score);
         score_set.insert(max_score);
@@ -361,7 +367,8 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
         jni_log(jenv, jthis, jlog_method, "  min_score is %d", min_score);
 
         for (size_t i = 0; i != max_scores.size(); ++i)
-            if (max_scores[i] >= min_score) ++num_tuples;
+            if (max_scores[i] >= min_score)
+                ++num_tuples;
 
         jni_log(jenv, jthis, jlog_method, "  num_tuples is %lu", num_tuples);
     }
@@ -404,7 +411,8 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
             // let the JVM allocate the blob, and then pull it out to populate.
             // alternatively, we build it and then turn it into a byte[]..
             ncbi::blast::SFlatHSP* hspblob = (ncbi::blast::SFlatHSP*)malloc(blob_size);
-            if (!hspblob) throw std::runtime_error("Couldn't allocate hspblob");
+            if (!hspblob)
+                throw std::runtime_error("Couldn't allocate hspblob");
 
             try {
                 /*
@@ -417,7 +425,8 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
                   */
                 jni_log(jenv, jthis, jlog_method, "  blob #%d size is %lu", i, blob_size);
                 jbyteArray tuple = jenv->NewByteArray(blob_size);
-                if (!tuple) throw std::runtime_error("Couldn't create ByteArray");
+                if (!tuple)
+                    throw std::runtime_error("Couldn't create ByteArray");
 
                 /*
                   declare hsp_blob: a sequence of HSP tuples, each with
@@ -465,7 +474,8 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
 
                 // Create a new HSP_LIST
                 jobject hspl_obj = jenv->NewObject(hsplclass, hspl_ctor_id);
-                if (!hspl_obj) throw std::runtime_error("Couldn't make new HSP_LIST");
+                if (!hspl_obj)
+                    throw std::runtime_error("Couldn't make new HSP_LIST");
                 jenv->SetIntField(hspl_obj, hspl_oid_fid, oid);
                 jenv->SetIntField(hspl_obj, hspl_max_score_fid, max_scores[i]);
                 jenv->SetObjectField(hspl_obj, hspl_blob_fid, tuple);
@@ -513,7 +523,8 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, jmethodID jlog_me
     // that embedded newlines are okay. If not, we run the chance of having
     // incoherent messages interleaved with activity from other jobs.
     // ANS - Agree, once segfaults deep in JVM have ceased, otherwise good to
-    // flush log sooner.
+    // flush log sooner. getpid() in log messages for the time being to
+    // disambiguate.
 
     jni_log(jenv, jthis, jlog_method, "\nBlast prelim_search called with");
     jni_log(jenv, jthis, jlog_method, "  query   : %s", jquery);
@@ -527,7 +538,8 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, jmethodID jlog_me
 
     jni_log(jenv, jthis, jlog_method, "Blast prelim_search returned");
 
-    if (!hsp_stream) throw std::runtime_error("prelim_search - NULL hsp_stream");
+    if (!hsp_stream)
+        throw std::runtime_error("prelim_search - NULL hsp_stream");
 
     std::vector<BlastHSPList*> hsp_lists;
 
@@ -536,14 +548,15 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, jmethodID jlog_me
         while (1) {
             BlastHSPList* hsp_list = 0;
             int status = BlastHSPStreamRead(hsp_stream->GetPointer(),
-                                            &hsp_list); // FIX, use operator ->?
+                                            &hsp_list);  // FIX, use operator ->?
 
             if (status == kBlastHSPStream_Error) {
                 jni_log(jenv, jthis, jlog_method, "kBlastHSPStream_Error");
                 throw std::runtime_error("prelim_search - Exception from BlastHSPStreamRead");
             }
 
-            if (status != kBlastHSPStream_Success || !hsp_list) break;
+            if (status != kBlastHSPStream_Success || !hsp_list)
+                break;
 
             hsp_lists.push_back(hsp_list);
             jni_log(jenv, jthis, jlog_method, "  loop");
@@ -624,26 +637,31 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
     jni_log(jenv, jthis, jlog_method, "  hsp_lists: %d", hspl_sz);
 
     jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST");
-    if (!hsplclass) throw std::runtime_error("Can't get hspl class");
+    if (!hsplclass)
+        throw std::runtime_error("Can't get hspl class");
 
     jfieldID hspl_blob_fid = jenv->GetFieldID(hsplclass, "hsp_blob", "[B");
-    if (!hspl_blob_fid) throw std::runtime_error("Can't get hsp_blob fieldID");
+    if (!hspl_blob_fid)
+        throw std::runtime_error("Can't get hsp_blob fieldID");
 
     jint oid = -1;
     std::vector<ncbi::blast::SFlatHSP> flat_hsp_list;
     // Iterate through HSP_LIST[]
     for (int h = 0; h != hspl_sz; ++h) {
         jobject hspl = jenv->GetObjectArrayElement(hspl_obj, h);
-        if (!hspl) throw std::runtime_error("Couldn't get array element");
+        if (!hspl)
+            throw std::runtime_error("Couldn't get array element");
 
         jobject blobobj = jenv->GetObjectField(hspl, hspl_blob_fid);
-        if (!blobobj) throw std::runtime_error("Couldn't get blob array");
+        if (!blobobj)
+            throw std::runtime_error("Couldn't get blob array");
         jbyteArray blobarr = (jbyteArray)blobobj;
 
         size_t blob_size = jenv->GetArrayLength(blobarr);
 
         jbyte* be = jenv->GetByteArrayElements(blobarr, NULL);
-        if (be == NULL) throw std::runtime_error("Couldn't get bytearray");
+        if (be == NULL)
+            throw std::runtime_error("Couldn't get bytearray");
         ncbi::blast::SFlatHSP* flathsps = (ncbi::blast::SFlatHSP*)be;
 
         size_t elements = blob_size / sizeof(ncbi::blast::SFlatHSP);
@@ -654,7 +672,7 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
             ncbi::blast::SFlatHSP flathsp = flathsps[i];
             flat_hsp_list.push_back(flathsp);
         }
-        jenv->ReleaseByteArrayElements(blobarr, be, JNI_ABORT); // Didn't update the array
+        jenv->ReleaseByteArrayElements(blobarr, be, JNI_ABORT);  // Didn't update the array
     }
 
     ncbi::blast::TIntermediateAlignments alignments;
@@ -666,10 +684,12 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
 
     // Get class for TB_LIST
     jclass tbcls = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST");
-    if (!tbcls) throw std::runtime_error("Can't get tb class");
+    if (!tbcls)
+        throw std::runtime_error("Can't get tb class");
 
     jmethodID tb_ctor_id = jenv->GetMethodID(tbcls, "<init>", "(ID[B)V");
-    if (!tb_ctor_id) throw std::runtime_error("Can't find tb ctor method");
+    if (!tb_ctor_id)
+        throw std::runtime_error("Can't find tb ctor method");
 
     jobjectArray retarray = jenv->NewObjectArray(num_alignments, tbcls, NULL);
     for (size_t i = 0; i != alignments.size(); ++i) {
@@ -681,10 +701,12 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, jmethodID jlog_method
                 asn.size());
 
         jbyteArray asn_blob = jenv->NewByteArray(asn.size());
-        if (!asn_blob) throw std::runtime_error("Can't make bytearray");
+        if (!asn_blob)
+            throw std::runtime_error("Can't make bytearray");
         jenv->SetByteArrayRegion(asn_blob, 0, asn.size(), (const jbyte*)asn.data());
         jobject tb_obj = jenv->NewObject(tbcls, tb_ctor_id, oid, evalue, asn_blob);
-        if (!tb_obj) throw std::runtime_error("Couldn't make new TB_LIST");
+        if (!tb_obj)
+            throw std::runtime_error("Couldn't make new TB_LIST");
 
         jenv->SetObjectArrayElement(retarray, i, tb_obj);
     }

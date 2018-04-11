@@ -35,7 +35,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
     sudo shutdown -h +14400
 else
     # Worker node, copy DBs from GCS
-    # TODO: Future mapper will compute db lengths needed by Blast libraries
+    # FIX: Future mapper will compute db lengths needed by Blast libraries
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -nu`
     for part in $parts; do
@@ -71,7 +71,7 @@ date
 exit 0
 
 
-# TODOS:
+# Future enhancements:
 # run-init-actions-early? To get RAM before Spark/YARN?
 # Cheap Chaos Monkey (shutdown -h +$RANDOM)
 # Start daemons
