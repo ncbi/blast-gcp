@@ -29,6 +29,8 @@ import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import org.apache.spark.SparkFiles;
 
+// import org.apache.log4j.Level;
+
 /* FIX and GENERAL COMMENTS
  *
  *  First, things that should be fixed will be marked FIX, and other stuff
@@ -43,12 +45,20 @@ import org.apache.spark.SparkFiles;
  */
 
 class BLAST_LIB {
+  // TODO: Replace with enum or Log4j's Level
+  public static final int LOG_TRACE = 0;
+  public static final int LOG_DEBUG = 1;
+  public static final int LOG_INFO = 2;
+  public static final int LOG_WARN = 3;
+  public static final int LOG_ERROR = 4;
+  public static final int LOG_FATAL = 5;
 
   // FIX - we need to ensure that this is locked down with regard to multi-threading
   // if a BLAST_LIB object is instantiated as a static member of an outer class,
   // this is known to work (i.e. lock up the JVM to serialize)
 
   BLAST_LIB() {
+    this.loglevel = BLAST_LIB.LOG_INFO;
     System.err.println("In Java BLAST_LIB ctor");
     try {
       // Java will look for libblastjni.so
@@ -87,6 +97,10 @@ class BLAST_LIB {
     }
   }
 
+  public void setLogLevel(int level) {
+    if (level >= BLAST_LIB.LOG_TRACE && level <= BLAST_LIB.LOG_FATAL) this.loglevel = level;
+  }
+
   public synchronized void setLogWriter(PrintWriter writer) {
     log_writer = writer;
   }
@@ -96,10 +110,34 @@ class BLAST_LIB {
   // generating signatures, you might booby-trap the build script to
   // catch any deviation in the signature of this method. And I'd
   // make the warning MUCH harder to avoid seeing/reading.
-  private synchronized void log(String msg) {
-    if (log_writer != null) {
+  private synchronized void log(int level, String msg) {
+    if (log_writer != null && level >= this.loglevel) {
       try {
-        msg = "(" + this.processID + ") " + msg;
+        String levelstr;
+        switch (level) {
+          case LOG_TRACE:
+            levelstr = "TRACE";
+            break;
+          case LOG_DEBUG:
+            levelstr = "DEBUG";
+            break;
+          case LOG_INFO:
+            levelstr = "INFO";
+            break;
+          case LOG_WARN:
+            levelstr = "WARN";
+            break;
+          case LOG_ERROR:
+            levelstr = "ERROR";
+            break;
+          case LOG_FATAL:
+            levelstr = "FATAL";
+            break;
+          default:
+            levelstr = "UNKOWNLEVEL";
+            break;
+        }
+        msg = "(" + this.processID + ") [" + levelstr + "] " + msg;
         log_writer.println(msg);
         log_writer.flush();
       } catch (Throwable t) {
@@ -175,6 +213,7 @@ class BLAST_LIB {
   private ExceptionInInitializerError invalid;
   private PrintWriter log_writer;
   private String processID;
+  private int loglevel;
 
   private native BLAST_HSP_LIST[] prelim_search(
       String query, String db_spec, String program, String params, int topn);
@@ -213,6 +252,7 @@ class BLAST_LIB {
     BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
     BLAST_LIB blaster = new BLAST_LIB();
+    blaster.setLogLevel(LOG_INFO);
 
     BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj);
     System.out.println("--- PRELIM_SEARCH RESULTS ---");
