@@ -52,7 +52,8 @@ javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ../pipeline/src/BLAST_PARTITION.java \
     ../pipeline/src/BLAST_HSP_LIST.java \
     ../pipeline/src/BLAST_TB_LIST.java \
-    ../pipeline/src/BLAST_LIB.java
+    ../pipeline/src/BLAST_LIB.java \
+    ./BLAST_TEST.java
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
@@ -119,7 +120,7 @@ fi
     java -Djava.library.path="../pipeline" \
     -Xcheck:jni -Xdiag -Xfuture \
         -cp $MAIN_JAR:.  \
-        gov.nih.nlm.ncbi.blastjni.BLAST_LIB \
+        gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
         > output.$$ 2>&1
     sort output.$$ | grep -e "000 " > test.result
     CMP=$(cmp test.result test.expected)
