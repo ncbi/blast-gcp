@@ -1,6 +1,8 @@
 #!/bin/bash
 
-tput reset
+clear
+mvn package
+exit
 
 SPARK_HOME="/usr/lib/spark/jars/*"
 HADOOP_FS_HOME="/usr/lib/hadoop/*"

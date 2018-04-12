@@ -84,10 +84,10 @@ import com.google.api.services.storage.StorageScopes;
 import com.google.api.services.storage.model.StorageObject;
 import java.io.ByteArrayInputStream;
 
-/*
+
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
-*/
+
 
 class BLAST_DRIVER extends Thread
 {
