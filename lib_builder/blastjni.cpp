@@ -188,28 +188,13 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
     if (!hsplclass)
         throw std::runtime_error("Can't get hspl class");
 
-    // FIX - if we can get a real constuctor for the BLAST_HSP_LIST, then field population is
-    // largely gone
-    jfieldID hspl_oid_fid = jenv->GetFieldID(hsplclass, "oid", "I");
-    if (!hspl_oid_fid)
-        throw std::runtime_error("Can't get oid fieldID");
 
-    jfieldID hspl_max_score_fid = jenv->GetFieldID(hsplclass, "max_score", "I");
-    if (!hspl_max_score_fid)
-        throw std::runtime_error("Can't get max_score fieldID");
-
-    jfieldID hspl_blob_fid = jenv->GetFieldID(hsplclass, "hsp_blob", "[B");
-    if (!hspl_blob_fid)
-        throw std::runtime_error("Can't get hsp_blob fieldID");
-
-    // jmethodID hspl_ctor_id=env->GetMethodID(hsplclass,
-    // "gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST()", "()V");
-    jmethodID hspl_ctor_id = jenv->GetMethodID(hsplclass, "<init>", "()V");
+    jmethodID hspl_ctor_id = jenv->GetMethodID(hsplclass, "<init>", "(II[B)V");
     if (!hspl_ctor_id)
-        throw std::runtime_error("Can't find ctor method");
+        throw std::runtime_error("Can't find hspl ctor method");
 
-    /*
-        But first, an explanation of what we have, and what we need to return:
+
+    /*  But first, an explanation of what we have, and what we need to return:
 
         prelim-search has returned to us a "stream" ( iterator upon a list ) of
         hsp_list objects, which are tuples. Conceptually, they are intended to be
@@ -280,11 +265,9 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
         more than N tuples.
 
         NB - the top-N does NOT apply to the inner set of hsps, which are
-        allowed to exceed N.
-    */
+        allowed to exceed N.  */
 
-    /*
-        PSEUDO/SKELETON CODE
+    /*  PSEUDO/SKELETON CODE
 
             given:
                 job       : an externally created tuple of implied members
@@ -309,10 +292,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
     if (!bclass)
         throw std::runtime_error("can't create byte array");
 
-    // jobjectArray tuples = jenv->NewObjectArray(num_tuples, bclass, jenv->NewByteArray(0));
-
-    /*
-            begin
+    /*     begin
                 // determine the max scores
                 for i in 0 .. hsp_lists . size
                 {
@@ -348,8 +328,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
         jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "  have %lu in score_set", score_set.size());
     }
 
-    /*
-        // assume for the moment that all tuples will make cut
+    /*  assume for the moment that all tuples will make cut
         num-tuples := hsp_lists . size
 
         // determine minimum cutoff on max-score
@@ -364,7 +343,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
                 if score >= min-score
                     num-tuples := num-tuples + 1
         }
-    */
+        */
     num_tuples = hsp_lists.size();
     if ((int)score_set.size() > topn) {
         int top = topn;
@@ -385,15 +364,13 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
         jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "  num_tuples is %lu", num_tuples);
     }
 
-    /*
-      // allocate return array/sequence/set
+    /*   allocate return array/sequence/set
          tuples := JVM . allocateMeAnObjectArray ( num-tuples )
     */
-
     jobjectArray retarray = jenv->NewObjectArray(num_tuples, hsplclass, NULL);
 
     /*
-      // build the sequence
+       build the sequence
       declare j := 0
       for i in 0 .. hsp_lists . size
       {
@@ -401,7 +378,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
     for (size_t i = 0; i != hsp_lists.size(); ++i) {
         if (max_scores[i] >= min_score) {
             /*
-            // apply filtering
+               apply filtering
             if max_scores [ i ] >= min-score
                 declare hsp_list := hsp_lists [ i ];
 
@@ -418,10 +395,6 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
             const BlastHSPList* hsp_list = hsp_lists[i];
             size_t blob_size = hsp_list->hspcnt * sizeof(ncbi::blast::SFlatHSP);
 
-            // FIX - I would like to see about creating the BLAST_HSP_LIST using
-            // a constructor that takes job, oid, max-score and blob size as parameters,
-            // let the JVM allocate the blob, and then pull it out to populate.
-            // alternatively, we build it and then turn it into a byte[]..
             ncbi::blast::SFlatHSP* hspblob = (ncbi::blast::SFlatHSP*)malloc(blob_size);
             if (!hspblob)
                 throw std::runtime_error("Couldn't allocate hspblob");
@@ -486,16 +459,12 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_met
                 */
 
                 // Create a new HSP_LIST
-                jobject hspl_obj = jenv->NewObject(hsplclass, hspl_ctor_id);
+                jobject hspl_obj
+                    = jenv->NewObject(hsplclass, hspl_ctor_id, oid, max_scores[i], tuple);
                 if (!hspl_obj)
                     throw std::runtime_error("Couldn't make new HSP_LIST");
-                jenv->SetIntField(hspl_obj, hspl_oid_fid, oid);
-                jenv->SetIntField(hspl_obj, hspl_max_score_fid, max_scores[i]);
-                jenv->SetObjectField(hspl_obj, hspl_blob_fid, tuple);
 
                 jenv->SetObjectArrayElement(retarray, i, hspl_obj);
-                //            jenv->SetObjectArrayElement(tuples, i, tuple);
-                // jenv->DeleteLocalRef(tuple);
             }
             catch (...) {
                 free(hspblob);
@@ -532,19 +501,14 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, jmethodID jlog_me
                                   const char* jquery, const char* jdb_spec, const char* jprogram,
                                   const char* jparams, jint topn)
 {
-    // FIX - this should probably just be a single log call, if we can assume
-    // that embedded newlines are okay. If not, we run the chance of having
-    // incoherent messages interleaved with activity from other jobs.
-    // ANS - Agree, once segfaults deep in JVM have ceased, otherwise good to
-    // flush log sooner. getpid() in log messages for the time being to
-    // disambiguate.
-
-    jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "Blast prelim_search called with");
-    jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "  query   : %s", jquery);
-    jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "  db_spec : %s", jdb_spec);
-    jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "  program : %s", jprogram);
-    //    jni_log(jenv, jthis, jlog_method, "  params  : %s", jparams);
-    jni_log(jenv, jthis, jlog_method, LOG_DEBUG, "  topn    : %d", topn);
+    jni_log(jenv, jthis, jlog_method, LOG_DEBUG,
+            "Blast prelim_search called with\n"
+            "  query   : %s\n"
+            "  db_spec : %s\n"
+            "  program : %s\n"
+            "  topn    : %d\n",
+            jquery, jdb_spec, jprogram, topn);
+    //      "  params  : %s"
 
     ncbi::blast::TBlastHSPStream* hsp_stream = ncbi::blast::PrelimSearch(
         std::string(jquery), std::string(jdb_spec), std::string(jprogram));

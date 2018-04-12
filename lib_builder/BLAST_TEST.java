@@ -22,12 +22,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
-
 class BLAST_TEST {
   public static void main(String[] args) {
     String rid = "ReqID123";
@@ -60,15 +54,6 @@ class BLAST_TEST {
     BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
     BLAST_LIB blaster = new BLAST_LIB();
-
-    try {
-      String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-      PrintWriter pw =
-          new PrintWriter(new FileOutputStream(new File("/tmp/blastjni." + pid + ".log"), true));
-      blaster.setLogWriter(pw);
-    } catch (FileNotFoundException ex) {
-      System.err.println("Couldn't create log");
-    }
 
     BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj);
     System.out.println("--- PRELIM_SEARCH RESULTS ---");

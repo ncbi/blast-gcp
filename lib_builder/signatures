@@ -59,8 +59,8 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
     descriptor: I
   public byte[] hsp_blob;
     descriptor: [B
-  public gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST();
-    descriptor: ()V
+  public gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST(int, int, byte[]);
+    descriptor: (II[B)V
 
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;
