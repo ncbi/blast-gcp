@@ -69,6 +69,21 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.HashPartitioner;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Collection;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.StorageScopes;
+import com.google.api.services.storage.model.StorageObject;
+import java.io.ByteArrayInputStream;
+
 /*
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
@@ -80,6 +95,40 @@ class BLAST_DRIVER extends Thread
     private final JavaSparkContext sc;
     private final JavaStreamingContext jssc;
     private final List< BLAST_PARTITION > db_sec_list;
+
+   /**
+    * Create a service for GCS.
+    */
+    private static Storage buildStorageService() throws GeneralSecurityException, IOException
+    {
+        HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+        JsonFactory jsonFactory = new JacksonFactory();
+        GoogleCredential credential = GoogleCredential.getApplicationDefault( transport, jsonFactory );
+
+        if ( credential.createScopedRequired() )
+        {
+            Collection<String> scopes = StorageScopes.all();
+            credential = credential.createScoped( scopes );
+        }
+        return new Storage.Builder( transport, jsonFactory, credential ).build();
+    }
+
+    /**
+     * Uploads a file to Google Cloud Storage.
+     */
+    private static void uploadFile( String bucketName, String key, String content ) throws IOException, GeneralSecurityException
+    {
+        InputStreamContent contentStream = new InputStreamContent( "text/plain", new ByteArrayInputStream( content.getBytes() ) );
+        // Setting the length improves upload performance
+        contentStream.setLength( content.getBytes().length );
+        // Destination object name
+        StorageObject objectMetadata = new StorageObject().setName( key );
+
+        // Do the insert
+        Storage.Objects.Insert insertRequest = buildStorageService().objects().insert( bucketName, objectMetadata, contentStream );
+
+        insertRequest.execute();
+    }
 
     public BLAST_DRIVER( final BLAST_SETTINGS settings )
     {
@@ -357,6 +406,17 @@ class BLAST_DRIVER extends Thread
 
                             int n_bytes = value.array().length;
                             BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "%d bytes written: %s", n_bytes, filename ) );
+
+                            try
+                            {
+                                uploadFile( "blastgcp-pipeline-test", "output/test1", req_id );
+                                BLAST_SEND.send( LOG_HOST, LOG_PORT, "upload done" );
+                            }
+                            catch ( Exception e_up )
+                            {
+                                BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "upload : %s", e_up.toString() ) );
+                            }
+
                         }
                         catch ( Exception e )
                         {
