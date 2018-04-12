@@ -47,12 +47,13 @@ DEPENDS="$SPARK_HOME/jars/*:."
 MAIN_JAR="sprint4.jar"
 echo "Compiling Java and creating JNI header"
 #NOTE: javah deprecated in Java 9, removed in Java 10
+JAVASRCDIR="../pipeline/src/main/java"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
-    ../pipeline/src/BLAST_REQUEST.java \
-    ../pipeline/src/BLAST_PARTITION.java \
-    ../pipeline/src/BLAST_HSP_LIST.java \
-    ../pipeline/src/BLAST_TB_LIST.java \
-    ../pipeline/src/BLAST_LIB.java \
+    $JAVASRCDIR/BLAST_REQUEST.java \
+    $JAVASRCDIR/BLAST_PARTITION.java \
+    $JAVASRCDIR/BLAST_HSP_LIST.java \
+    $JAVASRCDIR/BLAST_TB_LIST.java \
+    $JAVASRCDIR/BLAST_LIB.java \
     ./BLAST_TEST.java
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
 javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
