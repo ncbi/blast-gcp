@@ -31,6 +31,9 @@ mkdir -p $BLASTDBDIR
 if [[ "${ROLE}" == 'Master' ]]; then
     # For master node only, skip copy
     echo "master node, skipping DB copy"
+    # Need maven to build jars
+    apt-get update -y
+    apt-get install mvn -y
     # Auto terminate cluster in 8 hours
     sudo shutdown -h +480
 else
