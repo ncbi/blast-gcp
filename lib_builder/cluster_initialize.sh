@@ -37,7 +37,7 @@ else
     # Worker node, copy DBs from GCS
     # FIX: Future mapper will compute db lengths needed by Blast libraries
     MAXJOBS=8
-    parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -nu`
+    parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     for part in $parts; do
         piece="nt_50M.$part"
         mkdir -p $BLASTDBDIR/$piece
