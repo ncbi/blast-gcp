@@ -5,14 +5,14 @@ From your google cloud shell (the >_) box in upper right, paste
 ```shell
 # Copied from lib_builder/make_cluster.sh
 gcloud dataproc --region us-east4 \
-    clusters create cluster-$USER-$(date +%Y%m%d) \
+    clusters create blast-dataproc-$USER-$(date +%Y%m%d) \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
-    --worker-machine-type n1-standard-32 \
-        --worker-boot-disk-size 100 \
+    --worker-machine-type n1-highcpu-16 \
+        --worker-boot-disk-size 250 \
     --num-preemptible-workers 2 \
-        --preemptible-worker-boot-disk-size 100 \
+        --preemptible-worker-boot-disk-size 250 \
     --scopes 'https://www.googleapis.com/auth/cloud-platform' \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
@@ -22,7 +22,7 @@ gcloud dataproc --region us-east4 \
     --initialization-action-timeout 30m \
     --initialization-actions \
     "gs://blastgcp-pipeline-test/scripts/cluster_initialize.sh" \
-    --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
+    --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 ```
 

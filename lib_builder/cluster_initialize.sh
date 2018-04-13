@@ -49,7 +49,7 @@ DONE
 cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
 
 service google-fluentd restart
-logger "Logging agent begun with cluster_initialize.sh"
+logger "Logging agent begun with NCBI cluster_initialize.sh"
 
 
 mkdir -p $BLASTDBDIR
@@ -68,6 +68,7 @@ else
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     for part in $parts; do
+        logger "Preloading NCBI Blast DB $part"
         piece="nt_50M.$part"
         mkdir -p $BLASTDBDIR/$piece
         cd $BLASTDBDIR/$piece
@@ -95,6 +96,7 @@ chmod -R ugo+rxw $BLASTTMP
 ls -laR $BLASTTMP
 
 echo Cluster Initialized
+logger "NCBI cluster_initialize.sh complete"
 date
 
 exit 0
