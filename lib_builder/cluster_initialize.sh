@@ -26,6 +26,32 @@ DBBUCKET="gs://nt_50mb_chunks/"
 BLASTTMP=/tmp/blast/
 BLASTDBDIR=$BLASTTMP/db
 
+#curl -sSO https://repo.stackdriver.com/stack-install.sh
+#sudo bash stack-install.sh --write-gcm 2>&1 | tee -a stack-install.log
+
+curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
+sudo bash install-monitoring-agent.sh | tee -a stack-install.sh
+
+curl -sSO https://dl.google.com/cloudagents/install-logging-agent.sh
+sudo bash install-logging-agent.sh | tee -a stack-install.sh
+
+cd /tmp
+cat << DONE > libblast-log.conf
+<source>
+    @type tail
+    format none
+    path /tmp/blastjni.*.log
+    pos_file /var/tmp/fluentd.blastjni.pos
+    read_from_head true
+    tag blastjni-log
+</source>
+DONE
+cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
+
+service google-fluentd restart
+logger "Logging agent begun with cluster_initialize.sh"
+
+
 mkdir -p $BLASTDBDIR
 
 if [[ "${ROLE}" == 'Master' ]]; then

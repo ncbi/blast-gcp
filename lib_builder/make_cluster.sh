@@ -54,7 +54,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 #  16 highmem-64:  $19,535/month (limited disk, all ramdisk)
 # Ex: $11,666/month (12 std-64)
 gcloud dataproc --region us-east4 \
-    clusters create cluster-$USER-$(date +%Y%m%d) \
+    clusters create blast-dataproc-$USER-$(date +%Y%m%d) \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
@@ -71,7 +71,7 @@ gcloud dataproc --region us-east4 \
     --initialization-action-timeout 30m \
     --initialization-actions \
     "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
-    --tags ${USER}-dataproc-cluster-$(date +%Y%m%d-%H%M%S) \
+    --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 
 exit 0
