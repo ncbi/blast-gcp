@@ -49,7 +49,7 @@ DONE
 cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
 
 service google-fluentd restart
-logger "Logging agent begun with NCBI cluster_initialize.sh"
+logger -t cluster_initialize.sh "Logging agent begun with NCBI cluster_initialize.sh"
 
 
 mkdir -p $BLASTDBDIR
@@ -59,7 +59,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
     echo "master node, skipping DB copy"
     # Need maven to build jars
     apt-get update -y
-    apt-get install mvn -y
+    apt-get install maven -y
     # Auto terminate cluster in 8 hours
     sudo shutdown -h +480
 else
@@ -68,7 +68,7 @@ else
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     for part in $parts; do
-        logger "Preloading NCBI Blast DB $part"
+        logger -t cluster_initialize.sh "Preloading NCBI Blast DB $part"
         piece="nt_50M.$part"
         mkdir -p $BLASTDBDIR/$piece
         cd $BLASTDBDIR/$piece
@@ -96,7 +96,7 @@ chmod -R ugo+rxw $BLASTTMP
 ls -laR $BLASTTMP
 
 echo Cluster Initialized
-logger "NCBI cluster_initialize.sh complete"
+logger -t cluster_initialize.sh "NCBI cluster_initialize.sh complete"
 date
 
 exit 0
