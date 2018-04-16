@@ -609,6 +609,7 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
     catch (std::exception& x) {
         jni_throw(jenv, xtype = xc_java_exception, "%s", x.what());
     }
+    // FIX - https://ncbiconfluence.ncbi.nlm.nih.gov/pages/viewpage.action?spaceKey=BLASTGCP&title=Errors+reported+by+BLAST
     /*
     catch (ncbi::blast::CInputException& x) {
         jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());

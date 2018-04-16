@@ -61,13 +61,13 @@ log4j.appender.tmpfile.File=/tmp/blastjni.${user.name}.log
 log4j.appender.tmpfile.layout=org.apache.log4j.PatternLayout
 log4j.appender.tmpfile.layout.ConversionPattern=%m%n
 
-log4j.appender.sparkfile=org.apache.log4j.FileAppender
-log4j.appender.sparkfile.File=/var/log/spark/blastjni.${user.name}.log
-log4j.appender.sparkfile.layout=org.apache.log4j.PatternLayout
-#log4j.appender.sparkfile.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
-log4j.appender.sparkfile.layout.ConversionPattern=%d [%p] [%t] %c: %m%n
+#log4j.appender.sparkfile=org.apache.log4j.FileAppender
+#log4j.appender.sparkfile.File=/var/log/spark/blastjni.${user.name}.log
+#log4j.appender.sparkfile.layout=org.apache.log4j.PatternLayout
+##log4j.appender.sparkfile.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
+#log4j.appender.sparkfile.layout.ConversionPattern=%d [%p] [%t] %c: %m%n
 
-log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_LIB=INFO, tmpfile, sparkfile
+log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_LIB=INFO, tmpfile #, sparkfile
 log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_TEST=TRACE, tmpfile
 DONE2
 cat log4j.proto >> /etc/spark/conf.dist/log4j.properties
