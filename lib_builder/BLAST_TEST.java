@@ -28,9 +28,9 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 class BLAST_TEST {
-  private static final Logger logger = LogManager.getLogger(BLAST_TEST.class);
 
   public static void main(String[] args) {
+  Logger logger = LogManager.getLogger(BLAST_TEST.class);
     logger.info("Beginning");
     String rid = "ReqID123";
     String query = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";

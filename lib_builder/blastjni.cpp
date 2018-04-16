@@ -64,12 +64,14 @@
 /* Utility Functions */
 
 // FIX: Replace with proper enum or Log4J Level's
-const static int LOG_TRACE = 0;
-const static int LOG_DEBUG = 1;
-const static int LOG_INFO = 2;
-const static int LOG_WARN = 3;
-const static int LOG_ERROR = 4;
-const static int LOG_FATAL = 5;
+enum LOG_LEVEL {
+LOG_TRACE,
+LOG_DEBUG,
+LOG_INFO,
+LOG_WARN,
+LOG_ERROR,
+LOG_FATAL
+}
 
 enum
 {
@@ -128,11 +130,14 @@ static void jni_throw(JNIEnv* jenv, uint32_t xtype, const char* fmt, ...)
     }
 }
 
-static void jni_log(JNIEnv* jenv, jobject jthis, jmethodID jlog_method, int level, const char* fmt,
+static void jni_log(JNIEnv* jenv, jobject jthis, jmethodID jlog_method, LOG_LEVEL level, const char* fmt,
                     ...)
 {
     va_list args;
     va_start(args, fmt);
+
+    // Obtain signature via (build.sh makes file 'signatures'):
+    //   $ javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class
 
     char buffer[4096];
     int size = vsnprintf(buffer, sizeof buffer, fmt, args);
@@ -146,36 +151,52 @@ static void jni_log(JNIEnv* jenv, jobject jthis, jmethodID jlog_method, int leve
     else if ((size_t)size >= sizeof buffer)
         strcpy(buffer, "jni_log: failed to make a String ( string too long )");
 
-    if (jlog_method != 0) {
-        // make String object, JVM will garbage collect the jstring
-        jstring jstr = jenv->NewStringUTF(buffer);
-        if (!jstr)
-            fprintf(stderr, "Can't create JVM string\n");
-        jenv->CallVoidMethod(jthis, jlog_method, level, jstr);
-        if (jenv->ExceptionCheck())  // Mostly to silence -Xcheck:jni
-            fprintf(stderr, "Log method threw an exception, which it should never do.\n");
-    } else {
-        fprintf(stderr, "%s", buffer);
-    }
-}
+    // make String object, JVM will garbage collect the jstring
+    jstring jstr = jenv->NewStringUTF(buffer);
+    if (!jstr)
+        throw std::runtime_error("Can't create JVM string");
 
-static jmethodID getlogger(JNIEnv* jenv, jobject jthis)
-{
-    // Obtain signature via (build.sh makes file 'signatures'):
-    //   $ javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class
     jclass thiscls = jenv->GetObjectClass(jthis);
     if (!thiscls)
-        fprintf(stderr, "couldn't log %p\n", (void*)thiscls);
-    jmethodID jlog_method = jenv->GetMethodID(thiscls, "log", "(ILjava/lang/String;)V");
+        throw std::runtime_error("Can't get this class");
+
+    jmethodID jlog_method=NULL;
+    switch (level)
+    {
+    LOG_TRACE:
+        jlog_method = jenv->GetMethodID(thiscls, "log", "(ILjava/lang/String;)V");
+        break;
+    LOG_DEBUG:
+        jlog_method=
+        break;
+    LOG_INFO:
+        jlog_method=
+        break;
+    LOG_WARN:
+        jlog_method=
+        break;
+    LOG_ERROR:
+        jlog_method=
+        break;
+    LOG_FATAL:
+        jlog_method=
+        break;
+      default:
+        jlog_method=
+        break;
+    }
+
     if (jlog_method) {
         jni_log(jenv, jthis, jlog_method, LOG_TRACE, "Logger method %p, pid=%04d", jlog_method,
                 getpid());
     } else {
         fprintf(stderr, "couldn't get methodid %p\n", (void*)jlog_method);
     }
-
-    return jlog_method;
+    jenv->CallVoidMethod(jthis, jlog_method, level, jstr);
+    if (jenv->ExceptionCheck())  // Mostly to silence -Xcheck:jni
+        fprintf(stderr, "Log method threw an exception, which it should never do.\n");
 }
+
 
 /* Prelim_Search Functions */
 static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, jmethodID jlog_method,
