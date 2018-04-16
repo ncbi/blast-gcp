@@ -40,13 +40,24 @@ import org.apache.spark.SparkFiles;
  *  on a black background.
  */
 
-class BLAST_LIB {
-  // if a BLAST_LIB object is instantiated as a static member of an outer class,
+public class BLAST_LIB {
+  // FIX - if a BLAST_LIB object is instantiated as a static member of an outer class,
   // this is known to work (i.e. lock up the JVM to serialize)
-  private enum LibrarySingleton {
-    INSTANCE;
+  // So private constructor, and getInstance() Factory method returns Singleton
 
-    private LibrarySingleton() {
+  // CMT -
+  // See http://literatejava.com/jvm/fastest-threadsafe-singleton-jvm/
+  // The inner class (aka Initialization-on-demand holder idiom) is
+  // supposedly 25X faster than a synchronized method, but that is if JIT is
+  // involved and 10,000+ calls to the singleton are requested.
+  // In our case, this occurs twice per query, so only the JVM bytecode
+  // interpreter is involved and performance (~400 ns) should be fine.
+  //
+  //
+  // enum Singleton's seem to be the cleanest
+
+  private synchronized void loadLibrary() {
+    if (!initialized) {
       try {
         // Java will look for libblastjni.so
         System.loadLibrary("blastjni");
@@ -59,40 +70,23 @@ class BLAST_LIB {
           invalid = new ExceptionInInitializerError(e2);
         }
       }
+      initialized = true;
     }
-
-    public ExceptionInInitializerError getValid() {
-      return invalid;
-    }
-
-    private ExceptionInInitializerError invalid;
   }
-
-  private LibrarySingleton mysingleton;
-  private boolean initialized = false;
-  private String processID;
 
   public BLAST_LIB() {
-    if (!initialized) {
-      mysingleton = LibrarySingleton.INSTANCE;
-      // FIX - When Dataproc/Spark goes to Java 9+, replace with
-      // Process.getPid()
-      this.processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-      if (mysingleton.getValid() == null) initialized = true;
-    }
+    loadLibrary();
+    processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
   }
+
+  private boolean initialized = false;
+  private String processID;
+  private ExceptionInInitializerError invalid;
 
   void throwIfBad() {
-    if (mysingleton.getValid() != null) {
-      throw mysingleton.getValid();
-    }
+    if (!initialized) throw invalid;
   }
 
-  // Warning: If below signatures change, update blastjni.cpp
-  // CMT - not really a fix, but an observation that now that you're
-  // generating signatures, you might booby-trap the build script to
-  // catch any deviation in the signature of this method. And I'd
-  // make the warning MUCH harder to avoid seeing/reading.
   private synchronized void log_trace(String msg) {
     Logger logger = LogManager.getLogger(BLAST_LIB.class);
     if (logger.isTraceEnabled()) {

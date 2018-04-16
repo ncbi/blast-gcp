@@ -78,6 +78,7 @@ enum
 {
     xc_no_err,
     xc_java_exception,
+    xc_blast_exception,
 
     // should be last
     xc_java_runtime_exception
@@ -608,6 +609,14 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
     catch (std::exception& x) {
         jni_throw(jenv, xtype = xc_java_exception, "%s", x.what());
     }
+    /*
+    catch (ncbi::blast::CInputException& x) {
+        jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());
+    }
+    catch (CException& x) {
+        jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());
+    }
+    */
     catch (...) {
         jni_throw(jenv, xtype = xc_java_runtime_exception, "%s - unknown exception", __func__);
     }

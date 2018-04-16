@@ -1,11 +1,14 @@
 Compiled from "BLAST_LIB.java"
-class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
-  private gov.nih.nlm.ncbi.blastjni.BLAST_LIB$LibrarySingleton mysingleton;
-    descriptor: Lgov/nih/nlm/ncbi/blastjni/BLAST_LIB$LibrarySingleton;
+public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   private boolean initialized;
     descriptor: Z
   private java.lang.String processID;
     descriptor: Ljava/lang/String;
+  private java.lang.ExceptionInInitializerError invalid;
+    descriptor: Ljava/lang/ExceptionInInitializerError;
+  private synchronized void loadLibrary();
+    descriptor: ()V
+
   public gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
     descriptor: ()V
 
