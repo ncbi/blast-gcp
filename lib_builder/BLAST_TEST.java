@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 class BLAST_TEST {
 
   public static void main(String[] args) {
-  Logger logger = LogManager.getLogger(BLAST_TEST.class);
+    Logger logger = LogManager.getLogger(BLAST_TEST.class);
     logger.info("Beginning");
     String rid = "ReqID123";
     String query = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
@@ -92,6 +92,6 @@ class BLAST_TEST {
     } else {
       System.out.println("NULL asn1");
     }
-    logger.error("Finishing");
+    logger.info("Finishing");
   }
 }

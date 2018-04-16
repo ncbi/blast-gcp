@@ -36,7 +36,7 @@ rm -f *.class
 rm -rf gov
 rm -f *test.result
 rm -f *.jar
-rm -f /tmp/blast*$USER*.log
+rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
 
@@ -48,9 +48,9 @@ MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
 echo "Compiling Java"
-pushd ../pipeline
+pushd ../pipeline > /dev/null
 mvn -q package -f mike_pom.xml
-popd
+popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
 JAVASRCDIR="../pipeline/src/main/java"
 #    $JAVASRCDIR/BLAST_REQUEST.java \
@@ -65,6 +65,9 @@ echo "Creating JNI header"
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
+
+md5sum -c signatures.md5
+#md5sum signatures > signatures.md5
 
 echo "Creating JAR"
 #jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
