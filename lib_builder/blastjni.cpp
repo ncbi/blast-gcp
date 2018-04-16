@@ -165,13 +165,13 @@ static jmethodID getlogger(JNIEnv* jenv, jobject jthis)
     //   $ javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class
     jclass thiscls = jenv->GetObjectClass(jthis);
     if (!thiscls)
-        fprintf(stderr, "couldn't log %p\n", thiscls);
+        fprintf(stderr, "couldn't log %p\n", (void*)thiscls);
     jmethodID jlog_method = jenv->GetMethodID(thiscls, "log", "(ILjava/lang/String;)V");
     if (jlog_method) {
         jni_log(jenv, jthis, jlog_method, LOG_TRACE, "Logger method %p, pid=%04d", jlog_method,
                 getpid());
     } else {
-        fprintf(stderr, "couldn't get methodid %p\n", jlog_method);
+        fprintf(stderr, "couldn't get methodid %p\n", (void*)jlog_method);
     }
 
     return jlog_method;

@@ -36,44 +36,55 @@ rm -f *.class
 rm -rf gov
 rm -f *test.result
 rm -f *.jar
-rm -f /tmp/blast*$USER.log
+rm -f /tmp/blast*$USER*.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
 
 
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
 #packages,  but is required by g++ # at NCBI. Revisit after Jira BG-21
-DEPENDS="$SPARK_HOME/jars/*:."
-MAIN_JAR="sprint4.jar"
-echo "Compiling Java and creating JNI header"
+#MAIN_JAR="sprint4.jar"
+MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
+DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
+
+echo "Compiling Java"
+pushd ../pipeline
+mvn -q package -f mike_pom.xml
+popd
 #NOTE: javah deprecated in Java 9, removed in Java 10
 JAVASRCDIR="../pipeline/src/main/java"
-javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
-    $JAVASRCDIR/BLAST_REQUEST.java \
-    $JAVASRCDIR/BLAST_PARTITION.java \
-    $JAVASRCDIR/BLAST_HSP_LIST.java \
-    $JAVASRCDIR/BLAST_TB_LIST.java \
-    $JAVASRCDIR/BLAST_LIB.java \
+#    $JAVASRCDIR/BLAST_REQUEST.java \
+    #    $JAVASRCDIR/BLAST_PARTITION.java \
+    #    $JAVASRCDIR/BLAST_HSP_LIST.java \
+    #    $JAVASRCDIR/BLAST_TB_LIST.java \
+    #    $JAVASRCDIR/BLAST_LIB.java \
+    javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ./BLAST_TEST.java
-javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
-javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
-javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
+
+echo "Creating JNI header"
+javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
+javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
+javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
 
 echo "Creating JAR"
-jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
-rm -rf gov
+#jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
+cp $MAIN_JAR .
+#rm -rf gov
 
 if [ "$BUILDENV" = "ncbi" ]; then
     rm -f libblastjni.o ../pipeline/libblastjni.so
     echo "Compiling and linking blastjni.cpp"
+    cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
     # Note: Library order important
     #       Hidden dl_open for libdw
     # Eugene has:
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
-        #-ldbapi_driver -lncbi_xreader \
-    g++ blastjni.cpp \
+    #-ldbapi_driver -lncbi_xreader \
+        GPPCOMMAND="
+        g++ blastjni.cpp \
         -std=gnu++11 \
         -Wall -O  -I . \
+        -Wextra -pedantic \
         -shared \
         -fPIC \
         $JAVA_INC \
@@ -104,37 +115,40 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -llmdb-static -lpthread -lz -lbz2 \
         -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
         -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
-        -o ../pipeline/libblastjni.so
+        -o ../pipeline/libblastjni.so"
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+        $GPPCOMMAND
 fi
 
 
 #if [ "$BUILDENV" = "google" ]; then
-    echo "Testing JNI"
-    set +errexit
-    ldd ../pipeline/libblastjni.so | grep found
-    if [[ $? -ne 1 ]]; then
-        echo "Missing a shared library"
-        echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
-        exit 1
-    fi
-        #-verbose:jni \
-    java -Djava.library.path="../pipeline" \
+echo "Testing JNI"
+set +errexit
+ldd ../pipeline/libblastjni.so | grep found
+if [[ $? -ne 1 ]]; then
+    echo "Missing a shared library"
+    echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
+    exit 1
+fi
+#-verbose:jni \
+    #-Djava.library.path="../pipeline" \
+    java \
     -Xcheck:jni -Xdiag -Xfuture \
-        -cp $MAIN_JAR:.  \
-        gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
-        > output.$$ 2>&1
-    sort output.$$ | grep -e "000 " > test.result
-    CMP=$(cmp test.result test.expected)
-    if [[ $? -ne 0 ]]; then
-        cat -tn output.$$
-        #rm -f output.$$
-        sdiff -w 70 test.result test.expected
-        echo "Testing of JNI failed"
-        exit 1
-    fi
-    rm -f output.$$
-    set -o errexit
-    echo "Test OK"
+    -cp $MAIN_JAR:.  \
+    gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
+    > output.$$ 2>&1
+sort output.$$ | grep -e "000 " > test.result
+CMP=$(cmp test.result test.expected)
+if [[ $? -ne 0 ]]; then
+    cat -tn output.$$
+    #rm -f output.$$
+    sdiff -w 70 test.result test.expected
+    echo "Testing of JNI failed"
+    exit 1
+fi
+#rm -f output.$$
+set -o errexit
+echo "Test OK"
 #fi
 
 if [ "$BUILDENV" = "google" ]; then

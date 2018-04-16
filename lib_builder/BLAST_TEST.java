@@ -22,8 +22,16 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+// import org.apache.logging.log4j.LogManager;
+// import org.apache.logging.log4j.Logger;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 class BLAST_TEST {
+  private static final Logger logger = LogManager.getLogger(BLAST_TEST.class);
+
   public static void main(String[] args) {
+    logger.warn("Beginning");
     String rid = "ReqID123";
     String query = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
     String part =
@@ -48,6 +56,7 @@ class BLAST_TEST {
     S = S + String.format("query ....... %s\n", query);
     S = S + String.format("params ...... %s\n", params);
     System.err.println(S);
+    logger.trace(S);
 
     BLAST_REQUEST requestobj = new BLAST_REQUEST(rid + ":" + query, top_n);
     //        new BLAST_REQUEST(rid + ":" + query + ":nt:" + params + ":" + params, top_n);
@@ -83,5 +92,6 @@ class BLAST_TEST {
     } else {
       System.out.println("NULL asn1");
     }
+    logger.error("Finishing");
   }
 }
