@@ -28,6 +28,8 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Console;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 public final class BLAST_MAIN
 {
@@ -62,21 +64,23 @@ public final class BLAST_MAIN
             try
             {
                 BLAST_INI ini = new BLAST_INI( ini_path );
-                settings = new BLAST_SETTINGS( ini, appName );
+                settings = BLAST_SETTINGS_READER.read_from_ini( ini, appName );
                 System.out.println( String.format( "settings read from '%s'", ini_path ) );
             }
             catch( IOException e )
             {
-                settings = new BLAST_SETTINGS( appName );
+                settings = BLAST_SETTINGS_READER.defaults( appName );
             }
         }
         else
-            settings = new BLAST_SETTINGS( appName );
-        settings.files_to_transfer.add( "libblastjni.so" );
-        
+            settings = BLAST_SETTINGS_READER.defaults( appName );
+
         System.out.println( settings.toString() );
+
+        List< String > files_to_transfer = new ArrayList<>();
+        files_to_transfer.add( "libblastjni.so" );
         
-        BLAST_DRIVER driver = new BLAST_DRIVER( settings );
+        BLAST_DRIVER driver = new BLAST_DRIVER( settings, files_to_transfer );
         driver.start();
         try
         {

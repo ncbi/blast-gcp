@@ -89,9 +89,9 @@ public class BLAST_SEND
             inst.send_msg( msg );
     }
 
-    public static void send( final Broadcast< String > host, final Broadcast< Integer > port, final String msg )
+    public static void send( final BLAST_SETTINGS bls, final String msg )
     {
-        send( host.getValue(), port.getValue(), msg );
+        send( bls.log_host, bls.log_port, msg );
     }
 
 }
