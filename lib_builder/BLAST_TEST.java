@@ -31,7 +31,7 @@ class BLAST_TEST {
   private static final Logger logger = LogManager.getLogger(BLAST_TEST.class);
 
   public static void main(String[] args) {
-    logger.warn("Beginning");
+    logger.info("Beginning");
     String rid = "ReqID123";
     String query = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
     String part =
