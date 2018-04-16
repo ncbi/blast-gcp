@@ -133,27 +133,25 @@ public class BLAST_LIB {
     throwIfBad();
 
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-    /*
-    log( "\nJava jni_prelim_search called with" );
-    log( "  query   : " + query );
-    log( "  db_spec : " + db_spec );
-    log( "  program : " + program );
-    log( "  params  : " + params );
-    log( "  topn    : " + topn );
-    */
+    log_info("\nJava jni_prelim_search called with");
+    log_info("  query   : " + req.query);
+    log_info("  db_spec : " + part.db_spec);
+    log_info("  program : " + req.program);
+    log_info("  params  : " + req.params);
+    log_info("  topn    : " + req.top_n);
 
     long starttime = System.currentTimeMillis();
     BLAST_HSP_LIST[] ret =
         prelim_search(req.query, part.db_spec, req.program, req.params, req.top_n);
 
     long finishtime = System.currentTimeMillis();
-    // log( "jni_prelim_search returned in " + ( finishtime - starttime ) + " ms." );
-    // log( "jni_prelim_search returned " + ret.length + " HSP_LISTs:" );
+    log_info("jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
+    log_info("jni_prelim_search returned " + ret.length + " HSP_LISTs:");
     int i = 0;
     for (BLAST_HSP_LIST h : ret) {
       h.part = part;
       h.req = req;
-      // log( "#" + i + ": " + h.toString() );
+      log_debug("#" + i + ": " + h.toString());
       ++i;
     }
 
@@ -166,26 +164,26 @@ public class BLAST_LIB {
   BLAST_TB_LIST[] jni_traceback(BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req) {
     throwIfBad();
 
-    /*
-    log("\nJava jni_traceback called with");
-    log("  query   : " + requestobj.query );
-    log("  db_spec : " + partitionobj.db_spec);
-    log("  program : " + requestobj.program );
-    */
+    log_info("\nJava jni_traceback called with");
+    log_info("  query   : " + req.query);
+    log_info("  db_spec : " + part.db_spec);
+    log_info("  program : " + req.program);
+
     long starttime = System.currentTimeMillis();
     BLAST_TB_LIST[] ret = traceback(req.query, part.db_spec, req.program, hspl);
     long finishtime = System.currentTimeMillis();
-    /*
-    log("jni_traceback returned in " + (finishtime - starttime) + " ms.");
-    log("jni_traceback returned " + ret.length + " TB_LISTs:");
-    */
-    int i = 0;
-    for (BLAST_TB_LIST t : ret) {
-      t.part = part;
-      t.req = req;
-      ++i;
-    }
 
+    log_info("jni_traceback returned in " + (finishtime - starttime) + " ms.");
+    log_info("jni_traceback returned " + ret.length + " TB_LISTs:");
+
+    /*
+        int i = 0;
+        for (BLAST_TB_LIST t : ret) {
+          t.part = part;
+          t.req = req;
+          ++i;
+        }
+    */
     return ret;
   }
 
