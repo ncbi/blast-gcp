@@ -79,9 +79,9 @@ public class BLAST_LIB {
     processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
   }
 
-  private boolean initialized = false;
-  private String processID;
-  private ExceptionInInitializerError invalid;
+  private static boolean initialized = false;
+  private static String processID;
+  private static ExceptionInInitializerError invalid;
 
   void throwIfBad() {
     if (!initialized) throw invalid;
@@ -176,14 +176,13 @@ public class BLAST_LIB {
     log_info("jni_traceback returned in " + (finishtime - starttime) + " ms.");
     log_info("jni_traceback returned " + ret.length + " TB_LISTs:");
 
-    /*
-        int i = 0;
-        for (BLAST_TB_LIST t : ret) {
-          t.part = part;
-          t.req = req;
-          ++i;
-        }
-    */
+    int i = 0;
+    for (BLAST_TB_LIST t : ret) {
+        t.part = part;
+        t.req = req;
+        ++i;
+    }
+
     return ret;
   }
 
