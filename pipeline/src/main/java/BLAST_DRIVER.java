@@ -69,25 +69,14 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.HashPartitioner;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import java.util.Collection;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.StorageScopes;
-import com.google.api.services.storage.model.StorageObject;
-import java.io.ByteArrayInputStream;
 
-/*
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
-*/
 
 class BLAST_DRIVER extends Thread
 {
@@ -96,46 +85,13 @@ class BLAST_DRIVER extends Thread
     private final JavaStreamingContext jssc;
     private final List< BLAST_PARTITION > db_sec_list;
 
-   /**
-    * Create a service for GCS.
-    */
-    private static Storage buildStorageService() throws GeneralSecurityException, IOException
-    {
-        HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-        JsonFactory jsonFactory = new JacksonFactory();
-        GoogleCredential credential = GoogleCredential.getApplicationDefault( transport, jsonFactory );
-
-        if ( credential.createScopedRequired() )
-        {
-            Collection<String> scopes = StorageScopes.all();
-            credential = credential.createScoped( scopes );
-        }
-        return new Storage.Builder( transport, jsonFactory, credential ).build();
-    }
-
-    /**
-     * Uploads a file to Google Cloud Storage.
-     */
-    private static void uploadFile( String bucketName, String key, String content ) throws IOException, GeneralSecurityException
-    {
-        InputStreamContent contentStream = new InputStreamContent( "text/plain", new ByteArrayInputStream( content.getBytes() ) );
-        // Setting the length improves upload performance
-        contentStream.setLength( content.getBytes().length );
-        // Destination object name
-        StorageObject objectMetadata = new StorageObject().setName( key );
-
-        // Do the insert
-        Storage.Objects.Insert insertRequest = buildStorageService().objects().insert( bucketName, objectMetadata, contentStream );
-
-        insertRequest.execute();
-    }
-
-    public BLAST_DRIVER( final BLAST_SETTINGS settings )
+    public BLAST_DRIVER( final BLAST_SETTINGS settings, final List< String > files_to_transfer )
     {
         this.settings = settings;
 
         SparkConf conf = new SparkConf();
         conf.setAppName( settings.appName );
+
         conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
         conf.set( "spark.streaming.receiver.maxRate", String.format( "%d", settings.receiver_max_rate ) );
         if ( settings.num_executors > 0 )
@@ -149,7 +105,7 @@ class BLAST_DRIVER extends Thread
         sc.setLogLevel( "ERROR" );
 
         // send the given files to all nodes
-        for ( String a_file : settings.files_to_transfer )
+        for ( String a_file : files_to_transfer )
             sc.addFile( a_file );
 
         db_sec_list = create_db_secs();
@@ -179,27 +135,90 @@ class BLAST_DRIVER extends Thread
         return res;
     }
 
+    /* ===========================================================================================
+            create source-stream of Strings
+       =========================================================================================== */
+    private JavaDStream< String > create_socket_stream( Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        JavaDStream< String > res = jssc.socketTextStream( settings.trigger_host, settings.trigger_port ).cache();
+        if ( settings.log_request )
+        {
+            return res.map( item ->
+            {
+                BLAST_SEND.send( SETTINGS.getValue(), String.format( "REQ via socket: '%s'", item ) );
+                return item;
+            } ).cache();
+        }
+        else
+        {
+            return res.cache();
+        }
+    }
+
+    private JavaDStream< String > create_pubsub_stream( Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        final DStream< PubsubMessage > pub1 = PubsubUtils.createStream( jssc.ssc(),
+            settings.project_id, settings.subscript_id );
+
+        final JavaDStream< PubsubMessage > pub2 = JavaDStream$.MODULE$.fromDStream( pub1,
+            scala.reflect.ClassTag$.MODULE$.apply( PubsubMessage.class ) );
+
+        return pub2.map( item ->
+        {
+            String res = item.getData().toStringUtf8();
+            BLAST_SETTINGS bls = SETTINGS.getValue();
+            if ( bls.log_request )
+                BLAST_SEND.send( bls, String.format( "REQ via pubsub: '%s'", res ) );
+            return res;
+        }).cache();
+    }
+
+    private JavaDStream< String > create_source( Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        BLAST_SETTINGS bls = SETTINGS.getValue();
+        Boolean use_socket = ( bls.trigger_port > 0 && !bls.trigger_host.isEmpty() );
+        Boolean use_pubsub = ( !bls.project_id.isEmpty() && !bls.subscript_id.isEmpty() );
+
+        if ( use_socket )
+        {
+            if ( use_pubsub )
+            {
+                JavaDStream< String > S1 = create_socket_stream( SETTINGS );
+                JavaDStream< String > S2 = create_pubsub_stream( SETTINGS );
+                return S1.union( S2 ).cache();
+            }
+            else
+                return create_socket_stream( SETTINGS );
+        }
+        else
+        {
+            if ( use_pubsub )
+                return create_pubsub_stream( SETTINGS );
+            else
+                return null;
+        }
+    }
+
 
     /* ===========================================================================================
             perform prelim search / key = String.format( "%d %s", part.nr, req_req_id )
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_HSP_LIST > perform_prelim_search(
             final JavaPairDStream< BLAST_PARTITION, String > SRC,
-            Broadcast< Integer > TOP_N,
-            Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT,
-            Broadcast< Boolean > LOG_JOB_START, Broadcast< Boolean > LOG_JOB_DONE )
+            Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         return SRC.flatMapToPair( item -> {
-            ArrayList< Tuple2< String, BLAST_HSP_LIST > > ret = new ArrayList<>();
+            BLAST_SETTINGS bls = SETTINGS.getValue();            
 
             BLAST_PARTITION part = item._1();
-            BLAST_REQUEST req = new BLAST_REQUEST( item._2(), TOP_N.getValue() ); // REQ-LINE to REQUEST
+            BLAST_REQUEST req = new BLAST_REQUEST( item._2(), bls.top_n ); // REQ-LINE to REQUEST
 
             // ++++++ this is the where the work happens on the worker-nodes ++++++
-            if ( LOG_JOB_START.getValue() )
-                BLAST_SEND.send( LOG_HOST, LOG_PORT,
+            if ( bls.log_job_start )
+                BLAST_SEND.send( bls,
                                  String.format( "starting request: '%s' at '%s' ", req.req_id, part.db_spec ) );
 
+            ArrayList< Tuple2< String, BLAST_HSP_LIST > > ret = new ArrayList<>();
             Integer count = 0;
             try
             {
@@ -212,8 +231,8 @@ class BLAST_DRIVER extends Thread
 
                 count = search_res.length;
             
-                if ( LOG_JOB_DONE.getValue() )
-                    BLAST_SEND.send( LOG_HOST, LOG_PORT,
+                if ( bls.log_job_done )
+                    BLAST_SEND.send( bls,
                                      String.format( "request '%s'.'%s' done -> count = %d", rid, part.db_spec, count ) );
 
                 for ( BLAST_HSP_LIST S : search_res )
@@ -221,8 +240,8 @@ class BLAST_DRIVER extends Thread
             }
             catch ( Exception e )
             {
-                BLAST_SEND.send( LOG_HOST, LOG_PORT,
-                                     String.format( "request exeption: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                BLAST_SEND.send( bls,
+                                 String.format( "request exeption: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
             }
             return ret.iterator();
         }).cache();
@@ -233,7 +252,7 @@ class BLAST_DRIVER extends Thread
             calculate cutoff
        =========================================================================================== */
     private JavaPairDStream< String, Integer > calculate_cutoff( final JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
-             Broadcast< Boolean > LOG_CUTOFF, Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+             Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         // key   : req_id
         // value : scores, each having a copy of N for picking the cutoff value
@@ -267,8 +286,9 @@ class BLAST_DRIVER extends Thread
                 Collections.sort( lst, Collections.reverseOrder() );
                 cutoff = lst.get( top_n - 1 );                    
             }
-            if ( LOG_CUTOFF.getValue() )
-                BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
+            BLAST_SETTINGS bls = SETTINGS.getValue();
+            if ( bls.log_cutoff )
+                BLAST_SEND.send( bls, String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
             return new Tuple2<>( item._1(), cutoff );
 
         }).cache();
@@ -281,8 +301,7 @@ class BLAST_DRIVER extends Thread
     private JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > filter_by_cutoff(
                                 JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
                                 JavaPairDStream< String, Integer > CUTOFF,
-                                Broadcast< BLAST_PARTITIONER2 > PARTITIONER2,
-                                Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+                                Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 )
     {
 		JavaPairDStream< String, String > ACTIVE_PARTITIONS = 
 			HSPS.transform( rdd -> rdd.keys().distinct() )
@@ -304,8 +323,7 @@ class BLAST_DRIVER extends Thread
             perform traceback
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_TB_LIST > perform_traceback( 
-            JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > HSPS,
-            Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+            JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > HSPS )
     {
         JavaPairDStream< String, BLAST_HSP_LIST > temp1 = HSPS.mapValues( item -> item._1() );
 
@@ -341,8 +359,7 @@ class BLAST_DRIVER extends Thread
             collect and write traceback
        =========================================================================================== */
     private void write_traceback( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
-                                Broadcast< String > SAVE_DIR, Broadcast< Boolean > LOG_FINAL,
-                                Broadcast< String > LOG_HOST, Broadcast< Integer > LOG_PORT )
+                                  Broadcast< BLAST_SETTINGS > SETTINGS ) 
     {
         // key is now req-id
         final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
@@ -391,44 +408,43 @@ class BLAST_DRIVER extends Thread
                         String req_id = item._1();
                         ByteBuffer value = item._2();
 
-                        if ( LOG_FINAL.getValue() )
-                            BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "%s : %s", req_id, value.toString() ) );
+                        BLAST_SETTINGS bls = SETTINGS.getValue();
+                        String filename = String.format( "%sreq_%s.txt", bls.save_dir, req_id );
 
-                        String filename = String.format( "%sreq_%s.txt", SAVE_DIR.getValue(), req_id );
-                        //String filename = String.format( "gs:///blastgcp-pipeline-test/output/ReqID_%s.seq-annot.asn1", key );
-                        try
+                        if ( bls.gs_result_bucket.isEmpty() )
                         {
-                            Configuration conf = new Configuration();
-                            FileSystem fs = FileSystem.get( conf );
-                            OutputStream os = fs.create( new Path( filename ) );
-                            os.write( value.array() );
-                            os.close();
-
-                            int n_bytes = value.array().length;
-                            BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "%d bytes written: %s", n_bytes, filename ) );
-
                             try
                             {
-                                uploadFile( "blastgcp-pipeline-test", "output/test1", req_id );
-                                BLAST_SEND.send( LOG_HOST, LOG_PORT, "upload done" );
+                                // we have no bucket, that means we store to HADOOP-FS!
+                                Configuration conf = new Configuration();
+                                FileSystem fs = FileSystem.get( conf );
+                                OutputStream os = fs.create( new Path( filename ) );
+                                os.write( value.array() );
+                                os.close();
+                                int n_bytes = value.array().length;
+                                if ( bls.log_final )
+                                    BLAST_SEND.send( bls, String.format( "%d bytes written: %s", n_bytes, filename ) );
                             }
-                            catch ( Exception e_up )
+                            catch ( Exception e )
                             {
-                                BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "upload : %s", e_up.toString() ) );
+                                BLAST_SEND.send( bls, String.format( "fs-ex : %s", e.toString() ) );
                             }
-
                         }
-                        catch ( Exception e )
+                        else
                         {
-                            BLAST_SEND.send( LOG_HOST, LOG_PORT, String.format( "fs-ex : %s", e.toString() ) );
+                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, "output/test1", value );
+                            if ( bls.log_final )
+                                BLAST_SEND.send( bls, String.format( "%d bytes upload to google storage", uploaded ) );
                         }
                     }
                 } );
 
-                if ( LOG_FINAL.getValue() )
-                    BLAST_SEND.send( LOG_HOST, LOG_PORT,
-                                 String.format( "REQUEST DONE: count  = %d ( rdd.id = %d )", count, rdd.id() ) );
-
+                {
+                    BLAST_SETTINGS bls = SETTINGS.getValue();
+                    if ( bls.log_final )
+                        BLAST_SEND.send( bls,
+                                         String.format( "REQUEST DONE: count  = %d ( rdd.id = %d )", count, rdd.id() ) );
+                }
             }
         } );
     }
@@ -440,15 +456,7 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     broadcast settings
                =========================================================================================== */
-            Broadcast< String > LOG_HOST = sc.broadcast( settings.log_host );
-            Broadcast< Integer > LOG_PORT = sc.broadcast( settings.log_port );
-            Broadcast< String > SAVE_DIR = sc.broadcast( settings.save_dir );
-            Broadcast< Boolean > LOG_REQUEST = sc.broadcast( settings.log_request );
-            Broadcast< Boolean > LOG_JOB_START = sc.broadcast( settings.log_job_start );
-            Broadcast< Boolean > LOG_JOB_DONE = sc.broadcast( settings.log_job_done );
-            Broadcast< Boolean > LOG_CUTOFF = sc.broadcast( settings.log_cutoff );
-            Broadcast< Boolean > LOG_FINAL = sc.broadcast( settings.log_final );
-            Broadcast< Integer > TOP_N = sc.broadcast( settings.top_n );
+            Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
             Broadcast< BLAST_PARTITIONER1 > PARTITIONER1 = sc.broadcast(
                                             new BLAST_PARTITIONER1( settings.num_workers ) );
             Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 = sc.broadcast(
@@ -463,63 +471,52 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     initialize data-source ( socket as a stand-in for pub-sub )
                =========================================================================================== */
-            /*
-            final DStream< PubsubMessage > pub1 = PubsubUtils.createStream( jssc.ssc(),
-                settings.project_id, settings.subscript_id );
+            JavaDStream< String > REQ_STREAM = create_source( SETTINGS );
+            if ( REQ_STREAM != null )
+            {
+                /* ===========================================================================================
+                        join request-line from data-source with database-sections
+                   =========================================================================================== */
+                final JavaPairDStream< BLAST_PARTITION, String > JOINED_REQ_STREAM
+                    = REQ_STREAM.transformToPair( rdd -> 
+                                DB_SECS.cartesian( rdd ).partitionBy( PARTITIONER1.getValue() ) ).cache();
 
-            final JavaDStream< PubsubMessage > pub2 = JavaDStream$.MODULE$.fromDStream( pub1,
-                scala.reflect.ClassTag$.MODULE$.apply( PubsubMessage.class ) );
+                /* ===========================================================================================
+                        perform prelim search
+                   =========================================================================================== */
+                final JavaPairDStream< String, BLAST_HSP_LIST > HSPS = perform_prelim_search( JOINED_REQ_STREAM, SETTINGS );
 
-            final JavaDStream< String > REQ_STREAM = pub2.map( item -> item.getData().toStringUtf8() );
-            */
+                /* ===========================================================================================
+                        calculate cutoff ( top-score )
+                   =========================================================================================== */
+                final JavaPairDStream< String, Integer > CUTOFF  = calculate_cutoff( HSPS, SETTINGS );
 
-            final JavaDStream< String > REQ_STREAM
-                = jssc.socketTextStream( settings.trigger_host, settings.trigger_port ).cache();
+                /* ===========================================================================================
+                        filter by cutoff
+                   =========================================================================================== */
+                final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED 
+                    = filter_by_cutoff( HSPS, CUTOFF, PARTITIONER2 );
 
-            /* ===========================================================================================
-                    join request-line from data-source with database-sections
-               =========================================================================================== */
-            final JavaPairDStream< BLAST_PARTITION, String > JOINED_REQ_STREAM
-                = REQ_STREAM.transformToPair( rdd -> 
-                            DB_SECS.cartesian( rdd ).partitionBy( PARTITIONER1.getValue() ) ).cache();
+                /* ===========================================================================================
+                        perform traceback
+                   =========================================================================================== */
+                final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT = perform_traceback( FILTERED );
 
-            /* ===========================================================================================
-                    perform prelim search
-               =========================================================================================== */
-            final JavaPairDStream< String, BLAST_HSP_LIST > HSPS
-                = perform_prelim_search( JOINED_REQ_STREAM, TOP_N, LOG_HOST, LOG_PORT,
-                                         LOG_JOB_START, LOG_JOB_DONE );
+                /* ===========================================================================================
+                        collect traceback
+                   =========================================================================================== */
+                write_traceback( SEQANNOT, SETTINGS );
 
-            /* ===========================================================================================
-                    calculate cutoff ( top-score )
-               =========================================================================================== */
-            final JavaPairDStream< String, Integer > CUTOFF 
-                = calculate_cutoff( HSPS, LOG_CUTOFF, LOG_HOST, LOG_PORT );
-
-            /* ===========================================================================================
-                    filter by cutoff
-               =========================================================================================== */
-            final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED 
-                = filter_by_cutoff( HSPS, CUTOFF, PARTITIONER2, LOG_HOST, LOG_PORT );
-
-            /* ===========================================================================================
-                    perform traceback
-               =========================================================================================== */
-            final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT
-                = perform_traceback( FILTERED, LOG_HOST, LOG_PORT );
-
-            /* ===========================================================================================
-                    collect traceback
-               =========================================================================================== */
-            write_traceback( SEQANNOT, SAVE_DIR, LOG_FINAL, LOG_HOST, LOG_PORT );
-
-            /* ===========================================================================================
-                    start the streaming
-               =========================================================================================== */
-            jssc.start();
-            System.out.println( "database size: " + numbases.toString() );
-            System.out.println( "driver started..." );
-            jssc.awaitTermination();
+                /* ===========================================================================================
+                        start the streaming
+                   =========================================================================================== */
+                jssc.start();
+                System.out.println( "database size: " + numbases.toString() );
+                System.out.println( "driver started..." );
+                jssc.awaitTermination();
+            }
+            else
+                System.out.println( "invalid source(s)!" );
         }
         catch ( Exception e )
         {
