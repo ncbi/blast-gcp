@@ -62,7 +62,7 @@ gcloud dataproc --region us-east4 \
         --worker-boot-disk-size 250 \
     --num-preemptible-workers 62 \
         --preemptible-worker-boot-disk-size 250 \
-    --scopes 'https://www.googleapis.com/auth/cloud-platform' \
+    --scopes cloud-platform \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
     --region us-east4 \
@@ -73,7 +73,8 @@ gcloud dataproc --region us-east4 \
     "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
     --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
-
+# TODO: Scopes: storage-rw, pubsub, bigtable.admin.table, bigtabl.data,
+# devstorage.full_control, 
 exit 0
 # gcloud dataproc clusters diagnose cluster-name
 # beta: --max-age=8h
