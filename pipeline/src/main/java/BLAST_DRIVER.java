@@ -168,7 +168,7 @@ class BLAST_DRIVER extends Thread
             String res = item.getData().toStringUtf8();
             BLAST_SETTINGS bls = SETTINGS.getValue();
             if ( bls.log_request )
-                BLAST_SEND.send( bls, String.format( "REQ via pubsub: '%s'", res ) );
+                BLAST_SEND.send( bls, String.format( "REQ via pubsub: '%s'", res.substring( 0, 30 ) ) );
             return res;
         }).cache();
     }
@@ -188,12 +188,12 @@ class BLAST_DRIVER extends Thread
                 return S1.union( S2 ).cache();
             }
             else
-                return create_socket_stream( SETTINGS );
+                return create_socket_stream( SETTINGS ).cache();
         }
         else
         {
             if ( use_pubsub )
-                return create_pubsub_stream( SETTINGS );
+                return create_pubsub_stream( SETTINGS ).cache();
             else
                 return null;
         }
@@ -201,7 +201,7 @@ class BLAST_DRIVER extends Thread
 
 
     /* ===========================================================================================
-            perform prelim search / key = String.format( "%d %s", part.nr, req_req_id )
+            perform prelim search / key = String.format( "%d %s", part.nr, req.id )
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_HSP_LIST > perform_prelim_search(
             final JavaPairDStream< BLAST_PARTITION, String > SRC,
@@ -211,18 +211,19 @@ class BLAST_DRIVER extends Thread
             BLAST_SETTINGS bls = SETTINGS.getValue();            
 
             BLAST_PARTITION part = item._1();
-            BLAST_REQUEST req = new BLAST_REQUEST( item._2(), bls.top_n ); // REQ-LINE to REQUEST
+            BLAST_REQUEST_READER reader = new BLAST_REQUEST_READER();
+            BLAST_REQUEST req = reader.parse( item._2(), bls.top_n ); // REQ-LINE to REQUEST
 
             // ++++++ this is the where the work happens on the worker-nodes ++++++
             if ( bls.log_job_start )
                 BLAST_SEND.send( bls,
-                                 String.format( "starting request: '%s' at '%s' ", req.req_id, part.db_spec ) );
+                                 String.format( "starting request: '%s' at '%s' ", req.id, part.db_spec ) );
 
             ArrayList< Tuple2< String, BLAST_HSP_LIST > > ret = new ArrayList<>();
             Integer count = 0;
             try
             {
-                String rid = req.req_id;
+                String rid = req.id;
 
                 long startTime = System.currentTimeMillis();
                 BLAST_LIB blaster = new BLAST_LIB();
@@ -236,7 +237,7 @@ class BLAST_DRIVER extends Thread
                                      String.format( "request '%s'.'%s' done -> count = %d", rid, part.db_spec, count ) );
 
                 for ( BLAST_HSP_LIST S : search_res )
-                    ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.req_id ), S ) );
+                    ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.id ), S ) );
             }
             catch ( Exception e )
             {
