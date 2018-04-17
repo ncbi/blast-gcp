@@ -32,10 +32,10 @@ BLASTDBDIR=$BLASTTMP/db
 #sudo bash stack-install.sh --write-gcm 2>&1 | tee -a stack-install.log
 
 curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
-sudo bash install-monitoring-agent.sh | tee -a stack-install.log 2>&1
+sudo bash install-monitoring-agent.sh | tee -a stackdriver-install.log 2>&1
 
 curl -sSO https://dl.google.com/cloudagents/install-logging-agent.sh
-sudo bash install-logging-agent.sh | tee -a stack-install.log 2>&1
+sudo bash install-logging-agent.sh | tee -a stackdriver-install.log 2>&1
 
 #cd /tmp
 #cat << DONE > libblast-log.conf
@@ -59,20 +59,22 @@ cat << 'DONE2' > log4j.proto
 log4j.appender.tmpfile=org.apache.log4j.FileAppender
 log4j.appender.tmpfile.File=/tmp/blastjni.${user.name}.log
 log4j.appender.tmpfile.layout=org.apache.log4j.PatternLayout
-log4j.appender.tmpfile.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
+log4j.appender.tmpfile.layout.ConversionPattern=%m%n
 
-log4j.appender.sparkfile=org.apache.log4j.FileAppender
-log4j.appender.sparkfile.File=/var/log/spark/blastjni.$(user.name).log
-log4j.appender.sparkfile.layout=org.apache.log4j.PatternLayout
-log4j.appender.sparkfile.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
+#log4j.appender.sparkfile=org.apache.log4j.FileAppender
+#log4j.appender.sparkfile.File=/var/log/spark/blastjni.${user.name}.log
+#log4j.appender.sparkfile.layout=org.apache.log4j.PatternLayout
+##log4j.appender.sparkfile.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
+#log4j.appender.sparkfile.layout.ConversionPattern=%d [%p] [%t] %c: %m%n
 
-log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_LIB=INFO, tmpfile, sparkfile
+log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_LIB=INFO, tmpfile
+#, sparkfile
 log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_TEST=TRACE, tmpfile
 DONE2
 cat log4j.proto >> /etc/spark/conf.dist/log4j.properties
 
 
-logger -t cluster_initialize.sh "BLAST Logging agent begun with cluster_initialize.sh"
+logger -t cluster_initialize.sh "BLASTJNI Logging agent begun with cluster_initialize.sh"
 
 
 mkdir -p $BLASTDBDIR
@@ -91,7 +93,7 @@ else
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     for part in $parts; do
-        logger -t cluster_initialize.sh "BLAST Preloading Blast DB $part"
+        logger -t cluster_initialize.sh "BLASTJNI Preloading Blast DB $part"
         piece="nt_50M.$part"
         mkdir -p $BLASTDBDIR/$piece
         cd $BLASTDBDIR/$piece
@@ -119,7 +121,7 @@ chmod -R ugo+rxw $BLASTTMP
 ls -laR $BLASTTMP
 
 echo Cluster Initialized
-logger -t cluster_initialize.sh "BLAST cluster_initialize.sh complete"
+logger -t cluster_initialize.sh "BLASTJNI cluster_initialize.sh complete"
 date
 
 exit 0
