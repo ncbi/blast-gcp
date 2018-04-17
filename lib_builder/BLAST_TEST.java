@@ -58,8 +58,13 @@ class BLAST_TEST {
     System.err.println(S);
     logger.trace(S);
 
-    BLAST_REQUEST requestobj = new BLAST_REQUEST(rid + ":" + query, top_n);
-    //        new BLAST_REQUEST(rid + ":" + query + ":nt:" + params + ":" + params, top_n);
+    BLAST_REQUEST requestobj = new BLAST_REQUEST();
+    requestobj.id = rid;
+    requestobj.query = query;
+    requestobj.params = params;
+    requestobj.db = params;
+    requestobj.program = program;
+    requestobj.top_n = top_n;
     BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
     BLAST_LIB blaster = new BLAST_LIB();
