@@ -22,14 +22,10 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkFiles;
-
-// import org.apache.log4j.Level;
 
 /* FIX and GENERAL COMMENTS
  *
@@ -44,107 +40,91 @@ import org.apache.spark.SparkFiles;
  *  on a black background.
  */
 
-class BLAST_LIB {
-  // TODO: Replace with enum or Log4j's Level
-  public static final int LOG_TRACE = 0;
-  public static final int LOG_DEBUG = 1;
-  public static final int LOG_INFO = 2;
-  public static final int LOG_WARN = 3;
-  public static final int LOG_ERROR = 4;
-  public static final int LOG_FATAL = 5;
-
-  // FIX - we need to ensure that this is locked down with regard to multi-threading
-  // if a BLAST_LIB object is instantiated as a static member of an outer class,
+public class BLAST_LIB {
+  // FIX - if a BLAST_LIB object is instantiated as a static member of an outer class,
   // this is known to work (i.e. lock up the JVM to serialize)
+  // So private constructor, and getInstance() Factory method returns Singleton
 
-  BLAST_LIB() {
-    this.loglevel = BLAST_LIB.LOG_INFO;
-    System.err.println("In Java BLAST_LIB ctor");
-    try {
-      // Java will look for libblastjni.so
-      System.loadLibrary("blastjni");
-    } catch (Throwable e) {
+  // CMT -
+  // See http://literatejava.com/jvm/fastest-threadsafe-singleton-jvm/
+  // The inner class (aka Initialization-on-demand holder idiom) is
+  // supposedly 25X faster than a synchronized method, but that is if JIT is
+  // involved and 10,000+ calls to the singleton are requested.
+  // In our case, this occurs twice per query, so only the JVM bytecode
+  // interpreter is involved and performance (~400 ns) should be fine.
+  //
+  //
+  // enum Singleton's seem to be the cleanest
+
+  private synchronized void loadLibrary() {
+    if (!initialized) {
       try {
-        System.err.println("Nope #1");
-        System.load(SparkFiles.get("libblastjni.so"));
-      } catch (ExceptionInInitializerError x) {
-        System.err.println("Nope #2");
-        invalid = x;
-      } catch (Throwable e2) {
-        System.err.println("Nope #3");
-        invalid = new ExceptionInInitializerError(e2);
+        // Java will look for libblastjni.so
+        System.loadLibrary("blastjni");
+      } catch (Throwable e) {
+        try {
+          System.load(SparkFiles.get("libblastjni.so"));
+        } catch (ExceptionInInitializerError x) {
+          invalid = x;
+        } catch (Throwable e2) {
+          invalid = new ExceptionInInitializerError(e2);
+        }
       }
-    }
-
-    String username = System.getProperty("user.name", "unk");
-    String log_filename = "/tmp/blastjni." + username + ".log";
-
-    try {
-      // FIX - When Dataproc/Spark goes to Java 9+, replace with
-      // Process.getPid()
-      this.processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-      PrintWriter pw = new PrintWriter(new FileOutputStream(new File(log_filename), true));
-      this.setLogWriter(pw);
-    } catch (FileNotFoundException ex) {
-      System.err.println("Couldn't create log");
+      initialized = true;
     }
   }
+
+  public BLAST_LIB() {
+    loadLibrary();
+    processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+  }
+
+  private static boolean initialized = false;
+  private static String processID;
+  private static ExceptionInInitializerError invalid;
 
   void throwIfBad() {
-    if (invalid != null) {
-      System.err.println("invalid");
-      throw invalid;
+    if (!initialized) throw invalid;
+  }
+
+  private synchronized void log_trace(String msg) {
+    Logger logger = LogManager.getLogger(BLAST_LIB.class);
+    if (logger.isTraceEnabled()) {
+      msg = "BLASTJNI (" + this.processID + ") " + msg;
+      logger.trace(msg);
     }
   }
 
-  public void setLogLevel(int level) {
-    if (level >= BLAST_LIB.LOG_TRACE && level <= BLAST_LIB.LOG_FATAL) this.loglevel = level;
-  }
-
-  public synchronized void setLogWriter(PrintWriter writer) {
-    log_writer = writer;
-  }
-
-  // Warning: If below signature changes, update blastjni.cpp
-  // CMT - not really a fix, but an observation that now that you're
-  // generating signatures, you might booby-trap the build script to
-  // catch any deviation in the signature of this method. And I'd
-  // make the warning MUCH harder to avoid seeing/reading.
-  private synchronized void log(int level, String msg) {
-    if (log_writer != null && level >= this.loglevel) {
-      try {
-        String levelstr;
-        switch (level) {
-          case LOG_TRACE:
-            levelstr = "TRACE";
-            break;
-          case LOG_DEBUG:
-            levelstr = "DEBUG";
-            break;
-          case LOG_INFO:
-            levelstr = "INFO";
-            break;
-          case LOG_WARN:
-            levelstr = "WARN";
-            break;
-          case LOG_ERROR:
-            levelstr = "ERROR";
-            break;
-          case LOG_FATAL:
-            levelstr = "FATAL";
-            break;
-          default:
-            levelstr = "UNKOWNLEVEL";
-            break;
-        }
-        msg = "(" + this.processID + ") [" + levelstr + "] " + msg;
-        log_writer.println(msg);
-        log_writer.flush();
-      } catch (Throwable t) {
-      }
-    } else {
-      System.err.println(msg);
+  private synchronized void log_debug(String msg) {
+    Logger logger = LogManager.getLogger(BLAST_LIB.class);
+    if (logger.isDebugEnabled()) {
+      msg = "BLAST (" + this.processID + ") " + msg;
+      logger.debug(msg);
     }
+  }
+
+  private synchronized void log_info(String msg) {
+    Logger logger = LogManager.getLogger(BLAST_LIB.class);
+    msg = "BLAST (" + this.processID + ") " + msg;
+    logger.info(msg);
+  }
+
+  private synchronized void log_warn(String msg) {
+    Logger logger = LogManager.getLogger(BLAST_LIB.class);
+    msg = "BLAST (" + this.processID + ") " + msg;
+    logger.warn(msg);
+  }
+
+  private synchronized void log_error(String msg) {
+    Logger logger = LogManager.getLogger(BLAST_LIB.class);
+    msg = "BLAST (" + this.processID + ") " + msg;
+    logger.error(msg);
+  }
+
+  private synchronized void log_fatal(String msg) {
+    Logger logger = LogManager.getLogger(BLAST_LIB.class);
+    msg = "BLAST (" + this.processID + ") " + msg;
+    logger.fatal(msg);
   }
 
   BLAST_HSP_LIST[] jni_prelim_search(BLAST_PARTITION part, BLAST_REQUEST req) {
@@ -153,27 +133,25 @@ class BLAST_LIB {
     throwIfBad();
 
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-    /*
-    log( "\nJava jni_prelim_search called with" );
-    log( "  query   : " + query );
-    log( "  db_spec : " + db_spec );
-    log( "  program : " + program );
-    log( "  params  : " + params );
-    log( "  topn    : " + topn );
-    */
+    log_info("\nJava jni_prelim_search called with");
+    log_info("  query   : " + req.query);
+    log_info("  db_spec : " + part.db_spec);
+    log_info("  program : " + req.program);
+    log_info("  params  : " + req.params);
+    log_info("  topn    : " + req.top_n);
 
     long starttime = System.currentTimeMillis();
     BLAST_HSP_LIST[] ret =
         prelim_search(req.query, part.db_spec, req.program, req.params, req.top_n);
 
     long finishtime = System.currentTimeMillis();
-    // log( "jni_prelim_search returned in " + ( finishtime - starttime ) + " ms." );
-    // log( "jni_prelim_search returned " + ret.length + " HSP_LISTs:" );
+    log_info("jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
+    log_info("jni_prelim_search returned " + ret.length + " HSP_LISTs:");
     int i = 0;
     for (BLAST_HSP_LIST h : ret) {
       h.part = part;
       h.req = req;
-      // log( "#" + i + ": " + h.toString() );
+      log_debug("#" + i + ": " + h.toString());
       ++i;
     }
 
@@ -186,39 +164,31 @@ class BLAST_LIB {
   BLAST_TB_LIST[] jni_traceback(BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req) {
     throwIfBad();
 
-    /*
-    log("\nJava jni_traceback called with");
-    log("  query   : " + requestobj.query );
-    log("  db_spec : " + partitionobj.db_spec);
-    log("  program : " + requestobj.program );
-    */
+    log_info("\nJava jni_traceback called with");
+    log_info("  query   : " + req.query);
+    log_info("  db_spec : " + part.db_spec);
+    log_info("  program : " + req.program);
+
     long starttime = System.currentTimeMillis();
     BLAST_TB_LIST[] ret = traceback(req.query, part.db_spec, req.program, hspl);
     long finishtime = System.currentTimeMillis();
-    /*
-    log("jni_traceback returned in " + (finishtime - starttime) + " ms.");
-    log("jni_traceback returned " + ret.length + " TB_LISTs:");
-    */
+
+    log_info("jni_traceback returned in " + (finishtime - starttime) + " ms.");
+    log_info("jni_traceback returned " + ret.length + " TB_LISTs:");
+
     int i = 0;
     for (BLAST_TB_LIST t : ret) {
-      t.part = part;
-      t.req = req;
-      // log( "#" + i + ": " + t.toString() );
-      ++i;
+        t.part = part;
+        t.req = req;
+        ++i;
     }
 
     return ret;
   }
-
-  private ExceptionInInitializerError invalid;
-  private PrintWriter log_writer;
-  private String processID;
-  private int loglevel;
 
   private native BLAST_HSP_LIST[] prelim_search(
       String query, String db_spec, String program, String params, int topn);
 
   private native BLAST_TB_LIST[] traceback(
       String query, String db_spec, String program, BLAST_HSP_LIST[] hspl);
-
 }
