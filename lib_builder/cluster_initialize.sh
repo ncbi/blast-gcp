@@ -74,7 +74,7 @@ DONE2
 cat log4j.proto >> /etc/spark/conf.dist/log4j.properties
 
 
-logger -t cluster_initialize.sh "BLAST Logging agent begun with cluster_initialize.sh"
+logger -t cluster_initialize.sh "BLASTJNI Logging agent begun with cluster_initialize.sh"
 
 
 mkdir -p $BLASTDBDIR
@@ -93,7 +93,7 @@ else
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     for part in $parts; do
-        logger -t cluster_initialize.sh "BLAST Preloading Blast DB $part"
+        logger -t cluster_initialize.sh "BLASTJNI Preloading Blast DB $part"
         piece="nt_50M.$part"
         mkdir -p $BLASTDBDIR/$piece
         cd $BLASTDBDIR/$piece
@@ -121,7 +121,7 @@ chmod -R ugo+rxw $BLASTTMP
 ls -laR $BLASTTMP
 
 echo Cluster Initialized
-logger -t cluster_initialize.sh "BLAST cluster_initialize.sh complete"
+logger -t cluster_initialize.sh "BLASTJNI cluster_initialize.sh complete"
 date
 
 exit 0
