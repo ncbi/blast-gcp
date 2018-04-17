@@ -30,6 +30,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.io.FileReader;
+
+import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 
 public class BLAST_SETTINGS_READER
 {
@@ -201,5 +207,124 @@ public class BLAST_SETTINGS_READER
 
         return res;
     }
-  
+ 
+    private static String get_json_string( JsonObject root, final String name, final String dflt )
+    {
+        String res = dflt;
+        JsonElement elem = root.get( name );
+        if ( elem != null )
+        {
+            try
+            {
+                res = elem.getAsString();
+            }
+            catch( Exception e )
+            {
+            }
+        }
+        return res;
+    }
+
+    private static Integer get_json_int( JsonObject root, final String name, final Integer dflt )
+    {
+        Integer res = dflt;
+        JsonElement elem = root.get( name );
+        if ( elem != null )
+        {
+            try
+            {
+                res = elem.getAsInt();
+            }
+            catch( Exception e )
+            {
+            }
+        }
+        return res;
+    }
+
+    private static Boolean get_json_bool( JsonObject root, final String name, final Boolean dflt )
+    {
+        Boolean res = dflt;
+        JsonElement elem = root.get( name );
+        if ( elem != null )
+        {
+            try
+            {
+                res = elem.getAsBoolean();
+            }
+            catch( Exception e )
+            {
+            }
+        }
+        return res;
+    }
+
+    public static BLAST_SETTINGS read_from_json( final String json_file, final String appName )
+    {
+        BLAST_SETTINGS res = new BLAST_SETTINGS();
+        try
+        {
+            JsonParser parser = new JsonParser();
+            JsonElement tree = parser.parse( new FileReader( json_file ) );
+            if ( tree.isJsonObject() )
+            {
+                JsonObject root = tree.getAsJsonObject();
+
+                res.appName = get_json_string( root, key_appName, appName );
+
+                res.db_location = get_json_string( root, key_db_location, dflt_db_location );
+                res.db_pattern  = get_json_string( root, key_db_pattern, dflt_db_pattern );
+        
+                res.batch_duration = get_json_int( root, key_batch_duration, dflt_batch_duration );
+
+                try
+                {
+                    java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+                    String local_host = localMachine.getHostName();
+                    res.log_host     = get_json_string( root, key_log_host, local_host );
+                    res.trigger_host = get_json_string( root, key_trigger_host, local_host );
+                }
+                catch ( UnknownHostException e )
+                {
+                    System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
+                    res.log_host     = get_json_string( root, key_log_host, dflt_log_host );
+                    res.trigger_host = get_json_string( root, key_trigger_host, dflt_trigger_host );
+                }
+                
+                res.log_port     = get_json_int( root, key_log_port, dflt_log_port );
+                res.trigger_port = get_json_int( root, key_trigger_port, dflt_trigger_port );
+
+                res.save_dir = get_json_string( root, key_save_dir, dflt_save_dir() );
+                
+                res.num_db_partitions   = get_json_int( root, key_num_db_partitions, dflt_num_db_partitions );
+                res.num_workers         = get_json_int( root, key_num_workers, dflt_num_workers );
+                res.receiver_max_rate   = get_json_int( root, key_rec_max_rate, dflt_receiver_max_rate );
+                res.top_n               = get_json_int( root, key_top_n, dflt_top_n );
+
+                res.num_executors       = get_json_int( root, key_num_executors, dflt_num_executors );
+                res.num_executor_cores  = get_json_int( root, key_num_executor_cores, dflt_num_executor_cores );
+                res.executor_memory     = get_json_string( root, key_executor_memory, dflt_executor_memory );
+
+                res.flat_db_layout      = get_json_bool( root, key_flat_db_layout, dflt_flat_db_layout );
+
+                res.log_request     = get_json_bool( root, key_log_request, dflt_log_request );
+                res.log_job_start   = get_json_bool( root, key_log_start, dflt_log_start );
+                res.log_job_done    = get_json_bool( root, key_log_done, dflt_log_done );
+                res.log_cutoff      = get_json_bool( root, key_log_cutoff, dflt_log_cutoff );
+                res.log_final       = get_json_bool( root, key_log_final, dflt_log_final );
+
+                res.project_id      = get_json_string( root, key_project_id, dflt_project_id);
+                res.subscript_id    = get_json_string( root, key_subscript_id, dflt_subscript_id );
+                res.gs_result_bucket = get_json_string( root, key_gs_result_bucket, dflt_gs_result_bucket );
+                res.gs_result_file  = get_json_string( root, key_gs_result_file, dflt_gs_result_file );
+
+            }
+        }           
+        catch( Exception e )
+        {
+            res = defaults( appName );
+        }
+        return res;
+    }
+ 
 }

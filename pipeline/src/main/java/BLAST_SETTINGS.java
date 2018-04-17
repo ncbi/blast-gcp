@@ -84,11 +84,15 @@ public class BLAST_SETTINGS implements Serializable
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "executor memory..... %s\n", executor_memory );
         S  =  S +  String.format( "flat db layout...... %s\n", Boolean.toString( flat_db_layout ) );
-        S  =  S +  String.format( "log_request ........ %s\n", Boolean.toString( log_request ) );
-        S  =  S +  String.format( "log_job_start ...... %s\n", Boolean.toString( log_job_start ) );
-        S  =  S +  String.format( "log_job_done ....... %s\n", Boolean.toString( log_job_done ) );
-        S  =  S +  String.format( "log_cutoff ......... %s\n", Boolean.toString( log_cutoff ) );
-        S  =  S +  String.format( "log_final........... %s\n", Boolean.toString( log_final ) );
+
+        String S_log = "";
+        if ( log_request )   S_log = S_log + "request ";
+        if ( log_job_start ) S_log = S_log + "job_start ";
+        if ( log_job_done )  S_log = S_log + "job_done ";
+        if ( log_cutoff )    S_log = S_log + "cutoff ";
+        if ( log_final )     S_log = S_log + "final";
+
+        S  =  S +  String.format( "log ................ %s\n", S_log );
         return S;
     }
  
