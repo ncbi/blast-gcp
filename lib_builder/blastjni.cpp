@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <sstream>
@@ -160,6 +161,8 @@ static void log(JNIEnv* jenv, jobject jthis, LOG_LEVEL level, const char* fmt, .
     jclass thiscls = jenv->GetObjectClass(jthis);
     if (!thiscls)
         throw std::runtime_error("Can't get this class");
+    struct timespec stime, etime;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
 
     const char* func = "";
     switch (level) {
@@ -193,6 +196,8 @@ static void log(JNIEnv* jenv, jobject jthis, LOG_LEVEL level, const char* fmt, .
     jenv->CallVoidMethod(jthis, jlog_method, jstr);
     if (jenv->ExceptionCheck())  // Mostly to silence -Xcheck:jni
         fprintf(stderr, "Log method %s threw an exception, which it should never do.\n", func);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &etime);
+    // fprintf(stderr,"1000 iterations took %lu ns\n", etime.tv_nsec-stime.tv_nsec);
     return;
 }
 
@@ -609,7 +614,8 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
     catch (std::exception& x) {
         jni_throw(jenv, xtype = xc_java_exception, "%s", x.what());
     }
-    // FIX - https://ncbiconfluence.ncbi.nlm.nih.gov/pages/viewpage.action?spaceKey=BLASTGCP&title=Errors+reported+by+BLAST
+    // FIX -
+    // https://ncbiconfluence.ncbi.nlm.nih.gov/pages/viewpage.action?spaceKey=BLASTGCP&title=Errors+reported+by+BLAST
     /*
     catch (ncbi::blast::CInputException& x) {
         jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());

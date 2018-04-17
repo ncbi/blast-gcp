@@ -90,7 +90,7 @@ public class BLAST_LIB {
   private synchronized void log_trace(String msg) {
     Logger logger = LogManager.getLogger(BLAST_LIB.class);
     if (logger.isTraceEnabled()) {
-      msg = "BLAST (" + this.processID + ") " + msg;
+      msg = "BLASTJNI (" + this.processID + ") " + msg;
       logger.trace(msg);
     }
   }
