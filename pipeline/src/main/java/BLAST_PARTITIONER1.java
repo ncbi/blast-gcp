@@ -34,9 +34,9 @@ class BLAST_PARTITIONER1 extends Partitioner
 {
 	private int numParts;
 	
-	public BLAST_PARTITIONER1( int i )
+	public BLAST_PARTITIONER1( int numParts )
     {
-		numParts = i;
+		this.numParts = numParts;
 	}
 
 	@Override public int numPartitions()

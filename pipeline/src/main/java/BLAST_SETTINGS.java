@@ -45,7 +45,6 @@ public class BLAST_SETTINGS implements Serializable
 
     public String  save_dir;    
     public Integer num_db_partitions;
-    public Integer num_workers;
     public Integer receiver_max_rate;
     public Integer top_n;
     public Integer num_executors;
@@ -77,7 +76,6 @@ public class BLAST_SETTINGS implements Serializable
         S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );
         S  =  S +  String.format( "save_dir ........... '%s'\n", save_dir );
         S  =  S +  String.format( "num_db_partitions .. %d\n", num_db_partitions );
-        S  =  S +  String.format( "num_workers ........ %d\n", num_workers );
         S  =  S +  String.format( "dflt top_n ......... %d\n", top_n );
         S  =  S +  String.format( "rec. max. rate ..... %d per second\n", receiver_max_rate );
         S  =  S +  String.format( "executors .......... %d ( %d cores )\n", num_executors, num_executor_cores );

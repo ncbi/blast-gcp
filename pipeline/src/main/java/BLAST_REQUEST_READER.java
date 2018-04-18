@@ -40,10 +40,7 @@ class BLAST_REQUEST_READER
     public static final String dflt_program = "blastn";
     public static final String dflt_params = "blastn";
 
-    public String id, user, db, query, program, params;
-    public Integer top_n;
-
-    public final BLAST_REQUEST parse( final String line, final Integer top_n )
+    public static BLAST_REQUEST parse( final String line, final Integer top_n )
     {
         String S = line.trim();
         if ( S.startsWith( "{" ) )
@@ -51,7 +48,7 @@ class BLAST_REQUEST_READER
         return parse_colons_sep_list( S, top_n );
     }
 
-    private final BLAST_REQUEST parse_colons_sep_list( final String line, final Integer top_n )
+    private static BLAST_REQUEST parse_colons_sep_list( final String line, final Integer top_n )
     {
         BLAST_REQUEST res = new BLAST_REQUEST();
 
@@ -66,7 +63,7 @@ class BLAST_REQUEST_READER
         return res;
     }
 
-    private final void set_defaults( BLAST_REQUEST req, final Integer top_n )
+    private static void set_defaults( BLAST_REQUEST req, final Integer top_n )
     {
         if ( req.id.isEmpty() ) req.id = dflt_id;
         if ( req.query.isEmpty() ) req.query = dflt_query;
@@ -76,7 +73,7 @@ class BLAST_REQUEST_READER
         if ( req.params.isEmpty() ) req.params = dflt_params;
     }
 
-    private final String get_json_string( JsonObject root, final String name, final String dflt )
+    private static String get_json_string( JsonObject root, final String name, final String dflt )
     {
         String res = dflt;
         JsonElement elem = root.get( name );
@@ -93,7 +90,7 @@ class BLAST_REQUEST_READER
         return res;
     }
 
-    private final Integer get_json_int( JsonObject root, final String name, final Integer dflt )
+    private static Integer get_json_int( JsonObject root, final String name, final Integer dflt )
     {
         Integer res = dflt;
         JsonElement elem = root.get( name );
@@ -110,7 +107,7 @@ class BLAST_REQUEST_READER
         return res;
     }
 
-    private final BLAST_REQUEST parse_json( final String line, final Integer top_n )
+    private static BLAST_REQUEST parse_json( final String line, final Integer top_n )
     {
         BLAST_REQUEST res = new BLAST_REQUEST();
         JsonParser parser = new JsonParser();

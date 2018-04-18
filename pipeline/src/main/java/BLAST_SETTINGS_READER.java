@@ -50,7 +50,6 @@ public class BLAST_SETTINGS_READER
     public static final String key_trigger_port = "trigger_port";
     public static final String key_save_dir = "save_dir";
     public static final String key_num_db_partitions = "num_db_partitions";
-    public static final String key_num_workers = "num_workers";
     public static final String key_rec_max_rate = "receiver_max_rate";
     public static final String key_top_n = "top_n";
     public static final String key_num_executors = "num_executors";
@@ -76,7 +75,6 @@ public class BLAST_SETTINGS_READER
     public static final String  dflt_trigger_host = "localhost";
     public static final Integer dflt_trigger_port = 10012;
     public static final Integer dflt_num_db_partitions = 10;
-    public static final Integer dflt_num_workers = 2;
     public static final Integer dflt_receiver_max_rate = 5;
     public static final Integer dflt_top_n = 10;
     public static final Integer dflt_num_executors = 10;
@@ -128,7 +126,6 @@ public class BLAST_SETTINGS_READER
         res.save_dir = dflt_save_dir();
         
         res.num_db_partitions   = dflt_num_db_partitions;
-        res.num_workers         = dflt_num_workers;
         res.receiver_max_rate   = dflt_receiver_max_rate;
         res.top_n               = dflt_top_n;
 
@@ -184,7 +181,6 @@ public class BLAST_SETTINGS_READER
         res.save_dir = ini_file.getString( ini_section, key_save_dir, dflt_save_dir() );
         
         res.num_db_partitions   = ini_file.getInt( ini_section, key_num_db_partitions, dflt_num_db_partitions );
-        res.num_workers         = ini_file.getInt( ini_section, key_num_workers, dflt_num_workers );
         res.receiver_max_rate   = ini_file.getInt( ini_section, key_rec_max_rate, dflt_receiver_max_rate );
         res.top_n               = ini_file.getInt( ini_section, key_top_n, dflt_top_n );
 
@@ -297,7 +293,6 @@ public class BLAST_SETTINGS_READER
                 res.save_dir = get_json_string( root, key_save_dir, dflt_save_dir() );
                 
                 res.num_db_partitions   = get_json_int( root, key_num_db_partitions, dflt_num_db_partitions );
-                res.num_workers         = get_json_int( root, key_num_workers, dflt_num_workers );
                 res.receiver_max_rate   = get_json_int( root, key_rec_max_rate, dflt_receiver_max_rate );
                 res.top_n               = get_json_int( root, key_top_n, dflt_top_n );
 

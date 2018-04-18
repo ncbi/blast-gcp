@@ -25,15 +25,12 @@
 */
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.InetAddress;
 
 import org.apache.spark.SparkEnv;
-import org.apache.spark.broadcast.Broadcast;
 
 public class BLAST_SEND
 {

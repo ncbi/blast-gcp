@@ -36,22 +36,14 @@ import java.util.Random;
 
 import static java.lang.Math.min;
 
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 import scala.Tuple2;
 
 import org.apache.spark.api.java.Optional;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function0;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -68,12 +60,12 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.HashPartitioner;
+import org.apache.spark.SparkEnv;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
-
 
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
@@ -83,7 +75,6 @@ class BLAST_DRIVER extends Thread
     private final BLAST_SETTINGS settings;
     private final JavaSparkContext sc;
     private final JavaStreamingContext jssc;
-    private final List< BLAST_PARTITION > db_sec_list;
 
     public BLAST_DRIVER( final BLAST_SETTINGS settings, final List< String > files_to_transfer )
     {
@@ -108,8 +99,6 @@ class BLAST_DRIVER extends Thread
         for ( String a_file : files_to_transfer )
             sc.addFile( a_file );
 
-        db_sec_list = create_db_secs();
-
         // create a streaming-context from SparkContext given
         jssc = new JavaStreamingContext( sc, Durations.seconds( settings.batch_duration ) );
     }
@@ -127,12 +116,28 @@ class BLAST_DRIVER extends Thread
         }
     }
 
-    private List< BLAST_PARTITION > create_db_secs()
+    /* ===========================================================================================
+            create database-partitions
+       =========================================================================================== */
+    private JavaRDD< BLAST_PARTITION > make_db_partitions( Broadcast< BLAST_SETTINGS > SETTINGS,
+        Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 )
     {
-        List< BLAST_PARTITION > res = new ArrayList<>();
+        final List< Tuple2< Integer, BLAST_PARTITION > > db_list = new ArrayList<>();
         for ( int i = 0; i < settings.num_db_partitions; i++ )
-            res.add( new BLAST_PARTITION( settings.db_location, settings.db_pattern, i, settings.flat_db_layout ) );
-        return res;
+        {
+            BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
+                                                        i, settings.flat_db_layout );
+            db_list.add( new Tuple2<>( i, part ) );
+        }
+        return sc.parallelizePairs( db_list, SETTINGS.getValue().num_executors ).partitionBy( PARTITIONER0.getValue() ).map( item -> 
+        {
+            BLAST_PARTITION part = item._2();
+
+            BLAST_SETTINGS bls = SETTINGS.getValue();
+            BLAST_SEND.send( bls, String.format( "preparing %s", part ) );
+
+            return part.prepare();
+        }).cache();
     }
 
     /* ===========================================================================================
@@ -211,8 +216,17 @@ class BLAST_DRIVER extends Thread
             BLAST_SETTINGS bls = SETTINGS.getValue();            
 
             BLAST_PARTITION part = item._1();
-            BLAST_REQUEST_READER reader = new BLAST_REQUEST_READER();
-            BLAST_REQUEST req = reader.parse( item._2(), bls.top_n ); // REQ-LINE to REQUEST
+            BLAST_REQUEST req = BLAST_REQUEST_READER.parse( item._2(), bls.top_n ); // REQ-LINE to REQUEST
+
+            // see if we are at a different worker-id now
+            /*
+            String curr_worker_name = java.net.InetAddress.getLocalHost().getHostName();
+            if ( !curr_worker_name.equals( part.worker_name ) )
+            {
+                BLAST_SEND.send( bls,
+                                 String.format( "worker shift: %s -> %s", part.worker_name, curr_worker_name ) );
+            }
+            */
 
             // ++++++ this is the where the work happens on the worker-nodes ++++++
             if ( bls.log_job_start )
@@ -226,7 +240,10 @@ class BLAST_DRIVER extends Thread
                 String rid = req.id;
 
                 long startTime = System.currentTimeMillis();
-                BLAST_LIB blaster = new BLAST_LIB();
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib();
+
+                //BLAST_SEND.send( bls, String.format( "SINGLETON.requests = %d", BLAST_LIB_SINGLETON.get_requests() ) );
+
                 BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req );
                 long elapsed = System.currentTimeMillis() - startTime;
 
@@ -359,19 +376,19 @@ class BLAST_DRIVER extends Thread
     /* ===========================================================================================
             collect and write traceback
        =========================================================================================== */
-    private void write_traceback( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT,
+    private void write_traceback( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS,
                                   Broadcast< BLAST_SETTINGS > SETTINGS ) 
     {
         // key is now req-id
-        final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT1 = SEQANNOT.mapToPair( item ->
+        final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS1 = SEQANNOTS.mapToPair( item ->
         {
             String key = item._1();
             return new Tuple2<>( key.substring( key.indexOf( ' ' ) + 1, key.length() ), item._2() );
         } );
 
-        final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > SEQANNOT2 = SEQANNOT1.groupByKey();
+        final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > SEQANNOTS2 = SEQANNOTS1.groupByKey();
 
-        final JavaPairDStream< String, ByteBuffer > SEQANNOT3 = SEQANNOT2.mapValues( item ->
+        final JavaPairDStream< String, ByteBuffer > SEQANNOTS3 = SEQANNOTS2.mapValues( item ->
         {
             List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
             for ( BLAST_TB_LIST e : item )
@@ -396,7 +413,7 @@ class BLAST_DRIVER extends Thread
 			return ret;
         });
 
-        SEQANNOT3.foreachRDD( rdd ->
+        SEQANNOTS3.foreachRDD( rdd ->
         {
             long count = rdd.count();
             if ( count > 0 )
@@ -408,35 +425,27 @@ class BLAST_DRIVER extends Thread
                         Tuple2< String, ByteBuffer > item = iter.next();
                         String req_id = item._1();
                         ByteBuffer value = item._2();
-
                         BLAST_SETTINGS bls = SETTINGS.getValue();
-                        String filename = String.format( "%sreq_%s.txt", bls.save_dir, req_id );
 
                         if ( bls.gs_result_bucket.isEmpty() )
                         {
-                            try
-                            {
-                                // we have no bucket, that means we store to HADOOP-FS!
-                                Configuration conf = new Configuration();
-                                FileSystem fs = FileSystem.get( conf );
-                                OutputStream os = fs.create( new Path( filename ) );
-                                os.write( value.array() );
-                                os.close();
-                                int n_bytes = value.array().length;
-                                if ( bls.log_final )
-                                    BLAST_SEND.send( bls, String.format( "%d bytes written: %s", n_bytes, filename ) );
-                            }
-                            catch ( Exception e )
-                            {
-                                BLAST_SEND.send( bls, String.format( "fs-ex : %s", e.toString() ) );
-                            }
+                            String path = String.format( "%sreq_%s.txt", bls.save_dir, req_id );
+                            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, value );
+
+                            if ( bls.log_final )
+                                BLAST_SEND.send( bls, String.format( "%d bytes written to hadoop '%s'",
+                                        uploaded, path ) );
                         }
                         else
                         {
-                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, "output/test1", value );
+                            String gs_key = String.format( "output/%s.asn1", req_id );
+                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_key, value );
+
                             if ( bls.log_final )
-                                BLAST_SEND.send( bls, String.format( "%d bytes upload to google storage", uploaded ) );
+                                BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s'",
+                                        uploaded, bls.gs_result_bucket, gs_key ) );
                         }
+
                     }
                 } );
 
@@ -458,15 +467,17 @@ class BLAST_DRIVER extends Thread
                     broadcast settings
                =========================================================================================== */
             Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
+            Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 = sc.broadcast(
+                                            new BLAST_PARTITIONER0( settings.num_executors ) );
             Broadcast< BLAST_PARTITIONER1 > PARTITIONER1 = sc.broadcast(
-                                            new BLAST_PARTITIONER1( settings.num_workers ) );
+                                            new BLAST_PARTITIONER1( settings.num_executors ) );
             Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 = sc.broadcast(
-                                            new BLAST_PARTITIONER2( settings.num_workers ) );
+                                            new BLAST_PARTITIONER2( settings.num_executors ) );
 
             /* ===========================================================================================
                     create database-sections as a static RDD
                =========================================================================================== */
-            final JavaRDD< BLAST_PARTITION > DB_SECS = sc.parallelize( db_sec_list ).cache();
+            final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS, PARTITIONER0 );
 			final Integer numbases = DB_SECS.map( bp -> bp.getSize() ).reduce( ( x, y ) -> x + y );
 
             /* ===========================================================================================
@@ -478,14 +489,14 @@ class BLAST_DRIVER extends Thread
                 /* ===========================================================================================
                         join request-line from data-source with database-sections
                    =========================================================================================== */
-                final JavaPairDStream< BLAST_PARTITION, String > JOINED_REQ_STREAM
+                final JavaPairDStream< BLAST_PARTITION, String > JOB_STREAM
                     = REQ_STREAM.transformToPair( rdd -> 
                                 DB_SECS.cartesian( rdd ).partitionBy( PARTITIONER1.getValue() ) ).cache();
 
                 /* ===========================================================================================
                         perform prelim search
                    =========================================================================================== */
-                final JavaPairDStream< String, BLAST_HSP_LIST > HSPS = perform_prelim_search( JOINED_REQ_STREAM, SETTINGS );
+                final JavaPairDStream< String, BLAST_HSP_LIST > HSPS = perform_prelim_search( JOB_STREAM, SETTINGS );
 
                 /* ===========================================================================================
                         calculate cutoff ( top-score )
@@ -495,18 +506,18 @@ class BLAST_DRIVER extends Thread
                 /* ===========================================================================================
                         filter by cutoff
                    =========================================================================================== */
-                final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED 
+                final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED_HSPS 
                     = filter_by_cutoff( HSPS, CUTOFF, PARTITIONER2 );
 
                 /* ===========================================================================================
                         perform traceback
                    =========================================================================================== */
-                final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOT = perform_traceback( FILTERED );
+                final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS = perform_traceback( FILTERED_HSPS );
 
                 /* ===========================================================================================
                         collect traceback
                    =========================================================================================== */
-                write_traceback( SEQANNOT, SETTINGS );
+                write_traceback( SEQANNOTS, SETTINGS );
 
                 /* ===========================================================================================
                         start the streaming
