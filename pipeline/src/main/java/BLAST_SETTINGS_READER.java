@@ -43,6 +43,7 @@ public class BLAST_SETTINGS_READER
     public static final String key_appName = "appName";
     public static final String key_db_location = "db_location";
     public static final String key_db_pattern = "db_pattern";
+    public static final String key_db_bucket = "db_bucket";
     public static final String key_batch_duration = "batch_duration";
     public static final String key_log_host = "log_host";
     public static final String key_trigger_host = "trigger_host";
@@ -61,6 +62,9 @@ public class BLAST_SETTINGS_READER
     public static final String key_log_done = "log_done";
     public static final String key_log_cutoff = "log_cutoff";
     public static final String key_log_final = "log_final";
+    public static final String key_log_part_prep = "log_partition_prep";
+    public static final String key_log_worker_shift = "log_worker_shift";
+    public static final String key_log_sing_request = "log_singleton_requests";
     public static final String key_project_id = "project_id";
     public static final String key_subscript_id = "subscript_id";
     public static final String key_gs_result_bucket = "result_bucket";
@@ -69,6 +73,7 @@ public class BLAST_SETTINGS_READER
     // ------------------- default values -----------------------------------------
     public static final String  dflt_db_location = "/tmp/blast/db";
     public static final String  dflt_db_pattern = "nt_50M";
+    public static final String  dflt_db_bucket = "nt_50mb_chunks";
     public static final Integer dflt_batch_duration = 10;
     public static final String  dflt_log_host = "localhost";
     public static final Integer dflt_log_port = 10011;
@@ -86,6 +91,9 @@ public class BLAST_SETTINGS_READER
     public static final Boolean dflt_log_done = false;
     public static final Boolean dflt_log_cutoff = true;
     public static final Boolean dflt_log_final = true;
+    public static final Boolean dflt_log_part_prep = false;
+    public static final Boolean dflt_log_worker_shift = false;
+    public static final Boolean dflt_log_sing_request = false;
     public static final String  dflt_project_id = "ncbi-sandbox-blast";
     public static final String  dflt_subscript_id = "spark-test-subscript";
     public static final String  dflt_gs_result_bucket = "blastgcp-pipeline-test";
@@ -104,6 +112,7 @@ public class BLAST_SETTINGS_READER
         
         res.db_location = dflt_db_location;
         res.db_pattern  = dflt_db_pattern;
+        res.db_bucket   = dflt_db_bucket;
         
         res.batch_duration = dflt_batch_duration;
         
@@ -140,6 +149,9 @@ public class BLAST_SETTINGS_READER
         res.log_job_done        = dflt_log_done;
         res.log_cutoff          = dflt_log_cutoff;
         res.log_final           = dflt_log_final;
+        res.log_part_prep       = dflt_log_part_prep;
+        res.log_worker_shift    = dflt_log_worker_shift;
+        res.log_sing_request    = dflt_log_sing_request;
 
         res.project_id          = dflt_project_id;
         res.subscript_id        = dflt_subscript_id;
@@ -149,61 +161,6 @@ public class BLAST_SETTINGS_READER
         return res;
     }
     
-    public static BLAST_SETTINGS read_from_ini( final BLAST_INI ini_file, final String appName )
-    {
-        BLAST_SETTINGS res = new BLAST_SETTINGS();
-
-        final String ini_section = "APP";
-        res.appName = ini_file.getString( ini_section, key_appName, appName );
-        
-        res.db_location = ini_file.getString( ini_section, key_db_location, dflt_db_location );
-        res.db_pattern  = ini_file.getString( ini_section, key_db_pattern, dflt_db_pattern );
-        
-        res.batch_duration = ini_file.getInt( ini_section, key_batch_duration, dflt_batch_duration );
-
-        try
-        {
-            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            String local_host = localMachine.getHostName();
-            res.log_host     = ini_file.getString( ini_section, key_log_host, local_host );
-            res.trigger_host = ini_file.getString( ini_section, key_trigger_host, local_host );
-        }
-        catch ( UnknownHostException e )
-        {
-            System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
-            res.log_host = ini_file.getString( ini_section, key_log_host, dflt_log_host );
-            res.trigger_host = ini_file.getString( ini_section, key_trigger_host, dflt_trigger_host );
-        }
-        
-        res.log_port     = ini_file.getInt( ini_section, key_log_port, dflt_log_port );
-        res.trigger_port = ini_file.getInt( ini_section, key_trigger_port, dflt_trigger_port );
-        
-        res.save_dir = ini_file.getString( ini_section, key_save_dir, dflt_save_dir() );
-        
-        res.num_db_partitions   = ini_file.getInt( ini_section, key_num_db_partitions, dflt_num_db_partitions );
-        res.receiver_max_rate   = ini_file.getInt( ini_section, key_rec_max_rate, dflt_receiver_max_rate );
-        res.top_n               = ini_file.getInt( ini_section, key_top_n, dflt_top_n );
-
-        res.num_executors       = ini_file.getInt( ini_section, key_num_executors, dflt_num_executors );
-        res.num_executor_cores  = ini_file.getInt( ini_section, key_num_executor_cores, dflt_num_executor_cores );
-        res.executor_memory     = ini_file.getString( ini_section, key_executor_memory, dflt_executor_memory );
-
-        res.flat_db_layout      = ini_file.getBoolean( ini_section, key_flat_db_layout, dflt_flat_db_layout );
-
-        res.log_request     = ini_file.getBoolean( ini_section, key_log_request, dflt_log_request );
-        res.log_job_start   = ini_file.getBoolean( ini_section, key_log_start, dflt_log_start );
-        res.log_job_done    = ini_file.getBoolean( ini_section, key_log_done, dflt_log_done );
-        res.log_cutoff      = ini_file.getBoolean( ini_section, key_log_cutoff, dflt_log_cutoff );
-        res.log_final       = ini_file.getBoolean( ini_section, key_log_final, dflt_log_final );
-
-        res.project_id      = ini_file.getString( ini_section, key_project_id, dflt_project_id);
-        res.subscript_id    = ini_file.getString( ini_section, key_subscript_id, dflt_subscript_id );
-        res.gs_result_bucket = ini_file.getString( ini_section, key_gs_result_bucket, dflt_gs_result_bucket );
-        res.gs_result_file  = ini_file.getString( ini_section, key_gs_result_file, dflt_gs_result_file );
-
-        return res;
-    }
- 
     private static String get_json_string( JsonObject root, final String name, final String dflt )
     {
         String res = dflt;
@@ -270,6 +227,7 @@ public class BLAST_SETTINGS_READER
 
                 res.db_location = get_json_string( root, key_db_location, dflt_db_location );
                 res.db_pattern  = get_json_string( root, key_db_pattern, dflt_db_pattern );
+                res.db_bucket   = get_json_string( root, key_db_bucket, dflt_db_bucket );
         
                 res.batch_duration = get_json_int( root, key_batch_duration, dflt_batch_duration );
 
@@ -302,11 +260,14 @@ public class BLAST_SETTINGS_READER
 
                 res.flat_db_layout      = get_json_bool( root, key_flat_db_layout, dflt_flat_db_layout );
 
-                res.log_request     = get_json_bool( root, key_log_request, dflt_log_request );
-                res.log_job_start   = get_json_bool( root, key_log_start, dflt_log_start );
-                res.log_job_done    = get_json_bool( root, key_log_done, dflt_log_done );
-                res.log_cutoff      = get_json_bool( root, key_log_cutoff, dflt_log_cutoff );
-                res.log_final       = get_json_bool( root, key_log_final, dflt_log_final );
+                res.log_request         = get_json_bool( root, key_log_request, dflt_log_request );
+                res.log_job_start       = get_json_bool( root, key_log_start, dflt_log_start );
+                res.log_job_done        = get_json_bool( root, key_log_done, dflt_log_done );
+                res.log_cutoff          = get_json_bool( root, key_log_cutoff, dflt_log_cutoff );
+                res.log_final           = get_json_bool( root, key_log_final, dflt_log_final );
+                res.log_part_prep       = get_json_bool( root, key_log_part_prep, dflt_log_part_prep );
+                res.log_worker_shift    = get_json_bool( root, key_log_worker_shift, dflt_log_worker_shift );
+                res.log_sing_request    = get_json_bool( root, key_log_sing_request, dflt_log_sing_request );
 
                 res.project_id      = get_json_string( root, key_project_id, dflt_project_id);
                 res.subscript_id    = get_json_string( root, key_subscript_id, dflt_subscript_id );

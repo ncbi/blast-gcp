@@ -134,9 +134,10 @@ class BLAST_DRIVER extends Thread
             BLAST_PARTITION part = item._2();
 
             BLAST_SETTINGS bls = SETTINGS.getValue();
-            BLAST_SEND.send( bls, String.format( "preparing %s", part ) );
+            if ( bls.log_part_prep )
+                BLAST_SEND.send( bls, String.format( "preparing %s", part ) );
 
-            return part.prepare();
+            return BLAST_LIB_SINGLETON.prepare( part, bls );
         }).cache();
     }
 
@@ -206,7 +207,10 @@ class BLAST_DRIVER extends Thread
 
 
     /* ===========================================================================================
-            perform prelim search / key = String.format( "%d %s", part.nr, req.id )
+            perform prelim search
+
+            IN  :   SRC: JavaPairDStream < BLAST_PARTITION, STRING: REQUEST as JSON >
+            OUT :   JavaPairDStream < STRING: 'PARTITION.NR REQ.ID', BLAST_HSP_LIST >
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_HSP_LIST > perform_prelim_search(
             final JavaPairDStream< BLAST_PARTITION, String > SRC,
@@ -219,14 +223,15 @@ class BLAST_DRIVER extends Thread
             BLAST_REQUEST req = BLAST_REQUEST_READER.parse( item._2(), bls.top_n ); // REQ-LINE to REQUEST
 
             // see if we are at a different worker-id now
-            /*
-            String curr_worker_name = java.net.InetAddress.getLocalHost().getHostName();
-            if ( !curr_worker_name.equals( part.worker_name ) )
+            if ( bls.log_worker_shift )
             {
-                BLAST_SEND.send( bls,
-                                 String.format( "worker shift: %s -> %s", part.worker_name, curr_worker_name ) );
+                String curr_worker_name = java.net.InetAddress.getLocalHost().getHostName();
+                if ( !curr_worker_name.equals( part.worker_name ) )
+                {
+                    BLAST_SEND.send( bls,
+                                     String.format( "pre worker-shift for %d: %s -> %s", part.nr, part.worker_name, curr_worker_name ) );
+                }
             }
-            */
 
             // ++++++ this is the where the work happens on the worker-nodes ++++++
             if ( bls.log_job_start )
@@ -237,13 +242,12 @@ class BLAST_DRIVER extends Thread
             Integer count = 0;
             try
             {
-                String rid = req.id;
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part );
+
+                if ( bls.log_sing_request )
+                    BLAST_SEND.send( bls, String.format( "prelim SINGLETON.requests( %d ) = %d", part.nr, BLAST_LIB_SINGLETON.get_requests( part ) ) );
 
                 long startTime = System.currentTimeMillis();
-                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib();
-
-                //BLAST_SEND.send( bls, String.format( "SINGLETON.requests = %d", BLAST_LIB_SINGLETON.get_requests() ) );
-
                 BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req );
                 long elapsed = System.currentTimeMillis() - startTime;
 
@@ -251,7 +255,7 @@ class BLAST_DRIVER extends Thread
             
                 if ( bls.log_job_done )
                     BLAST_SEND.send( bls,
-                                     String.format( "request '%s'.'%s' done -> count = %d", rid, part.db_spec, count ) );
+                                     String.format( "request '%s'.'%s' done -> count = %d", req.id, part.db_spec, count ) );
 
                 for ( BLAST_HSP_LIST S : search_res )
                     ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.id ), S ) );
@@ -268,7 +272,11 @@ class BLAST_DRIVER extends Thread
 
     /* ===========================================================================================
             calculate cutoff
+
+            IN  :   HSPS: JavaPairDStream< STRING: 'PARTITION.NR REQ.ID', BLAST_HSP_LIST >
+            OUT :   JavaPairDStream< STRING: 'REQ.ID', INTEGER : CUTOFF ) >
        =========================================================================================== */
+
     private JavaPairDStream< String, Integer > calculate_cutoff( final JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
              Broadcast< BLAST_SETTINGS > SETTINGS )
     {
@@ -277,7 +285,7 @@ class BLAST_DRIVER extends Thread
         final JavaPairDStream< String, BLAST_RID_SCORE > TEMP1 = HSPS.mapToPair( item -> {
             BLAST_RID_SCORE ris = new BLAST_RID_SCORE( item._2().max_score, item._2().req.top_n );
             String key = item._1();
-            String req_id = key.substring( key.indexOf( ' ' ), key.length() );
+            String req_id = key.substring( key.indexOf( ' ' ) + 1, key.length() );
             return new Tuple2< String, BLAST_RID_SCORE >( req_id, ris );
         }).cache();
 
@@ -315,6 +323,10 @@ class BLAST_DRIVER extends Thread
 
     /* ===========================================================================================
             filter by cutoff
+
+            IN  :   HSPS:   JavaPairDStream< STRING: 'PARTITION.NR REQ.ID', BLAST_HSP_LIST >
+                    CUTOFF: JavaPairDStream< STRING: 'REQ.ID', INTEGER : CUTOFF ) >
+            OUT :   JavaPairDStream< STRING: 'REQ.ID', Tuple2< BLAST_HSP_LIST, INTEGER : CUTOFF > >
        =========================================================================================== */
     private JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > filter_by_cutoff(
                                 JavaPairDStream< String, BLAST_HSP_LIST > HSPS,
@@ -323,35 +335,53 @@ class BLAST_DRIVER extends Thread
     {
 		JavaPairDStream< String, String > ACTIVE_PARTITIONS = 
 			HSPS.transform( rdd -> rdd.keys().distinct() )
-            .mapToPair( item-> new Tuple2<>( item.substring( item.indexOf( ' ' ), item.length() ), item ) );
+            .mapToPair( item-> new Tuple2<>( item.substring( item.indexOf( ' ' ) + 1, item.length() ), item ) );
 
         JavaPairDStream< String, Integer > CUTOFF2 = 
-			ACTIVE_PARTITIONS.join( CUTOFF ).mapToPair( item -> item._2() );
+			ACTIVE_PARTITIONS.join( CUTOFF ).mapToPair( item -> item._2() ).
+                transformToPair( rdd -> rdd.partitionBy( PARTITIONER2.getValue() ) );
 
+        return HSPS.join( CUTOFF2 ).filter( item ->
+        {
+            BLAST_HSP_LIST hsps = item._2()._1();
+            Integer cutoff = item._2()._2();
+            return ( cutoff == 0 || hsps.max_score >= cutoff );
+        }).cache();
+
+        /*
         return HSPS.join( CUTOFF2, PARTITIONER2.getValue() ) . filter( item ->
         {
             BLAST_HSP_LIST hsps = item._2()._1();
             Integer cutoff = item._2()._2();
             return ( cutoff == 0 || hsps.max_score >= cutoff );
         }).cache();
+        */
     }
 
 
     /* ===========================================================================================
             perform traceback
+
+            IN  : HSPS: JavaPairDStream< STRING: 'REQ.ID', Tuple2< BLAST_HSP_LIST, INTEGER : CUTOFF > >
+            OUT : JavaPairDStream< STRING: 'REQ.ID', BLAST_TB_LIST >
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_TB_LIST > perform_traceback( 
-            JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > HSPS )
+            JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > HSPS,
+            Broadcast< BLAST_PARTITIONER2 > PARTITIONER2,
+            Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         JavaPairDStream< String, BLAST_HSP_LIST > temp1 = HSPS.mapValues( item -> item._1() );
 
-        JavaPairDStream< String, Iterable< BLAST_HSP_LIST > > temp2 = temp1.groupByKey();
+        JavaPairDStream< String, Iterable< BLAST_HSP_LIST > > temp2 = temp1.groupByKey( PARTITIONER2.getValue() );
 
         return temp2.flatMapToPair( item ->
         {
             String key = item._1();
 
-            // 
+            BLAST_SETTINGS bls = SETTINGS.getValue();
+
+            //BLAST_SEND.send( bls, String.format( "traceback key = %s", key ) );
+
             ArrayList< BLAST_HSP_LIST > all_gcps = new ArrayList<>();
             for( BLAST_HSP_LIST e : item._2() )
                 all_gcps.add( e );
@@ -360,9 +390,24 @@ class BLAST_DRIVER extends Thread
             int i = 0;
             for( BLAST_HSP_LIST e : all_gcps )
                 a[ i++ ] = e;
-            
-            BLAST_LIB blaster = new BLAST_LIB();
-            BLAST_TB_LIST [] results = blaster.jni_traceback( a, a[ 0 ].part, a[ 0 ].req );
+
+            BLAST_PARTITION part = a[ 0 ].part;
+
+            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part );
+            if ( bls.log_sing_request )
+                BLAST_SEND.send( bls, String.format( "traceback SINGLETON.requests( %d ) =%d", part.nr, BLAST_LIB_SINGLETON.get_requests( part ) ) );
+
+            if ( bls.log_worker_shift )
+            {
+                String curr_worker_name = java.net.InetAddress.getLocalHost().getHostName();
+                if ( !curr_worker_name.equals( part.worker_name ) )
+                {
+                    BLAST_SEND.send( bls,
+                                     String.format( "tb worker-shift for %d: %s -> %s", part.nr, part.worker_name, curr_worker_name ) );
+                }
+            }
+
+            BLAST_TB_LIST [] results = blaster.jni_traceback( a, part, a[ 0 ].req );
 
             ArrayList< Tuple2< String, BLAST_TB_LIST> > ret = new ArrayList<>();            
             for ( BLAST_TB_LIST L : results )
@@ -478,7 +523,7 @@ class BLAST_DRIVER extends Thread
                     create database-sections as a static RDD
                =========================================================================================== */
             final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS, PARTITIONER0 );
-			final Integer numbases = DB_SECS.map( bp -> bp.getSize() ).reduce( ( x, y ) -> x + y );
+			//final Integer numbases = DB_SECS.map( bp -> bp.getSize() ).reduce( ( x, y ) -> x + y );
 
             /* ===========================================================================================
                     initialize data-source ( socket as a stand-in for pub-sub )
@@ -512,7 +557,8 @@ class BLAST_DRIVER extends Thread
                 /* ===========================================================================================
                         perform traceback
                    =========================================================================================== */
-                final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS = perform_traceback( FILTERED_HSPS );
+                final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS
+                    = perform_traceback( FILTERED_HSPS, PARTITIONER2, SETTINGS );
 
                 /* ===========================================================================================
                         collect traceback
@@ -523,7 +569,7 @@ class BLAST_DRIVER extends Thread
                         start the streaming
                    =========================================================================================== */
                 jssc.start();
-                System.out.println( "database size: " + numbases.toString() );
+                //System.out.println( "database size: " + numbases.toString() );
                 System.out.println( "driver started..." );
                 jssc.awaitTermination();
             }

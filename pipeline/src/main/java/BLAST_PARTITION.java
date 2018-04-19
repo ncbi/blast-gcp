@@ -41,7 +41,6 @@ class BLAST_PARTITION implements Serializable
         this.nr         = other.nr;
         this.db_spec    = other.db_spec;
         this.name       = other.name;
-        this.db_size    = other.db_size;
         this.worker_name= other.worker_name;
     }
 
@@ -67,7 +66,6 @@ class BLAST_PARTITION implements Serializable
 
     public BLAST_PARTITION prepare()
     {
-        this.db_size = 1000;
         try
         {
             this.worker_name = java.net.InetAddress.getLocalHost().getHostName();
@@ -91,11 +89,6 @@ class BLAST_PARTITION implements Serializable
             return ( nr % num_partitions );
         else
             return 0;
-    }
-
-    public Integer getSize()
-    {
-        return db_size;
     }
 }
 

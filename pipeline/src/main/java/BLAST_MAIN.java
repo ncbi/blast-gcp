@@ -61,16 +61,8 @@ public final class BLAST_MAIN
         if ( args.length > 0 )
         {
             String ini_path = args[ 0 ];
-            try
-            {
-                BLAST_INI ini = new BLAST_INI( ini_path );
-                settings = BLAST_SETTINGS_READER.read_from_ini( ini, appName );
-                System.out.println( String.format( "settings read from '%s'", ini_path ) );
-            }
-            catch( IOException e )
-            {
-                settings = BLAST_SETTINGS_READER.defaults( appName );
-            }
+            settings = BLAST_SETTINGS_READER.read_from_json( ini_path, appName );
+            System.out.println( String.format( "settings read from '%s'", ini_path ) );
         }
         else
             settings = BLAST_SETTINGS_READER.defaults( appName );

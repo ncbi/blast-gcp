@@ -34,7 +34,8 @@ public class BLAST_SETTINGS implements Serializable
     
     public String db_location;
     public String db_pattern;
-    
+    public String db_bucket;
+
     public Integer batch_duration;
     
     public String log_host;
@@ -56,7 +57,10 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean log_job_start;
     public Boolean log_job_done;
     public Boolean log_cutoff;
-    public Boolean log_final;   
+    public Boolean log_final;
+    public Boolean log_part_prep;
+    public Boolean log_worker_shift;
+    public Boolean log_sing_request;
 
     public String project_id;
     public String subscript_id;
@@ -68,6 +72,7 @@ public class BLAST_SETTINGS implements Serializable
         String S = String.format( "appName ............ '%s'\n", appName );
         S  =  S +  String.format( "db_location ........ '%s'\n", db_location );
         S  =  S +  String.format( "db_pattern ......... '%s'\n", db_pattern );
+        S  =  S +  String.format( "db_bucket .......... '%s'\n", db_bucket );
         S  =  S +  String.format( "pubsub-subscript ... '%s' : '%s'\n", project_id, subscript_id );
         S  =  S +  String.format( "GS result-bucket ... '%s'\n", gs_result_bucket );
         S  =  S +  String.format( "GS result-file ..... '%s'\n", gs_result_file );
@@ -88,7 +93,10 @@ public class BLAST_SETTINGS implements Serializable
         if ( log_job_start ) S_log = S_log + "job_start ";
         if ( log_job_done )  S_log = S_log + "job_done ";
         if ( log_cutoff )    S_log = S_log + "cutoff ";
-        if ( log_final )     S_log = S_log + "final";
+        if ( log_final )     S_log = S_log + "final ";
+        if ( log_part_prep )     S_log = S_log + "part-prep ";
+        if ( log_worker_shift )  S_log = S_log + "worker-shift ";
+        if ( log_sing_request )  S_log = S_log + "singleton-requests ";
 
         S  =  S +  String.format( "log ................ %s\n", S_log );
         return S;
