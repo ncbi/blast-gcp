@@ -151,7 +151,7 @@ if [[ $? -ne 0 ]]; then
     echo "Testing of JNI failed"
     exit 1
 fi
-#rm -f output.$$
+rm -f output.$$
 set -o errexit
 echo "Test OK"
 #fi
