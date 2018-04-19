@@ -39,6 +39,7 @@ rm -f *.jar
 rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
+rm -rf $TMP/scan-build-*
 
 
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
