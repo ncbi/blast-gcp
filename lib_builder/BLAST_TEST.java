@@ -41,9 +41,9 @@ class BLAST_TEST {
     final String program = "blastn";
 
     String params = "{";
-    params += "\n\"version\": 1, ";
-    params += "\n \"RID\": \"" + rid + "\" , ";
-    params += "\n \"blast_parms\": { \"todo\": \"todo\" } }";
+    params += "\n\"version\": 1,";
+    params += "\n \"RID\": \"" + rid + "\" ,";
+    params += "\n \"blast_params\": { \"todo\": \"todo\" } }";
     params += "\n";
 
     final Integer top_n = 100;
@@ -60,8 +60,7 @@ class BLAST_TEST {
     S = S + String.format("req-id ...... %s\n", rid);
     S = S + String.format("query ....... %s\n", query);
     S = S + String.format("params ...... %s\n", params);
-    System.err.println(S);
-    logger.trace(S);
+    logger.info(S);
 
     BLAST_REQUEST requestobj = new BLAST_REQUEST();
     requestobj.id = rid;
