@@ -32,7 +32,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # n1-highmem-N: N=2,4,64,96
 #   $0.0674/$0.0134 per hour ("") (so ~25% more expensive)
 #
-# plus DataProc surcharge ($0.01/vCPU): ** Half of our expense?!? **
+# plus Dataproc surcharge ($0.01/vCPU): ** Half of our expense?!? **
 # plus provisioned storage ($0.044/ GB month)
 # minus sustained use (25-30%), committed use (~40-60%), and preemptible (80%)
 #

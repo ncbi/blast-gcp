@@ -89,9 +89,10 @@ if [[ "${ROLE}" == 'Master' ]]; then
     apt-get install maven python python-dev python-pip python3-pip python3 python3-dev -y
 #    wget https://bootstrap.pypa.io/get-pip.py
 #    python get-pip.py
-#    pip install gcloud #--target application/vendor/ gcloud
-#    pip install --upgrade google-cloud
-#    pip install --upgrade google-cloud-pubsub
+#    pip3 install gcloud #--target application/vendor/ gcloud
+#    pip3 install --upgrade google-cloud
+#    pip3 install --upgrade google-cloud-pubsub
+#    pip3 install --upgrade google-cloud-storage
 else
     # Worker node, copy DBs from GCS
     # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
