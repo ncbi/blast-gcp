@@ -58,10 +58,12 @@ JAVASRCDIR="../pipeline/src/main/java"
     #    $JAVASRCDIR/BLAST_HSP_LIST.java \
     #    $JAVASRCDIR/BLAST_TB_LIST.java \
     #    $JAVASRCDIR/BLAST_LIB.java \
-    javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ./BLAST_TEST.java
-
 echo "Creating JNI header"
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+    ../pipeline/src/main/java/BLAST_LIB.java
+
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures

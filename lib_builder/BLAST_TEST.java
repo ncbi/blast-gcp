@@ -38,9 +38,14 @@ class BLAST_TEST {
         "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/nt_50M.14"; // 14 & 18
     final String location = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
     final String db_part = "nt_50M";
-    // have hits
-    String params = "nt";
     final String program = "blastn";
+
+    String params = "{";
+    params += "\n\"version\": 1, ";
+    params += "\n \"RID\": \"" + rid + "\" , ";
+    params += "\n \"blast_parms\": { \"todo\": \"todo\" } }";
+    params += "\n";
+
     final Integer top_n = 100;
 
     if (args.length > 0) {
@@ -67,9 +72,12 @@ class BLAST_TEST {
     requestobj.top_n = top_n;
     BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
-    BLAST_LIB blaster = new BLAST_LIB();
+    BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib();
 
-    BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj);
+    final String logLevel = "INFO";
+    params = "nt"; // FIX - When Blast team ready for JSON params
+
+    BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj, logLevel);
     System.out.println("--- PRELIM_SEARCH RESULTS ---");
     if (hspl != null) {
       System.out.println(" prelim_search returned " + hspl.length + " HSP lists:");
@@ -80,7 +88,7 @@ class BLAST_TEST {
       System.out.println("NULL hspl");
     }
 
-    BLAST_TB_LIST[] tbs = blaster.jni_traceback(hspl, partitionobj, requestobj);
+    BLAST_TB_LIST[] tbs = blaster.jni_traceback(hspl, partitionobj, requestobj, logLevel);
 
     System.out.println("traceback done");
     System.out.println("--- TRACEBACK RESULTS ---");

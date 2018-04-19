@@ -76,20 +76,25 @@ cat log4j.proto >> /etc/spark/conf.dist/log4j.properties
 
 logger -t cluster_initialize.sh "BLASTJNI Logging agent begun with cluster_initialize.sh"
 
+# Auto terminate cluster in 8 hours
+sudo shutdown -h +480
 
 mkdir -p $BLASTDBDIR
 
 if [[ "${ROLE}" == 'Master' ]]; then
     # For master node only, skip copy
     echo "master node, skipping DB copy"
-    # Need maven to build jars
+    # Need maven to build jars, pip for installing Google APIs for tests
     apt-get update -y
-    apt-get install maven -y
-    # Auto terminate cluster in 8 hours
-    sudo shutdown -h +480
+    apt-get install maven python python-dev python-pip python3-pip python3 python3-dev -y
+#    wget https://bootstrap.pypa.io/get-pip.py
+#    python get-pip.py
+#    pip install gcloud #--target application/vendor/ gcloud
+#    pip install --upgrade google-cloud
+#    pip install --upgrade google-cloud-pubsub
 else
     # Worker node, copy DBs from GCS
-    # FIX: Future mapper will compute db lengths needed by Blast libraries
+    # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     for part in $parts; do

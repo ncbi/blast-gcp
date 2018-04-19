@@ -7,18 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_TRACE
-#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_TRACE 0L
-#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_DEBUG
-#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_DEBUG 1L
-#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_INFO
-#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_INFO 2L
-#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_WARN
-#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_WARN 3L
-#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_ERROR
-#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_ERROR 4L
-#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_FATAL
-#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_LOG_FATAL 5L
 /*
  * Class:     gov_nih_nlm_ncbi_blastjni_BLAST_LIB
  * Method:    prelim_search
@@ -30,10 +18,10 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
 /*
  * Class:     gov_nih_nlm_ncbi_blastjni_BLAST_LIB
  * Method:    traceback
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
+ * Signature: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
  */
 JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceback
-  (JNIEnv *, jobject, jstring, jstring, jstring, jobjectArray);
+  (JNIEnv *, jobject, jobjectArray, jstring, jstring, jstring, jstring);
 
 #ifdef __cplusplus
 }

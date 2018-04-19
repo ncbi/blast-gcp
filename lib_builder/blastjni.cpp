@@ -62,19 +62,6 @@
 #include <string>
 #include <vector>
 
-/* Utility Functions */
-
-// FIX: Replace with proper enum or Log4J Level's
-enum LOG_LEVEL
-{
-    LOG_TRACE,
-    LOG_DEBUG,
-    LOG_INFO,
-    LOG_WARN,
-    LOG_ERROR,
-    LOG_FATAL
-};
-
 enum
 {
     xc_no_err,
@@ -85,6 +72,7 @@ enum
     xc_java_runtime_exception
 };
 
+/* Utility Functions */
 static void jni_throw(JNIEnv* jenv, jclass jexcept_cls, const char* fmt, va_list args)
 {
     // expand message into buffer
@@ -133,8 +121,9 @@ static void jni_throw(JNIEnv* jenv, uint32_t xtype, const char* fmt, ...)
     }
 }
 
-static void log(JNIEnv* jenv, jobject jthis, LOG_LEVEL level, const char* fmt, ...)
+static void log(JNIEnv* jenv, jobject jthis, const char* loglevel, const char* fmt, ...)
 {
+    // struct timespec stime, etime;
     va_list args;
     va_start(args, fmt);
 
@@ -154,50 +143,29 @@ static void log(JNIEnv* jenv, jobject jthis, LOG_LEVEL level, const char* fmt, .
         strcpy(buffer, "log: failed to make a String ( string too long )");
 
     // make String object, JVM will garbage collect the jstring
-    jstring jstr = jenv->NewStringUTF(buffer);
-    if (!jstr)
-        throw std::runtime_error("Can't create JVM string");
-
     jclass thiscls = jenv->GetObjectClass(jthis);
     if (!thiscls)
         throw std::runtime_error("Can't get this class");
-    struct timespec stime, etime;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
+    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
+    jstring jbuffer = jenv->NewStringUTF(buffer);
+    if (!jbuffer)
+        throw std::runtime_error("Can't create JVM string");
 
-    const char* func = "";
-    switch (level) {
-        case LOG_TRACE:
-            func = "log_trace";
-            break;
-        case LOG_DEBUG:
-            func = "log_debug";
-            break;
-        case LOG_INFO:
-            func = "log_info";
-            break;
-        case LOG_WARN:
-            func = "log_warn";
-            break;
-        case LOG_ERROR:
-            func = "log_error";
-            break;
-        case LOG_FATAL:
-            func = "log_fatal";
-            break;
-        default:
-            func = "log_fatal";
-            break;
-    }
+    jstring jloglevel = jenv->NewStringUTF(loglevel);
+    if (!jloglevel)
+        throw std::runtime_error("Can't create JVM string");
 
-    jmethodID jlog_method = jenv->GetMethodID(thiscls, func, "(Ljava/lang/String;)V");
+
+    jmethodID jlog_method
+        = jenv->GetMethodID(thiscls, "log", "(Ljava/lang/String;Ljava/lang/String;)V");
     if (!jlog_method)
         throw std::runtime_error("Couldn't get log function");
 
-    jenv->CallVoidMethod(jthis, jlog_method, jstr);
+    jenv->CallVoidMethod(jthis, jlog_method, jloglevel, jbuffer);
     if (jenv->ExceptionCheck())  // Mostly to silence -Xcheck:jni
-        fprintf(stderr, "Log method %s threw an exception, which it should never do.\n", func);
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &etime);
-    // fprintf(stderr,"1000 iterations took %lu ns\n", etime.tv_nsec-stime.tv_nsec);
+        fprintf(stderr, "Log method threw an exception, which it should never do.\n");
+    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &etime);
+    // fprintf(stderr, "1000 iterations took %lu ns\n", etime.tv_nsec - stime.tv_nsec);
     return;
 }
 
@@ -206,7 +174,7 @@ static void log(JNIEnv* jenv, jobject jthis, LOG_LEVEL level, const char* fmt, .
 static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, std::vector<BlastHSPList*>& hsp_lists,
                                  int topn)
 {
-    log(jenv, jthis, LOG_INFO, "iterate_HSPs has %lu HSP lists:", hsp_lists.size());
+    log(jenv, jthis, "INFO", "iterate_HSPs has %lu HSP lists:", hsp_lists.size());
 
     jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST");
     if (!hsplclass)
@@ -331,25 +299,24 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, std::vector<BlastH
     */
     for (size_t i = 0; i != hsp_lists.size(); ++i) {
         const BlastHSPList* hsp_list = hsp_lists[i];
-        log(jenv, jthis, LOG_DEBUG, "  HSP list #%d, oid=0x%x", i, hsp_list->oid);
+        log(jenv, jthis, "DEBUG", "  HSP list #%d, oid=0x%x", i, hsp_list->oid);
         if (!hsp_list->hspcnt) {
-            log(jenv, jthis, LOG_DEBUG, "iterate_HSPs, zero hspcnt");
+            log(jenv, jthis, "DEBUG", "iterate_HSPs, zero hspcnt");
             continue;
         }
         int max_score = INT_MIN;
 
         for (int h = 0; h != hsp_list->hspcnt; ++h) {
             int hsp_score = hsp_list->hsp_array[h]->score;
-            log(jenv, jthis, LOG_DEBUG, "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score,
-                hsp_score);
+            log(jenv, jthis, "DEBUG", "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score, hsp_score);
             if (max_score < hsp_score)
                 max_score = hsp_score;
         }
         max_scores.push_back(max_score);
         score_set.insert(max_score);
 
-        log(jenv, jthis, LOG_DEBUG, "  have %lu max_scores", max_scores.size());
-        log(jenv, jthis, LOG_DEBUG, "  have %lu in score_set", score_set.size());
+        log(jenv, jthis, "DEBUG", "  have %lu max_scores", max_scores.size());
+        log(jenv, jthis, "DEBUG", "  have %lu in score_set", score_set.size());
     }
 
     /*  assume for the moment that all tuples will make cut
@@ -379,13 +346,13 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, std::vector<BlastH
             }
         }
 
-        log(jenv, jthis, LOG_DEBUG, "  min_score is %d", min_score);
+        log(jenv, jthis, "DEBUG", "  min_score is %d", min_score);
 
         for (size_t i = 0; i != max_scores.size(); ++i)
             if (max_scores[i] >= min_score)
                 ++num_tuples;
 
-        log(jenv, jthis, LOG_DEBUG, "  num_tuples is %lu", num_tuples);
+        log(jenv, jthis, "DEBUG", "  num_tuples is %lu", num_tuples);
     }
 
     /*   allocate return array/sequence/set
@@ -432,7 +399,7 @@ static jobjectArray iterate_HSPs(JNIEnv* jenv, jobject jthis, std::vector<BlastH
                   // the JVM will have allocated memory for us in the form of
                   // a byte[] used as a blob for the { hsps }
                   */
-                log(jenv, jthis, LOG_DEBUG, "  blob #%d size is %lu", i, blob_size);
+                log(jenv, jthis, "DEBUG", "  blob #%d size is %lu", i, blob_size);
                 jbyteArray tuple = jenv->NewByteArray(blob_size);
                 if (!tuple)
                     throw std::runtime_error("Couldn't create ByteArray");
@@ -527,7 +494,7 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, const char* jquer
     if (jenv->EnsureLocalCapacity(64))
         throw std::runtime_error("Can't ensure local capacity");
 
-    log(jenv, jthis, LOG_DEBUG,
+    log(jenv, jthis, "DEBUG",
         "Blast prelim_search called with\n"
         "  query   : %s\n"
         "  db_spec : %s\n"
@@ -539,24 +506,24 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, const char* jquer
     ncbi::blast::TBlastHSPStream* hsp_stream = ncbi::blast::PrelimSearch(
         std::string(jquery), std::string(jdb_spec), std::string(jprogram));
 
-    log(jenv, jthis, LOG_INFO, "Blast prelim_search returned");
+    log(jenv, jthis, "INFO", "Blast prelim_search returned");
 
     if (!hsp_stream) {
-        log(jenv, jthis, LOG_ERROR, "NULL hsp_stream");
+        log(jenv, jthis, "ERROR", "NULL hsp_stream");
         throw std::runtime_error("prelim_search - NULL hsp_stream");
     }
 
     std::vector<BlastHSPList*> hsp_lists;
 
     try {
-        log(jenv, jthis, LOG_DEBUG, "Begin BlastHSPStreamRead loop");
+        log(jenv, jthis, "DEBUG", "Begin BlastHSPStreamRead loop");
         while (1) {
             BlastHSPList* hsp_list = 0;
             int status = BlastHSPStreamRead(hsp_stream->GetPointer(),
                                             &hsp_list);  // FIX, use operator ->?
 
             if (status == kBlastHSPStream_Error) {
-                log(jenv, jthis, LOG_ERROR, "kBlastHSPStream_Error");
+                log(jenv, jthis, "ERROR", "kBlastHSPStream_Error");
                 throw std::runtime_error("prelim_search - Exception from BlastHSPStreamRead");
             }
 
@@ -564,14 +531,14 @@ static jobjectArray prelim_search(JNIEnv* jenv, jobject jthis, const char* jquer
                 break;
 
             hsp_lists.push_back(hsp_list);
-            log(jenv, jthis, LOG_DEBUG, "  loop");
+            log(jenv, jthis, "DEBUG", "  loop");
         }
 
-        log(jenv, jthis, LOG_DEBUG, "  loop complete");
+        log(jenv, jthis, "DEBUG", "  loop complete");
     }
     catch (...) {
         whack_hsp_lists(hsp_lists);
-        log(jenv, jthis, LOG_ERROR, "exception in loop");
+        log(jenv, jthis, "ERROR", "exception in loop");
         //        BlastHSPStreamFree(hsp_stream);
         throw;
     }
@@ -601,12 +568,12 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
     const char* program = jenv->GetStringUTFChars(jprogram, 0);
     const char* params = jenv->GetStringUTFChars(jparams, 0);
 
-    log(jenv, jthis, LOG_INFO, "C++ jni_prelim_1search called with");
-    log(jenv, jthis, LOG_INFO, "  query   : %s", query);
-    log(jenv, jthis, LOG_INFO, "  db_spec : %s", db_spec);
-    log(jenv, jthis, LOG_INFO, "  program : %s", program);
-    log(jenv, jthis, LOG_INFO, "  params  : %s", params);
-    log(jenv, jthis, LOG_INFO, "  topn    : %d", topn);
+    log(jenv, jthis, "INFO", "C++ jni_prelim_1search called with");
+    log(jenv, jthis, "INFO", "  query   : %s", query);
+    log(jenv, jthis, "INFO", "  db_spec : %s", db_spec);
+    log(jenv, jthis, "INFO", "  program : %s", program);
+    log(jenv, jthis, "INFO", "  params  : %s", params);
+    log(jenv, jthis, "INFO", "  topn    : %d", topn);
     jobjectArray ret = NULL;
     try {
         ret = prelim_search(jenv, jthis, query, db_spec, program, params, topn);
@@ -628,7 +595,7 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
         jni_throw(jenv, xtype = xc_java_runtime_exception, "%s - unknown exception", __func__);
     }
 
-    log(jenv, jthis, LOG_INFO, "C++ prelim_search done");
+    log(jenv, jthis, "INFO", "C++ prelim_search done");
     jenv->ReleaseStringUTFChars(jquery, query);
     jenv->ReleaseStringUTFChars(jdb_spec, db_spec);
     jenv->ReleaseStringUTFChars(jprogram, program);
@@ -640,13 +607,13 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_
 static jobjectArray traceback(JNIEnv* jenv, jobject jthis, const char* jquery, const char* jdb_spec,
                               const char* jprogram, jobjectArray hspl_obj)
 {
-    log(jenv, jthis, LOG_INFO, "Blast traceback called with");
-    log(jenv, jthis, LOG_INFO, "  query    : %s", jquery);
-    log(jenv, jthis, LOG_INFO, "  db_spec  : %s", jdb_spec);
-    log(jenv, jthis, LOG_INFO, "  program  : %s", jprogram);
+    log(jenv, jthis, "INFO", "Blast traceback called with");
+    log(jenv, jthis, "INFO", "  query    : %s", jquery);
+    log(jenv, jthis, "INFO", "  db_spec  : %s", jdb_spec);
+    log(jenv, jthis, "INFO", "  program  : %s", jprogram);
 
     jsize hspl_sz = jenv->GetArrayLength(hspl_obj);
-    log(jenv, jthis, LOG_INFO, "  hsp_lists: %d", hspl_sz);
+    log(jenv, jthis, "INFO", "  hsp_lists: %d", hspl_sz);
 
     jclass hsplclass = jenv->FindClass("gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST");
     if (!hsplclass)
@@ -677,8 +644,7 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, const char* jquery, c
         ncbi::blast::SFlatHSP* flathsps = (ncbi::blast::SFlatHSP*)be;
 
         size_t elements = blob_size / sizeof(ncbi::blast::SFlatHSP);
-        log(jenv, jthis, LOG_DEBUG, "  blob will have %lu elements: %lu bytes", elements,
-            blob_size);
+        log(jenv, jthis, "DEBUG", "  blob will have %lu elements: %lu bytes", elements, blob_size);
 
         for (size_t i = 0; i != elements; ++i) {
             ncbi::blast::SFlatHSP flathsp = flathsps[i];
@@ -691,7 +657,7 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, const char* jquery, c
     int result = ncbi::blast::TracebackSearch(std::string(jquery), std::string(jdb_spec),
                                               std::string(jprogram), flat_hsp_list, alignments);
     size_t num_alignments = alignments.size();
-    log(jenv, jthis, LOG_INFO, "Blast traceback returned status=%d. Got %d alignments", result,
+    log(jenv, jthis, "INFO", "Blast traceback returned status=%d. Got %d alignments", result,
         num_alignments);
 
     // Get class for TB_LIST
@@ -709,8 +675,7 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, const char* jquery, c
         std::string asn = alignments[i].second;
         oid = flat_hsp_list[i].oid;
 
-        log(jenv, jthis, LOG_DEBUG, "  evalue=%f, oid=%d, ASN is %lu bytes", evalue, oid,
-            asn.size());
+        log(jenv, jthis, "DEBUG", "  evalue=%f, oid=%d, ASN is %lu bytes", evalue, oid, asn.size());
 
         jbyteArray asn_blob = jenv->NewByteArray(asn.size());
         if (!asn_blob)
@@ -733,19 +698,20 @@ static jobjectArray traceback(JNIEnv* jenv, jobject jthis, const char* jquery, c
  * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_JOB;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
  */
 JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceback(
-    JNIEnv* jenv, jobject jthis, jstring jquery, jstring jdb_spec, jstring jprogram,
-    jobjectArray hspl)
+    JNIEnv* jenv, jobject jthis, jobjectArray hspl, jstring jquery, jstring jdb_spec,
+    jstring jprogram, jstring jparams)
 {
     uint32_t xtype = xc_no_err;
 
     const char* query = jenv->GetStringUTFChars(jquery, 0);
     const char* db_spec = jenv->GetStringUTFChars(jdb_spec, 0);
     const char* program = jenv->GetStringUTFChars(jprogram, 0);
+    const char* params = jenv->GetStringUTFChars(jparams, 0);
 
-    log(jenv, jthis, LOG_DEBUG, "C++ jni_traceback called with");
-    log(jenv, jthis, LOG_DEBUG, "  query   : %s", query);
-    log(jenv, jthis, LOG_DEBUG, "  db_spec : %s", db_spec);
-    log(jenv, jthis, LOG_DEBUG, "  program : %s", program);
+    log(jenv, jthis, "DEBUG", "C++ jni_traceback called with");
+    log(jenv, jthis, "DEBUG", "  query   : %s", query);
+    log(jenv, jthis, "DEBUG", "  db_spec : %s", db_spec);
+    log(jenv, jthis, "DEBUG", "  program : %s", program);
     //    log(jenv, jthis, jlog_method, "  blob    : %lu bytes", blob_size);
     jobjectArray ret = NULL;
     try {
@@ -758,9 +724,10 @@ JNIEXPORT jobjectArray JNICALL Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceba
         jni_throw(jenv, xtype = xc_java_runtime_exception, "%s - unknown exception", __func__);
     }
 
-    log(jenv, jthis, LOG_INFO, "C++ traceback done");
+    log(jenv, jthis, "INFO", "C++ traceback done");
     jenv->ReleaseStringUTFChars(jquery, query);
     jenv->ReleaseStringUTFChars(jdb_spec, db_spec);
     jenv->ReleaseStringUTFChars(jprogram, program);
+    jenv->ReleaseStringUTFChars(jparams, params);
     return ret;
 }

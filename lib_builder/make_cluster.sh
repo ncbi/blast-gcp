@@ -53,6 +53,10 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # 256 highcpu-4:   $15,581/month
 #  16 highmem-64:  $19,535/month (limited disk, all ramdisk)
 # Ex: $11,666/month (12 std-64)
+#
+# Dataflow pricing is:
+#    $0.07/vCPU hour
+#    $0.003/GB hour (so at least another $0.01/vCPU hour)
 gcloud dataproc --region us-east4 \
     clusters create blast-dataproc-$USER-$(date +%Y%m%d) \
     --master-machine-type n1-standard-8 \
