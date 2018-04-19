@@ -23,172 +23,114 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.lang.management.ManagementFactory;
+import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkFiles;
 
-/* FIX and GENERAL COMMENTS
- *
- *  First, things that should be fixed will be marked FIX, and other stuff
- *  may be marked CMT for observations.
- *
- *  Of course, all of the printing to System.err is only temporary and will
- *  have to go away, much like these comments. But there it is.
- *
- *  White space is good. It helps people to be able to distinguish things
- *  visually. Super-dense coding style is like using a dark blue foreground
- *  on a black background.
- */
-
 public class BLAST_LIB {
-  // FIX - if a BLAST_LIB object is instantiated as a static member of an outer class,
-  // this is known to work (i.e. lock up the JVM to serialize)
-  // So private constructor, and getInstance() Factory method returns Singleton
-
-  // CMT -
-  // See http://literatejava.com/jvm/fastest-threadsafe-singleton-jvm/
-  // The inner class (aka Initialization-on-demand holder idiom) is
-  // supposedly 25X faster than a synchronized method, but that is if JIT is
-  // involved and 10,000+ calls to the singleton are requested.
-  // In our case, this occurs twice per query, so only the JVM bytecode
-  // interpreter is involved and performance (~400 ns) should be fine.
-  //
-  //
-  // enum Singleton's seem to be the cleanest
-
-  private synchronized void loadLibrary() {
-    if (!initialized) {
-      try {
-        // Java will look for libblastjni.so
-        System.loadLibrary("blastjni");
-      } catch (Throwable e) {
-        try {
-          System.load(SparkFiles.get("libblastjni.so"));
-        } catch (ExceptionInInitializerError x) {
-          invalid = x;
-        } catch (Throwable e2) {
-          invalid = new ExceptionInInitializerError(e2);
-        }
-      }
-      initialized = true;
-    }
-  }
-
+  // Guaranteed to be a singleton courtesy of BLAST_LIB_SINGLETON
   public BLAST_LIB() {
-    loadLibrary();
+    try {
+      // Java will look for libblastjni.so, thread safe if successful?
+      System.loadLibrary("blastjni");
+    } catch (Throwable e) {
+      try {
+        System.load(SparkFiles.get("libblastjni.so"));
+      } catch (ExceptionInInitializerError x) {
+        invalid = x;
+      } catch (Throwable e2) {
+        invalid = new ExceptionInInitializerError(e2);
+      }
+    }
     processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+    logLevel = Level.INFO;
   }
 
-  private static boolean initialized = false;
   private static String processID;
   private static ExceptionInInitializerError invalid;
+  private static Level logLevel;
 
   void throwIfBad() {
-    if (!initialized) throw invalid;
+    if (invalid != null) throw invalid;
   }
 
-  private synchronized void log_trace(String msg) {
+  // We can't rely on log4j.properties to filter, instead we'll look at
+  // logLevel
+  private synchronized void log(final String level, final String msg) {
     Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    if (logger.isTraceEnabled()) {
-      msg = "BLASTJNI (" + this.processID + ") " + msg;
-      logger.trace(msg);
+    Level l = Level.toLevel(level);
+
+    if (l.isGreaterOrEqual(logLevel)) {
+      final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + ") " + msg;
+      logger.log(l, newmsg);
     }
   }
 
-  private synchronized void log_debug(String msg) {
-    Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    if (logger.isDebugEnabled()) {
-      msg = "BLAST (" + this.processID + ") " + msg;
-      logger.debug(msg);
-    }
-  }
-
-  private synchronized void log_info(String msg) {
-    Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    msg = "BLAST (" + this.processID + ") " + msg;
-    logger.info(msg);
-  }
-
-  private synchronized void log_warn(String msg) {
-    Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    msg = "BLAST (" + this.processID + ") " + msg;
-    logger.warn(msg);
-  }
-
-  private synchronized void log_error(String msg) {
-    Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    msg = "BLAST (" + this.processID + ") " + msg;
-    logger.error(msg);
-  }
-
-  private synchronized void log_fatal(String msg) {
-    Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    msg = "BLAST (" + this.processID + ") " + msg;
-    logger.fatal(msg);
-  }
-
-  BLAST_HSP_LIST[] jni_prelim_search(BLAST_PARTITION part, BLAST_REQUEST req) {
+  synchronized BLAST_HSP_LIST[] jni_prelim_search(
+      BLAST_PARTITION part, BLAST_REQUEST req, String logLevel) {
 
     // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
     throwIfBad();
 
+    BLAST_LIB.logLevel = Level.toLevel(logLevel);
+
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-    log_info("\nJava jni_prelim_search called with");
-    log_info("  query   : " + req.query);
-    log_info("  db_spec : " + part.db_spec);
-    log_info("  program : " + req.program);
-    log_info("  params  : " + req.params);
-    log_info("  topn    : " + req.top_n);
+    log("INFO", "\nJava jni_prelim_search called with");
+    log("INFO", "  query   : " + req.query);
+    log("INFO", "  db_spec : " + part.db_spec);
+    log("INFO", "  program : " + req.program);
+    // FIX - top_n_prelim
+    log("INFO", "  topn    : " + req.top_n);
 
     long starttime = System.currentTimeMillis();
+
     BLAST_HSP_LIST[] ret =
         prelim_search(req.query, part.db_spec, req.program, req.params, req.top_n);
 
     long finishtime = System.currentTimeMillis();
-    log_info("jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
-    log_info("jni_prelim_search returned " + ret.length + " HSP_LISTs:");
+    log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
+    log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
     int i = 0;
     for (BLAST_HSP_LIST h : ret) {
       h.part = part;
       h.req = req;
-      log_debug("#" + i + ": " + h.toString());
+      log("DEBUG", "#" + i + ": " + h.toString());
       ++i;
     }
 
-    // CMT - I think we will want to add some sort of a tracing facility gated upon verbosity
-    // and perhaps some other switches so that we can look inside of a running cluster from
-    // time to time. This is, of course, later.
     return ret;
   }
 
-  BLAST_TB_LIST[] jni_traceback(BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req) {
+  synchronized BLAST_TB_LIST[] jni_traceback(
+      BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req, String logLevel) {
     throwIfBad();
 
-    log_info("\nJava jni_traceback called with");
-    log_info("  query   : " + req.query);
-    log_info("  db_spec : " + part.db_spec);
-    log_info("  program : " + req.program);
+    BLAST_LIB.logLevel = Level.toLevel(logLevel);
+    log("INFO", "\nJava jni_traceback called with");
+    log("INFO", "  query   : " + req.query);
+    log("INFO", "  db_spec : " + part.db_spec);
 
     long starttime = System.currentTimeMillis();
-    BLAST_TB_LIST[] ret = traceback(req.query, part.db_spec, req.program, hspl);
+    BLAST_TB_LIST[] ret = traceback(hspl, req.query, part.db_spec, req.program, req.params);
     long finishtime = System.currentTimeMillis();
 
-    log_info("jni_traceback returned in " + (finishtime - starttime) + " ms.");
-    log_info("jni_traceback returned " + ret.length + " TB_LISTs:");
+    log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");
+    log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs:");
 
     int i = 0;
     for (BLAST_TB_LIST t : ret) {
-        t.part = part;
-        t.req = req;
-        ++i;
+      t.part = part;
+      t.req = req;
+      ++i;
     }
 
     return ret;
   }
 
   private native BLAST_HSP_LIST[] prelim_search(
-      String query, String db_spec, String program, String params, int topn);
+      String query, String db_spec, String program, String params, int top_n);
 
   private native BLAST_TB_LIST[] traceback(
-      String query, String db_spec, String program, BLAST_HSP_LIST[] hspl);
+      BLAST_HSP_LIST[] hspl, String query, String db_spec, String program, String params);
 }

@@ -248,7 +248,7 @@ class BLAST_DRIVER extends Thread
                     BLAST_SEND.send( bls, String.format( "prelim SINGLETON.requests( %d ) = %d", part.nr, BLAST_LIB_SINGLETON.get_requests( part ) ) );
 
                 long startTime = System.currentTimeMillis();
-                BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req );
+                BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, "Info" );
                 long elapsed = System.currentTimeMillis() - startTime;
 
                 count = search_res.length;
@@ -407,7 +407,7 @@ class BLAST_DRIVER extends Thread
                 }
             }
 
-            BLAST_TB_LIST [] results = blaster.jni_traceback( a, part, a[ 0 ].req );
+            BLAST_TB_LIST [] results = blaster.jni_traceback( a, part, a[ 0 ].req, "Info" );
 
             ArrayList< Tuple2< String, BLAST_TB_LIST> > ret = new ArrayList<>();            
             for ( BLAST_TB_LIST L : results )
