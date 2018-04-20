@@ -1,7 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 
 import json
 import random
+import base64
+import secrets
 # pip3 install --user --upgrade google-cloud-storage
 # pip3 install --user --upgrade google-cloud-pubsub
 from google.cloud import pubsub
@@ -9,7 +11,8 @@ from google.cloud import storage
 #from google.cloud import pubsub, storage
 #from gcloud import pubsub, storage
 
-session_id="blast_test-" + str(random.randint(0,1000000))
+#session_id="blast_test-" + str(random.randint(0,1000000))
+session_id="blast_test-" + secrets.token_urlsafe(6)
 # Instantiates a client
 storage=storage.Client()
 publisher_client = pubsub.PublisherClient()
@@ -33,6 +36,7 @@ test_blobs=[]
 for test in test_request_bucket.list_blobs():
     test_blobs.append(test)
 
+shuffle(test_blobs)
 
 for test in test_blobs[0:5]:
     print (test)
@@ -44,6 +48,7 @@ for test in test_blobs[0:5]:
     msg=json.dumps(j,indent=4).encode()
     print (msg)
     response=publisher_client.publish(topic_path, msg)
+    # TODO: jitter
 
 
 #publisher_client.delete_topic(topic_path)
