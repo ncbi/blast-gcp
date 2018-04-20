@@ -3,7 +3,7 @@
 import json
 import random
 import base64
-import secrets
+#import secrets # python 3.6
 # pip3 install --user --upgrade google-cloud-storage
 # pip3 install --user --upgrade google-cloud-pubsub
 from google.cloud import pubsub
@@ -11,8 +11,8 @@ from google.cloud import storage
 #from google.cloud import pubsub, storage
 #from gcloud import pubsub, storage
 
-#session_id="blast_test-" + str(random.randint(0,1000000))
-session_id="blast_test-" + secrets.token_urlsafe(6)
+session_id="blast_test-" + hex(random.randint(0,sys.maxsize))[2:]
+#session_id="blast_test-" + secrets.token_urlsafe(6)
 # Instantiates a client
 storage=storage.Client()
 publisher_client = pubsub.PublisherClient()
