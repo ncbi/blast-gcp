@@ -121,7 +121,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -llmdb-static -lpthread -lz -lbz2 \
         -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
         -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
-        -o ../pipeline/libblastjni.so"
+        -o ./libblastjni.so"
         scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
         $GPPCOMMAND
 fi
@@ -130,7 +130,7 @@ fi
 #if [ "$BUILDENV" = "google" ]; then
 echo "Testing JNI"
 set +errexit
-ldd ../pipeline/libblastjni.so | grep found
+ldd ./libblastjni.so | grep found
 if [[ $? -ne 1 ]]; then
     echo "Missing a shared library"
     echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
