@@ -3,17 +3,18 @@
     "log_done" : "false",
     "log_request" : "true",
     "log_partition_prep" : "true",
-    "log_worker_shift" : "true",
-    "log_singleton_requests" : "false",
+    "log_worker_shift" : "false",
 
     "batch_duration" : 2,
     "top_n" : 100,
-    "num_db_partitions" : 60,
-    "num_workers" : 5,
-    "num_executors" : 5,
+    "num_db_partitions" : 886,
+    "num_workers" : 8,
+    "num_executors" : 8,
     "num_executor_cores" : 3,
     "trigger_port" : 0,
     "project_id" : "ncbi-sandbox-blast",
     "subscript_id" : "run-subscript-integration",
-    "db_location" : "/home/raetzw/blast/db"
+
+    "x_db_location" : "/home/raetzw/blast/db",
+    "db_location" : "/tmp/blast/db_test"
 }

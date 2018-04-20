@@ -60,7 +60,6 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean log_final;
     public Boolean log_part_prep;
     public Boolean log_worker_shift;
-    public Boolean log_sing_request;
 
     public String project_id;
     public String subscript_id;
@@ -96,7 +95,6 @@ public class BLAST_SETTINGS implements Serializable
         if ( log_final )     S_log = S_log + "final ";
         if ( log_part_prep )     S_log = S_log + "part-prep ";
         if ( log_worker_shift )  S_log = S_log + "worker-shift ";
-        if ( log_sing_request )  S_log = S_log + "singleton-requests ";
 
         S  =  S +  String.format( "log ................ %s\n", S_log );
         return S;

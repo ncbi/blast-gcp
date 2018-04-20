@@ -242,23 +242,23 @@ class BLAST_DRIVER extends Thread
             Integer count = 0;
             try
             {
-                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part );
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, bls );
 
-                if ( bls.log_sing_request )
-                    BLAST_SEND.send( bls, String.format( "prelim SINGLETON.requests( %d ) = %d", part.nr, BLAST_LIB_SINGLETON.get_requests( part ) ) );
+                if ( blaster != null )
+                {
+                    long startTime = System.currentTimeMillis();
+                    BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, "Info" );
+                    long elapsed = System.currentTimeMillis() - startTime;
 
-                long startTime = System.currentTimeMillis();
-                BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, "Info" );
-                long elapsed = System.currentTimeMillis() - startTime;
+                    count = search_res.length;
+                
+                    if ( bls.log_job_done )
+                        BLAST_SEND.send( bls,
+                                         String.format( "request '%s'.'%s' done -> count = %d", req.id, part.db_spec, count ) );
 
-                count = search_res.length;
-            
-                if ( bls.log_job_done )
-                    BLAST_SEND.send( bls,
-                                     String.format( "request '%s'.'%s' done -> count = %d", req.id, part.db_spec, count ) );
-
-                for ( BLAST_HSP_LIST S : search_res )
-                    ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.id ), S ) );
+                    for ( BLAST_HSP_LIST S : search_res )
+                        ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.id ), S ) );
+                }
             }
             catch ( Exception e )
             {
@@ -393,9 +393,7 @@ class BLAST_DRIVER extends Thread
 
             BLAST_PARTITION part = a[ 0 ].part;
 
-            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part );
-            if ( bls.log_sing_request )
-                BLAST_SEND.send( bls, String.format( "traceback SINGLETON.requests( %d ) =%d", part.nr, BLAST_LIB_SINGLETON.get_requests( part ) ) );
+            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, bls );
 
             if ( bls.log_worker_shift )
             {
@@ -523,7 +521,9 @@ class BLAST_DRIVER extends Thread
                     create database-sections as a static RDD
                =========================================================================================== */
             final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS, PARTITIONER0 );
-			//final Integer numbases = DB_SECS.map( bp -> bp.getSize() ).reduce( ( x, y ) -> x + y );
+
+            final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
+			final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
 
             /* ===========================================================================================
                     initialize data-source ( socket as a stand-in for pub-sub )
@@ -569,7 +569,7 @@ class BLAST_DRIVER extends Thread
                         start the streaming
                    =========================================================================================== */
                 jssc.start();
-                //System.out.println( "database size: " + numbases.toString() );
+                System.out.println( String.format( "total database size: %,d bytes", total_size ) );
                 System.out.println( "driver started..." );
                 jssc.awaitTermination();
             }

@@ -31,20 +31,10 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-/*
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Bucket;
-import com.google.cloud.storage.BucketInfo;
-import com.google.cloud.ServiceOptions;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.Storage.BlobListOption;
-import com.google.cloud.storage.StorageOptions;
-*/
+import java.nio.file.Files;
 
 import com.google.cloud.storage.Bucket;
 
@@ -64,16 +54,17 @@ import java.util.Collection;
 
 class PART_INST
 {
-    public BLAST_LIB blaster;
-    public Integer part_id, requested, size;
+    public Integer part_id, requested;
+    public Long size;
     public Boolean prepared;
+    public BLAST_LIB blaster;
 
     public PART_INST( final BLAST_PARTITION part )
     {
-        blaster = new BLAST_LIB();
         part_id = part.nr;
+        blaster = new BLAST_LIB();
         requested = 0;
-        size = 0;
+        size = 0L;
         prepared = false;
     }
 
@@ -91,9 +82,10 @@ class PART_INST
         return new Storage.Builder( transport, jsonFactory, credential ).build();
     }
 
-    public BLAST_PARTITION prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
+
+    public Boolean prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        /*
+        Boolean res = false;
         try
         {
             List< String > extensions = new LinkedList<>();
@@ -117,39 +109,49 @@ class PART_INST
                     Storage.Objects.Get obj = storage.objects().get( settings.db_bucket, obj_name );
                     if ( obj != null )
                     {
-                        getObject.getMediaHttpDownloader().setDirectDownloadEnabled( !IS_APP_ENGINE );
+                        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
-                        String dst_fn;
+                        String dst_path, dst_fn;
 
                         if ( settings.flat_db_layout )
-                            dst_fn = String.format( "%s/%s", settings.db_location, obj_name );
+                            dst_path = settings.db_location;
                         else
-                            dst_fn = String.format( "%s/%s/%s", settings.db_location, part.name, obj_name );
+                            dst_path = String.format( "%s/%s", settings.db_location, part.name );
+
+                        dst_fn = String.format( "%s/%s", dst_path, obj_name );
+
+                        Files.createDirectories( Paths.get( dst_path ) );
 
                         BLAST_SEND.send( settings, String.format( "'%s:%s' --> '%s'", settings.db_bucket, obj_name, dst_fn ) );
-
+                        
                         File f = new File( dst_fn );
                         FileOutputStream f_out = new FileOutputStream( f );
 
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        obj.executeMediaAndDownloadTo( out );
+                        obj.executeMediaAndDownloadTo( f_out );
 
+                        f_out.flush();
+                        f_out.close();
                     }
+                }
+                res = true;
+            }
+            else
+                res = true;
+            if ( size == 0L )
+            {
+                for ( String ext : extensions )
+                {
+                    String fn = String.format( "%s.%s", part.db_spec, ext );
+                    File f = new File( fn );
+                    size += f.length();
                 }
             }
         }
         catch( Exception e )
         {
-            BLAST_SEND.send( settings, String.format( "gs: %", e ) );
+            BLAST_SEND.send( settings, String.format( "gs: %s", e ) );
         }
-        */
-        prepared = true;
-        return part.prepare();
-    }
-
-    public BLAST_LIB get_lib( final BLAST_PARTITION part )
-    {
-        return blaster;
+        return res;
     }
 }
 
@@ -163,7 +165,7 @@ class BLAST_LIB_SINGLETON
     {
     }
 
-    private static PART_INST getInstance( final BLAST_PARTITION part )
+    private static PART_INST getPartInst( final BLAST_PARTITION part )
     {
         if ( !parts.containsKey( part.nr ) )
             parts.put( part.nr, new PART_INST( part ) );
@@ -172,32 +174,38 @@ class BLAST_LIB_SINGLETON
 
     public static BLAST_PARTITION prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        PART_INST inst = getInstance( part );
+        PART_INST inst = getPartInst( part );
         if ( inst != null )
         {
+            if ( !inst.prepared )
+                inst.prepared = inst.prepare( part, settings );
             inst.requested += 1;
-            return inst.prepare( part, settings );
+            
+            return part.prepare();
         }
         return null;
     }
 
-    public static BLAST_LIB get_lib( final BLAST_PARTITION part )
+    public static BLAST_LIB get_lib( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        PART_INST inst = getInstance( part );
+        PART_INST inst = getPartInst( part );
         if ( inst != null )
         {
-            inst.requested += 1;            
-            return inst.get_lib( part );
+            if ( !inst.prepared )
+                inst.prepared = inst.prepare( part, settings );
+            inst.requested += 1;
+            return inst.blaster;
         }
         return null;
     }
 
-    public static Integer get_requests( final BLAST_PARTITION part )
+    public static Long get_size( final BLAST_PARTITION part )
     {
-        PART_INST inst = getInstance( part );
+        PART_INST inst = getPartInst( part );
         if ( inst != null )
-            return inst.requested;
-        return 0;
+            return inst.size;
+        return 0L;
     }
+
 }
 

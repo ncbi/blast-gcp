@@ -64,7 +64,6 @@ public class BLAST_SETTINGS_READER
     public static final String key_log_final = "log_final";
     public static final String key_log_part_prep = "log_partition_prep";
     public static final String key_log_worker_shift = "log_worker_shift";
-    public static final String key_log_sing_request = "log_singleton_requests";
     public static final String key_project_id = "project_id";
     public static final String key_subscript_id = "subscript_id";
     public static final String key_gs_result_bucket = "result_bucket";
@@ -93,7 +92,6 @@ public class BLAST_SETTINGS_READER
     public static final Boolean dflt_log_final = true;
     public static final Boolean dflt_log_part_prep = false;
     public static final Boolean dflt_log_worker_shift = false;
-    public static final Boolean dflt_log_sing_request = false;
     public static final String  dflt_project_id = "ncbi-sandbox-blast";
     public static final String  dflt_subscript_id = "spark-test-subscript";
     public static final String  dflt_gs_result_bucket = "blastgcp-pipeline-test";
@@ -151,7 +149,6 @@ public class BLAST_SETTINGS_READER
         res.log_final           = dflt_log_final;
         res.log_part_prep       = dflt_log_part_prep;
         res.log_worker_shift    = dflt_log_worker_shift;
-        res.log_sing_request    = dflt_log_sing_request;
 
         res.project_id          = dflt_project_id;
         res.subscript_id        = dflt_subscript_id;
@@ -267,7 +264,6 @@ public class BLAST_SETTINGS_READER
                 res.log_final           = get_json_bool( root, key_log_final, dflt_log_final );
                 res.log_part_prep       = get_json_bool( root, key_log_part_prep, dflt_log_part_prep );
                 res.log_worker_shift    = get_json_bool( root, key_log_worker_shift, dflt_log_worker_shift );
-                res.log_sing_request    = get_json_bool( root, key_log_sing_request, dflt_log_sing_request );
 
                 res.project_id      = get_json_string( root, key_project_id, dflt_project_id);
                 res.subscript_id    = get_json_string( root, key_subscript_id, dflt_subscript_id );
@@ -278,6 +274,7 @@ public class BLAST_SETTINGS_READER
         }           
         catch( Exception e )
         {
+            System.out.println( String.format( "json-parsing: %s", e ) );
             res = defaults( appName );
         }
         return res;

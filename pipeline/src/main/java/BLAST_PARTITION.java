@@ -33,8 +33,8 @@ class BLAST_PARTITION implements Serializable
     public final Integer nr;
     public final String db_spec;
     public final String name;
-    public Integer db_size;
     public String worker_name;
+    //public Integer[] payload;
 
     public BLAST_PARTITION( final BLAST_PARTITION other )
     {
@@ -42,6 +42,7 @@ class BLAST_PARTITION implements Serializable
         this.db_spec    = other.db_spec;
         this.name       = other.name;
         this.worker_name= other.worker_name;
+        //this.payload    = other.payload;
     }
 
     // location  : '/tmp/blast/db'
@@ -51,7 +52,7 @@ class BLAST_PARTITION implements Serializable
     public BLAST_PARTITION( final String location, final String db_pat, final Integer nr, final Boolean flat )
     {
         this.nr = nr;
-        this.db_size = 0;
+        //this.payload = new Integer[ 50000 ];
 
         if ( nr < 100 )
             name = String.format( "%s.%02d", db_pat, nr  );
@@ -62,6 +63,7 @@ class BLAST_PARTITION implements Serializable
             db_spec = String.format( "%s/%s", location, name );
         else
             db_spec = String.format( "%s/%s/%s", location, name, name );
+
     }
 
     public BLAST_PARTITION prepare()
