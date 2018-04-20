@@ -8,6 +8,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 set +errexit
 distro=$(grep Debian /etc/os-release | wc -l)
 set -o errexit
+export LD_LIBRARY_PATH=".:../pipeline"
 if [ "$distro" -ne 0 ]; then
     export DISTRO="Debian 8"
     export BUILDENV="google"
@@ -15,12 +16,11 @@ if [ "$distro" -ne 0 ]; then
     export PATH="$JAVA_HOME/bin:$PATH"
     export BLASTDB=/tmp/blast/
     export SPARK_HOME=/usr/lib/spark/
-    export LD_LIBRARY_PATH=".:$PWD/ext"
 else
     export DISTRO="CentOS 7"
     export BUILDENV="ncbi"
     export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
-    export LD_LIBRARY_PATH="../pipeline:/opt/ncbi/gcc/4.9.3/lib64/:$PWD/ext"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/ncbi/gcc/4.9.3/lib64/"
     export BLASTDB=/net/frosty/vol/blast/db/blast
     BLASTBYDATE="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/"
     export SPARK_HOME=/usr/local/spark/2.2.0/
@@ -124,6 +124,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
         -o ./libblastjni.so"
         scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
         $GPPCOMMAND
+        cp libblastjni.so ../pipeline
 fi
 
 

@@ -27,6 +27,19 @@ package gov.nih.nlm.ncbi.blastjni;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+class ConcLoad extends Thread {
+  private BLAST_PARTITION part;
+
+  public ConcLoad(BLAST_PARTITION part) {
+    this.part = part;
+  }
+
+  public void run() {
+    System.out.println("thread started");
+    BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(part);
+  }
+}
+
 class BLAST_TEST {
 
   public static void main(String[] args) {
@@ -71,7 +84,12 @@ class BLAST_TEST {
     requestobj.top_n = top_n;
     BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
-    BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib();
+    //    for (int i = 0; i != 10; ++i) {
+    //      ConcLoad p = new ConcLoad( partitionobj );
+    //      p.start();
+    //    }
+
+    BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj);
 
     final String logLevel = "INFO";
     params = "nt"; // FIX - When Blast team ready for JSON params
