@@ -41,9 +41,9 @@ def get_cluster():
     user = getpass.getuser()
     print("\nuser is " + user)
     cmd = [
-        'gcloud', 'dataproc', '--project', 'ncbi-sandbox-blast', '--region',
-        'us-east4', 'clusters', 'list'
-    ]
+            'gcloud', 'dataproc', '--project', 'ncbi-sandbox-blast', '--region',
+            'us-east4', 'clusters', 'list'
+            ]
     results = subprocess.check_output(cmd)
     #    print(results)
     clusters = results.decode().split('\n')
@@ -54,7 +54,6 @@ def get_cluster():
             return
 
 
-#subscriber = pusub_v1.SubscriberClient()
 
 
 def make_pubsub():
@@ -62,15 +61,28 @@ def make_pubsub():
     global PUBSUB, PUBSUB_CLIENT, TEST_ID
     PUBSUB_CLIENT = pubsub.PublisherClient()
     PUBSUB = 'projects/{project_id}/topics/{topic}'.format(
-        project_id="ncbi-sandbox-blast",  # os.getenv('GOOGLE_CLOUD_PROJECT'),
-        topic=TEST_ID)
+            project_id="ncbi-sandbox-blast",  # os.getenv('GOOGLE_CLOUD_PROJECT'),
+            topic=TEST_ID)
 
     # Create the topic.
     topic = PUBSUB_CLIENT.create_topic(PUBSUB)
 
     #topic=publisher.get_topic(PUBSUB)
     print('\nTopic created: {}'.format(topic))
-    return PUBSUB
+
+    if False:
+        subscriber=pubsub.SubscriberClient()
+        topic_path=PUBSUB
+
+        subscription_path = subscriber.subscription_path(
+                'ncbi-sandbox-blast', TEST_ID)
+
+        subscription = subscriber.create_subscription(
+                subscription_path, topic_path)
+
+        print('Subscription created: {}'.format(subscription))
+
+    return
 
 
 def make_bucket():
@@ -102,6 +114,7 @@ def get_tests():
         print("  RID was " + j['RID'])
         j['RID'] = TEST_ID + j['RID']
         print("  RID  is " + j['RID'])
+        # TODO: Randomly put query in gs bucket instead
         TESTS.append(j)
     print("Loaded " + str(len(TESTS)) + " tests")
 
@@ -118,18 +131,23 @@ def publish(jdict):
 def make_json():
     global BUCKET_NAME, PUBSUB, TEST_ID
     j = {}
+    j['log_start'] = 'false'
+    j['log_done']= 'false'
     j['result_bucket'] = BUCKET_NAME
     j['subscript_id'] = TEST_ID #PUBSUB
-    j['log_request'] = 'false'
+    j['log_request'] = 'true'
+    j['log_worker_shift'] = 'false'
+    j['batch_duration']=2
     j['trigger_host'] = ''
     j['trigger_port'] = 0
     j['log_partition_prep'] = "true"
     j['top_n'] = 100
     j['num_db_partitions'] = 886
-    j['num_workers'] = 30
+    j['num_workers'] = 8
     j['num_executors'] = 8
-    j['num_executor_cores'] = 5
-    return json.dumps(j, indent=4)
+    j['num_executor_cores'] = 3
+    j['project_id']='ncbi-sandbox-blast'
+    return json.dumps(j, indent=4, sort_keys=True)
 
 
 def submit_application(config):
@@ -151,8 +169,8 @@ def submit_application(config):
     cmd.append("gov.nih.nlm.ncbi.blastjni.BLAST_MAIN")
     cmd.append("--jars")
     cmd.append(
-        "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar,../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
-    )
+            "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar,../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
+            )
     cmd.append("--project")
     cmd.append("ncbi-sandbox-blast")
     cmd.append("--files")
@@ -191,7 +209,7 @@ def results_thread():
         print("Results:")
         for result in BUCKET.list_blobs():
             print("  result:" + result)
-
+# TODO: Check Job Orchestration status
         time.sleep(5)
 
 
@@ -242,13 +260,14 @@ def main():
     #print(config)
 
     # submit application
-    submit_application(config)
-    # Start threads
+    threading.Thread(target=submit_thread).start()
     time.sleep(15)
+    submit_application(config)
+    time.sleep(15)
+    # Start threads
     #  status
     threading.Thread(target=status_thread).start()
     #  submits
-    threading.Thread(target=submit_thread).start()
     #  results
     threading.Thread(target=results_thread).start()
 
