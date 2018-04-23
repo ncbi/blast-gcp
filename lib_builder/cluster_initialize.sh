@@ -86,7 +86,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
     echo "master node, skipping DB copy"
     # Need maven to build jars, pip for installing Google APIs for tests
     apt-get update -y
-    apt-get install maven python python-dev python-pip python3-pip python3 python3-dev -y
+    apt-get install -y maven #python python-dev python-pip python3-pip python3 python3-dev
 #    wget https://bootstrap.pypa.io/get-pip.py
 #    python get-pip.py
 #    pip3 install gcloud #--target application/vendor/ gcloud

@@ -1,0 +1,30 @@
+{
+  "RID": "AFEWNC4P014",
+  "UserID": "156.17.83.216",
+  "blast_params": {
+    "db": "nt",
+    "db_length": "174044644244",
+    "db_num_seqs": "46882714",
+    "evalue": 1000.0,
+    "filter_string": "F",
+    "gap_extend": 2,
+    "gap_open": 5,
+    "gapped_alignment": true,
+    "hitlist_size": 100,
+    "penalty": -3,
+    "perc_identity": 0.0,
+    "program": "blastn",
+    "queries": [
+      "TGAACTACGTTCGTTCTTCTGG"
+    ],
+    "reward": 1,
+    "strand": 3,
+    "word_size": 7
+  },
+  "spark_params": {
+    "db": "nt",
+    "dbpath": "gs://nt_50mb_chunks/nt_50M",
+    "evalue": 1000.0,
+    "hitlist_size": 100
+  }
+}
