@@ -91,5 +91,17 @@ public class BLAST_SEND
         send( bls.log_host, bls.log_port, msg );
     }
 
+    public static String resolve( final String hostname )
+    {
+        try
+        {
+            InetAddress address = InetAddress.getByName( hostname ); 
+            return address.getHostAddress();
+        }
+        catch ( Exception e )
+        {
+            return hostname;
+        }
+    }
 }
 

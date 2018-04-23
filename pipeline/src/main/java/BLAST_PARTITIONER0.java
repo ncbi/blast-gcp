@@ -28,18 +28,11 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import org.apache.spark.Partitioner;
 
-class BLAST_PARTITIONER0 extends Partitioner
+class BLAST_PARTITIONER0 extends BLAST_PARTITIONER
 {
-	private int numParts;
-	
-	public BLAST_PARTITIONER0( int numParts )
+	public BLAST_PARTITIONER0( int n )
     {
-		this.numParts = numParts;
-	}
-
-	@Override public int numPartitions()
-    {
-	    return numParts;
+		super( n );
 	}
 
 	@Override public int getPartition( Object key )

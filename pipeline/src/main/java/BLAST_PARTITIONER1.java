@@ -27,21 +27,13 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import org.apache.spark.Partitioner;
-import scala.Tuple2;
 
 
-class BLAST_PARTITIONER1 extends Partitioner
+class BLAST_PARTITIONER1 extends BLAST_PARTITIONER
 {
-	private int numParts;
-	
-	public BLAST_PARTITIONER1( int numParts )
+	public BLAST_PARTITIONER1( int n )
     {
-		this.numParts = numParts;
-	}
-
-	@Override public int numPartitions()
-    {
-	    return numParts;
+		super( n );
 	}
 
 	@Override public int getPartition( Object key )

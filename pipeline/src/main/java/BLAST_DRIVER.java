@@ -39,6 +39,9 @@ import static java.lang.Math.min;
 import java.nio.ByteBuffer;
 
 import scala.Tuple2;
+import scala.collection.Seq;
+import scala.collection.JavaConversions;
+import scala.reflect.ClassTag;
 
 import org.apache.spark.api.java.Optional;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -58,9 +61,11 @@ import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.HashPartitioner;
 import org.apache.spark.SparkEnv;
+import org.apache.spark.rdd.RDD;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -94,6 +99,11 @@ class BLAST_DRIVER extends Thread
 
         sc = new JavaSparkContext( conf );
         sc.setLogLevel( "ERROR" );
+
+        /*
+        SparkContext spctx = sc.toSparkContext( sc );
+        spctx.addSparkListener( new BLAST_SPARK_LISTENER() );
+        */
 
         // send the given files to all nodes
         for ( String a_file : files_to_transfer )
@@ -139,6 +149,65 @@ class BLAST_DRIVER extends Thread
 
             return BLAST_LIB_SINGLETON.prepare( part, bls );
         }).cache();
+    }
+
+    private Seq< Tuple2< Integer, Seq< String > > > make_workers_seq( Integer num_executors )
+    {
+        // first we create a array-list containing a key ( Integer ) and a sequence of IP-adresses for that key
+        final List< Tuple2< Integer, Seq< String > > > workers = new ArrayList<>();
+        for ( int i = 0; i < num_executors; i++ )
+        {
+            List< String > ip = new ArrayList<>();
+
+            String host = String.format( "wblast-w-%d.c.ncbi-sandbox-blast.internal", i );
+
+            String ip_addr = BLAST_SEND.resolve( host );
+
+            BLAST_SEND.send( settings, String.format( "adding %s -> %s", host, ip_addr ) );
+            
+            ip.add( ip_addr );
+            Seq< String > ip_seq = JavaConversions.asScalaBuffer( ip ).toSeq();
+            Tuple2< Integer, Seq< String > > tup = new Tuple2<>( i, ip_seq );
+            workers.add( tup );
+        }
+
+        // then we transform this list into a Seq
+        return JavaConversions.asScalaBuffer( workers ).toSeq();
+    }
+
+    private JavaRDD< BLAST_PARTITION > make_db_partitions_2( Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        // then we transform this list into a Seq
+        final Seq< Tuple2< Integer, Seq< String > > > workers_seq = make_workers_seq( settings.num_executors );
+
+        // then we create a RDD containing the worker-nr as content, each one of them residing at the given worker-host
+        ClassTag< Integer > tag = scala.reflect.ClassTag$.MODULE$.apply( Integer.class );
+
+        // this shoud distribute the Integers to different worker-nodes
+        final RDD< Integer > workers_rdd = sc.toSparkContext( sc ).makeRDD( workers_seq, tag );
+
+        // then we transform that one into a JavaRDD
+        final JavaRDD< Integer > j_workers_rdd = JavaRDD.fromRDD( workers_rdd, tag );
+
+        // then we transform the JavaRDD of ints into the BLAST_PARTITIONS we need
+        return j_workers_rdd.flatMap( item ->
+        {
+            BLAST_SETTINGS bls = SETTINGS.getValue();
+            List< BLAST_PARTITION > partitions = new ArrayList<>();
+
+            for ( int i = 0; i < bls.num_db_partitions; i++ )
+            {
+                if ( item == ( i % bls.num_executors ) )
+                {                
+                    BLAST_PARTITION part = new BLAST_PARTITION( bls.db_location, bls.db_pattern, i, bls.flat_db_layout );
+                    if ( bls.log_part_prep )
+                        BLAST_SEND.send( bls, String.format( "preparing %s at key=%d", part, item ) );
+
+                    partitions.add( BLAST_LIB_SINGLETON.prepare( part, bls ) );
+                }
+            }
+            return partitions.iterator();
+        } ).cache();
     }
 
     /* ===========================================================================================
@@ -520,7 +589,9 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     create database-sections as a static RDD
                =========================================================================================== */
-            final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS, PARTITIONER0 );
+            //final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS, PARTITIONER0 );
+
+            final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions_2( SETTINGS );
 
             final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
 			final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
@@ -564,6 +635,7 @@ class BLAST_DRIVER extends Thread
                         collect traceback
                    =========================================================================================== */
                 write_traceback( SEQANNOTS, SETTINGS );
+
 
                 /* ===========================================================================================
                         start the streaming

@@ -27,21 +27,37 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import org.apache.spark.Partitioner;
-import java.lang.String;
 
-
-class BLAST_PARTITIONER2 extends BLAST_PARTITIONER
+class BLAST_PARTITIONER extends Partitioner
 {
-	public BLAST_PARTITIONER2( int n )
+	public int numParts;
+	
+	public BLAST_PARTITIONER( int numParts )
     {
-		super( n );
+		this.numParts = numParts;
+	}
+
+	@Override public int numPartitions()
+    {
+	    return numParts;
 	}
 
 	@Override public int getPartition( Object key )
     {
-		String pjob=( String )key;
-		Integer pnum = Integer.valueOf( pjob.substring( 0, pjob.indexOf( ' ' ) ) );
-		return pnum % numParts;
+        return 0;
+    }
+
+    @Override public boolean equals( Object obj )
+    {
+        if ( obj == null ) { return false; }
+        if ( !BLAST_PARTITIONER.class.isAssignableFrom( obj.getClass() ) ) { return false; }
+        final BLAST_PARTITIONER other = ( BLAST_PARTITIONER )obj;
+        if ( numParts != other.numParts ) { return false; }
+        return true;
+    }
+
+    @Override public int hashCode()
+    {
+        return numParts;
     }
 }
-

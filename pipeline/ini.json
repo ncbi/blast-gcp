@@ -7,7 +7,7 @@
 
     "batch_duration" : 2,
     "top_n" : 100,
-    "num_db_partitions" : 886,
+    "num_db_partitions" : 100,
     "num_workers" : 8,
     "num_executors" : 8,
     "num_executor_cores" : 3,
