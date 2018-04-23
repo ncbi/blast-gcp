@@ -12,18 +12,16 @@ import threading
 import time
 
 # sudo apt update
-# sudo apt install -u python python-dev python3 python3-dev python3-pip
-# wget https://bootstrap.pypa.io/get-pip.py
-# sudo python get-pip.py
+# sudo apt install -y -u python python-dev python3 python3-dev
+# easy_install --user pip
+# pip install --upgrade virtualenv
+# pip install --user --upgrade google-cloud-storage
+# pip install --user --upgrade google-cloud-pubsub
 
 # gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS
 
-# pip3 install --user --upgrade google-cloud-storage
-# pip3 install --user --upgrade google-cloud-pubsub
 from google.cloud import pubsub
 from google.cloud import storage
-#from google.cloud import pubsub, storage
-#from gcloud import pubsub, storage
 
 # GLOBALS
 CLUSTER_ID = ""
