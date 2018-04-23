@@ -33,6 +33,7 @@ TESTS = []
 PUBSUB_CLIENT = None
 PUBSUB = ""
 JOB_ID = ""
+CONFIG_JSON = ""
 
 
 def get_cluster():
@@ -115,11 +116,13 @@ def publish(jdict):
 
 
 def make_json():
-    global BUCKET_NAME, PUBSUB
+    global BUCKET_NAME, PUBSUB, TEST_ID
     j = {}
     j['result_bucket'] = BUCKET_NAME
-    j['subscript_id'] = PUBSUB
-    j['log_request'] = 'true'
+    j['subscript_id'] = TEST_ID #PUBSUB
+    j['log_request'] = 'false'
+    j['trigger_host'] = ''
+    j['trigger_port'] = 0
     j['log_partition_prep'] = "true"
     j['top_n'] = 100
     j['num_db_partitions'] = 886
@@ -131,8 +134,8 @@ def make_json():
 
 def submit_application(config):
     global CLUSTER_ID, TEST_ID, JOB_ID
-    jsonfname = TEST_ID + ".json"
-    fout = open(jsonfname, "w")
+    CONFIG_JSON = TEST_ID + ".json"
+    fout = open(CONFIG_JSON, "w")
     fout.write(config)
     fout.close()
 
@@ -153,17 +156,16 @@ def submit_application(config):
     cmd.append("--project")
     cmd.append("ncbi-sandbox-blast")
     cmd.append("--files")
-    cmd.append("../pipeline/libblastjni.so," + jsonfname)
+    cmd.append("../pipeline/libblastjni.so," + CONFIG_JSON)
     cmd.append("--region")
     cmd.append("us-east4")
     cmd.append("--")
-    cmd.append(jsonfname)
+    cmd.append(CONFIG_JSON)
     print(cmd)
     print("  cmd: " + ' '.join(cmd))
     JOB_ID = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()
     JOB_ID = JOB_ID.replace("\n", "\n        ")
     print("JOB_ID is    " + JOB_ID)
-    os.remove(jsonfname)
 
 
 def status_thread():
@@ -194,7 +196,9 @@ def results_thread():
 
 
 def cleanup():
-    global PUBSUB, PUBSUB_CLIENT, BUCKET, BUCKET_NAME, STORAGE_CLIENT
+    global PUBSUB, PUBSUB_CLIENT, BUCKET, BUCKET_NAME, STORAGE_CLIENT, CONFIG_JSON
+    if CONFIG_JSON:
+        os.remove(CONFIG_JSON)
     if PUBSUB:
         print("Removing PUBSUB " + PUBSUB)
         PUBSUB_CLIENT = pubsub.PublisherClient()
