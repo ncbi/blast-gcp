@@ -131,7 +131,31 @@ class BLAST_DRIVER extends Thread
     /* ===========================================================================================
             create database-partitions
        =========================================================================================== */
-    private JavaRDD< BLAST_PARTITION > make_db_partitions( Broadcast< BLAST_SETTINGS > SETTINGS )
+    private JavaRDD< BLAST_PARTITION > make_db_partitions_1( Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        final List< BLAST_PARTITION > part_list = new ArrayList<>();
+        for ( int i = 0; i < settings.num_db_partitions; i++ )
+        {
+            BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
+                i, settings.flat_db_layout );
+            part_list.add( part );
+        }
+
+        JavaRDD< BLAST_PARTITION > temp1 = sc.parallelize( part_list );
+
+        return temp1.map( item ->
+        {
+            BLAST_SETTINGS bls = SETTINGS.getValue();
+
+            if ( bls.log_part_prep )
+                BLAST_SEND.send( bls, String.format( "preparing %s", item ) );
+
+            return BLAST_LIB_SINGLETON.prepare( item, bls );
+        } ).cache();
+    }
+
+
+    private JavaRDD< BLAST_PARTITION > make_db_partitions_2( Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         final List< Tuple2< BLAST_PARTITION, Seq< String > > > part_list = new ArrayList<>();
         for ( int i = 0; i < settings.num_db_partitions; i++ )
@@ -549,7 +573,11 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     create database-sections as a static RDD
                =========================================================================================== */
-            final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS );
+            JavaRDD< BLAST_PARTITION > DB_SECS;
+            if ( settings.with_locality )
+                DB_SECS = make_db_partitions_2( SETTINGS );
+            else
+                DB_SECS = make_db_partitions_1( SETTINGS );
 
             final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
 			final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );

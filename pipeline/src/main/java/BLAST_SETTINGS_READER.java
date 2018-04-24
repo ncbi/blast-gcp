@@ -47,6 +47,7 @@ public class BLAST_SETTINGS_READER
     public static final String key_worker_node_name_pattern = "worker_node_name_pattern";
     public static final String key_batch_duration = "batch_duration";
     public static final String key_locality_wait = "locality_wait";
+    public static final String key_with_locality = "with_locality";
     public static final String key_log_host = "log_host";
     public static final String key_trigger_host = "trigger_host";
     public static final String key_log_port = "log_port";
@@ -84,6 +85,7 @@ public class BLAST_SETTINGS_READER
     public static final String  dflt_worker_node_name_pattern = "wblast-w-%d.c.ncbi-sandbox-blast.internal";
     public static final Integer dflt_batch_duration = 2;
     public static final String  dflt_locality_wait = "20s";
+    public static final Boolean dflt_with_locality = false;
     public static final String  dflt_log_host = "localhost";
     public static final Integer dflt_log_port = 10011;
     public static final String  dflt_trigger_host = "localhost";
@@ -132,7 +134,8 @@ public class BLAST_SETTINGS_READER
 
         res.batch_duration = dflt_batch_duration;
         res.locality_wait  = dflt_locality_wait;
-        
+        res.with_locality  = dflt_with_locality;
+
         try
         {
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
@@ -260,6 +263,7 @@ public class BLAST_SETTINGS_READER
 
                 res.batch_duration = get_json_int( root, key_batch_duration, dflt_batch_duration );
                 res.locality_wait  = get_json_string( root, key_locality_wait, dflt_locality_wait );
+                res.with_locality  = get_json_bool( root, key_with_locality, dflt_with_locality );
 
                 try
                 {
