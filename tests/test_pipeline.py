@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import atexit
+import base64
+import getpass
 import json
 import os
-import getpass
 import random
 #import secrets # python 3.6
 import subprocess
@@ -133,20 +134,20 @@ def make_json():
     j['log_start'] = 'false'
     j['log_done'] = 'false'
     j['result_bucket'] = BUCKET_NAME
-    j['subscript_id'] = SUBSCRIPTION_PATH
+    j['subscript_id'] = TEST_ID  # SUBSCRIPTION_PATH
     j['log_request'] = 'true'
     j['log_worker_shift'] = 'false'
     j['batch_duration'] = 2
-    j['trigger_host'] = ''
     j['trigger_port'] = 0
+    j['log_port'] = 0
     j['log_partition_prep'] = "true"
     j['top_n'] = 100
-    j['num_db_partitions'] = 886
+    j['num_db_partitions'] = 100
     j['num_workers'] = 8
     j['num_executors'] = 8
     j['num_executor_cores'] = 3
     j['project_id'] = PROJECT
-    return json.dumps(j, indent=4, sort_keys=True)
+    return json.dumps(j, indent=4)
 
 
 def submit_application(config):
@@ -155,6 +156,12 @@ def submit_application(config):
     fout = open(CONFIG_JSON, "w")
     fout.write(config)
     fout.close()
+
+    # spark-submit --master yarn
+    # --jars /home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar
+    # --class gov.nih.nlm.ncbi.blastjni.BLAST_MAIN
+    # ./target/sparkblast-1-jar-with-dependencies.jar
+    # foo.json
 
     cmd = []
     cmd.append("gcloud")
@@ -206,8 +213,10 @@ def results_thread():
     global STORAGE_CLIENT, BUCKET, BUCKET_NAME, TESTS
     while True:
         print("Results...")
-        for result in BUCKET.list_blobs():
-            print("  result: " + result)
+        for result in BUCKET.list_blobs():  # prefix='output',delimiter='/'):
+            print("  result: " + result.name)
+            d = result.download_as_string()
+            print("  result: " + base64.b64encode(d).decode()[0:10])
 
 
 # TODO: Check Job Orchestration status
@@ -228,12 +237,12 @@ def cleanup():
         subscriber_client = pubsub.SubscriberClient()
         subscriber_client.delete_subscription(SUBSCRIPTION_PATH)
     if BUCKET:
-        for test in BUCKET.list_blobs():
-            STORAGE_CLIENT.DeleteObject(test)
-            print("Deleting " + test + " from bucket " + BUCKET_NAME)
+        for blob in BUCKET.list_blobs():
+            print("Deleting " + blob.name + " from bucket " + BUCKET_NAME)
+            BUCKET.delete_blob(blob.name)
         print("Removing BUCKET: " + BUCKET_NAME)
-        #bucket=STORAGE_CLIENT.get_bucket(BUCKET_NAME)
-        BUCKET.delete()
+        bucket = STORAGE_CLIENT.get_bucket(BUCKET_NAME)
+        bucket.delete()
     # TODO: Kill application?
 
 
@@ -266,11 +275,8 @@ def main():
 
     # configure json.ini
     config = make_json()
+    print(config)
     #print(config)
-
-    # submit application
-    submit_application(config)
-    time.sleep(15)
 
     # Start threads
     #  submits
@@ -279,6 +285,10 @@ def main():
     threading.Thread(target=status_thread).start()
     #  results
     threading.Thread(target=results_thread).start()
+
+    # submit application
+    time.sleep(15)
+    submit_application(config)
 
 
 #   asn1 diff
