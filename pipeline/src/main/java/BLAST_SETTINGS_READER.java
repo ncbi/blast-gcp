@@ -170,6 +170,7 @@ public class BLAST_SETTINGS_READER
             }
             catch( Exception e )
             {
+                System.out.println( String.format( "json-parsing for %s -> %s", name, e ) );
             }
         }
         return res;
@@ -187,6 +188,7 @@ public class BLAST_SETTINGS_READER
             }
             catch( Exception e )
             {
+                System.out.println( String.format( "json-parsing for %s -> %s", name, e ) );
             }
         }
         return res;
@@ -204,6 +206,7 @@ public class BLAST_SETTINGS_READER
             }
             catch( Exception e )
             {
+                System.out.println( String.format( "json-parsing for %s -> %s", name, e ) );
             }
         }
         return res;

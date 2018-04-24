@@ -151,24 +151,26 @@ class BLAST_DRIVER extends Thread
         }).cache();
     }
 
-    private Seq< Tuple2< Integer, Seq< String > > > make_workers_seq( Integer num_executors )
+    private Seq< Tuple2< BLAST_PARTITION, Seq< String > > > make_partitions_with_prefered_loc()
     {
-        // first we create a array-list containing a key ( Integer ) and a sequence of IP-adresses for that key
-        final List< Tuple2< Integer, Seq< String > > > workers = new ArrayList<>();
-        for ( int i = 0; i < num_executors; i++ )
+        final List< Tuple2< BLAST_PARTITION, Seq< String > > > workers = new ArrayList<>();
+        for ( int i = 0; i < settings.num_db_partitions; i++ )
         {
-            List< String > ip = new ArrayList<>();
+            BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
+                i, settings.flat_db_layout );
 
-            String host = String.format( "wblast-w-%d.c.ncbi-sandbox-blast.internal", i );
+            Integer prefered_node = part.getPartition( settings.num_executors );
 
-            String ip_addr = BLAST_SEND.resolve( host );
+            String host = String.format( "wblast-w-%d.c.ncbi-sandbox-blast.internal", prefered_node );
 
-            BLAST_SEND.send( settings, String.format( "adding %s -> %s", host, ip_addr ) );
-            
-            ip.add( ip_addr );
-            Seq< String > ip_seq = JavaConversions.asScalaBuffer( ip ).toSeq();
-            Tuple2< Integer, Seq< String > > tup = new Tuple2<>( i, ip_seq );
-            workers.add( tup );
+            //BLAST_SEND.send( settings, String.format( "adding %s for %s", host, part ) );
+
+            List< String > prefered_loc = new ArrayList<>();            
+            prefered_loc.add( host );
+
+            Seq< String > prefered_loc_seq = JavaConversions.asScalaBuffer( prefered_loc ).toSeq();
+
+            workers.add( new Tuple2<>( part, prefered_loc_seq ) );
         }
 
         // then we transform this list into a Seq
@@ -178,35 +180,23 @@ class BLAST_DRIVER extends Thread
     private JavaRDD< BLAST_PARTITION > make_db_partitions_2( Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         // then we transform this list into a Seq
-        final Seq< Tuple2< Integer, Seq< String > > > workers_seq = make_workers_seq( settings.num_executors );
+        final Seq< Tuple2< BLAST_PARTITION, Seq< String > > > temp1 = make_partitions_with_prefered_loc();
 
         // then we create a RDD containing the worker-nr as content, each one of them residing at the given worker-host
-        ClassTag< Integer > tag = scala.reflect.ClassTag$.MODULE$.apply( Integer.class );
+        ClassTag< BLAST_PARTITION > tag = scala.reflect.ClassTag$.MODULE$.apply( BLAST_PARTITION.class );
 
         // this shoud distribute the Integers to different worker-nodes
-        final RDD< Integer > workers_rdd = sc.toSparkContext( sc ).makeRDD( workers_seq, tag );
-
-        // then we transform that one into a JavaRDD
-        final JavaRDD< Integer > j_workers_rdd = JavaRDD.fromRDD( workers_rdd, tag );
+        final RDD< BLAST_PARTITION > temp2 = sc.toSparkContext( sc ).makeRDD( temp1, tag );
 
         // then we transform the JavaRDD of ints into the BLAST_PARTITIONS we need
-        return j_workers_rdd.flatMap( item ->
+        return JavaRDD.fromRDD( temp2, tag ).map( item ->
         {
             BLAST_SETTINGS bls = SETTINGS.getValue();
-            List< BLAST_PARTITION > partitions = new ArrayList<>();
 
-            for ( int i = 0; i < bls.num_db_partitions; i++ )
-            {
-                if ( item == ( i % bls.num_executors ) )
-                {                
-                    BLAST_PARTITION part = new BLAST_PARTITION( bls.db_location, bls.db_pattern, i, bls.flat_db_layout );
-                    if ( bls.log_part_prep )
-                        BLAST_SEND.send( bls, String.format( "preparing %s at key=%d", part, item ) );
+            if ( bls.log_part_prep )
+                BLAST_SEND.send( bls, String.format( "preparing %s", item ) );
 
-                    partitions.add( BLAST_LIB_SINGLETON.prepare( part, bls ) );
-                }
-            }
-            return partitions.iterator();
+            return BLAST_LIB_SINGLETON.prepare( item, bls );
         } ).cache();
     }
 
