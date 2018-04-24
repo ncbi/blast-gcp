@@ -87,10 +87,10 @@ if [[ "${ROLE}" == 'Master' ]]; then
     # Need maven to build jars, pip for installing Google APIs for tests
     apt-get update -y
     apt-get install -y -u maven python python-dev python3 python3-dev
-    sudo easy_install pip
-    sudo pip install --upgrade virtualenv
-    sudo pip install --user --upgrade google-cloud-storage
-    sudo pip install --user --upgrade google-cloud-pubsub
+#    sudo easy_install pip
+#    sudo pip install --upgrade virtualenv
+#    sudo pip install --user --upgrade google-cloud-storage
+#    sudo pip install --user --upgrade google-cloud-pubsub
 else
     # Worker node, copy DBs from GCS
     # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
