@@ -46,6 +46,7 @@ public class BLAST_SETTINGS_READER
     public static final String key_db_bucket = "db_bucket";
     public static final String key_worker_node_name_pattern = "worker_node_name_pattern";
     public static final String key_batch_duration = "batch_duration";
+    public static final String key_locality_wait = "locality_wait";
     public static final String key_log_host = "log_host";
     public static final String key_trigger_host = "trigger_host";
     public static final String key_log_port = "log_port";
@@ -65,6 +66,7 @@ public class BLAST_SETTINGS_READER
     public static final String key_log_final = "log_final";
     public static final String key_log_part_prep = "log_partition_prep";
     public static final String key_log_worker_shift = "log_worker_shift";
+    public static final String key_jni_log_level = "jni_log_level";
     public static final String key_project_id = "project_id";
     public static final String key_subscript_id = "subscript_id";
     public static final String key_gs_result_bucket = "result_bucket";
@@ -80,7 +82,8 @@ public class BLAST_SETTINGS_READER
     public static final String  dflt_db_pattern = "nt_50M";
     public static final String  dflt_db_bucket = "nt_50mb_chunks";
     public static final String  dflt_worker_node_name_pattern = "wblast-w-%d.c.ncbi-sandbox-blast.internal";
-    public static final Integer dflt_batch_duration = 10;
+    public static final Integer dflt_batch_duration = 2;
+    public static final String  dflt_locality_wait = "20s";
     public static final String  dflt_log_host = "localhost";
     public static final Integer dflt_log_port = 10011;
     public static final String  dflt_trigger_host = "localhost";
@@ -99,6 +102,7 @@ public class BLAST_SETTINGS_READER
     public static final Boolean dflt_log_final = true;
     public static final Boolean dflt_log_part_prep = false;
     public static final Boolean dflt_log_worker_shift = false;
+    public static final String  dflt_jni_log_level = "Info";
     public static final String  dflt_project_id = "ncbi-sandbox-blast";
     public static final String  dflt_subscript_id = "spark-test-subscript";
     public static final String  dflt_gs_result_bucket = "blastgcp-pipeline-test";
@@ -127,6 +131,7 @@ public class BLAST_SETTINGS_READER
         res.worker_node_name_pattern = dflt_worker_node_name_pattern;
 
         res.batch_duration = dflt_batch_duration;
+        res.locality_wait  = dflt_locality_wait;
         
         try
         {
@@ -163,6 +168,7 @@ public class BLAST_SETTINGS_READER
         res.log_final           = dflt_log_final;
         res.log_part_prep       = dflt_log_part_prep;
         res.log_worker_shift    = dflt_log_worker_shift;
+        res.jni_log_level       = dflt_jni_log_level;
 
         res.project_id          = dflt_project_id;
         res.subscript_id        = dflt_subscript_id;
@@ -253,6 +259,7 @@ public class BLAST_SETTINGS_READER
                 res.worker_node_name_pattern = get_json_string( root, key_worker_node_name_pattern, dflt_worker_node_name_pattern );
 
                 res.batch_duration = get_json_int( root, key_batch_duration, dflt_batch_duration );
+                res.locality_wait  = get_json_string( root, key_locality_wait, dflt_locality_wait );
 
                 try
                 {
@@ -290,6 +297,7 @@ public class BLAST_SETTINGS_READER
                 res.log_final           = get_json_bool( root, key_log_final, dflt_log_final );
                 res.log_part_prep       = get_json_bool( root, key_log_part_prep, dflt_log_part_prep );
                 res.log_worker_shift    = get_json_bool( root, key_log_worker_shift, dflt_log_worker_shift );
+                res.jni_log_level       = get_json_string( root, key_jni_log_level, dflt_jni_log_level );
 
                 res.project_id          = get_json_string( root, key_project_id, dflt_project_id);
                 res.subscript_id        = get_json_string( root, key_subscript_id, dflt_subscript_id );

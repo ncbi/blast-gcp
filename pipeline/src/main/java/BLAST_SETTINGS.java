@@ -38,6 +38,7 @@ public class BLAST_SETTINGS implements Serializable
     public String worker_node_name_pattern;
 
     public Integer batch_duration;
+    public String  locality_wait;
     
     public String log_host;
     public Integer log_port;
@@ -61,6 +62,7 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean log_final;
     public Boolean log_part_prep;
     public Boolean log_worker_shift;
+    public String  jni_log_level;
 
     public String project_id;
     public String subscript_id;
@@ -79,16 +81,13 @@ public class BLAST_SETTINGS implements Serializable
         S  =  S +  String.format( "db_location ........ '%s'\n", db_location );
         S  =  S +  String.format( "db_pattern ......... '%s'\n", db_pattern );
         S  =  S +  String.format( "db_bucket .......... '%s'\n", db_bucket );
-        S  =  S +  String.format( "worker-node-pattd .. '%s'\n", "wblast-w-%d.c.ncbi-sandbox-blast.internal" );
+        S  =  S +  String.format( "worker-node-patt ... '%s'\n", worker_node_name_pattern );
         S  =  S +  String.format( "pubsub-subscript ... '%s' : '%s'\n", project_id, subscript_id );
-        S  =  S +  String.format( "GS result-bucket ... '%s'\n", gs_result_bucket );
-        S  =  S +  String.format( "GS result-file ..... '%s'\n", gs_result_file );
-        S  =  S +  String.format( "GS status-bucket ... '%s'\n", gs_status_bucket );
-        S  =  S +  String.format( "GS status-file ..... '%s'\n", gs_status_file );
-        S  =  S +  String.format( "GS status-running... '%s'\n", gs_status_running );
-        S  =  S +  String.format( "GS status-done ..... '%s'\n", gs_status_done );
-        S  =  S +  String.format( "GS status-error .... '%s'\n", gs_status_error );
+        S  =  S +  String.format( "GS result .......... '%s' : '%s'\n", gs_result_bucket, gs_result_file );
+        S  =  S +  String.format( "GS status .......... '%s' : '%s'\n", gs_status_bucket, gs_status_file );
+        S  =  S +  String.format( "GS status-codes  ... '%s', '%s', '%s'\n", gs_status_running, gs_status_done, gs_status_error );
         S  =  S +  String.format( "batch_duration ..... %d seconds\n", batch_duration );
+        S  =  S +  String.format( "locality.wait ...... %s\n", locality_wait );
         S  =  S +  String.format( "log_host ........... %s:%d\n", log_host, log_port );
         S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );
         S  =  S +  String.format( "save_dir ........... '%s'\n", save_dir );
@@ -99,6 +98,7 @@ public class BLAST_SETTINGS implements Serializable
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "executor memory..... %s\n", executor_memory );
         S  =  S +  String.format( "flat db layout...... %s\n", Boolean.toString( flat_db_layout ) );
+        S  =  S +  String.format( "jni-log-level ...... %s\n", jni_log_level );
 
         String S_log = "";
         if ( log_request )   S_log = S_log + "request ";

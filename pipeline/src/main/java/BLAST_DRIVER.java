@@ -97,6 +97,8 @@ class BLAST_DRIVER extends Thread
         if ( !settings.executor_memory.isEmpty() )
             conf.set( "spark.executor.memory", settings.executor_memory );
 
+        conf.set( "spark.locality.wait", settings.locality_wait );
+
         sc = new JavaSparkContext( conf );
         sc.setLogLevel( "ERROR" );
 
@@ -277,7 +279,7 @@ class BLAST_DRIVER extends Thread
                 if ( blaster != null )
                 {
                     long startTime = System.currentTimeMillis();
-                    BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, "Info" );
+                    BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
                     long elapsed = System.currentTimeMillis() - startTime;
 
                     count = search_res.length;
@@ -435,7 +437,7 @@ class BLAST_DRIVER extends Thread
                 }
             }
 
-            BLAST_TB_LIST [] results = blaster.jni_traceback( a, part, a[ 0 ].req, "Info" );
+            BLAST_TB_LIST [] results = blaster.jni_traceback( a, part, a[ 0 ].req, bls.jni_log_level );
 
             ArrayList< Tuple2< String, BLAST_TB_LIST> > ret = new ArrayList<>();            
             for ( BLAST_TB_LIST L : results )

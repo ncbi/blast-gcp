@@ -57,7 +57,7 @@ public class BLAST_LIB {
 
   // We can't rely on log4j.properties to filter, instead we'll look at
   // logLevel
-  private synchronized void log(final String level, final String msg) {
+  private void log(final String level, final String msg) {
     Logger logger = LogManager.getLogger(BLAST_LIB.class);
     Level l = Level.toLevel(level);
 
