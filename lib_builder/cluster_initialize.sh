@@ -86,13 +86,11 @@ if [[ "${ROLE}" == 'Master' ]]; then
     echo "master node, skipping DB copy"
     # Need maven to build jars, pip for installing Google APIs for tests
     apt-get update -y
-    apt-get install -y maven #python python-dev python-pip python3-pip python3 python3-dev
-#    wget https://bootstrap.pypa.io/get-pip.py
-#    python get-pip.py
-#    pip3 install gcloud #--target application/vendor/ gcloud
-#    pip3 install --upgrade google-cloud
-#    pip3 install --upgrade google-cloud-pubsub
-#    pip3 install --upgrade google-cloud-storage
+    apt-get install -y -u maven python python-dev python3 python3-dev
+    sudo easy_install pip
+    sudo pip install --upgrade virtualenv
+    sudo pip install --user --upgrade google-cloud-storage
+    sudo pip install --user --upgrade google-cloud-pubsub
 else
     # Worker node, copy DBs from GCS
     # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
