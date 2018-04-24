@@ -120,4 +120,10 @@ public class BLAST_GS_UPLOADER
         return res;
     }
 
+    public static Integer upload( final String bucket, final String key, final String content )
+    {
+        ByteBuffer bb = ByteBuffer.wrap( content.getBytes() );
+        return upload( bucket, key, bb );
+    }
+
 }

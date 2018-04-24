@@ -44,6 +44,7 @@ public class BLAST_SETTINGS_READER
     public static final String key_db_location = "db_location";
     public static final String key_db_pattern = "db_pattern";
     public static final String key_db_bucket = "db_bucket";
+    public static final String key_worker_node_name_pattern = "worker_node_name_pattern";
     public static final String key_batch_duration = "batch_duration";
     public static final String key_log_host = "log_host";
     public static final String key_trigger_host = "trigger_host";
@@ -68,11 +69,17 @@ public class BLAST_SETTINGS_READER
     public static final String key_subscript_id = "subscript_id";
     public static final String key_gs_result_bucket = "result_bucket";
     public static final String key_gs_result_file = "result_file";
+    public static final String key_gs_status_bucket = "status_bucket";
+    public static final String key_gs_status_file = "status_file";
+    public static final String key_gs_status_running = "status_running";
+    public static final String key_gs_status_done = "status_done";
+    public static final String key_gs_status_error = "status_error";
 
     // ------------------- default values -----------------------------------------
     public static final String  dflt_db_location = "/tmp/blast/db";
     public static final String  dflt_db_pattern = "nt_50M";
     public static final String  dflt_db_bucket = "nt_50mb_chunks";
+    public static final String  dflt_worker_node_name_pattern = "wblast-w-%d.c.ncbi-sandbox-blast.internal";
     public static final Integer dflt_batch_duration = 10;
     public static final String  dflt_log_host = "localhost";
     public static final Integer dflt_log_port = 10011;
@@ -96,6 +103,11 @@ public class BLAST_SETTINGS_READER
     public static final String  dflt_subscript_id = "spark-test-subscript";
     public static final String  dflt_gs_result_bucket = "blastgcp-pipeline-test";
     public static final String  dflt_gs_result_file = "output/%s/seq-annot.asn";
+    public static final String  dflt_gs_status_bucket = "blastgcp-pipeline-test";
+    public static final String  dflt_gs_status_file = "status/%s/status.txt";
+    public static final String  dflt_gs_status_running = "RUNNING";
+    public static final String  dflt_gs_status_done = "DONE";
+    public static final String  dflt_gs_status_error = "ERROR";
 
     private static String dflt_save_dir()
     {
@@ -111,7 +123,9 @@ public class BLAST_SETTINGS_READER
         res.db_location = dflt_db_location;
         res.db_pattern  = dflt_db_pattern;
         res.db_bucket   = dflt_db_bucket;
-        
+
+        res.worker_node_name_pattern = dflt_worker_node_name_pattern;
+
         res.batch_duration = dflt_batch_duration;
         
         try
@@ -152,9 +166,16 @@ public class BLAST_SETTINGS_READER
 
         res.project_id          = dflt_project_id;
         res.subscript_id        = dflt_subscript_id;
+
         res.gs_result_bucket    = dflt_gs_result_bucket;
         res.gs_result_file      = dflt_gs_result_file;
-        
+
+        res.gs_status_bucket    = dflt_gs_status_bucket;
+        res.gs_status_file      = dflt_gs_status_file;
+        res.gs_status_running   = dflt_gs_status_running;
+        res.gs_status_done      = dflt_gs_status_done;
+        res.gs_status_error     = dflt_gs_status_error;
+
         return res;
     }
     
@@ -229,6 +250,8 @@ public class BLAST_SETTINGS_READER
                 res.db_pattern  = get_json_string( root, key_db_pattern, dflt_db_pattern );
                 res.db_bucket   = get_json_string( root, key_db_bucket, dflt_db_bucket );
         
+                res.worker_node_name_pattern = get_json_string( root, key_worker_node_name_pattern, dflt_worker_node_name_pattern );
+
                 res.batch_duration = get_json_int( root, key_batch_duration, dflt_batch_duration );
 
                 try
@@ -268,10 +291,18 @@ public class BLAST_SETTINGS_READER
                 res.log_part_prep       = get_json_bool( root, key_log_part_prep, dflt_log_part_prep );
                 res.log_worker_shift    = get_json_bool( root, key_log_worker_shift, dflt_log_worker_shift );
 
-                res.project_id      = get_json_string( root, key_project_id, dflt_project_id);
-                res.subscript_id    = get_json_string( root, key_subscript_id, dflt_subscript_id );
-                res.gs_result_bucket = get_json_string( root, key_gs_result_bucket, dflt_gs_result_bucket );
-                res.gs_result_file  = get_json_string( root, key_gs_result_file, dflt_gs_result_file );
+                res.project_id          = get_json_string( root, key_project_id, dflt_project_id);
+                res.subscript_id        = get_json_string( root, key_subscript_id, dflt_subscript_id );
+
+                res.gs_result_bucket    = get_json_string( root, key_gs_result_bucket, dflt_gs_result_bucket );
+                res.gs_result_file      = get_json_string( root, key_gs_result_file, dflt_gs_result_file );
+
+                res.gs_status_bucket    = get_json_string( root, key_gs_status_bucket, dflt_gs_status_bucket );
+                res.gs_status_file      = get_json_string( root, key_gs_status_file, dflt_gs_status_file );
+
+                res.gs_status_running   = get_json_string( root, key_gs_status_running, dflt_gs_status_running );
+                res.gs_status_done      = get_json_string( root, key_gs_status_done, dflt_gs_status_done );
+                res.gs_status_error     = get_json_string( root, key_gs_status_error, dflt_gs_status_error );
 
             }
         }           

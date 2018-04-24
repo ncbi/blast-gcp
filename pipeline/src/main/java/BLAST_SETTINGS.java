@@ -35,6 +35,7 @@ public class BLAST_SETTINGS implements Serializable
     public String db_location;
     public String db_pattern;
     public String db_bucket;
+    public String worker_node_name_pattern;
 
     public Integer batch_duration;
     
@@ -66,15 +67,27 @@ public class BLAST_SETTINGS implements Serializable
     public String gs_result_bucket;
     public String gs_result_file;
 
+    public String gs_status_bucket;
+    public String gs_status_file;
+    public String gs_status_running;
+    public String gs_status_done;
+    public String gs_status_error;
+
     @Override public String toString()
     {
         String S = String.format( "appName ............ '%s'\n", appName );
         S  =  S +  String.format( "db_location ........ '%s'\n", db_location );
         S  =  S +  String.format( "db_pattern ......... '%s'\n", db_pattern );
         S  =  S +  String.format( "db_bucket .......... '%s'\n", db_bucket );
+        S  =  S +  String.format( "worker-node-pattd .. '%s'\n", "wblast-w-%d.c.ncbi-sandbox-blast.internal" );
         S  =  S +  String.format( "pubsub-subscript ... '%s' : '%s'\n", project_id, subscript_id );
         S  =  S +  String.format( "GS result-bucket ... '%s'\n", gs_result_bucket );
         S  =  S +  String.format( "GS result-file ..... '%s'\n", gs_result_file );
+        S  =  S +  String.format( "GS status-bucket ... '%s'\n", gs_status_bucket );
+        S  =  S +  String.format( "GS status-file ..... '%s'\n", gs_status_file );
+        S  =  S +  String.format( "GS status-running... '%s'\n", gs_status_running );
+        S  =  S +  String.format( "GS status-done ..... '%s'\n", gs_status_done );
+        S  =  S +  String.format( "GS status-error .... '%s'\n", gs_status_error );
         S  =  S +  String.format( "batch_duration ..... %d seconds\n", batch_duration );
         S  =  S +  String.format( "log_host ........... %s:%d\n", log_host, log_port );
         S  =  S +  String.format( "trigger_host ....... %s:%d\n", trigger_host, trigger_port );

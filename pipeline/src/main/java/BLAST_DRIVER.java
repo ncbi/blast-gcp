@@ -129,31 +129,9 @@ class BLAST_DRIVER extends Thread
     /* ===========================================================================================
             create database-partitions
        =========================================================================================== */
-    private JavaRDD< BLAST_PARTITION > make_db_partitions( Broadcast< BLAST_SETTINGS > SETTINGS,
-        Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 )
+    private JavaRDD< BLAST_PARTITION > make_db_partitions( Broadcast< BLAST_SETTINGS > SETTINGS )
     {
-        final List< Tuple2< Integer, BLAST_PARTITION > > db_list = new ArrayList<>();
-        for ( int i = 0; i < settings.num_db_partitions; i++ )
-        {
-            BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
-                                                        i, settings.flat_db_layout );
-            db_list.add( new Tuple2<>( i, part ) );
-        }
-        return sc.parallelizePairs( db_list, SETTINGS.getValue().num_executors ).partitionBy( PARTITIONER0.getValue() ).map( item -> 
-        {
-            BLAST_PARTITION part = item._2();
-
-            BLAST_SETTINGS bls = SETTINGS.getValue();
-            if ( bls.log_part_prep )
-                BLAST_SEND.send( bls, String.format( "preparing %s", part ) );
-
-            return BLAST_LIB_SINGLETON.prepare( part, bls );
-        }).cache();
-    }
-
-    private Seq< Tuple2< BLAST_PARTITION, Seq< String > > > make_partitions_with_prefered_loc()
-    {
-        final List< Tuple2< BLAST_PARTITION, Seq< String > > > workers = new ArrayList<>();
+        final List< Tuple2< BLAST_PARTITION, Seq< String > > > part_list = new ArrayList<>();
         for ( int i = 0; i < settings.num_db_partitions; i++ )
         {
             BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
@@ -161,7 +139,7 @@ class BLAST_DRIVER extends Thread
 
             Integer prefered_node = part.getPartition( settings.num_executors );
 
-            String host = String.format( "wblast-w-%d.c.ncbi-sandbox-blast.internal", prefered_node );
+            String host = String.format( settings.worker_node_name_pattern, prefered_node );
 
             //BLAST_SEND.send( settings, String.format( "adding %s for %s", host, part ) );
 
@@ -170,25 +148,20 @@ class BLAST_DRIVER extends Thread
 
             Seq< String > prefered_loc_seq = JavaConversions.asScalaBuffer( prefered_loc ).toSeq();
 
-            workers.add( new Tuple2<>( part, prefered_loc_seq ) );
+            part_list.add( new Tuple2<>( part, prefered_loc_seq ) );
         }
 
-        // then we transform this list into a Seq
-        return JavaConversions.asScalaBuffer( workers ).toSeq();
-    }
+        // we transform thes list into a Seq
+        final Seq< Tuple2< BLAST_PARTITION, Seq< String > > > temp1 = JavaConversions.asScalaBuffer( part_list ).toSeq();
 
-    private JavaRDD< BLAST_PARTITION > make_db_partitions_2( Broadcast< BLAST_SETTINGS > SETTINGS )
-    {
-        // then we transform this list into a Seq
-        final Seq< Tuple2< BLAST_PARTITION, Seq< String > > > temp1 = make_partitions_with_prefered_loc();
-
-        // then we create a RDD containing the worker-nr as content, each one of them residing at the given worker-host
+        // we need the class-tag for twice for conversions
         ClassTag< BLAST_PARTITION > tag = scala.reflect.ClassTag$.MODULE$.apply( BLAST_PARTITION.class );
 
-        // this shoud distribute the Integers to different worker-nodes
+        // this will distribute the partitions to different worker-nodes
         final RDD< BLAST_PARTITION > temp2 = sc.toSparkContext( sc ).makeRDD( temp1, tag );
 
-        // then we transform the JavaRDD of ints into the BLAST_PARTITIONS we need
+        // now we transform it into a JavaRDD and perform a mapping-op to eventuall load the
+        // database onto the worker-node ( if it is not already there )
         return JavaRDD.fromRDD( temp2, tag ).map( item ->
         {
             BLAST_SETTINGS bls = SETTINGS.getValue();
@@ -203,24 +176,12 @@ class BLAST_DRIVER extends Thread
     /* ===========================================================================================
             create source-stream of Strings
        =========================================================================================== */
-    private JavaDStream< String > create_socket_stream( Broadcast< BLAST_SETTINGS > SETTINGS )
+    private JavaDStream< String > create_socket_stream()
     {
-        JavaDStream< String > res = jssc.socketTextStream( settings.trigger_host, settings.trigger_port ).cache();
-        if ( settings.log_request )
-        {
-            return res.map( item ->
-            {
-                BLAST_SEND.send( SETTINGS.getValue(), String.format( "REQ via socket: '%s'", item ) );
-                return item;
-            } ).cache();
-        }
-        else
-        {
-            return res.cache();
-        }
+        return jssc.socketTextStream( settings.trigger_host, settings.trigger_port ).cache();
     }
 
-    private JavaDStream< String > create_pubsub_stream( Broadcast< BLAST_SETTINGS > SETTINGS )
+    private JavaDStream< String > create_pubsub_stream()
     {
         final DStream< PubsubMessage > pub1 = PubsubUtils.createStream( jssc.ssc(),
             settings.project_id, settings.subscript_id );
@@ -228,58 +189,68 @@ class BLAST_DRIVER extends Thread
         final JavaDStream< PubsubMessage > pub2 = JavaDStream$.MODULE$.fromDStream( pub1,
             scala.reflect.ClassTag$.MODULE$.apply( PubsubMessage.class ) );
 
-        return pub2.map( item ->
-        {
-            String res = item.getData().toStringUtf8();
-            BLAST_SETTINGS bls = SETTINGS.getValue();
-            if ( bls.log_request )
-                BLAST_SEND.send( bls, String.format( "REQ via pubsub: '%s'", res.substring( 0, 30 ) ) );
-            return res;
-        }).cache();
+        return pub2.map( item -> item.getData().toStringUtf8() ).cache();
     }
 
-    private JavaDStream< String > create_source( Broadcast< BLAST_SETTINGS > SETTINGS )
+    private JavaDStream< BLAST_REQUEST > create_source( Broadcast< BLAST_SETTINGS > SETTINGS )
     {
-        BLAST_SETTINGS bls = SETTINGS.getValue();
-        Boolean use_socket = ( bls.trigger_port > 0 && !bls.trigger_host.isEmpty() );
-        Boolean use_pubsub = ( !bls.project_id.isEmpty() && !bls.subscript_id.isEmpty() );
+        Boolean use_socket = ( settings.trigger_port > 0 && !settings.trigger_host.isEmpty() );
+        Boolean use_pubsub = ( !settings.project_id.isEmpty() && !settings.subscript_id.isEmpty() );
+
+        JavaDStream< String > tmp = null;
 
         if ( use_socket )
         {
             if ( use_pubsub )
             {
-                JavaDStream< String > S1 = create_socket_stream( SETTINGS );
-                JavaDStream< String > S2 = create_pubsub_stream( SETTINGS );
-                return S1.union( S2 ).cache();
+                JavaDStream< String > S1 = create_socket_stream();
+                JavaDStream< String > S2 = create_pubsub_stream();
+                tmp = S1.union( S2 ).cache();
             }
             else
-                return create_socket_stream( SETTINGS ).cache();
+                tmp = create_socket_stream();
         }
         else
         {
             if ( use_pubsub )
-                return create_pubsub_stream( SETTINGS ).cache();
-            else
-                return null;
+                tmp = create_pubsub_stream();
         }
+        if ( tmp != null )
+        {
+            return tmp.map( item ->
+            {
+                BLAST_SETTINGS bls = SETTINGS.getValue();
+
+                BLAST_REQUEST request = BLAST_REQUEST_READER.parse( item, bls.top_n );
+
+                if ( bls.log_request )
+                    BLAST_SEND.send( bls, String.format( "REQ: '%s'", request.id ) );
+
+                String gs_status_key = String.format( bls.gs_status_file, request.id );
+                BLAST_GS_UPLOADER.upload( bls.gs_status_bucket, gs_status_key, bls.gs_status_running );
+
+                return request;
+            }).cache();
+        }
+        return null;
     }
 
 
     /* ===========================================================================================
             perform prelim search
 
-            IN  :   SRC: JavaPairDStream < BLAST_PARTITION, STRING: REQUEST as JSON >
+            IN  :   SRC: JavaPairDStream < BLAST_PARTITION, BLAST_REQUEST >
             OUT :   JavaPairDStream < STRING: 'PARTITION.NR REQ.ID', BLAST_HSP_LIST >
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_HSP_LIST > perform_prelim_search(
-            final JavaPairDStream< BLAST_PARTITION, String > SRC,
+            final JavaPairDStream< BLAST_PARTITION, BLAST_REQUEST > SRC,
             Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         return SRC.flatMapToPair( item -> {
             BLAST_SETTINGS bls = SETTINGS.getValue();            
 
             BLAST_PARTITION part = item._1();
-            BLAST_REQUEST req = BLAST_REQUEST_READER.parse( item._2(), bls.top_n ); // REQ-LINE to REQUEST
+            BLAST_REQUEST req = item._2();
 
             // see if we are at a different worker-id now
             if ( bls.log_worker_shift )
@@ -527,6 +498,7 @@ class BLAST_DRIVER extends Thread
                         Tuple2< String, ByteBuffer > item = iter.next();
                         String req_id = item._1();
                         ByteBuffer value = item._2();
+
                         BLAST_SETTINGS bls = SETTINGS.getValue();
 
                         if ( bls.gs_result_bucket.isEmpty() )
@@ -540,23 +512,19 @@ class BLAST_DRIVER extends Thread
                         }
                         else
                         {
-                            String gs_key = String.format( "output/%s.asn1", req_id );
-                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_key, value );
+                            String gs_result_key = String.format( bls.gs_result_file, req_id );
+                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, value );
+
+                            String gs_status_key = String.format( bls.gs_status_file, req_id );
+                            BLAST_GS_UPLOADER.upload( bls.gs_status_bucket, gs_status_key, bls.gs_status_done );
 
                             if ( bls.log_final )
                                 BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s'",
-                                        uploaded, bls.gs_result_bucket, gs_key ) );
+                                        uploaded, bls.gs_result_bucket, gs_result_key ) );
                         }
 
                     }
                 } );
-
-                {
-                    BLAST_SETTINGS bls = SETTINGS.getValue();
-                    if ( bls.log_final )
-                        BLAST_SEND.send( bls,
-                                         String.format( "REQUEST DONE: count  = %d ( rdd.id = %d )", count, rdd.id() ) );
-                }
             }
         } );
     }
@@ -579,9 +547,7 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     create database-sections as a static RDD
                =========================================================================================== */
-            //final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS, PARTITIONER0 );
-
-            final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions_2( SETTINGS );
+            final JavaRDD< BLAST_PARTITION > DB_SECS = make_db_partitions( SETTINGS );
 
             final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
 			final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
@@ -589,13 +555,13 @@ class BLAST_DRIVER extends Thread
             /* ===========================================================================================
                     initialize data-source ( socket as a stand-in for pub-sub )
                =========================================================================================== */
-            JavaDStream< String > REQ_STREAM = create_source( SETTINGS );
+            JavaDStream< BLAST_REQUEST > REQ_STREAM = create_source( SETTINGS );
             if ( REQ_STREAM != null )
             {
                 /* ===========================================================================================
                         join request-line from data-source with database-sections
                    =========================================================================================== */
-                final JavaPairDStream< BLAST_PARTITION, String > JOB_STREAM
+                final JavaPairDStream< BLAST_PARTITION, BLAST_REQUEST > JOB_STREAM
                     = REQ_STREAM.transformToPair( rdd -> 
                                 DB_SECS.cartesian( rdd ).partitionBy( PARTITIONER1.getValue() ) ).cache();
 

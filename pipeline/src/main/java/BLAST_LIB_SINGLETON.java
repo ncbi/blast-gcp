@@ -54,16 +54,13 @@ import java.util.Collection;
 
 class PART_INST
 {
-    public Integer part_id, requested;
+    public Integer part_id;
     public Long size;
     public Boolean prepared;
-    public BLAST_LIB blaster;
 
     public PART_INST( final BLAST_PARTITION part )
     {
         part_id = part.nr;
-        blaster = new BLAST_LIB();
-        requested = 0;
         size = 0L;
         prepared = false;
     }
@@ -159,6 +156,7 @@ class BLAST_LIB_SINGLETON
 {
     // let us have a map of PARTITION-ID to BLAST_LIB
     private static Map< Integer, PART_INST > parts = new ConcurrentHashMap<>();
+    private static BLAST_LIB blaster = new BLAST_LIB();
 
     /* this ensures that nobody can make an instance of this class, but the class itself */
     private BLAST_LIB_SINGLETON()
@@ -174,12 +172,11 @@ class BLAST_LIB_SINGLETON
 
     public static BLAST_PARTITION prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        PART_INST inst = getPartInst( part );
-        if ( inst != null )
+        PART_INST p_inst = getPartInst( part );
+        if ( p_inst != null )
         {
-            if ( !inst.prepared )
-                inst.prepared = inst.prepare( part, settings );
-            inst.requested += 1;
+            if ( !p_inst.prepared )
+                p_inst.prepared = p_inst.prepare( part, settings );
             
             return part.prepare();
         }
@@ -188,22 +185,21 @@ class BLAST_LIB_SINGLETON
 
     public static BLAST_LIB get_lib( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        PART_INST inst = getPartInst( part );
-        if ( inst != null )
+        PART_INST p_inst = getPartInst( part );
+        if ( p_inst != null )
         {
-            if ( !inst.prepared )
-                inst.prepared = inst.prepare( part, settings );
-            inst.requested += 1;
-            return inst.blaster;
+            if ( !p_inst.prepared )
+                p_inst.prepared = p_inst.prepare( part, settings );
+            return blaster;
         }
         return null;
     }
 
     public static Long get_size( final BLAST_PARTITION part )
     {
-        PART_INST inst = getPartInst( part );
-        if ( inst != null )
-            return inst.size;
+        PART_INST p_inst = getPartInst( part );
+        if ( p_inst != null )
+            return p_inst.size;
         return 0L;
     }
 

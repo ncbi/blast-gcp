@@ -67,8 +67,8 @@ public class BLAST_LIB {
     }
   }
 
-  synchronized BLAST_HSP_LIST[] jni_prelim_search(
-      BLAST_PARTITION part, BLAST_REQUEST req, String logLevel) {
+  BLAST_HSP_LIST[] jni_prelim_search( BLAST_PARTITION part, BLAST_REQUEST req, String logLevel )
+  {
 
     // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
     throwIfBad();
@@ -102,7 +102,7 @@ public class BLAST_LIB {
     return ret;
   }
 
-  synchronized BLAST_TB_LIST[] jni_traceback(
+  BLAST_TB_LIST[] jni_traceback(
       BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req, String logLevel) {
     throwIfBad();
 
