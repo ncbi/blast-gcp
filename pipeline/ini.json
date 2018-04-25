@@ -15,7 +15,7 @@
     "num_executor_cores" : 3,
     "trigger_port" : 0,
     "project_id" : "ncbi-sandbox-blast",
-    "subscript_id" : "spark-test-subscript",
+    "subscript_id" : "run-queue-integration",
     "db_location" : "/tmp/blast/db_test",
     "result_bucket" : "blast-results",
     "status_bucket" : "blast-results",
