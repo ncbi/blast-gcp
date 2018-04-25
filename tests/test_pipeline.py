@@ -153,6 +153,7 @@ def make_json():
     j['log_start'] = 'false'
     j['log_done'] = 'false'
     j['result_bucket'] = BUCKET_NAME
+    j['status_bucket'] = BUCKET_NAME
     j['subscript_id'] = TEST_ID  # SUBSCRIPTION_PATH
     j['log_request'] = 'true'
     j['log_worker_shift'] = 'false'
@@ -225,7 +226,7 @@ def submit_thread():
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
             progress(submit="  Submitted " + TESTS[test]['orig_RID'])
-            time.sleep(random.randrange(0, 3))
+            time.sleep(random.randrange(5, 10))
         progress(submit="Enough tests submitted, taking a break.")
         time.sleep(20)
 
