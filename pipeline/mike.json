@@ -1,19 +1,32 @@
 {
-    "log_start": "false",
-    "batch_duration": 2,
-    "top_n": 100,
-    "subscript_id": "blast-test-vartanianmh",
-    "project_id": "ncbi-sandbox-blast",
-    "log_worker_shift": "false",
-    "trigger_port": 0,
-    "log_request": "true",
-    "num_db_partitions": 886,
-    "num_executor_cores": 5,
-    "num_executors": 180,
-    "log_partition_prep": "true",
-    "log_port": 0,
-    "status_bucket": "blast-test-vartanianmh",
-    "result_bucket": "blast-test-vartanianmh",
-    "log_done": "false"
+    "blastjni" : {
+        "db" : {
+            "db_bucket" : "nt_50mb_chunks",
+            "num_db_partitions" : 886
+        },
+        "top_n" : 100
+    },
+    "log" : {
+        "log_port" : 0
+    },
+    "result" : {
+        "asn1" : {
+            "bucket" : "blast-test-vartanianmh"
+        },
+        "status" : {
+            "bucket" : "blast-test-vartanianmh"
+        }
+    },
+    "source" : {
+        "pubsub" : {
+            "project_id" : "ncbi-sandbox-blast",
+            "subscript_id" : "blast-test-vartanianmh"
+        }
+    },
+    "spark" : {
+        "num_executor_cores" : 5,
+        "num_executors" : 180,
+        "with_locality" : true
+    }
 }
 

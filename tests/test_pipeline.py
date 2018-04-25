@@ -111,11 +111,17 @@ def make_pubsub():
 
 
 def make_bucket():
-    global STORAGE_CLIENT, TEST_ID, BUCKET, BUCKET_NAME
+    global STORAGE_CLIENT, TEST_ID, BUCKET, BUCKET_NAME, PROJECT
     STORAGE_CLIENT = storage.Client()
     BUCKET_NAME = TEST_ID
     print('  Creating bucket ' + BUCKET_NAME)
     BUCKET = STORAGE_CLIENT.create_bucket(BUCKET_NAME)
+    labels = BUCKET.labels
+    labels['owner'] = TEST_ID
+    labels['project'] = PROJECT
+    labels['description'] = "temporary_test_bucket"
+    BUCKET.labels = labels
+    BUCKET.update()
 
 
 def get_tests():
@@ -150,23 +156,45 @@ def publish(jdict):
 def make_json():
     global BUCKET_NAME, SUBSCRIPTION_PATH, TEST_ID, PROJECT, CLUSTER_ID
     j = {}
-    j['log_start'] = 'false'
-    j['log_done'] = 'false'
-    j['result_bucket'] = BUCKET_NAME
-    j['status_bucket'] = BUCKET_NAME
-    j['subscript_id'] = TEST_ID  # SUBSCRIPTION_PATH
-    j['log_request'] = 'true'
-    j['log_worker_shift'] = 'false'
-    j['batch_duration'] = 2
-    j['trigger_port'] = 0
-    j['log_port'] = 0
-    j['log_partition_prep'] = "true"
-    j['top_n'] = 100
-    j['num_db_partitions'] = 886
-    j['num_executors'] = 180
-    j['num_executor_cores'] = 5
-    j['project_id'] = PROJECT
-    return json.dumps(j, indent=4)
+    if False:
+        j['log_start'] = 'false'
+        j['log_done'] = 'false'
+        j['result_bucket'] = BUCKET_NAME
+        j['status_bucket'] = BUCKET_NAME
+        j['subscript_id'] = TEST_ID  # SUBSCRIPTION_PATH
+        j['log_request'] = 'true'
+        j['log_worker_shift'] = 'false'
+        j['batch_duration'] = 2
+        j['trigger_port'] = 0
+        j['log_port'] = 0
+        j['log_partition_prep'] = "true"
+        j['top_n'] = 100
+        j['num_db_partitions'] = 886
+        j['num_executors'] = 180
+        j['num_executor_cores'] = 5
+        j['project_id'] = PROJECT
+    else:
+        j['spark'] = {}
+        j['spark']['with_locality'] = True
+        j['spark']['num_executors'] = 180
+        j['spark']['num_executor_cores'] = 5
+        j['blastjni'] = {}
+        j['blastjni']['db'] = {}
+        j['blastjni']['db']['db_bucket'] = 'nt_50mb_chunks'
+        j['blastjni']['db']['num_db_partitions'] = 886
+        j['blastjni']['top_n'] = 100
+        j['source'] = {}
+        j['source']['pubsub'] = {}
+        j['source']['pubsub']['project_id'] = PROJECT
+        j['source']['pubsub']['subscript_id'] = TEST_ID
+        j['result'] = {}
+        j['result']['asn1'] = {}
+        j['result']['asn1']['bucket'] = BUCKET_NAME
+        j['result']['status'] = {}
+        j['result']['status']['bucket'] = BUCKET_NAME
+        j['log'] = {}
+        j['log']['log_port'] = 0
+    return json.dumps(j, indent=4, separators=(',', ' : '), sort_keys=True)
 
 
 def submit_application(config):

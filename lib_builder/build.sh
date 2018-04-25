@@ -137,7 +137,7 @@ line
 echo "Running tests..."
 echo "  Testing JNI function signatures"
 md5sum -c signatures.md5 > /dev/null
-echo "  Testing JNI function signatures: OK"
+echo "  Testing JNI function signatures OK"
 #md5sum signatures > signatures.md5
 
 
@@ -151,7 +151,7 @@ if [[ $? -ne 1 ]]; then
     echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
     exit 1
 fi
-echo "  Testing for unresolved libraries: OK"
+echo "  Testing for unresolved libraries OK"
 
 echo "  Testing JNI"
 #-verbose:jni \
@@ -172,7 +172,7 @@ if [[ $? -ne 0 ]]; then
 fi
 rm -f output.$$
 set -o errexit
-echo "  Testing JNI: OK"
+echo "  Testing JNI OK"
 echo "Tests complete"
 line
 #fi
