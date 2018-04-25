@@ -64,7 +64,7 @@ gcloud beta dataproc --region us-east4 \
     --num-workers 2 \
     --worker-machine-type n1-highcpu-16 \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 62 \
+    --num-preemptible-workers 4 \
         --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
