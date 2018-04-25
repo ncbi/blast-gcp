@@ -162,9 +162,9 @@ def make_json():
     j['log_port'] = 0
     j['log_partition_prep'] = "true"
     j['top_n'] = 100
-    j['num_db_partitions'] = 20
-    j['num_executors'] = 2
-    j['num_executor_cores'] = 3
+    j['num_db_partitions'] = 886
+    j['num_executors'] = 180
+    j['num_executor_cores'] = 5
     j['project_id'] = PROJECT
     return json.dumps(j, indent=4)
 
