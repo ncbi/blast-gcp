@@ -228,7 +228,7 @@ def submit_thread():
             progress(submit="  Submitted " + TESTS[test]['orig_RID'])
             time.sleep(random.randrange(5, 10))
         progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(20)
+        time.sleep(180)
 
 
 def results_thread():
