@@ -16,5 +16,8 @@
     "trigger_port" : 0,
     "project_id" : "ncbi-sandbox-blast",
     "subscript_id" : "spark-test-subscript",
-    "db_location" : "/tmp/blast/db_test"
+    "db_location" : "/tmp/blast/db_test",
+    "result_bucket" : "blast-results",
+    "status_bucket" : "blast-results",
+    "status_file" : "%s/status.txt"
 }
