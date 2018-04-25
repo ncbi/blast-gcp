@@ -9,12 +9,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 414 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 414 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -24,12 +24,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 76563325, 10, -5 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 422 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -42,12 +42,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 14994106 } ,
+              gi 933686971 } ,
             starts {
               0 ,
-              713 } ,
+              17518 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -59,12 +59,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -74,12 +74,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -92,14 +92,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 349582761 } ,
+              gi 825091707 } ,
             starts {
               0 ,
-              21086 } ,
+              36645 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -109,12 +109,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -124,12 +124,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -142,12 +142,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1115571650 } ,
+              gi 1049298114 } ,
             starts {
               0 ,
-              713 } ,
+              12425 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -159,12 +159,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -174,12 +174,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 776713148, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 424 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -192,12 +192,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 7673700 } ,
+              gi 1043194029 } ,
             starts {
               0 ,
-              778 } ,
+              996022 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -209,12 +209,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -224,12 +224,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -242,12 +242,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742758 } ,
+              gi 1001624365 } ,
             starts {
               0 ,
-              713 } ,
+              1306 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -259,12 +259,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -274,12 +274,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -292,12 +292,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742734 } ,
+              gi 1001622250 } ,
             starts {
               0 ,
-              713 } ,
+              7287 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -309,12 +309,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -324,12 +324,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -342,12 +342,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742730 } ,
+              gi 1001622136 } ,
             starts {
               0 ,
-              713 } ,
+              8181 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -359,12 +359,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -374,12 +374,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -392,12 +392,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742726 } ,
+              gi 820773739 } ,
             starts {
               0 ,
-              713 } ,
+              2017 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -409,12 +409,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -424,12 +424,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -442,12 +442,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742724 } ,
+              gi 1279171646 } ,
             starts {
               0 ,
-              713 } ,
+              16163 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -459,12 +459,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -474,12 +474,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -492,14 +492,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742738 } ,
+              gi 1279166650 } ,
             starts {
               0 ,
-              713 } ,
+              17944 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -509,12 +509,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -524,12 +524,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -542,12 +542,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742732 } ,
+              gi 1279161820 } ,
             starts {
               0 ,
-              713 } ,
+              6047 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -559,12 +559,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -574,12 +574,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -592,14 +592,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742722 } ,
+              gi 1279154312 } ,
             starts {
               0 ,
-              713 } ,
+              35079 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -609,12 +609,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -624,12 +624,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -642,14 +642,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 353742736 } ,
+              gi 1279149370 } ,
             starts {
               0 ,
-              713 } ,
+              10081 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -659,12 +659,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -674,12 +674,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -692,14 +692,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 13569613 } ,
+              gi 1279144318 } ,
             starts {
               0 ,
-              707 } ,
+              4639 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -709,12 +709,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -724,12 +724,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -742,14 +742,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 395406413 } ,
+              gi 1150468888 } ,
             starts {
               0 ,
-              713 } ,
+              28899 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -759,12 +759,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -774,12 +774,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -792,12 +792,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 395406421 } ,
+              gi 1320767865 } ,
             starts {
               0 ,
-              713 } ,
+              19056 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -809,12 +809,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -824,12 +824,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -842,12 +842,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 395406415 } ,
+              gi 806638916 } ,
             starts {
               0 ,
-              713 } ,
+              17463 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -859,12 +859,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -874,12 +874,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -892,14 +892,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 395406403 } ,
+              gi 1133373041 } ,
             starts {
               0 ,
-              713 } ,
+              22934 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -909,12 +909,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -924,12 +924,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -942,12 +942,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 395406401 } ,
+              gi 1131737831 } ,
             starts {
               0 ,
-              713 } ,
+              25537 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -959,12 +959,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -974,12 +974,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -992,12 +992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 395406397 } ,
+              gi 1131737781 } ,
             starts {
               0 ,
-              713 } ,
+              26940 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1009,12 +1009,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 417 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 417 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1024,12 +1024,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 771173199, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1042,14 +1042,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 15421132 } ,
+              gi 1052520471 } ,
             starts {
               0 ,
-              713 } ,
+              15479 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -1059,12 +1059,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 416 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 416 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1074,12 +1074,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 769326549, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1088,38 +1088,18 @@ Seq-annot ::= {
         segs
           denseg {
             dim 2 ,
-            numseg 5 ,
+            numseg 1 ,
             ids {
               local
                 str "query" ,
-              gi 32402581 } ,
+              gi 940785863 } ,
             starts {
               0 ,
-              712 ,
-              10 ,
-              -1 ,
-              11 ,
-              722 ,
-              18 ,
-              -1 ,
-              19 ,
-              729 } ,
+              26197 } ,
             lens {
-              10 ,
-              1 ,
-              7 ,
-              1 ,
-              407 } ,
+              822 } ,
             strands {
-              plus ,
               plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
               plus } } } ,
       {
         type partial ,
@@ -1129,12 +1109,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1144,12 +1124,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1162,12 +1142,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 211909077 } ,
+              gi 1316112127 } ,
             starts {
               0 ,
-              21026 } ,
+              18310 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1179,12 +1159,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 426 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 426 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1194,12 +1174,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 787793046, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 426 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1212,12 +1192,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 331183 } ,
+              gi 1316112081 } ,
             starts {
               0 ,
-              795 } ,
+              18925 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1229,12 +1209,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1244,12 +1224,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1262,12 +1242,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 58957 } ,
+              gi 1316112034 } ,
             starts {
               0 ,
-              775 } ,
+              18925 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1279,12 +1259,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1294,12 +1274,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1312,12 +1292,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 391884084 } ,
+              gi 1316111988 } ,
             starts {
               0 ,
-              713 } ,
+              18925 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1329,12 +1309,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1344,12 +1324,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 776713148, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 424 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1362,12 +1342,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 290467418 } ,
+              gi 1316111942 } ,
             starts {
               0 ,
-              727 } ,
+              18925 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1379,12 +1359,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1394,12 +1374,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1412,14 +1392,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 261363544 } ,
+              gi 1229082103 } ,
             starts {
               0 ,
-              713 } ,
+              21828 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -1429,12 +1409,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1444,12 +1424,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1462,12 +1442,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 261363540 } ,
+              gi 469567118 } ,
             starts {
               0 ,
-              713 } ,
+              26940 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1479,12 +1459,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1494,12 +1474,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1512,12 +1492,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 261363538 } ,
+              gi 461496297 } ,
             starts {
               0 ,
-              713 } ,
+              26945 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1529,12 +1509,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1544,12 +1524,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1562,14 +1542,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 261363550 } ,
+              gi 1028614356 } ,
             starts {
               0 ,
-              713 } ,
+              10672 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -1579,12 +1559,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1594,12 +1574,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1612,14 +1592,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 324022082 } ,
+              gi 742999772 } ,
             starts {
               0 ,
-              749 } ,
+              38851 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -1629,12 +1609,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1644,12 +1624,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1662,12 +1642,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 110826440 } ,
+              gi 1163072101 } ,
             starts {
               0 ,
-              713 } ,
+              42010 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1679,12 +1659,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1694,12 +1674,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1712,12 +1692,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 110826442 } ,
+              gi 1163063602 } ,
             starts {
               0 ,
-              713 } ,
+              27118 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1729,12 +1709,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1744,12 +1724,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1762,12 +1742,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 110006348 } ,
+              gi 918463070 } ,
             starts {
               0 ,
-              713 } ,
+              26394 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1779,12 +1759,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1794,12 +1774,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1812,12 +1792,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1064244979 } ,
+              gi 1231111509 } ,
             starts {
               0 ,
-              713 } ,
+              16190 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1829,12 +1809,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 411 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1844,12 +1824,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 760093301, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 421 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1862,14 +1842,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1246296396 } ,
+              gi 384236334 } ,
             starts {
               0 ,
-              713 } ,
+              187 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -1879,12 +1859,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1894,12 +1874,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1912,12 +1892,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 405167154 } ,
+              gi 902618894 } ,
             starts {
               0 ,
-              713 } ,
+              46931 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1929,12 +1909,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1944,12 +1924,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -1962,12 +1942,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 405167152 } ,
+              gi 902604381 } ,
             starts {
               0 ,
-              713 } ,
+              16285 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1979,12 +1959,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 417 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 417 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -1994,12 +1974,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 771173199, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2012,12 +1992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 405167188 } ,
+              gi 1174615918 } ,
             starts {
               0 ,
-              685 } ,
+              44058 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2029,12 +2009,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2044,12 +2024,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2062,12 +2042,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 405167190 } ,
+              gi 1061250795 } ,
             starts {
               0 ,
-              713 } ,
+              7053 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2079,12 +2059,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2094,12 +2074,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2112,12 +2092,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 405167176 } ,
+              gi 1061297281 } ,
             starts {
               0 ,
-              691 } ,
+              21293 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2129,12 +2109,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2144,12 +2124,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2162,12 +2142,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 405167174 } ,
+              gi 1167690221 } ,
             starts {
               0 ,
-              626 } ,
+              26197 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2179,12 +2159,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2194,12 +2174,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2212,12 +2192,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164416211 } ,
+              gi 1167690172 } ,
             starts {
               0 ,
-              713 } ,
+              26197 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2229,12 +2209,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2244,12 +2224,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2262,12 +2242,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164416209 } ,
+              gi 959153996 } ,
             starts {
               0 ,
-              713 } ,
+              34338 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2279,12 +2259,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2294,12 +2274,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2312,12 +2292,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164416203 } ,
+              gi 959148293 } ,
             starts {
               0 ,
-              713 } ,
+              25537 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2329,12 +2309,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2344,12 +2324,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2362,12 +2342,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164416199 } ,
+              gi 1046636174 } ,
             starts {
               0 ,
-              713 } ,
+              17517 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2379,12 +2359,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2394,12 +2374,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2412,12 +2392,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164416161 } ,
+              gi 1046636110 } ,
             starts {
               0 ,
-              704 } ,
+              17517 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2429,12 +2409,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2444,12 +2424,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2462,12 +2442,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164416219 } ,
+              gi 1167690282 } ,
             starts {
               0 ,
-              713 } ,
+              15669 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2479,12 +2459,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2494,12 +2474,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2512,14 +2492,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 613447646 } ,
+              gi 1202265830 } ,
             starts {
               0 ,
-              21086 } ,
+              18428 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -2529,12 +2509,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2544,12 +2524,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2562,12 +2542,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 613447462 } ,
+              gi 1202249921 } ,
             starts {
               0 ,
-              21086 } ,
+              32092 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2579,12 +2559,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2594,12 +2574,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2612,12 +2592,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 298568200 } ,
+              gi 1202229487 } ,
             starts {
               0 ,
-              741 } ,
+              43196 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2629,12 +2609,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2644,12 +2624,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2662,14 +2642,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 112949615 } ,
+              gi 1202218270 } ,
             starts {
               0 ,
-              21087 } ,
+              25698 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -2679,12 +2659,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2694,12 +2674,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2712,12 +2692,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 324963506 } ,
+              gi 1202197306 } ,
             starts {
               0 ,
-              713 } ,
+              247 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2729,12 +2709,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 414 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 414 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2744,12 +2724,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 76563325, 10, -5 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 422 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2762,12 +2742,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 14994108 } ,
+              gi 1133557979 } ,
             starts {
               0 ,
-              713 } ,
+              18715 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2779,12 +2759,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2794,12 +2774,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2812,14 +2792,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 67528073 } ,
+              gi 1196608111 } ,
             starts {
               0 ,
-              713 } ,
+              8709 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -2829,12 +2809,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2844,12 +2824,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2862,14 +2842,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 45549458 } ,
+              gi 1196608111 } ,
             starts {
               0 ,
-              713 } ,
+              52088 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -2879,12 +2859,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2894,12 +2874,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2912,12 +2892,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 45549454 } ,
+              gi 1062713299 } ,
             starts {
               0 ,
-              713 } ,
+              9794 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2929,12 +2909,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2944,12 +2924,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -2962,14 +2942,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 260751587 } ,
+              gi 1241294847 } ,
             starts {
               0 ,
-              713 } ,
+              20205 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -2979,12 +2959,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -2994,12 +2974,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3012,12 +2992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 260766924 } ,
+              gi 1227854650 } ,
             starts {
               0 ,
-              713 } ,
+              26738 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3029,12 +3009,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3044,12 +3024,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 776713148, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 424 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3062,12 +3042,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 6581113 } ,
+              gi 1285282315 } ,
             starts {
               0 ,
-              782 } ,
+              2017 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3079,12 +3059,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3094,12 +3074,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3112,12 +3092,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 32454273 } ,
+              gi 555235185 } ,
             starts {
               0 ,
-              713 } ,
+              17517 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3129,12 +3109,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3144,12 +3124,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3162,14 +3142,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 57116625 } ,
+              gi 1201280613 } ,
             starts {
               0 ,
-              21086 } ,
+              26414 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3179,12 +3159,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3194,12 +3174,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3212,14 +3192,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 282598595 } ,
+              gi 1201280004 } ,
             starts {
               0 ,
-              21086 } ,
+              26414 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3229,12 +3209,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3244,12 +3224,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3262,14 +3242,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 282598562 } ,
+              gi 1201279949 } ,
             starts {
               0 ,
-              21086 } ,
+              26414 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3279,12 +3259,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3294,12 +3274,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 776713148, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 424 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3312,12 +3292,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 282598573 } ,
+              gi 660582265 } ,
             starts {
               0 ,
-              21086 } ,
+              48310 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3329,12 +3309,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3344,12 +3324,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3362,12 +3342,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 282598584 } ,
+              gi 1043558864 } ,
             starts {
               0 ,
-              21080 } ,
+              26939 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3379,12 +3359,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3394,12 +3374,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 776713148, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 424 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3412,12 +3392,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 690384948 } ,
+              gi 599328478 } ,
             starts {
               0 ,
-              713 } ,
+              26940 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3429,12 +3409,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3444,12 +3424,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3462,12 +3442,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 164665772 } ,
+              gi 717159388 } ,
             starts {
               0 ,
-              713 } ,
+              77370 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3479,12 +3459,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3494,12 +3474,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3512,14 +3492,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 225729088 } ,
+              gi 410375234 } ,
             starts {
               0 ,
-              713 } ,
+              44450 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3529,12 +3509,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3544,12 +3524,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3562,14 +3542,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 225729036 } ,
+              gi 975900971 } ,
             starts {
               0 ,
-              713 } ,
+              1592 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3579,12 +3559,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3594,12 +3574,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3612,12 +3592,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62996628 } ,
+              gi 1341139953 } ,
             starts {
               0 ,
-              21080 } ,
+              26940 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3629,12 +3609,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3644,12 +3624,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3662,12 +3642,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62996639 } ,
+              gi 1209596053 } ,
             starts {
               0 ,
-              21077 } ,
+              2017 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3679,12 +3659,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3694,12 +3674,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3712,14 +3692,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632208 } ,
+              gi 1209595572 } ,
             starts {
               0 ,
-              713 } ,
+              402 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3729,12 +3709,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3744,12 +3724,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3762,14 +3742,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632206 } ,
+              gi 1342690384 } ,
             starts {
               0 ,
-              713 } ,
+              42447 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3779,12 +3759,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3794,12 +3774,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3812,14 +3792,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632204 } ,
+              gi 1342448635 } ,
             starts {
               0 ,
-              713 } ,
+              6570 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -3829,12 +3809,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3844,12 +3824,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3862,12 +3842,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632202 } ,
+              gi 1035493642 } ,
             starts {
               0 ,
-              713 } ,
+              24630 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3879,12 +3859,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3894,12 +3874,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3912,12 +3892,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632200 } ,
+              gi 1206187749 } ,
             starts {
               0 ,
-              713 } ,
+              15344 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3929,12 +3909,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3944,12 +3924,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -3962,12 +3942,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632198 } ,
+              gi 1189395770 } ,
             starts {
               0 ,
-              713 } ,
+              89601 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3979,12 +3959,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -3994,12 +3974,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4012,12 +3992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632196 } ,
+              gi 1189395715 } ,
             starts {
               0 ,
-              713 } ,
+              17538 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4029,12 +4009,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4044,12 +4024,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4062,14 +4042,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632192 } ,
+              gi 586641463 } ,
             starts {
               0 ,
-              713 } ,
+              34029 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4079,12 +4059,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4094,12 +4074,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4112,12 +4092,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632188 } ,
+              gi 1185671707 } ,
             starts {
               0 ,
-              713 } ,
+              17464 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4129,12 +4109,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4144,12 +4124,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4162,14 +4142,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632186 } ,
+              gi 1151137977 } ,
             starts {
               0 ,
-              713 } ,
+              0 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4179,12 +4159,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4194,12 +4174,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4212,12 +4192,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632184 } ,
+              gi 808352501 } ,
             starts {
               0 ,
-              713 } ,
+              5757 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4229,12 +4209,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4244,12 +4224,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4262,14 +4242,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632182 } ,
+              gi 908778063 } ,
             starts {
               0 ,
-              713 } ,
+              21176 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4279,12 +4259,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4294,12 +4274,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4312,12 +4292,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632180 } ,
+              gi 1190361126 } ,
             starts {
               0 ,
-              713 } ,
+              22165 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4329,12 +4309,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4344,12 +4324,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4362,12 +4342,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632178 } ,
+              gi 1190361125 } ,
             starts {
               0 ,
-              713 } ,
+              22165 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4379,12 +4359,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4394,12 +4374,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4412,12 +4392,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632176 } ,
+              gi 1059051925 } ,
             starts {
               0 ,
-              713 } ,
+              5757 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4429,12 +4409,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4444,12 +4424,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4462,14 +4442,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632174 } ,
+              gi 1339162548 } ,
             starts {
               0 ,
-              713 } ,
+              25786 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4479,12 +4459,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4494,12 +4474,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4512,12 +4492,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632172 } ,
+              gi 1208620067 } ,
             starts {
               0 ,
-              713 } ,
+              42296 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4529,12 +4509,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4544,12 +4524,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4562,14 +4542,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143632170 } ,
+              gi 1336434052 } ,
             starts {
               0 ,
-              713 } ,
+              68614 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4579,12 +4559,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 408 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4594,12 +4574,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 754553352, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 420 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4612,14 +4592,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1143567168 } ,
+              gi 1336433633 } ,
             starts {
               0 ,
-              713 } ,
+              39397 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4629,12 +4609,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4644,12 +4624,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4662,12 +4642,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 50082761 } ,
+              gi 1204565950 } ,
             starts {
               0 ,
-              21023 } ,
+              11590 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4679,12 +4659,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4694,12 +4674,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4712,12 +4692,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911131 } ,
+              gi 1206209158 } ,
             starts {
               0 ,
-              713 } ,
+              40218 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4729,12 +4709,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4744,12 +4724,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4762,12 +4742,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911129 } ,
+              gi 1135520290 } ,
             starts {
               0 ,
-              713 } ,
+              19066 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4779,12 +4759,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4794,12 +4774,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4812,12 +4792,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911125 } ,
+              gi 1266961636 } ,
             starts {
               0 ,
-              713 } ,
+              31061 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4829,12 +4809,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4844,12 +4824,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4862,14 +4842,14 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911123 } ,
+              gi 1344821187 } ,
             starts {
               0 ,
-              713 } ,
+              21728 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
-              plus ,
+              minus ,
               plus } } } ,
       {
         type partial ,
@@ -4879,12 +4859,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 423 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4894,12 +4874,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 782253097, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 425 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4912,12 +4892,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911121 } ,
+              gi 1114557683 } ,
             starts {
               0 ,
-              713 } ,
+              8442 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4929,12 +4909,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4944,12 +4924,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -4962,12 +4942,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911133 } ,
+              gi 1114557082 } ,
             starts {
               0 ,
-              713 } ,
+              8442 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4979,12 +4959,12 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "blast_score" ,
             value
-              int 405 } ,
+              int 822 } ,
           {
             id
               str "e_value" ,
@@ -4994,12 +4974,12 @@ Seq-annot ::= {
             id
               str "bit_score" ,
             value
-              real { 749013403, 10, -6 } } ,
+              real { 15190663, 10, -4 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 419 } ,
+              int 822 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -5012,12 +4992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 62911127 } ,
+              gi 1114545790 } ,
             starts {
               0 ,
-              713 } ,
+              8442 } ,
             lens {
-              426 } ,
+              822 } ,
             strands {
               plus ,
               plus } } }

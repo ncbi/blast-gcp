@@ -62,6 +62,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # 16 each to 2 workers
 # 854/16 amongst 54 preemptible workers
 
+# ~$15/hour for 56 node cluster
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
