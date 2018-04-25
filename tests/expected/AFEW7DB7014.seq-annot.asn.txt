@@ -1,0 +1,204 @@
+Seq-annot ::= {
+  data
+    align {
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 94 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 94 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 453043429, 10, -47 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 174705361, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 188 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 221776625, 10, -7 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 13 ,
+            ids {
+              local
+                str "query" ,
+              gi 2928 } ,
+            starts {
+              343 ,
+              1072 ,
+              467 ,
+              -1 ,
+              478 ,
+              1196 ,
+              481 ,
+              -1 ,
+              483 ,
+              1199 ,
+              484 ,
+              -1 ,
+              485 ,
+              1200 ,
+              486 ,
+              -1 ,
+              488 ,
+              1201 ,
+              490 ,
+              -1 ,
+              491 ,
+              1203 ,
+              492 ,
+              -1 ,
+              494 ,
+              1204 } ,
+            lens {
+              124 ,
+              11 ,
+              3 ,
+              2 ,
+              1 ,
+              1 ,
+              1 ,
+              2 ,
+              2 ,
+              1 ,
+              1 ,
+              2 ,
+              79 } ,
+            strands {
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 78 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 78 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 355214614, 10, -38 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 145158967, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 145 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 168996229, 10, -7 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 9 ,
+            ids {
+              local
+                str "query" ,
+              gi 2928 } ,
+            starts {
+              152 ,
+              760 ,
+              253 ,
+              -1 ,
+              254 ,
+              861 ,
+              255 ,
+              -1 ,
+              259 ,
+              862 ,
+              260 ,
+              -1 ,
+              264 ,
+              863 ,
+              265 ,
+              -1 ,
+              274 ,
+              864 } ,
+            lens {
+              101 ,
+              1 ,
+              1 ,
+              4 ,
+              1 ,
+              4 ,
+              1 ,
+              9 ,
+              52 } ,
+            strands {
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus } } }
+      

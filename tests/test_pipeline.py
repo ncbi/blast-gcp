@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import atexit
-import base64
+#import base64
+import datetime
 import getpass
 import json
 import os
@@ -31,25 +32,49 @@ TEST_ID = ""
 STORAGE_CLIENT = None
 BUCKET = ""
 BUCKET_NAME = ""
-TESTS = []
+TESTS = {}
 PUBSUB_CLIENT = None
-TOPIC = ""
+TOPIC_NAME = ""
 SUBSCRIPTION = None
 SUBSCRIPTION_PATH = ""
 JOB_ID = ""
 CONFIG_JSON = ""
 
 
+def progress(submit=None, results=None):
+    if submit is None and results is None:
+        progress(" " * 12 + "SUBMIT THREAD", " " * 12 + "RESULTS THREAD")
+        progress("-" * 80, "-" * 80)
+        return
+
+    if submit is None:
+        submit = ""
+    else:
+        if '\n' in submit:
+            lines = submit.split('\n')
+            for line in lines:
+                progress(submit=line)
+
+    if results is None:
+        results = ""
+    else:
+        if '\n' in results:
+            lines = results.split('\n')
+            for line in lines:
+                progress(results=line)
+
+    print("%-38.38s | %-38.38s" % (submit, results))
+
+
 def get_cluster():
     global CLUSTER_ID, PROJECT
     user = getpass.getuser()
-    print("\nuser is " + user)
+    print("user is " + user)
     cmd = [
         'gcloud', 'dataproc', '--project', PROJECT, '--region', 'us-east4',
         'clusters', 'list'
     ]
     results = subprocess.check_output(cmd)
-    #    print(results)
     clusters = results.decode().split('\n')
     for cluster in clusters:
         cluster_name = cluster.split(' ')[0]
@@ -59,28 +84,28 @@ def get_cluster():
 
 
 def make_pubsub():
-    #topic#_path = publisher.PUBSUB(
-    global TOPIC, SUBSCRIPTION, SUBSCRIPTION_PATH, PUBSUB_CLIENT, TEST_ID
+    global TOPIC_NAME, SUBSCRIPTION, SUBSCRIPTION_PATH, PUBSUB_CLIENT, TEST_ID
     global PROJECT
     PUBSUB_CLIENT = pubsub.PublisherClient()
-    TOPIC = 'projects/{project_id}/topics/{topic}'.format(
+    TOPIC_NAME = 'projects/{project_id}/topics/{topic}'.format(
         project_id=PROJECT,  # os.getenv('GOOGLE_CLOUD_PROJECT'),
         topic=TEST_ID)
 
     # Create the topic.
-    topic = PUBSUB_CLIENT.create_topic(TOPIC)
+    topic = PUBSUB_CLIENT.create_topic(TOPIC_NAME)
+    print('  Topic created: ' + TOPIC_NAME)
 
-    #topic=publisher.get_topic(PUBSUB)
-    print('\nTopic created: {}'.format(topic))
+    #    print('  Topic created: {}'.format(topic))
 
     subscriber = pubsub.SubscriberClient()
 
     SUBSCRIPTION_PATH = subscriber.subscription_path(PROJECT, TEST_ID)
-    print("SUBSCRIPTION_PATH is " + SUBSCRIPTION_PATH)
+    print("  SUBSCRIPTION_PATH is " + SUBSCRIPTION_PATH)
 
-    SUBSCRIPTION = subscriber.create_subscription(SUBSCRIPTION_PATH, TOPIC)
+    SUBSCRIPTION = subscriber.create_subscription(SUBSCRIPTION_PATH,
+                                                  TOPIC_NAME)
 
-    print('Subscription created: {}'.format(SUBSCRIPTION))
+    #    print('  Subscription created: {}'.format(SUBSCRIPTION))
 
     return
 
@@ -89,46 +114,37 @@ def make_bucket():
     global STORAGE_CLIENT, TEST_ID, BUCKET, BUCKET_NAME
     STORAGE_CLIENT = storage.Client()
     BUCKET_NAME = TEST_ID
-    #    BUCKET = BUCKET.replace('_', '')
-    print('\nCreating bucket ' + BUCKET_NAME)
+    print('  Creating bucket ' + BUCKET_NAME)
     BUCKET = STORAGE_CLIENT.create_bucket(BUCKET_NAME)
 
 
 def get_tests():
     global TESTS
-    #    test_blobs.append(test)
-    #for test in test_request_bucket.list_blobs():
 
     test_blobs = os.listdir('queries')
     random.shuffle(test_blobs)
 
-    for test_file in test_blobs[0:5]:
+    for test_file in test_blobs:
         test_file = 'queries/' + test_file
-        print('  ' + test_file)
         with open(test_file) as fin:
             read_data = fin.read()
 
-        #foo=test.download_as_string()
         j = json.loads(read_data)
         j['orig_RID'] = j['RID']
-        print("  RID was " + j['RID'])
+        j['pubsub_submit_time'] = "TBD"
         j['RID'] = TEST_ID + j['RID']
-        print("  RID  is " + j['RID'])
-        # TODO: Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0,100) < 1:
+        # Randomly put 1% of queries in gs bucket instead
+        if random.randrange(0, 100) < 5:
             print("Using bigquery")
-            j['queries']=['gs://bucket/big.query']
-        TESTS.append(j)
+            j['queries'] = ['gs://bucket/big.query']
+        TESTS[j['RID']] = j
     print("Loaded " + str(len(TESTS)) + " tests")
 
 
 def publish(jdict):
-    global TOPIC, PUBSUB_CLIENT
-    #    PUBSUB_CLIENT.publish(TOPIC, b'test')
-    jdict['pubsub_submit_time'] = time.time()
+    global TOPIC_NAME, PUBSUB_CLIENT
     msg = json.dumps(jdict, indent=4).encode()
-    #print(msg)
-    PUBSUB_CLIENT.publish(TOPIC, msg)
+    PUBSUB_CLIENT.publish(TOPIC_NAME, msg)
 
 
 def make_json():
@@ -145,10 +161,9 @@ def make_json():
     j['log_port'] = 0
     j['log_partition_prep'] = "true"
     j['top_n'] = 100
-    j['num_db_partitions'] = 100
+    j['num_db_partitions'] = 20
     j['num_executors'] = 2
     j['num_executor_cores'] = 3
-#    j['worker_node_name_pattern'] = CLUSTER_ID + "-w-%d.c.ncbi-sandbox-blast.internal"
     j['project_id'] = PROJECT
     return json.dumps(j, indent=4)
 
@@ -177,9 +192,10 @@ def submit_application(config):
     cmd.append("--class")
     cmd.append("gov.nih.nlm.ncbi.blastjni.BLAST_MAIN")
     cmd.append("--jars")
+    # TODO: magic pubsub jar should be in git or make_jars.sh
     cmd.append(
-            "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
-            + "," + "../pipeline/target/sparkblast-1-jar-with-dependencies.jar")
+        "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
+        + "," + "../pipeline/target/sparkblast-1-jar-with-dependencies.jar")
     cmd.append("--project")
     cmd.append(PROJECT)
     cmd.append("--files")
@@ -190,62 +206,93 @@ def submit_application(config):
     cmd.append("1")
     cmd.append("--")
     cmd.append(CONFIG_JSON)
-    #print(cmd)
-    print("  cmd: " + ' '.join(cmd))
-    JOB_ID = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()
-    JOB_ID = JOB_ID.replace("\n", "\n        ")
-    print("JOB_ID is    " + JOB_ID)
-
-
-def status_thread():
-    while True:
-        print("Status...")
-        time.sleep(5)
+    print("  cmd is : " + ' '.join(cmd))
+    #JOB_ID = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()
+    #JOB_ID = JOB_ID.replace("\n", "\n        ")
+    #print("JOB_ID is    " + JOB_ID)
 
 
 def submit_thread():
     global TESTS
-    print("Submit thread started: " + str(len(TESTS)))
-    for test in TESTS:
-        # Emulate 1..10 submissions a second
-        time.sleep(random.randrange(0, 100) / 1000)
-        publish(test)
-        print("Submitted")
-    print("Submit thread complete")
+    progress(submit=("Submit thread started: " + str(len(TESTS)) + " tests"))
+    while True:
+        tests = list(TESTS.keys())
+        random.shuffle(tests)
+        for test in tests[0:5]:
+            # Emulate 1..10 submissions a second
+            #time.sleep(random.randrange(0, 100) / 1000)
+            TESTS[test]['pubsub_submit_time'] = time.time()
+            #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
+            publish(TESTS[test])
+            progress(submit="  Submitted " + TESTS[test]['orig_RID'])
+            time.sleep(random.randrange(0, 3))
+        progress(submit="Enough tests submitted, taking a break.")
+        time.sleep(20)
 
 
 def results_thread():
     global STORAGE_CLIENT, BUCKET, BUCKET_NAME, TESTS
     while True:
-        print("Results...")
-        for result in BUCKET.list_blobs():  # prefix='output',delimiter='/'):
-            print("  result: " + result.name)
-            d = result.download_as_string()
-            print("  result: " + base64.b64encode(d).decode()[0:10])
+        time.sleep(1)
+        anything = False
+        for blob in BUCKET.list_blobs():  # prefix='output',delimiter='/'):
+            anything = True
+            # gs://blast-test-$USER/output/RID/seq-annot.asn/
+            # gs://blast-test-$USER/status/RID/status.txt
+            parts = blob.name.split('/')
+            if parts[0] == 'status':
+                # TODO: Check Job Orchestration status
+                continue
+            # progress(results=str(parts))
+            rid = parts[1]
 
+            result = TESTS[rid]
+            origrid = result['orig_RID']
+            os.makedirs(name='results', exist_ok=True)
+            fname = "results/" + origrid + "." + parts[2]
 
-# TODO: Check Job Orchestration status
-        time.sleep(5)
+            blob.download_to_filename(fname)
+            dtend = blob.time_created
+            dtend = dtend.replace(tzinfo=None)
+            BUCKET.delete_blob(blob.name)
+
+            dtstart = datetime.datetime.utcfromtimestamp(
+                result['pubsub_submit_time'])
+            elapsed = dtend - dtstart
+            progress(results="%s took %0.2f seconds" % (
+                origrid, elapsed.total_seconds()))
+
+            cmd = [
+                "asntool", "-m", "/am/ncbiapdata/asn/asn.all", "-t",
+                "Seq-annot", "-d", fname, "-p", fname + ".txt"
+            ]
+            #print (cmd)
+            subprocess.check_output(cmd)
+
+        if not anything:
+            progress(results="No objects in bucket")
+            time.sleep(20)
 
 
 def cleanup():
-    global PUBSUB_CLIENT, TOPIC, BUCKET, BUCKET_NAME
+    global PUBSUB_CLIENT, TOPIC_NAME, BUCKET, BUCKET_NAME
     global STORAGE_CLIENT, CONFIG_JSON, SUBSCRIPTION, SUBSCRIPTION_PATH
+    print("*** Cleaning up... ***")
     if CONFIG_JSON:
         os.remove(CONFIG_JSON)
-    if TOPIC:
-        print("Removing TOPIC: " + TOPIC)
+    if TOPIC_NAME:
+        print("  Removing TOPIC: " + TOPIC_NAME)
         PUBSUB_CLIENT = pubsub.PublisherClient()
-        PUBSUB_CLIENT.delete_topic(TOPIC)
+        PUBSUB_CLIENT.delete_topic(TOPIC_NAME)
     if SUBSCRIPTION:
-        print("Removing SUBSCRIPTION: " + SUBSCRIPTION_PATH)
+        print("  Removing SUBSCRIPTION: " + SUBSCRIPTION_PATH)
         subscriber_client = pubsub.SubscriberClient()
         subscriber_client.delete_subscription(SUBSCRIPTION_PATH)
     if BUCKET:
         for blob in BUCKET.list_blobs():
-            print("Deleting " + blob.name + " from bucket " + BUCKET_NAME)
+            print("    Deleting " + blob.name + " from bucket " + BUCKET_NAME)
             BUCKET.delete_blob(blob.name)
-        print("Removing BUCKET: " + BUCKET_NAME)
+        print("  Removing BUCKET: " + BUCKET_NAME)
         bucket = STORAGE_CLIENT.get_bucket(BUCKET_NAME)
         bucket.delete()
     # TODO: Kill application?
@@ -260,8 +307,8 @@ def main():
     # register atexit
     atexit.register(cleanup)
     TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
-#    TEST_ID = "blast-test-vartanianmh"
-    print("TEST_ID is " + TEST_ID + '\n')
+    TEST_ID = "blast-test-vartanianmh"
+    print("TEST_ID is " + TEST_ID)
 
     get_tests()
 
@@ -270,7 +317,7 @@ def main():
 
     # Look for cluster
     get_cluster()
-    print("\nCluster id is: " + CLUSTER_ID)
+    print("Cluster id is: " + CLUSTER_ID)
     # Start if not found?
 
     # Create output bucket
@@ -284,17 +331,25 @@ def main():
     print("JSON config is " + config)
     #print(config)
 
+    print()
+    print("PubSub subscriptions created")
+    print("Cloud Storage bucket created")
+    print()
+    submit_application(config)
+    print()
+    print(" " * 20, "*** Start Spark Streaming Job now ***")
+    time.sleep(10)
+    print()
+    time.sleep(1)
+
     # Start threads
     #  submits
+    progress(None, None)
     threading.Thread(target=submit_thread).start()
     #  status
-    threading.Thread(target=status_thread).start()
+    #threading.Thread(target=status_thread).start()
     #  results
     threading.Thread(target=results_thread).start()
-
-    # submit application
-    time.sleep(15)
-    submit_application(config)
 
 
 #   asn1 diff

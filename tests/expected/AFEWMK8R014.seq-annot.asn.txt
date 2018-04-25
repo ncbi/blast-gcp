@@ -1,0 +1,64 @@
+Seq-annot ::= {
+  data
+    align {
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 49 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 49 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 58783814, 10, -21 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 916061271, 10, -7 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 52 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 443939393, 10, -8 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 3 ,
+            ids {
+              local
+                str "query" ,
+              gi 2674070 } ,
+            starts {
+              1256 ,
+              0 ,
+              -1 ,
+              48 ,
+              1304 ,
+              49 } ,
+            lens {
+              48 ,
+              1 ,
+              4 } ,
+            strands {
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus } } }
+      
