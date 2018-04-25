@@ -114,7 +114,10 @@ def get_tests():
         print("  RID was " + j['RID'])
         j['RID'] = TEST_ID + j['RID']
         print("  RID  is " + j['RID'])
-        # TODO: Randomly put query in gs bucket instead
+        # TODO: Randomly put 1% of queries in gs bucket instead
+        if random.randrange(0,100) < 1:
+            print("Using bigquery")
+            j['queries']=['gs://bucket/big.query']
         TESTS.append(j)
     print("Loaded " + str(len(TESTS)) + " tests")
 
@@ -129,7 +132,7 @@ def publish(jdict):
 
 
 def make_json():
-    global BUCKET_NAME, SUBSCRIPTION_PATH, TEST_ID, PROJECT
+    global BUCKET_NAME, SUBSCRIPTION_PATH, TEST_ID, PROJECT, CLUSTER_ID
     j = {}
     j['log_start'] = 'false'
     j['log_done'] = 'false'
@@ -143,9 +146,9 @@ def make_json():
     j['log_partition_prep'] = "true"
     j['top_n'] = 100
     j['num_db_partitions'] = 100
-    j['num_workers'] = 8
-    j['num_executors'] = 8
+    j['num_executors'] = 2
     j['num_executor_cores'] = 3
+#    j['worker_node_name_pattern'] = CLUSTER_ID + "-w-%d.c.ncbi-sandbox-blast.internal"
     j['project_id'] = PROJECT
     return json.dumps(j, indent=4)
 
@@ -175,14 +178,16 @@ def submit_application(config):
     cmd.append("gov.nih.nlm.ncbi.blastjni.BLAST_MAIN")
     cmd.append("--jars")
     cmd.append(
-        "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
-        + "," + "../pipeline/target/sparkblast-1-jar-with-dependencies.jar")
+            "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
+            + "," + "../pipeline/target/sparkblast-1-jar-with-dependencies.jar")
     cmd.append("--project")
     cmd.append(PROJECT)
     cmd.append("--files")
     cmd.append("../pipeline/libblastjni.so," + CONFIG_JSON)
     cmd.append("--region")
     cmd.append("us-east4")
+    cmd.append("--max-failures-per-hour")
+    cmd.append("1")
     cmd.append("--")
     cmd.append(CONFIG_JSON)
     #print(cmd)
@@ -255,6 +260,7 @@ def main():
     # register atexit
     atexit.register(cleanup)
     TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
+#    TEST_ID = "blast-test-vartanianmh"
     print("TEST_ID is " + TEST_ID + '\n')
 
     get_tests()
@@ -275,7 +281,7 @@ def main():
 
     # configure json.ini
     config = make_json()
-    print(config)
+    print("JSON config is " + config)
     #print(config)
 
     # Start threads
