@@ -39,12 +39,23 @@ import com.google.gson.stream.JsonReader;
 
 public class BLAST_SETTINGS_READER
 {
-    // ------------------- keys in INI-file ---------------------------------------
+    // ------------------- sections in json-file ----------------------------------
+    public static final String key_source_section = "source";
+    public static final String key_socket_section = "socket";
+    public static final String key_pubsub_section = "pubsub";
+    public static final String key_log_section = "log";
+    public static final String key_result_section = "result";
+    public static final String key_asn1_section = "asn1";
+    public static final String key_status_section = "status";
+    public static final String key_blastjni_section = "blastjni";
+    public static final String key_db_section = "db";
+    public static final String key_spark_section = "spark";
+
+    // ------------------- keys in json-file ---------------------------------------
     public static final String key_appName = "appName";
     public static final String key_db_location = "db_location";
     public static final String key_db_pattern = "db_pattern";
     public static final String key_db_bucket = "db_bucket";
-    public static final String key_worker_node_name_pattern = "worker_node_name_pattern";
     public static final String key_batch_duration = "batch_duration";
     public static final String key_locality_wait = "locality_wait";
     public static final String key_with_locality = "with_locality";
@@ -67,53 +78,51 @@ public class BLAST_SETTINGS_READER
     public static final String key_log_final = "log_final";
     public static final String key_log_part_prep = "log_partition_prep";
     public static final String key_log_worker_shift = "log_worker_shift";
+    public static final String key_log_pref_loc = "log_pref_loc";
     public static final String key_jni_log_level = "jni_log_level";
     public static final String key_project_id = "project_id";
     public static final String key_subscript_id = "subscript_id";
-    public static final String key_gs_result_bucket = "result_bucket";
-    public static final String key_gs_result_file = "result_file";
-    public static final String key_gs_status_bucket = "status_bucket";
-    public static final String key_gs_status_file = "status_file";
-    public static final String key_gs_status_running = "status_running";
-    public static final String key_gs_status_done = "status_done";
-    public static final String key_gs_status_error = "status_error";
+    public static final String key_gs_bucket = "bucket";
+    public static final String key_gs_file = "file";
+    public static final String key_gs_running = "running";
+    public static final String key_gs_done = "done";
+    public static final String key_gs_error = "error";
 
     // ------------------- default values -----------------------------------------
     public static final String  dflt_db_location = "/tmp/blast/db";
     public static final String  dflt_db_pattern = "nt_50M";
-    public static final String  dflt_db_bucket = "nt_50mb_chunks";
-    public static final String  dflt_worker_node_name_pattern = "wblast-w-%d.c.ncbi-sandbox-blast.internal";
+    public static final String  dflt_db_bucket = ""; // "nt_50mb_chunks";
     public static final Integer dflt_batch_duration = 2;
-    public static final String  dflt_locality_wait = "20s";
+    public static final String  dflt_locality_wait = "3s";
     public static final Boolean dflt_with_locality = false;
     public static final String  dflt_log_host = "localhost";
-    public static final Integer dflt_log_port = 10011;
+    public static final Integer dflt_log_port = 0; //10011;
     public static final String  dflt_trigger_host = "localhost";
-    public static final Integer dflt_trigger_port = 10012;
-    public static final Integer dflt_num_db_partitions = 10;
+    public static final Integer dflt_trigger_port = 0; //10012;
+    public static final Integer dflt_num_db_partitions = 0;
     public static final Integer dflt_receiver_max_rate = 5;
     public static final Integer dflt_top_n = 10;
     public static final Integer dflt_num_executors = 10;
     public static final Integer dflt_num_executor_cores = 5;
     public static final String  dflt_executor_memory = "";
     public static final Boolean dflt_flat_db_layout = false;
-    public static final Boolean dflt_log_request = false;
+    public static final Boolean dflt_log_request = true;
     public static final Boolean dflt_log_start = false;
     public static final Boolean dflt_log_done = false;
     public static final Boolean dflt_log_cutoff = true;
     public static final Boolean dflt_log_final = true;
     public static final Boolean dflt_log_part_prep = false;
     public static final Boolean dflt_log_worker_shift = false;
+    public static final Boolean dflt_log_pref_loc = false;
     public static final String  dflt_jni_log_level = "Info";
-    public static final String  dflt_project_id = "ncbi-sandbox-blast";
-    public static final String  dflt_subscript_id = "spark-test-subscript";
-    public static final String  dflt_gs_result_bucket = "blastgcp-pipeline-test";
+    public static final String  dflt_project_id = "";
+    public static final String  dflt_subscript_id = "";
+    public static final String  dflt_gs_bucket = "";
     public static final String  dflt_gs_result_file = "output/%s/seq-annot.asn";
-    public static final String  dflt_gs_status_bucket = "blastgcp-pipeline-test";
     public static final String  dflt_gs_status_file = "status/%s/status.txt";
-    public static final String  dflt_gs_status_running = "RUNNING";
-    public static final String  dflt_gs_status_done = "DONE";
-    public static final String  dflt_gs_status_error = "ERROR";
+    public static final String  dflt_gs_running = "RUNNING";
+    public static final String  dflt_gs_done = "DONE";
+    public static final String  dflt_gs_error = "ERROR";
 
     private static String dflt_save_dir()
     {
@@ -129,8 +138,6 @@ public class BLAST_SETTINGS_READER
         res.db_location = dflt_db_location;
         res.db_pattern  = dflt_db_pattern;
         res.db_bucket   = dflt_db_bucket;
-
-        res.worker_node_name_pattern = dflt_worker_node_name_pattern;
 
         res.batch_duration = dflt_batch_duration;
         res.locality_wait  = dflt_locality_wait;
@@ -171,27 +178,28 @@ public class BLAST_SETTINGS_READER
         res.log_final           = dflt_log_final;
         res.log_part_prep       = dflt_log_part_prep;
         res.log_worker_shift    = dflt_log_worker_shift;
+        res.log_pref_loc        = dflt_log_pref_loc;
         res.jni_log_level       = dflt_jni_log_level;
 
         res.project_id          = dflt_project_id;
         res.subscript_id        = dflt_subscript_id;
 
-        res.gs_result_bucket    = dflt_gs_result_bucket;
+        res.gs_result_bucket    = dflt_gs_bucket;
         res.gs_result_file      = dflt_gs_result_file;
 
-        res.gs_status_bucket    = dflt_gs_status_bucket;
+        res.gs_status_bucket    = dflt_gs_bucket;
         res.gs_status_file      = dflt_gs_status_file;
-        res.gs_status_running   = dflt_gs_status_running;
-        res.gs_status_done      = dflt_gs_status_done;
-        res.gs_status_error     = dflt_gs_status_error;
+        res.gs_status_running   = dflt_gs_running;
+        res.gs_status_done      = dflt_gs_done;
+        res.gs_status_error     = dflt_gs_error;
 
         return res;
     }
     
-    private static String get_json_string( JsonObject root, final String name, final String dflt )
+    private static String get_json_string( JsonObject root, final String key, final String dflt )
     {
         String res = dflt;
-        JsonElement elem = root.get( name );
+        JsonElement elem = root.get( key );
         if ( elem != null )
         {
             try
@@ -200,16 +208,16 @@ public class BLAST_SETTINGS_READER
             }
             catch( Exception e )
             {
-                System.out.println( String.format( "json-parsing for %s -> %s", name, e ) );
+                System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
             }
         }
         return res;
     }
 
-    private static Integer get_json_int( JsonObject root, final String name, final Integer dflt )
+    private static Integer get_json_int( JsonObject root, final String key, final Integer dflt )
     {
         Integer res = dflt;
-        JsonElement elem = root.get( name );
+        JsonElement elem = root.get( key );
         if ( elem != null )
         {
             try
@@ -218,16 +226,16 @@ public class BLAST_SETTINGS_READER
             }
             catch( Exception e )
             {
-                System.out.println( String.format( "json-parsing for %s -> %s", name, e ) );
+                System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
             }
         }
         return res;
     }
 
-    private static Boolean get_json_bool( JsonObject root, final String name, final Boolean dflt )
+    private static Boolean get_json_bool( JsonObject root, final String key, final Boolean dflt )
     {
         Boolean res = dflt;
-        JsonElement elem = root.get( name );
+        JsonElement elem = root.get( key );
         if ( elem != null )
         {
             try
@@ -236,10 +244,36 @@ public class BLAST_SETTINGS_READER
             }
             catch( Exception e )
             {
-                System.out.println( String.format( "json-parsing for %s -> %s", name, e ) );
+                System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
             }
         }
         return res;
+    }
+
+    private static JsonObject get_sub( JsonObject root, final String key )
+    {
+        JsonElement e = root.get( key );
+        if ( e != null )
+        {
+            if ( e.isJsonObject() )
+                return e.getAsJsonObject();
+        }
+        return null;
+    }
+
+    private static String get_host( JsonObject root, final String key, final String dflt )
+    {
+        String dflt_host = dflt;
+        try
+        {
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            dflt_host = localMachine.getHostName();
+        }
+        catch ( UnknownHostException e )
+        {
+            dflt_host = dflt;
+        }
+        return get_json_string( root, key, dflt_host );
     }
 
     public static BLAST_SETTINGS read_from_json( final String json_file, final String appName )
@@ -255,66 +289,136 @@ public class BLAST_SETTINGS_READER
 
                 res.appName = get_json_string( root, key_appName, appName );
 
-                res.db_location = get_json_string( root, key_db_location, dflt_db_location );
-                res.db_pattern  = get_json_string( root, key_db_pattern, dflt_db_pattern );
-                res.db_bucket   = get_json_string( root, key_db_bucket, dflt_db_bucket );
-        
-                res.worker_node_name_pattern = get_json_string( root, key_worker_node_name_pattern, dflt_worker_node_name_pattern );
-
-                res.batch_duration = get_json_int( root, key_batch_duration, dflt_batch_duration );
-                res.locality_wait  = get_json_string( root, key_locality_wait, dflt_locality_wait );
-                res.with_locality  = get_json_bool( root, key_with_locality, dflt_with_locality );
-
-                try
-                {
-                    java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-                    String local_host = localMachine.getHostName();
-                    res.log_host     = get_json_string( root, key_log_host, local_host );
-                    res.trigger_host = get_json_string( root, key_trigger_host, local_host );
-                }
-                catch ( UnknownHostException e )
-                {
-                    System.out.println( String.format( "cannot detect name of local machine: %s", e ) );
-                    res.log_host     = get_json_string( root, key_log_host, dflt_log_host );
-                    res.trigger_host = get_json_string( root, key_trigger_host, dflt_trigger_host );
-                }
-                
-                res.log_port     = get_json_int( root, key_log_port, dflt_log_port );
-                res.trigger_port = get_json_int( root, key_trigger_port, dflt_trigger_port );
-
                 res.save_dir = get_json_string( root, key_save_dir, dflt_save_dir() );
                 
-                res.num_db_partitions   = get_json_int( root, key_num_db_partitions, dflt_num_db_partitions );
-                res.receiver_max_rate   = get_json_int( root, key_rec_max_rate, dflt_receiver_max_rate );
-                res.top_n               = get_json_int( root, key_top_n, dflt_top_n );
+                res.batch_duration = dflt_batch_duration;
+                res.locality_wait  = dflt_locality_wait;
+                res.with_locality  = dflt_with_locality;
+                res.num_executors       = dflt_num_executors;
+                res.num_executor_cores  = dflt_num_executor_cores;
+                res.executor_memory     = dflt_executor_memory;
 
-                res.num_executors       = get_json_int( root, key_num_executors, dflt_num_executors );
-                res.num_executor_cores  = get_json_int( root, key_num_executor_cores, dflt_num_executor_cores );
-                res.executor_memory     = get_json_string( root, key_executor_memory, dflt_executor_memory );
+                JsonObject spark_obj = get_sub( root, key_spark_section );
+                if ( spark_obj != null )
+                {
+                    res.batch_duration = get_json_int( spark_obj, key_batch_duration, dflt_batch_duration );
+                    res.locality_wait  = get_json_string( spark_obj, key_locality_wait, dflt_locality_wait );
+                    res.with_locality  = get_json_bool( spark_obj, key_with_locality, dflt_with_locality );
+                    res.num_executors       = get_json_int( spark_obj, key_num_executors, dflt_num_executors );
+                    res.num_executor_cores  = get_json_int( spark_obj, key_num_executor_cores, dflt_num_executor_cores );
+                    res.executor_memory     = get_json_string( spark_obj, key_executor_memory, dflt_executor_memory );
+                }
 
-                res.flat_db_layout      = get_json_bool( root, key_flat_db_layout, dflt_flat_db_layout );
+                res.db_location = dflt_db_location;
+                res.db_pattern  = dflt_db_pattern;
+                res.db_bucket   = dflt_db_bucket;
+                res.flat_db_layout    = dflt_flat_db_layout;
+                res.num_db_partitions = dflt_num_db_partitions;
+                res.top_n         = dflt_top_n;
+                res.jni_log_level = dflt_jni_log_level;
 
-                res.log_request         = get_json_bool( root, key_log_request, dflt_log_request );
-                res.log_job_start       = get_json_bool( root, key_log_start, dflt_log_start );
-                res.log_job_done        = get_json_bool( root, key_log_done, dflt_log_done );
-                res.log_cutoff          = get_json_bool( root, key_log_cutoff, dflt_log_cutoff );
-                res.log_final           = get_json_bool( root, key_log_final, dflt_log_final );
-                res.log_part_prep       = get_json_bool( root, key_log_part_prep, dflt_log_part_prep );
-                res.log_worker_shift    = get_json_bool( root, key_log_worker_shift, dflt_log_worker_shift );
-                res.jni_log_level       = get_json_string( root, key_jni_log_level, dflt_jni_log_level );
+                JsonObject blastjni_obj = get_sub( root, key_blastjni_section );
+                if ( blastjni_obj != null )
+                {
+                    JsonObject db_obj = get_sub( blastjni_obj, key_db_section );
+                    if ( db_obj != null )
+                    {
+                        res.db_location = get_json_string( db_obj, key_db_location, dflt_db_location );
+                        res.db_pattern  = get_json_string( db_obj, key_db_pattern, dflt_db_pattern );
+                        res.db_bucket   = get_json_string( db_obj, key_db_bucket, dflt_db_bucket );
+                        res.flat_db_layout    = get_json_bool( db_obj, key_flat_db_layout, dflt_flat_db_layout );
+                        res.num_db_partitions = get_json_int( db_obj, key_num_db_partitions, dflt_num_db_partitions );
 
-                res.project_id          = get_json_string( root, key_project_id, dflt_project_id);
-                res.subscript_id        = get_json_string( root, key_subscript_id, dflt_subscript_id );
+                    }
+                    res.top_n         = get_json_int( blastjni_obj, key_top_n, dflt_top_n );
+                    res.jni_log_level = get_json_string( blastjni_obj, key_jni_log_level, dflt_jni_log_level );
+                }
 
-                res.gs_result_bucket    = get_json_string( root, key_gs_result_bucket, dflt_gs_result_bucket );
-                res.gs_result_file      = get_json_string( root, key_gs_result_file, dflt_gs_result_file );
 
-                res.gs_status_bucket    = get_json_string( root, key_gs_status_bucket, dflt_gs_status_bucket );
-                res.gs_status_file      = get_json_string( root, key_gs_status_file, dflt_gs_status_file );
+                res.trigger_port = dflt_trigger_port;
+                res.trigger_host = dflt_trigger_host;
+                res.project_id   = dflt_project_id;
+                res.subscript_id = dflt_subscript_id;
+                res.receiver_max_rate = dflt_receiver_max_rate;
 
-                res.gs_status_running   = get_json_string( root, key_gs_status_running, dflt_gs_status_running );
-                res.gs_status_done      = get_json_string( root, key_gs_status_done, dflt_gs_status_done );
-                res.gs_status_error     = get_json_string( root, key_gs_status_error, dflt_gs_status_error );
+                JsonObject source_obj = get_sub( root, key_source_section );
+                if ( source_obj != null )
+                {
+                    JsonObject socket_obj = get_sub( source_obj, key_socket_section );
+                    if ( socket_obj != null )
+                    {
+                        res.trigger_port = get_json_int( socket_obj, key_trigger_port, dflt_trigger_port );
+                        res.trigger_host = get_host( socket_obj, key_trigger_host, dflt_trigger_host );
+                    }
+
+                    JsonObject pubsub_obj = get_sub( source_obj, key_pubsub_section );
+                    if ( pubsub_obj != null )
+                    {
+                        res.project_id   = get_json_string( pubsub_obj, key_project_id, dflt_project_id);
+                        res.subscript_id = get_json_string( pubsub_obj, key_subscript_id, dflt_subscript_id );
+                        res.receiver_max_rate = get_json_int( pubsub_obj, key_rec_max_rate, dflt_receiver_max_rate );
+                    }
+                }
+
+                res.gs_result_bucket  = dflt_gs_bucket;
+                res.gs_result_file    = dflt_gs_result_file;
+                res.save_dir          = dflt_save_dir();
+                res.gs_status_bucket  = dflt_gs_bucket;
+                res.gs_status_file    = dflt_gs_status_file;
+                res.gs_status_running = dflt_gs_running;
+                res.gs_status_done    = dflt_gs_done;
+                res.gs_status_error   = dflt_gs_error;
+
+                JsonObject result_obj = get_sub( root, key_result_section );
+                if ( result_obj != null )
+                {
+                    JsonObject asn1_obj = get_sub( result_obj, key_asn1_section );                    
+                    if ( asn1_obj != null )
+                    {
+                        res.gs_result_bucket  = get_json_string( asn1_obj, key_gs_bucket, dflt_gs_bucket );
+                        res.gs_result_file    = get_json_string( asn1_obj, key_gs_file, dflt_gs_result_file );
+
+                        res.save_dir = get_json_string( root, key_save_dir, dflt_save_dir() );
+                    }
+
+                    JsonObject status_obj = get_sub( result_obj, key_status_section );                    
+                    if ( asn1_obj != null )
+                    {
+                        res.gs_status_bucket    = get_json_string( status_obj, key_gs_bucket, dflt_gs_bucket );
+                        res.gs_status_file      = get_json_string( status_obj, key_gs_file, dflt_gs_status_file );
+
+                        res.gs_status_running   = get_json_string( status_obj, key_gs_running, dflt_gs_running );
+                        res.gs_status_done      = get_json_string( status_obj, key_gs_done, dflt_gs_done );
+                        res.gs_status_error     = get_json_string( status_obj, key_gs_error, dflt_gs_error );
+                    }
+                }
+
+                res.log_request      = dflt_log_request;
+                res.log_job_start    = dflt_log_start;
+                res.log_job_done     = dflt_log_done;
+                res.log_cutoff       = dflt_log_cutoff;
+                res.log_final        = dflt_log_final;
+                res.log_part_prep    = dflt_log_part_prep;
+                res.log_worker_shift = dflt_log_worker_shift;
+                res.log_pref_loc     = dflt_log_pref_loc;
+                res.log_port = dflt_log_port;
+                res.log_host = dflt_log_host;
+
+                JsonObject log_obj = get_sub( root, key_log_section );
+                if ( log_obj != null )
+                {
+                    res.log_request      = get_json_bool( log_obj, key_log_request, dflt_log_request );
+                    res.log_job_start    = get_json_bool( log_obj, key_log_start, dflt_log_start );
+                    res.log_job_done     = get_json_bool( log_obj, key_log_done, dflt_log_done );
+                    res.log_cutoff       = get_json_bool( log_obj, key_log_cutoff, dflt_log_cutoff );
+                    res.log_final        = get_json_bool( log_obj, key_log_final, dflt_log_final );
+                    res.log_part_prep    = get_json_bool( log_obj, key_log_part_prep, dflt_log_part_prep );
+                    res.log_worker_shift = get_json_bool( log_obj, key_log_worker_shift, dflt_log_worker_shift );
+                    res.log_pref_loc     = get_json_bool( log_obj, key_log_pref_loc, dflt_log_pref_loc );
+
+                    res.log_port = get_json_int( log_obj, key_log_port, dflt_log_port );
+                    res.log_host = get_host( log_obj, key_log_host, dflt_log_host );
+                }
 
             }
         }           

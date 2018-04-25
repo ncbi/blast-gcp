@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
@@ -38,6 +39,7 @@ import static java.lang.Math.min;
 
 import java.nio.ByteBuffer;
 
+import scala.Option;
 import scala.Tuple2;
 import scala.collection.Seq;
 import scala.collection.JavaConversions;
@@ -70,20 +72,20 @@ import org.apache.spark.rdd.RDD;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import java.util.Collection;
-
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
 
 class BLAST_DRIVER extends Thread
 {
     private final BLAST_SETTINGS settings;
+    private final BLAST_YARN_NODES nodes;
     private final JavaSparkContext sc;
     private final JavaStreamingContext jssc;
 
     public BLAST_DRIVER( final BLAST_SETTINGS settings, final List< String > files_to_transfer )
     {
         this.settings = settings;
+        this.nodes = new BLAST_YARN_NODES();
 
         SparkConf conf = new SparkConf();
         conf.setAppName( settings.appName );
@@ -101,11 +103,6 @@ class BLAST_DRIVER extends Thread
 
         sc = new JavaSparkContext( conf );
         sc.setLogLevel( "ERROR" );
-
-        /*
-        SparkContext spctx = sc.toSparkContext( sc );
-        spctx.addSparkListener( new BLAST_SPARK_LISTENER() );
-        */
 
         // send the given files to all nodes
         for ( String a_file : files_to_transfer )
@@ -128,29 +125,38 @@ class BLAST_DRIVER extends Thread
         }
     }
 
+    private Integer node_count()
+    {
+        Integer res = nodes.count();
+        if ( res == 0 )
+            res = settings.num_executors;
+        return res;
+    }
+
     /* ===========================================================================================
             create database-partitions
        =========================================================================================== */
-    private JavaRDD< BLAST_PARTITION > make_db_partitions_1( Broadcast< BLAST_SETTINGS > SETTINGS )
+    private JavaRDD< BLAST_PARTITION > make_db_partitions_1( Broadcast< BLAST_SETTINGS > SETTINGS,
+        Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 )
     {
-        final List< BLAST_PARTITION > part_list = new ArrayList<>();
+        final List< Tuple2< Integer, BLAST_PARTITION > > db_list = new ArrayList<>();
         for ( int i = 0; i < settings.num_db_partitions; i++ )
         {
             BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
                 i, settings.flat_db_layout );
-            part_list.add( part );
+            db_list.add( new Tuple2<>( i, part ) );
         }
 
-        JavaRDD< BLAST_PARTITION > temp1 = sc.parallelize( part_list );
-
-        return temp1.map( item ->
+        return sc.parallelizePairs( db_list, node_count() ).partitionBy(
+            PARTITIONER0.getValue() ).map( item ->
         {
+            BLAST_PARTITION part = item._2();
+
             BLAST_SETTINGS bls = SETTINGS.getValue();
-
             if ( bls.log_part_prep )
-                BLAST_SEND.send( bls, String.format( "preparing %s", item ) );
+                BLAST_SEND.send( bls, String.format( "preparing %s", part ) );
 
-            return BLAST_LIB_SINGLETON.prepare( item, bls );
+            return BLAST_LIB_SINGLETON.prepare( part, bls );
         } ).cache();
     }
 
@@ -163,11 +169,10 @@ class BLAST_DRIVER extends Thread
             BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
                 i, settings.flat_db_layout );
 
-            Integer prefered_node = part.getPartition( settings.num_executors );
+            String host = nodes.getHost( part.getPartition( node_count() ) );
 
-            String host = String.format( settings.worker_node_name_pattern, prefered_node );
-
-            //BLAST_SEND.send( settings, String.format( "adding %s for %s", host, part ) );
+            if ( settings.log_pref_loc )
+                BLAST_SEND.send( settings, String.format( "adding %s for %s", host, part ) );
 
             List< String > prefered_loc = new ArrayList<>();            
             prefered_loc.add( host );
@@ -436,8 +441,6 @@ class BLAST_DRIVER extends Thread
 
             BLAST_SETTINGS bls = SETTINGS.getValue();
 
-            //BLAST_SEND.send( bls, String.format( "traceback key = %s", key ) );
-
             ArrayList< BLAST_HSP_LIST > all_gcps = new ArrayList<>();
             for( BLAST_HSP_LIST e : item._2() )
                 all_gcps.add( e );
@@ -563,12 +566,9 @@ class BLAST_DRIVER extends Thread
                     broadcast settings
                =========================================================================================== */
             Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
-            Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 = sc.broadcast(
-                                            new BLAST_PARTITIONER0( settings.num_executors ) );
-            Broadcast< BLAST_PARTITIONER1 > PARTITIONER1 = sc.broadcast(
-                                            new BLAST_PARTITIONER1( settings.num_executors ) );
-            Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 = sc.broadcast(
-                                            new BLAST_PARTITIONER2( settings.num_executors ) );
+            Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 = sc.broadcast( new BLAST_PARTITIONER0( node_count() ) );
+            Broadcast< BLAST_PARTITIONER1 > PARTITIONER1 = sc.broadcast( new BLAST_PARTITIONER1( node_count() ) );
+            Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 = sc.broadcast( new BLAST_PARTITIONER2( node_count() ) );
 
             /* ===========================================================================================
                     create database-sections as a static RDD
@@ -577,7 +577,7 @@ class BLAST_DRIVER extends Thread
             if ( settings.with_locality )
                 DB_SECS = make_db_partitions_2( SETTINGS );
             else
-                DB_SECS = make_db_partitions_1( SETTINGS );
+                DB_SECS = make_db_partitions_1( SETTINGS, PARTITIONER0 );
 
             final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
 			final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );

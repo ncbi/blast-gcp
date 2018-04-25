@@ -35,7 +35,6 @@ public class BLAST_SETTINGS implements Serializable
     public String db_location;
     public String db_pattern;
     public String db_bucket;
-    public String worker_node_name_pattern;
 
     public Integer batch_duration;
     public String  locality_wait;
@@ -63,6 +62,7 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean log_final;
     public Boolean log_part_prep;
     public Boolean log_worker_shift;
+    public Boolean log_pref_loc;
     public String  jni_log_level;
 
     public String project_id;
@@ -76,13 +76,37 @@ public class BLAST_SETTINGS implements Serializable
     public String gs_status_done;
     public String gs_status_error;
 
+    public Boolean valid()
+    {
+        if ( db_bucket.isEmpty() ) return false;
+        if ( num_db_partitions == 0 ) return false;
+        if ( top_n == 0 ) return false;
+        if ( project_id.isEmpty() ) return false;
+        if ( subscript_id.isEmpty() ) return false;
+        if ( gs_result_bucket.isEmpty() ) return false;
+        if ( gs_status_bucket.isEmpty() ) return false;
+        return true;
+    }
+
+    public String missing()
+    {
+        String S = "";
+        if ( db_bucket.isEmpty() ) S = S + "db_bucket is missing\n";
+        if ( num_db_partitions == 0 ) S = S + "num_db_partitions is 0\n";
+        if ( top_n == 0 ) S = S + "top_n is 0\n";
+        if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
+        if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
+        if ( gs_result_bucket.isEmpty() ) S = S + "gs_result_bucket is missing\n";
+        if ( gs_status_bucket.isEmpty() ) S = S + "gs_status_bucket is missing\n";
+        return S;
+    }
+
     @Override public String toString()
     {
         String S = String.format( "appName ............ '%s'\n", appName );
         S  =  S +  String.format( "db_location ........ '%s'\n", db_location );
         S  =  S +  String.format( "db_pattern ......... '%s'\n", db_pattern );
         S  =  S +  String.format( "db_bucket .......... '%s'\n", db_bucket );
-        S  =  S +  String.format( "worker-node-patt ... '%s'\n", worker_node_name_pattern );
         S  =  S +  String.format( "pubsub-subscript ... '%s' : '%s'\n", project_id, subscript_id );
         S  =  S +  String.format( "GS result .......... '%s' : '%s'\n", gs_result_bucket, gs_result_file );
         S  =  S +  String.format( "GS status .......... '%s' : '%s'\n", gs_status_bucket, gs_status_file );
@@ -110,6 +134,7 @@ public class BLAST_SETTINGS implements Serializable
         if ( log_final )     S_log = S_log + "final ";
         if ( log_part_prep )     S_log = S_log + "part-prep ";
         if ( log_worker_shift )  S_log = S_log + "worker-shift ";
+        if ( log_pref_loc )  S_log = S_log + "pref_log ";
 
         S  =  S +  String.format( "log ................ %s\n", S_log );
         return S;

@@ -56,37 +56,40 @@ public final class BLAST_MAIN
 
    public static void main( String[] args ) throws Exception
    {
-        final String appName = BLAST_MAIN.class.getSimpleName();
-        BLAST_SETTINGS settings;
-        if ( args.length > 0 )
-        {
-            String ini_path = args[ 0 ];
-            settings = BLAST_SETTINGS_READER.read_from_json( ini_path, appName );
-            System.out.println( String.format( "settings read from '%s'", ini_path ) );
-        }
+        if ( args.length < 1 )
+            System.out.println( "settings json-file missing" );
         else
-            settings = BLAST_SETTINGS_READER.defaults( appName );
+        {
+            final String appName = BLAST_MAIN.class.getSimpleName();
+            String ini_path = args[ 0 ];
+            BLAST_SETTINGS settings = BLAST_SETTINGS_READER.read_from_json( ini_path, appName );
+            System.out.println( String.format( "settings read from '%s'", ini_path ) );
+            if ( !settings.valid() )
+                System.out.println( settings.missing() );
+            else
+            {
+                System.out.println( settings.toString() );
 
-        System.out.println( settings.toString() );
-
-        List< String > files_to_transfer = new ArrayList<>();
-        files_to_transfer.add( "libblastjni.so" );
-        
-        BLAST_DRIVER driver = new BLAST_DRIVER( settings, files_to_transfer );
-        driver.start();
-        try
-        {
-            wait_for_console( "exit", 500 );
-            driver.stop_blast();
-            driver.join();
-        }
-        catch ( InterruptedException e1 )
-        {
-            System.out.println( String.format( "driver interrupted: %s", e1 ) );
-        }
-        catch( Exception e2 )
-        {
-            System.out.println( String.format( "stopping driver: %s", e2 ) );
+                List< String > files_to_transfer = new ArrayList<>();
+                files_to_transfer.add( "libblastjni.so" );
+                
+                BLAST_DRIVER driver = new BLAST_DRIVER( settings, files_to_transfer );
+                driver.start();
+                try
+                {
+                    wait_for_console( "exit", 500 );
+                    driver.stop_blast();
+                    driver.join();
+                }
+                catch ( InterruptedException e1 )
+                {
+                    System.out.println( String.format( "driver interrupted: %s", e1 ) );
+                }
+                catch( Exception e2 )
+                {
+                    System.out.println( String.format( "stopping driver: %s", e2 ) );
+                }
+            }
         }
    }
 }
