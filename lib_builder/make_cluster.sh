@@ -58,7 +58,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 #    $0.07/vCPU hour
 #    $0.003/GB hour (so at least another $0.01/vCPU hour)
 gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER \ #-$(date +%Y%m%d) \
+    clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \

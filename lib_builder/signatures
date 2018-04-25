@@ -12,7 +12,7 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   void throwIfBad();
     descriptor: ()V
 
-  private synchronized void log(java.lang.String, java.lang.String);
+  private void log(java.lang.String, java.lang.String);
     descriptor: (Ljava/lang/String;Ljava/lang/String;)V
 
   gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);

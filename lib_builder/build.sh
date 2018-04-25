@@ -3,6 +3,10 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+function line() {
+    echo "---------------------------------------------"
+}
+
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 set +errexit
@@ -69,67 +73,77 @@ javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
 
-md5sum -c signatures.md5
-#md5sum signatures > signatures.md5
-
 echo "Creating JAR"
 #jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
 cp $MAIN_JAR .
 #rm -rf gov
 
 if [ "$BUILDENV" = "ncbi" ]; then
-    rm -f libblastjni.o ../pipeline/libblastjni.so
-    echo "Compiling and linking blastjni.cpp"
-    cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+#    rm -f libblastjni.o ../pipeline/libblastjni.so
     # Note: Library order important
     #       Hidden dl_open for libdw
     # Eugene has:
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
     #-ldbapi_driver -lncbi_xreader \
-        GPPCOMMAND="
-        g++ blastjni.cpp \
-        -std=gnu++11 \
-        -Wall -O  -I . \
-        -Wextra -pedantic \
-        -shared \
-        -fPIC \
-        $JAVA_INC \
-        -L./int/blast/libs \
-        -I $BLASTBYDATE/include \
-        -I $BLASTBYDATE/ReleaseMT/inc \
-        -L $BLASTBYDATE/ReleaseMT/lib \
-        -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
-        -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
-        -L . \
-        -L ext \
-        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
-        -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
-        -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
-        -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
-        -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
-        -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
-        -lblast_services -lxalnmgr -lxobjutil -lxobjread \
-        -lvariation -lcreaders -lsubmit -lxnetblastcli \
-        -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
-        -lncbi_xloader_genbank -lncbi_xreader_id1 \
-        -lncbi_xreader \
-        -lncbi_xreader_id2 \
-        -lxconnect -lid1 -lid2 -lxobjmgr \
-        -lgenome_collection -lseqedit -lseqsplit -lsubmit \
-        -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
-        -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
-        -llmdb-static -lpthread -lz -lbz2 \
-        -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
-        -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
-        -o ./libblastjni.so"
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
-        $GPPCOMMAND
-        cp libblastjni.so ../pipeline
+    echo "Running static analysis on C++ code"
+    echo "WARN: static analyzer checks temporarily disabled"
+    # TODO cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+    GPPCOMMAND="
+    g++ blastjni.cpp \
+    -std=gnu++11 \
+    -Wall -O  -I . \
+    -Wextra -pedantic \
+    -shared \
+    -fPIC \
+    $JAVA_INC \
+    -L./int/blast/libs \
+    -I $BLASTBYDATE/include \
+    -I $BLASTBYDATE/ReleaseMT/inc \
+    -L $BLASTBYDATE/ReleaseMT/lib \
+    -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L . \
+    -L ext \
+    -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
+    -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
+    -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
+    -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
+    -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
+    -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
+    -lblast_services -lxalnmgr -lxobjutil -lxobjread \
+    -lvariation -lcreaders -lsubmit -lxnetblastcli \
+    -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
+    -lncbi_xloader_genbank -lncbi_xreader_id1 \
+    -lncbi_xreader \
+    -lncbi_xreader_id2 \
+    -lxconnect -lid1 -lid2 -lxobjmgr \
+    -lgenome_collection -lseqedit -lseqsplit -lsubmit \
+    -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
+    -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
+    -llmdb-static -lpthread -lz -lbz2 \
+    -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+    -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
+    -o ./libblastjni.so"
+    # scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+
+    echo "Static analysis on C++ code complete"
+    echo "Compiling and linking blastjni.cpp"
+    echo "WARN: g++ temporarily disabled"
+    # $GPPCOMMAND
+    cp libblastjni.so ../pipeline
 fi
+
+line
+echo "Running tests..."
+echo "  Testing JNI function signatures"
+md5sum -c signatures.md5 > /dev/null
+#echo "  Testing JNI function signatures: OK"
+#md5sum signatures > signatures.md5
+
 
 
 #if [ "$BUILDENV" = "google" ]; then
-echo "Testing JNI"
+echo "  Testing for unresolved libraries"
 set +errexit
 ldd ./libblastjni.so | grep found
 if [[ $? -ne 1 ]]; then
@@ -137,6 +151,9 @@ if [[ $? -ne 1 ]]; then
     echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
     exit 1
 fi
+echo "  Testing for unresolved libraries: OK"
+
+echo "  Testing JNI"
 #-verbose:jni \
     #-Djava.library.path="../pipeline" \
     java \
@@ -150,12 +167,14 @@ if [[ $? -ne 0 ]]; then
     cat -tn output.$$
     #rm -f output.$$
     sdiff -w 70 test.result test.expected
-    echo "Testing of JNI failed"
+    echo "  Testing of JNI failed"
     exit 1
 fi
 rm -f output.$$
 set -o errexit
-echo "Test OK"
+echo "  Testing JNI: OK"
+echo "Tests complete"
+line
 #fi
 
 if [ "$BUILDENV" = "google" ]; then
