@@ -54,7 +54,7 @@ DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
 echo "Compiling Java"
 pushd ../pipeline > /dev/null
-mvn -q package -f mike_pom.xml
+mvn -q package
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
 JAVASRCDIR="../pipeline/src/main/java"
