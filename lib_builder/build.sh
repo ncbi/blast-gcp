@@ -137,7 +137,7 @@ line
 echo "Running tests..."
 echo "  Testing JNI function signatures"
 md5sum -c signatures.md5 > /dev/null
-#echo "  Testing JNI function signatures: OK"
+echo "  Testing JNI function signatures: OK"
 #md5sum signatures > signatures.md5
 
 
