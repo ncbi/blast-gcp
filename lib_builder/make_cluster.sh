@@ -57,6 +57,11 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # Dataflow pricing is:
 #    $0.07/vCPU hour
 #    $0.003/GB hour (so at least another $0.01/vCPU hour)
+
+# 886 partitions:
+# 16 each to 2 workers
+# 854/16 amongst 54 preemptible workers
+
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
@@ -64,7 +69,7 @@ gcloud beta dataproc --region us-east4 \
     --num-workers 2 \
     --worker-machine-type n1-highcpu-16 \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 62 \
+    --num-preemptible-workers 54 \
         --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \

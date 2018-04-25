@@ -7,12 +7,12 @@
     "log_worker_shift": "false",
     "trigger_port": 0,
     "log_request": "true",
-    "num_executor_cores": 3,
+    "num_executor_cores": 15,
     "log_partition_prep": "true",
     "log_port": 0,
     "result_bucket": "blast-test-vartanianmh",
     "log_done": "false",
-    "num_db_partitions": 20,
-    "num_executors": 2
+    "num_db_partitions": 886,
+    "num_executors": 62
 }
 
