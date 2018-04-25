@@ -36,7 +36,8 @@ class ConcLoad extends Thread {
 
   public void run() {
     System.out.println("thread started");
-    BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(part);
+    //    BLAST_SETTINGS bls = SETTINGS.getValue();
+    //   BLAST_LIB blaster = BLAST_LIB.get_lib(part, bls);
   }
 }
 
@@ -89,7 +90,9 @@ class BLAST_TEST {
     //      p.start();
     //    }
 
-    BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj);
+    // BLAST_SETTINGS bls = BLAST_SETTINGS.getValue();
+    // BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj, bls);
+    BLAST_LIB blaster = new BLAST_LIB();
 
     final String logLevel = "INFO";
     params = "nt"; // FIX - When Blast team ready for JSON params

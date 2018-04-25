@@ -57,20 +57,27 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # Dataflow pricing is:
 #    $0.07/vCPU hour
 #    $0.003/GB hour (so at least another $0.01/vCPU hour)
-gcloud dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER-$(date +%Y%m%d) \
+
+# 886 partitions:
+# 16 each to 2 workers
+# 854/16 amongst 54 preemptible workers
+
+# ~$15/hour for 56 node cluster
+gcloud beta dataproc --region us-east4 \
+    clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
     --worker-machine-type n1-highcpu-16 \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 62 \
+    --num-preemptible-workers 54 \
         --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
     --region us-east4 \
     --zone   us-east4-b \
+    --max-age=8h \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
@@ -81,9 +88,8 @@ gcloud dataproc --region us-east4 \
 # dataproc-3bd9289a... has 15 day deletion lifecycle
 
 # TODO: Scopes: storage-rw, pubsub, bigtable.admin.table, bigtabl.data,
-# devstorage.full_control, 
+# devstorage.full_control,
 exit 0
 # gcloud dataproc clusters diagnose cluster-name
-# beta: --max-age=8h
 #--single-node
 

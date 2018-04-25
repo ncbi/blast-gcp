@@ -1,0 +1,464 @@
+Seq-annot ::= {
+  data
+    align {
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 169 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 169 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 920173185, 10, -89 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 313204085, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 367 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 428185673, 10, -7 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 33 ,
+            ids {
+              local
+                str "query" ,
+              gi 389643387 } ,
+            starts {
+              152 ,
+              0 ,
+              -1 ,
+              101 ,
+              253 ,
+              102 ,
+              263 ,
+              -1 ,
+              265 ,
+              112 ,
+              269 ,
+              -1 ,
+              270 ,
+              116 ,
+              -1 ,
+              125 ,
+              279 ,
+              126 ,
+              -1 ,
+              131 ,
+              284 ,
+              132 ,
+              -1 ,
+              138 ,
+              290 ,
+              139 ,
+              -1 ,
+              141 ,
+              292 ,
+              142 ,
+              -1 ,
+              150 ,
+              300 ,
+              151 ,
+              -1 ,
+              175 ,
+              324 ,
+              176 ,
+              -1 ,
+              177 ,
+              325 ,
+              178 ,
+              -1 ,
+              179 ,
+              326 ,
+              180 ,
+              467 ,
+              -1 ,
+              470 ,
+              321 ,
+              472 ,
+              -1 ,
+              473 ,
+              323 ,
+              477 ,
+              -1 ,
+              479 ,
+              327 ,
+              480 ,
+              -1 ,
+              483 ,
+              328 ,
+              484 ,
+              -1 ,
+              494 ,
+              329 } ,
+            lens {
+              101 ,
+              1 ,
+              10 ,
+              2 ,
+              4 ,
+              1 ,
+              9 ,
+              1 ,
+              5 ,
+              1 ,
+              6 ,
+              1 ,
+              2 ,
+              1 ,
+              8 ,
+              1 ,
+              24 ,
+              1 ,
+              1 ,
+              1 ,
+              1 ,
+              1 ,
+              141 ,
+              3 ,
+              2 ,
+              1 ,
+              4 ,
+              2 ,
+              1 ,
+              3 ,
+              1 ,
+              10 ,
+              107 } ,
+            strands {
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 94 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 94 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 453043429, 10, -47 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 174705361, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 188 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 221776625, 10, -7 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 13 ,
+            ids {
+              local
+                str "query" ,
+              gi 2928 } ,
+            starts {
+              343 ,
+              1072 ,
+              467 ,
+              -1 ,
+              478 ,
+              1196 ,
+              481 ,
+              -1 ,
+              483 ,
+              1199 ,
+              484 ,
+              -1 ,
+              485 ,
+              1200 ,
+              486 ,
+              -1 ,
+              488 ,
+              1201 ,
+              490 ,
+              -1 ,
+              491 ,
+              1203 ,
+              492 ,
+              -1 ,
+              494 ,
+              1204 } ,
+            lens {
+              124 ,
+              11 ,
+              3 ,
+              2 ,
+              1 ,
+              1 ,
+              1 ,
+              2 ,
+              2 ,
+              1 ,
+              1 ,
+              2 ,
+              79 } ,
+            strands {
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 78 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 78 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 355214614, 10, -38 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 145158967, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 145 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 168996229, 10, -7 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 9 ,
+            ids {
+              local
+                str "query" ,
+              gi 2928 } ,
+            starts {
+              152 ,
+              760 ,
+              253 ,
+              -1 ,
+              254 ,
+              861 ,
+              255 ,
+              -1 ,
+              259 ,
+              862 ,
+              260 ,
+              -1 ,
+              264 ,
+              863 ,
+              265 ,
+              -1 ,
+              274 ,
+              864 } ,
+            lens {
+              101 ,
+              1 ,
+              1 ,
+              4 ,
+              1 ,
+              4 ,
+              1 ,
+              9 ,
+              52 } ,
+            strands {
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 28 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 28 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 221481607, 10, -10 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 528264844, 10, -7 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 28 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 313901979, 10, -8 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 687875964 } ,
+            starts {
+              111 ,
+              8219 } ,
+            lens {
+              28 } ,
+            strands {
+              minus ,
+              plus } } }
+      
