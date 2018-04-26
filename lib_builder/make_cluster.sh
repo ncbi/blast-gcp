@@ -68,8 +68,17 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # 0.9GB per CPU, so at least 57.6GB for 64 cores, which is n1-highcpu-64
 
 # TODO:
-# YARN, 1 core?
+# YARN, 1 core? Dataproc has /etc/.../spark-defaults.conf set as:
+# # User-supplied properties.
+#  Thu Apr 26 11:46:31 UTC 2018
+#  spark.executor.cores=8
+#  spark.executor.memory=4655m
+#  spark.driver.memory=7680m
+#  spark.driver.maxResultSize=3840m
+#  spark.yarn.am.memory=640m
+
 # turn off dynamic allocation?
+#  /etc/spark/conf/spark-defaults.conf: spark.dynamicAllocation.enabled true
 # check Spark Web UI
 
 # ~$15/hour for 56 node cluster

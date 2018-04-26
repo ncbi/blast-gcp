@@ -24,9 +24,9 @@
         }
     },
     "spark" : {
-        "num_executor_cores" : 5,
+        "num_executor_cores" : 4,
         "num_executors" : 180,
-        "with_locality" : true
+        "with_locality" : false
     }
 }
 

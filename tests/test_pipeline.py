@@ -171,13 +171,13 @@ def make_json():
         j['top_n'] = 100
         j['num_db_partitions'] = 886
         j['num_executors'] = 180
-        j['num_executor_cores'] = 5
+        j['num_executor_cores'] = 4
         j['project_id'] = PROJECT
     else:
         j['spark'] = {}
-        j['spark']['with_locality'] = True
+        j['spark']['with_locality'] = False
         j['spark']['num_executors'] = 180
-        j['spark']['num_executor_cores'] = 5
+        j['spark']['num_executor_cores'] = 4
         j['blastjni'] = {}
         j['blastjni']['db'] = {}
         j['blastjni']['db']['db_bucket'] = 'nt_50mb_chunks'
@@ -367,7 +367,7 @@ def main():
     submit_application(config)
     print()
     print(" " * 20, "*** Start Spark Streaming Job now ***")
-    time.sleep(10)
+    time.sleep(20)
     print()
     time.sleep(1)
 
