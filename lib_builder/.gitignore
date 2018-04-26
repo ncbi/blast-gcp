@@ -1,6 +1,7 @@
 target/
+gov/
 *.result
-BlastJNI.jar
-sprint3.jar
+*.jar
 Req*asn1
 output.*
+

@@ -1,51 +1,32 @@
 Compiled from "BLAST_LIB.java"
-class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
-  public static final int LOG_TRACE;
-    descriptor: I
-  public static final int LOG_DEBUG;
-    descriptor: I
-  public static final int LOG_INFO;
-    descriptor: I
-  public static final int LOG_WARN;
-    descriptor: I
-  public static final int LOG_ERROR;
-    descriptor: I
-  public static final int LOG_FATAL;
-    descriptor: I
-  private java.lang.ExceptionInInitializerError invalid;
-    descriptor: Ljava/lang/ExceptionInInitializerError;
-  private java.io.PrintWriter log_writer;
-    descriptor: Ljava/io/PrintWriter;
-  private java.lang.String processID;
+public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
+  private static java.lang.String processID;
     descriptor: Ljava/lang/String;
-  private int loglevel;
-    descriptor: I
-  gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
+  private static java.lang.ExceptionInInitializerError invalid;
+    descriptor: Ljava/lang/ExceptionInInitializerError;
+  private static org.apache.log4j.Level logLevel;
+    descriptor: Lorg/apache/log4j/Level;
+  public gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
     descriptor: ()V
 
   void throwIfBad();
     descriptor: ()V
 
-  public void setLogLevel(int);
-    descriptor: (I)V
+  private void log(java.lang.String, java.lang.String);
+    descriptor: (Ljava/lang/String;Ljava/lang/String;)V
 
-  public synchronized void setLogWriter(java.io.PrintWriter);
-    descriptor: (Ljava/io/PrintWriter;)V
+  gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+    descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  private synchronized void log(int, java.lang.String);
-    descriptor: (ILjava/lang/String;)V
-
-  gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST);
-    descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
-
-  gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST);
-    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
+  gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 
   private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int);
     descriptor: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(java.lang.String, java.lang.String, java.lang.String, gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[]);
-    descriptor: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
+  private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], java.lang.String, java.lang.String, java.lang.String, java.lang.String);
+    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
+
 }
 Compiled from "BLAST_HSP_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
@@ -59,8 +40,8 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
     descriptor: I
   public byte[] hsp_blob;
     descriptor: [B
-  public gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST();
-    descriptor: ()V
+  public gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST(int, int, byte[]);
+    descriptor: (II[B)V
 
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;

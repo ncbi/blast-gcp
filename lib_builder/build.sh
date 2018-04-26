@@ -3,11 +3,16 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+function line() {
+    echo "---------------------------------------------"
+}
+
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 set +errexit
 distro=$(grep Debian /etc/os-release | wc -l)
 set -o errexit
+export LD_LIBRARY_PATH=".:../pipeline"
 if [ "$distro" -ne 0 ]; then
     export DISTRO="Debian 8"
     export BUILDENV="google"
@@ -15,12 +20,11 @@ if [ "$distro" -ne 0 ]; then
     export PATH="$JAVA_HOME/bin:$PATH"
     export BLASTDB=/tmp/blast/
     export SPARK_HOME=/usr/lib/spark/
-    export LD_LIBRARY_PATH=".:$PWD/ext"
 else
     export DISTRO="CentOS 7"
     export BUILDENV="ncbi"
     export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
-    export LD_LIBRARY_PATH="../pipeline:/opt/ncbi/gcc/4.9.3/lib64/:$PWD/ext"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/ncbi/gcc/4.9.3/lib64/"
     export BLASTDB=/net/frosty/vol/blast/db/blast
     BLASTBYDATE="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/"
     export SPARK_HOME=/usr/local/spark/2.2.0/
@@ -36,103 +40,141 @@ rm -f *.class
 rm -rf gov
 rm -f *test.result
 rm -f *.jar
-rm -f /tmp/blast*$USER.log
+rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
+rm -rf $TMP/scan-build-*
 
 
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
 #packages,  but is required by g++ # at NCBI. Revisit after Jira BG-21
-DEPENDS="$SPARK_HOME/jars/*:."
-MAIN_JAR="sprint3.jar"
-echo "Compiling Java and creating JNI header"
+#MAIN_JAR="sprint4.jar"
+MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
+DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
+
+echo "Compiling Java"
+pushd ../pipeline > /dev/null
+mvn -q package
+popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
+JAVASRCDIR="../pipeline/src/main/java"
+#    $JAVASRCDIR/BLAST_REQUEST.java \
+    #    $JAVASRCDIR/BLAST_PARTITION.java \
+    #    $JAVASRCDIR/BLAST_HSP_LIST.java \
+    #    $JAVASRCDIR/BLAST_TB_LIST.java \
+    #    $JAVASRCDIR/BLAST_LIB.java \
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
-    ../pipeline/src/BLAST_REQUEST.java \
-    ../pipeline/src/BLAST_PARTITION.java \
-    ../pipeline/src/BLAST_HSP_LIST.java \
-    ../pipeline/src/BLAST_TB_LIST.java \
-    ../pipeline/src/BLAST_LIB.java
-javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
-javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
-javap -p -s gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
+    ./BLAST_TEST.java
+echo "Creating JNI header"
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+    ../pipeline/src/main/java/BLAST_LIB.java
+
+javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
+javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST.class >> signatures
+javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST.class >> signatures
 
 echo "Creating JAR"
-jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
-rm -rf gov
+#jar cf $MAIN_JAR gov/nih/nlm/ncbi/blastjni/*class
+cp $MAIN_JAR .
+#rm -rf gov
 
 if [ "$BUILDENV" = "ncbi" ]; then
-    rm -f libblastjni.o ../pipeline/libblastjni.so
-    echo "Compiling and linking blastjni.cpp"
+#    rm -f libblastjni.o ../pipeline/libblastjni.so
     # Note: Library order important
     #       Hidden dl_open for libdw
     # Eugene has:
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
-        #-ldbapi_driver -lncbi_xreader \
+    #-ldbapi_driver -lncbi_xreader \
+    echo "Running static analysis on C++ code"
+    echo "WARN: static analyzer checks temporarily disabled"
+    # TODO cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+    GPPCOMMAND="
     g++ blastjni.cpp \
-        -std=gnu++11 \
-        -Wall -O  -I . \
-        -shared \
-        -fPIC \
-        $JAVA_INC \
-        -L./int/blast/libs \
-        -I $BLASTBYDATE/include \
-        -I $BLASTBYDATE/ReleaseMT/inc \
-        -L $BLASTBYDATE/ReleaseMT/lib \
-        -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
-        -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
-        -L . \
-        -L ext \
-        -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
-        -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
-        -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
-        -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
-        -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
-        -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
-        -lblast_services -lxalnmgr -lxobjutil -lxobjread \
-        -lvariation -lcreaders -lsubmit -lxnetblastcli \
-        -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
-        -lncbi_xloader_genbank -lncbi_xreader_id1 \
-        -lncbi_xreader \
-        -lncbi_xreader_id2 \
-        -lxconnect -lid1 -lid2 -lxobjmgr \
-        -lgenome_collection -lseqedit -lseqsplit -lsubmit \
-        -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
-        -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
-        -llmdb-static -lpthread -lz -lbz2 \
-        -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
-        -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
-        -o ../pipeline/libblastjni.so
+    -std=gnu++11 \
+    -Wall -O  -I . \
+    -Wextra -pedantic \
+    -shared \
+    -fPIC \
+    $JAVA_INC \
+    -L./int/blast/libs \
+    -I $BLASTBYDATE/include \
+    -I $BLASTBYDATE/ReleaseMT/inc \
+    -L $BLASTBYDATE/ReleaseMT/lib \
+    -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L . \
+    -L ext \
+    -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
+    -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
+    -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
+    -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
+    -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
+    -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
+    -lblast_services -lxalnmgr -lxobjutil -lxobjread \
+    -lvariation -lcreaders -lsubmit -lxnetblastcli \
+    -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
+    -lncbi_xloader_genbank -lncbi_xreader_id1 \
+    -lncbi_xreader \
+    -lncbi_xreader_id2 \
+    -lxconnect -lid1 -lid2 -lxobjmgr \
+    -lgenome_collection -lseqedit -lseqsplit -lsubmit \
+    -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
+    -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
+    -llmdb-static -lpthread -lz -lbz2 \
+    -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+    -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
+    -o ./libblastjni.so"
+    # scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+
+    echo "Static analysis on C++ code complete"
+    echo "Compiling and linking blastjni.cpp"
+    echo "WARN: g++ temporarily disabled"
+    # $GPPCOMMAND
+    cp libblastjni.so ../pipeline
 fi
+
+line
+echo "Running tests..."
+echo "  Testing JNI function signatures"
+md5sum -c signatures.md5 > /dev/null
+echo "  Testing JNI function signatures OK"
+#md5sum signatures > signatures.md5
+
 
 
 #if [ "$BUILDENV" = "google" ]; then
-    echo "Testing JNI"
-    set +errexit
-    ldd ../pipeline/libblastjni.so | grep found
-    if [[ $? -ne 1 ]]; then
-        echo "Missing a shared library"
-        echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
-        exit 1
-    fi
-        #-verbose:jni \
-    java -Djava.library.path="../pipeline" \
+echo "  Testing for unresolved libraries"
+set +errexit
+ldd ./libblastjni.so | grep found
+if [[ $? -ne 1 ]]; then
+    echo "Missing a shared library"
+    echo "LD_LIBRARY_PATH is $LD_LIBRARY_PATH"
+    exit 1
+fi
+echo "  Testing for unresolved libraries OK"
+
+echo "  Testing JNI"
+#-verbose:jni \
+    #-Djava.library.path="../pipeline" \
+    java \
     -Xcheck:jni -Xdiag -Xfuture \
-        -cp $MAIN_JAR:.  \
-        gov.nih.nlm.ncbi.blastjni.BLAST_LIB \
-        > output.$$ 2>&1
-    sort output.$$ | grep -e "000 " > test.result
-    CMP=$(cmp test.result test.expected)
-    if [[ $? -ne 0 ]]; then
-        cat -tn output.$$
-        #rm -f output.$$
-        sdiff -w 70 test.result test.expected
-        echo "Testing of JNI failed"
-        exit 1
-    fi
-    rm -f output.$$
-    set -o errexit
-    echo "Test OK"
+    -cp $MAIN_JAR:.  \
+    gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
+    > output.$$ 2>&1
+sort output.$$ | grep -e "000 " > test.result
+CMP=$(cmp test.result test.expected)
+if [[ $? -ne 0 ]]; then
+    cat -tn output.$$
+    #rm -f output.$$
+    sdiff -w 70 test.result test.expected
+    echo "  Testing of JNI failed"
+    exit 1
+fi
+rm -f output.$$
+set -o errexit
+echo "  Testing JNI OK"
+echo "Tests complete"
+line
 #fi
 
 if [ "$BUILDENV" = "google" ]; then
@@ -146,60 +188,4 @@ echo "Build Complete"
 date
 echo
 exit 0
-
-
-
-
-<<HINTS
-gcloud auth application-default login --no-launch-browser
-
-git clone https://github.com/ncbi/blast-gcp.git
-cd blast-gcp
-git checkout engineering
-sudo apt-get install libdw-dev -y
-git config --global user.email "Mike.Vartanian@nih.gov"
-git config --global user.name "Mike Vartanian"
-
-
-# Can be useful for debugging
- export SPARK_PRINT_LAUNCH_COMMAND=1
-
-# To manually populate /tmp on workers:
- cd /tmp;gsutil cp gs://blastgcp-pipeline-test/scripts/cluster_initialize.sh .;chmod +x cluster_initialize.sh; sudo ./cluster_initialize.sh
-
-# Not sure if needed
- sudo vi /etc/spark/conf.dist/spark-env.sh
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/blast
-# could be replaced by
- -conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast"
-
-
-$ yarn logs --allicationID <appID>
-yarn.nodemanager.delete.debug-delay-sec property Spark History Server
- with the yarn.log-aggregation-enable config
- Once the job has completed the NodeManager will keep the log for each
- container for ${yarn.nodemanager.log.retain-seconds} which is
- 10800 seconds by default ( 3 hours ) and delete them once they have expired.
- But if ${yarn.log-aggregation-enable} is enabled then the NodeManager
- will immediately concatenate all of the containers logs into one file
- and upload them into HDFS in
-   ${yarn.nodemanager.remote-app-log-dir}/${user.name}/logs/ and delete
-   them from the local userlogs directory
-
-
-
-
- spark-submit \
-     --conf spark.executorEnv.LD_LIBRARY_PATH="/tmp/blast" \
-     --files libblastjni.so  \
-     --jars BlastJNI.jar \
-     --class BlastSpark \
-     --master yarn \
-     target/blastjni-0.0314.jar \
-    $PIPELINEBUCKET/input/query.jsonl
-     #/user/vartanianmh/query.jsonl
-
-
-HINTS
-
 
