@@ -90,6 +90,7 @@ class BLAST_DRIVER extends Thread
         SparkConf conf = new SparkConf();
         conf.setAppName( settings.appName );
 
+        //conf.set ("spark.dynamicAllocation.enabled", "false" );
         conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
         conf.set( "spark.streaming.receiver.maxRate", String.format( "%d", settings.receiver_max_rate ) );
         if ( settings.num_executors > 0 )
@@ -394,12 +395,12 @@ class BLAST_DRIVER extends Thread
                                 JavaPairDStream< String, Integer > CUTOFF,
                                 Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 )
     {
-		JavaPairDStream< String, String > ACTIVE_PARTITIONS = 
-			HSPS.transform( rdd -> rdd.keys().distinct() )
+        JavaPairDStream< String, String > ACTIVE_PARTITIONS = 
+            HSPS.transform( rdd -> rdd.keys().distinct() )
             .mapToPair( item-> new Tuple2<>( item.substring( item.indexOf( ' ' ) + 1, item.length() ), item ) );
 
         JavaPairDStream< String, Integer > CUTOFF2 = 
-			ACTIVE_PARTITIONS.join( CUTOFF ).mapToPair( item -> item._2() ).
+            ACTIVE_PARTITIONS.join( CUTOFF ).mapToPair( item -> item._2() ).
                 transformToPair( rdd -> rdd.partitionBy( PARTITIONER2.getValue() ) );
 
         return HSPS.join( CUTOFF2 ).filter( item ->
@@ -504,15 +505,16 @@ class BLAST_DRIVER extends Thread
             for ( BLAST_TB_LIST e : top_n_seq_annots )
                 sum += e.asn1_blob.length;
 
-			ByteBuffer ret = ByteBuffer.allocate( sum + 8 + 4 );
-			byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
-			ret.put( seq_annot_prefix );
-			for ( BLAST_TB_LIST e : top_n_seq_annots )
-				ret.put( e.asn1_blob );
-    		byte[] seq_annot_suffix = { 0, 0, 0, 0 };
-			ret.put( seq_annot_suffix );
+            byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+            byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0 };
+            ByteBuffer ret = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
 
-			return ret;
+            ret.put( seq_annot_prefix );
+            for ( BLAST_TB_LIST e : top_n_seq_annots )
+                ret.put( e.asn1_blob );
+            ret.put( seq_annot_suffix );
+
+            return ret;
         });
 
         SEQANNOTS3.foreachRDD( rdd ->
@@ -580,7 +582,7 @@ class BLAST_DRIVER extends Thread
                 DB_SECS = make_db_partitions_1( SETTINGS, PARTITIONER0 );
 
             final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
-			final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
+            final Long total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
 
             /* ===========================================================================================
                     initialize data-source ( socket as a stand-in for pub-sub )
