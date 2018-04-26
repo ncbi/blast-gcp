@@ -85,12 +85,12 @@ class BLAST_DRIVER extends Thread
     public BLAST_DRIVER( final BLAST_SETTINGS settings, final List< String > files_to_transfer )
     {
         this.settings = settings;
-        this.nodes = new BLAST_YARN_NODES();
+        this.nodes = new BLAST_YARN_NODES();    // discovers yarn-nodes
 
         SparkConf conf = new SparkConf();
         conf.setAppName( settings.appName );
 
-        //conf.set ("spark.dynamicAllocation.enabled", "false" );
+        conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( settings.with_dyn_alloc ) );
         conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
         conf.set( "spark.streaming.receiver.maxRate", String.format( "%d", settings.receiver_max_rate ) );
         if ( settings.num_executors > 0 )
@@ -99,7 +99,6 @@ class BLAST_DRIVER extends Thread
             conf.set( "spark.executor.cores", String.format( "%d", settings.num_executor_cores ) );
         if ( !settings.executor_memory.isEmpty() )
             conf.set( "spark.executor.memory", settings.executor_memory );
-
         conf.set( "spark.locality.wait", settings.locality_wait );
 
         sc = new JavaSparkContext( conf );
@@ -506,7 +505,7 @@ class BLAST_DRIVER extends Thread
                 sum += e.asn1_blob.length;
 
             byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
-            byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0 };
+            byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
             ByteBuffer ret = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
 
             ret.put( seq_annot_prefix );
