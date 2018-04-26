@@ -63,14 +63,15 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # 854/16 amongst 54 preemptible workers
 
 # ~$15/hour for 56 node cluster
+# ~$21/hour for 16 X 64
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
-    --worker-machine-type n1-highcpu-16 \
+    --worker-machine-type n1-highcpu-64 \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 54 \
+    --num-preemptible-workers 14 \
         --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
