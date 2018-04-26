@@ -64,7 +64,7 @@
       <artifactId>spark-pubsub</artifactId>
       <version>0.1.0-SNAPSHOT</version>
       <scope>system</scope>
-      <systemPath>${env.HOME}/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar</systemPath>
+      <systemPath>${project.basedir}/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar</systemPath>
     </dependency>
     <!-- FIX: Apache Log4J 1.2 was EOL'ed on 8/2015, but Spark still uses it,
          so shall we. -->
