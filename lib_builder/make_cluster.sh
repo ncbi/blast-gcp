@@ -68,9 +68,8 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # 0.9GB per CPU, so at least 57.6GB for 64 cores, which is n1-highcpu-64
 
 # TODO:
-# Disable broadcast compression?
 # YARN, 1 core?
-# turn off dynamic allocation
+# turn off dynamic allocation?
 # check Spark Web UI
 
 # ~$15/hour for 56 node cluster
