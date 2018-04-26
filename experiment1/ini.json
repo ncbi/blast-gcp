@@ -1,0 +1,25 @@
+{
+    "spark" :
+    {
+        "with_locality" : "true",
+        "num_executors" : 8,
+        "num_executor_cores" : 3
+    },
+
+    "num_partitions" : 80,
+
+    "source" :
+    {
+        "socket" :
+        {
+            "port" : 10012
+        }
+    },
+
+    "log" :
+    {
+        "port" : 10011,
+        "pref-loc" : "true",
+        "part-prep" : "true"
+    }
+}
