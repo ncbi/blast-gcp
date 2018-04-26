@@ -142,7 +142,7 @@ def get_tests():
         # Randomly put 1% of queries in gs bucket instead
         if random.randrange(0, 100) < 5:
             print("Using bigquery")
-            j['queries'] = ['gs://bucket/big.query']
+#            j['queries'] = ['gs://bucket/big.query']
         TESTS[j['RID']] = j
     print("Loaded " + str(len(TESTS)) + " tests")
 
@@ -367,7 +367,7 @@ def main():
     submit_application(config)
     print()
     print(" " * 20, "*** Start Spark Streaming Job now ***")
-    time.sleep(20)
+    time.sleep(40)
     print()
     time.sleep(1)
 

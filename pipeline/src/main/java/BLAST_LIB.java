@@ -76,7 +76,7 @@ public class BLAST_LIB {
     BLAST_LIB.logLevel = Level.toLevel(logLevel);
 
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-    log("INFO", "\nJava jni_prelim_search called with");
+    log("INFO", "Java jni_prelim_search called with");
     log("INFO", "  query   : " + req.query);
     log("INFO", "  db_spec : " + part.db_spec);
     log("INFO", "  program : " + req.program);
@@ -107,7 +107,7 @@ public class BLAST_LIB {
     throwIfBad();
 
     BLAST_LIB.logLevel = Level.toLevel(logLevel);
-    log("INFO", "\nJava jni_traceback called with");
+    log("INFO", "Java jni_traceback called with");
     log("INFO", "  query   : " + req.query);
     log("INFO", "  db_spec : " + part.db_spec);
 
