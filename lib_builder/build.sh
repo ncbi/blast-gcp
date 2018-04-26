@@ -43,7 +43,7 @@ rm -f *.jar
 rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
-rm -rf $TMP/scan-build-*
+rm -rf /tmp/scan-build-*
 
 
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
@@ -54,7 +54,8 @@ DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
 echo "Compiling Java"
 pushd ../pipeline > /dev/null
-mvn -q package
+./make_jar.sh
+#mvn -q package
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
 JAVASRCDIR="../pipeline/src/main/java"
