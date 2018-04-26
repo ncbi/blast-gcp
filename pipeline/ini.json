@@ -9,15 +9,16 @@
     "locality_wait" : "5s",
 
     "top_n" : 100,
-    "num_db_partitions" : 200,
+    "num_db_partitions" : 50,
     "num_workers" : 8,
-    "num_executors" : 8,
+    "num_executors" : 4,
     "num_executor_cores" : 3,
     "trigger_port" : 0,
     "project_id" : "ncbi-sandbox-blast",
-    "subscript_id" : "run-queue-integration",
+    "subscript_id" : "sprint4-integration-demo",
     "db_location" : "/tmp/blast/db_test",
     "result_bucket" : "blast-results",
     "status_bucket" : "blast-results",
-    "status_file" : "%s/status.txt"
+    "status_file" : "%s/status.txt",
+    "result_file" : "%s/seq-annot.asn"
 }
