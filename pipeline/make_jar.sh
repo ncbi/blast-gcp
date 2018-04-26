@@ -2,11 +2,11 @@
 
 clear
 
-if [ ! -d "bigdata-interop" ]; then
-    git clone https://github.com/GoogleCloudPlatform/bigdata-interop.git
-    cd bigdata-interop/pubsub
-    mvn package
-fi
+#if [ ! -d "bigdata-interop" ]; then
+#    git clone https://github.com/GoogleCloudPlatform/bigdata-interop.git
+#    cd bigdata-interop/pubsub
+#    mvn package
+#fi
 
 echo "compiling java-classes"
 mvn -q package
