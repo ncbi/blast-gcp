@@ -6,9 +6,6 @@
 #exec >  >(tee -ia /tmp/cluster_initialize.log)
 #exec 2> >(tee -ia /tmp/cluster_initialize.log >&2)
 
-# Copy this script to GS bucket with:
-# gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
-
 cd /tmp
 
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
@@ -23,7 +20,6 @@ echo 'tmpfs /mnt/ram-disk tmpfs nodev,nosuid,noexec,nodiratime,size=50% 0 0' \
 sudo mount -t tmpfs -o size=50% /mnt/ram-disk
 
 
-PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 DBBUCKET="gs://nt_50mb_chunks/"
 BLASTTMP=/tmp/blast/
 BLASTDBDIR=$BLASTTMP/db
@@ -95,7 +91,8 @@ else
     # Worker node, copy DBs from GCS
     # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
     MAXJOBS=8
-    parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
+    #parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
+    parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -u | head -1`
     for part in $parts; do
         logger -t cluster_initialize.sh "BLASTJNI Preloading Blast DB $part"
         piece="nt_50M.$part"
