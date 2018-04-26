@@ -1,0 +1,44 @@
+{
+    "spark" :
+    {
+        "with_locality" : "true",
+        "num_executors" : 8,
+        "num_executor_cores" : 3
+    },
+
+    "blastjni" :
+    {
+        "db" :
+        {
+            "db_bucket" : "nt_50mb_chunks",
+            "num_db_partitions" : 80
+        },
+        "top_n" : 100
+    },
+
+    "source" :
+    {
+        "pubsub" :
+        {
+            "project_id" : "ncbi-sandbox-blast",
+            "subscript_id" : "spark-test-subscript"
+        }
+    },
+
+    "result" :
+    {
+        "asn1" :
+        {
+            "bucket" : "blastgcp-pipeline-test"
+        },
+        "status" :
+        {
+            "bucket"  : "blastgcp-pipeline-test"
+        }
+    },
+
+    "log" :
+    {
+        "log_port" : 10011
+    }
+}

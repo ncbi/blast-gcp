@@ -1,0 +1,32 @@
+{
+    "blastjni" : {
+        "db" : {
+            "db_bucket" : "nt_50mb_chunks",
+            "num_db_partitions" : 886
+        },
+        "top_n" : 100
+    },
+    "log" : {
+        "log_port" : 0
+    },
+    "result" : {
+        "asn1" : {
+            "bucket" : "blast-test-vartanianmh"
+        },
+        "status" : {
+            "bucket" : "blast-test-vartanianmh"
+        }
+    },
+    "source" : {
+        "pubsub" : {
+            "project_id" : "ncbi-sandbox-blast",
+            "subscript_id" : "blast-test-vartanianmh"
+        }
+    },
+    "spark" : {
+        "num_executor_cores" : 4,
+        "num_executors" : 180,
+        "with_locality" : false
+    }
+}
+
