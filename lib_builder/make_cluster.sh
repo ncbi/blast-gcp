@@ -62,6 +62,17 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # 16 each to 2 workers
 # 854/16 amongst 54 preemptible workers
 
+# Need 50+GB for NT DB to be resident in kernel page cache.
+# Figure Spark/Hadoop/OS/JVMs take ~4GB, so need
+# at least 54GB RAM per node. GCE won't allow less than
+# 0.9GB per CPU, so at least 57.6GB for 64 cores, which is n1-highcpu-64
+
+# TODO:
+# Disable broadcast compression?
+# YARN, 1 core?
+# turn off dynamic allocation
+# check Spark Web UI
+
 # ~$15/hour for 56 node cluster
 # ~$21/hour for 16 X 64
 gcloud beta dataproc --region us-east4 \
