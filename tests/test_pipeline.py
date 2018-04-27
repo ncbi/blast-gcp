@@ -171,13 +171,13 @@ def make_json():
         j['top_n'] = 100
         j['num_db_partitions'] = 886
         j['num_executors'] = 180
-        j['num_executor_cores'] = 4
+        j['num_executor_cores'] = 1
         j['project_id'] = PROJECT
     else:
         j['spark'] = {}
         j['spark']['with_locality'] = False
         j['spark']['num_executors'] = 180
-        j['spark']['num_executor_cores'] = 4
+        j['spark']['num_executor_cores'] = 1
         j['blastjni'] = {}
         j['blastjni']['db'] = {}
         j['blastjni']['db']['db_bucket'] = 'nt_50mb_chunks'
