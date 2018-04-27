@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.exp1;
+package gov.nih.nlm.ncbi.exp;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -34,10 +34,6 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
-
-import static java.lang.Math.min;
-
-import java.nio.ByteBuffer;
 
 import scala.Option;
 import scala.Tuple2;
@@ -68,9 +64,6 @@ import org.apache.spark.SparkFiles;
 import org.apache.spark.HashPartitioner;
 import org.apache.spark.SparkEnv;
 import org.apache.spark.rdd.RDD;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 class EXP_DRIVER extends Thread
 {
@@ -128,18 +121,17 @@ class EXP_DRIVER extends Thread
         return res;
     }
 
-    private JavaRDD< String > make_partitions( Broadcast< EXP_SETTINGS > SETTINGS )
+    private JavaRDD< EXP_PARTITION > make_partitions( Broadcast< EXP_SETTINGS > SETTINGS )
     {
-        final List< Tuple2< String, Seq< String > > > part_list = new ArrayList<>();
+        final List< Tuple2< EXP_PARTITION, Seq< String > > > part_list = new ArrayList<>();
         for ( int i = 0; i < settings.num_partitions; i++ )
         {
-            Integer idx = i % node_count();
+            String host = yarn_nodes.getHost( i % node_count() );
 
-            String part = String.format( "PART#%d(%d)", i, idx );
-            String host = yarn_nodes.getHost( idx );
+            EXP_PARTITION part = new EXP_PARTITION( i, host );
 
             if ( settings.log_pref_loc )
-                EXP_SEND.send( settings, String.format( "adding %s for %s", host, part ) );
+                EXP_SEND.send( settings, String.format( "%s", part ) );
 
             List< String > prefered_loc = new ArrayList<>();            
             prefered_loc.add( host );
@@ -150,13 +142,13 @@ class EXP_DRIVER extends Thread
         }
 
         // we transform thes list into a Seq
-        final Seq< Tuple2< String, Seq< String > > > temp1 = JavaConversions.asScalaBuffer( part_list ).toSeq();
+        final Seq< Tuple2< EXP_PARTITION, Seq< String > > > temp1 = JavaConversions.asScalaBuffer( part_list ).toSeq();
 
         // we need the class-tag for twice for conversions
-        ClassTag< String > tag = scala.reflect.ClassTag$.MODULE$.apply( String.class );
+        ClassTag< EXP_PARTITION > tag = scala.reflect.ClassTag$.MODULE$.apply( EXP_PARTITION.class );
 
         // this will distribute the partitions to different worker-nodes
-        final RDD< String > temp2 = sc.toSparkContext( sc ).makeRDD( temp1, tag );
+        final RDD< EXP_PARTITION > temp2 = sc.toSparkContext( sc ).makeRDD( temp1, tag );
 
         // now we transform it into a JavaRDD and perform a mapping-op to eventuall load the
         // database onto the worker-node ( if it is not already there )
@@ -174,17 +166,18 @@ class EXP_DRIVER extends Thread
     /* ===========================================================================================
             create source-stream of Strings
        =========================================================================================== */
-    private JavaDStream< String > create_socket_stream( Broadcast< EXP_SETTINGS > SETTINGS )
+    private JavaDStream< EXP_REQUEST > create_socket_stream( Broadcast< EXP_SETTINGS > SETTINGS )
     {
         JavaDStream< String > tmp = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
         return tmp.map( item ->
         {
             EXP_SETTINGS se = SETTINGS.getValue();
 
+            EXP_REQUEST res = new EXP_REQUEST( item.trim() );
             if ( se.log_request )
-                EXP_SEND.send( se, String.format( "REQ: '%s'", item ) );
+                EXP_SEND.send( se, String.format( "%s", res ) );
 
-            return item;
+            return res;
         } ).cache();
     }
 
@@ -203,7 +196,7 @@ class EXP_DRIVER extends Thread
                         String item = iter.next();
 
                         if ( se.log_final )
-                            EXP_SEND.send( se, String.format( "final : '%s'", item ) );
+                            EXP_SEND.send( se, String.format( "final: '%s'", item ) );
                     }
                 } );
             }
@@ -223,23 +216,25 @@ class EXP_DRIVER extends Thread
             /* ===========================================================================================
                     make PARTS
                =========================================================================================== */
-            JavaRDD< String > PARTS = make_partitions( SETTINGS );
-            final JavaRDD< Integer > P_SIZES = PARTS.map( item -> item.length() );
-            final Integer total_size = P_SIZES.reduce( ( x, y ) -> x + y );
+            JavaRDD< EXP_PARTITION > PARTS = make_partitions( SETTINGS );
+            final JavaRDD< Long > P_SIZES = PARTS.map( item -> item.size() );
+            final Long total_size = P_SIZES.reduce( ( x, y ) -> x + y );
 
 
             /* ===========================================================================================
                     initialize data-source ( socket as a stand-in for pub-sub )
                =========================================================================================== */
-            final JavaDStream< String > REQ_STREAM = create_socket_stream( SETTINGS );
+            final JavaDStream< EXP_REQUEST > REQ_STREAM = create_socket_stream( SETTINGS );
 
-            final JavaPairDStream< String, String > JOB_STREAM
+            final JavaPairDStream< EXP_PARTITION, EXP_REQUEST > JOB_STREAM
                 = REQ_STREAM.transformToPair( rdd -> PARTS.cartesian( rdd ) ).cache();
             
-            final JavaDStream< String > RES_STREAM = JOB_STREAM.map( item ->
+            final JavaPairDStream< String > RES_STREAM = JOB_STREAM.map( item ->
             {
-                return String.format( "%s-%s", item._1(), item._2() );
-            });
+                EXP_PARTITION part = item._1();
+                EXP_REQUEST req = item._2();
+                return String.format( "%s <---> %s", part, req );
+            }).cache();
 
             consum_stream( RES_STREAM, SETTINGS );
 

@@ -11,8 +11,8 @@
 # on the master-node: 'hadoop fs -ls results' to see produced rdd's
 #
 
-EXP_CLASS="gov.nih.nlm.ncbi.exp1.EXP_MAIN"
-EXP_JAR="./target/exp1-1-jar-with-dependencies.jar"
+EXP_CLASS="gov.nih.nlm.ncbi.exp.EXP_MAIN"
+EXP_JAR="target/exp-2-jar-with-dependencies.jar"
 EXP_INI="ini.json"
 
 #

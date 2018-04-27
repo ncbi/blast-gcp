@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.exp1;
+package gov.nih.nlm.ncbi.exp;
 
 import java.io.Console;
 import java.io.IOException;

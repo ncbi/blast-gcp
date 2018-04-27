@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>gov.nih.nlm.ncbi.exp1</groupId>
-  <artifactId>exp1</artifactId>
-  <version>1</version>
+  <groupId>gov.nih.nlm.ncbi.exp</groupId>
+  <artifactId>exp</artifactId>
+  <version>2</version>
 
   <dependencies>
 

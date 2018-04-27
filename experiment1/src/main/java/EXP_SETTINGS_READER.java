@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.exp1;
+package gov.nih.nlm.ncbi.exp;
 
 import java.util.List;
 import java.util.ArrayList;

@@ -23,7 +23,7 @@
 * ===========================================================================
 *
 */
-package gov.nih.nlm.ncbi.exp1;
+package gov.nih.nlm.ncbi.exp;
 
 import java.io.BufferedOutputStream;
 import java.io.PrintStream;
@@ -35,32 +35,29 @@ import org.apache.spark.SparkEnv;
 public class EXP_SEND
 {
     private static EXP_SEND instance = null;
-
-    private final String host;
-    private final int port;
+    private PrintStream ps;
     private String localName;
 
     private EXP_SEND( final String host, final int port )
     {
-        this.host = host;
-        this.port = port;
         try
         {
-            InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            localName = localMachine.getHostName();
+            localName = java.net.InetAddress.getLocalHost().getHostName();
+            Socket socket = new Socket( host, port );
+            socket.setTcpNoDelay( true );
+            ps = new PrintStream( socket.getOutputStream() );
         }
         catch ( Exception e )
         {
             localName = "unknown";
+            ps = null;
         }
     }
 
     public static EXP_SEND getInstance( final String host, final int port )
     {
         if ( instance == null )
-        {
             instance = new EXP_SEND( host, port );
-        }
         return instance;
     }
 
@@ -68,11 +65,7 @@ public class EXP_SEND
     {
         try
         {
-            Socket socket = new Socket( host, port );
-            PrintStream ps = new PrintStream( socket.getOutputStream() );
             ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId(), msg );
-            socket.close();
-        
         }
         catch ( Exception e )
         {
@@ -86,22 +79,9 @@ public class EXP_SEND
             inst.send_msg( msg );
     }
 
-    public static void send( final EXP_SETTINGS bls, final String msg )
+    public static void send( final EXP_SETTINGS se, final String msg )
     {
-        send( bls.log_host, bls.log_port, msg );
-    }
-
-    public static String resolve( final String hostname )
-    {
-        try
-        {
-            InetAddress address = InetAddress.getByName( hostname ); 
-            return address.getHostAddress();
-        }
-        catch ( Exception e )
-        {
-            return hostname;
-        }
+        send( se.log_host, se.log_port, msg );
     }
 }
 
