@@ -8,8 +8,8 @@ SUBSCRIPTION?=sprint4-integration-demo
 DEMO_BUCKET=sprint4-integration-demo
 
 all: 
-	-gsutil mb gs://${DEMO_BUCKET}
-	gsutil cp ./lib_builder/cluster_initialize.sh gs://${DEMO_BUCKET}/scripts/
+	#-gsutil mb gs://${DEMO_BUCKET}
+	#gsutil cp ./lib_builder/cluster_initialize.sh gs://${DEMO_BUCKET}/scripts/
 	#pipeline/make_jar.sh
 	#gcloud pubsub subscriptions create --topic run-queue-integration ${SUBSCRIPTION}
 	lib_builder/make_cluster.sh gs://${DEMO_BUCKET}
