@@ -87,10 +87,10 @@ if [ "$BUILDENV" = "ncbi" ]; then
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
     #-ldbapi_driver -lncbi_xreader \
     echo "Running static analysis on C++ code"
-    echo "WARN: static analyzer checks temporarily disabled"
-    # TODO cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+    cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
     GPPCOMMAND="
-    g++ blastjni.cpp \
+    g++ \
+    blastjni.cpp \
     -std=gnu++11 \
     -Wall -O  -I . \
     -Wextra -pedantic \
@@ -125,12 +125,11 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
     -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
-    # scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+    scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
 
     echo "Static analysis on C++ code complete"
     echo "Compiling and linking blastjni.cpp"
-    echo "WARN: g++ temporarily disabled"
-    # $GPPCOMMAND
+    $GPPCOMMAND
     cp libblastjni.so ../pipeline
 fi
 

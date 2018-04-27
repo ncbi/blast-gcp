@@ -26,7 +26,6 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
 
   private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], java.lang.String, java.lang.String, java.lang.String, java.lang.String);
     descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
-
 }
 Compiled from "BLAST_HSP_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
