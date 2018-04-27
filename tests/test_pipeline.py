@@ -30,7 +30,7 @@ PROJECT = "ncbi-sandbox-blast"
 CLUSTER_ID = ""
 TEST_ID = ""
 STORAGE_CLIENT = None
-BUCKET = ""
+BUCKET = None
 BUCKET_NAME = ""
 TESTS = {}
 PUBSUB_CLIENT = None
@@ -125,7 +125,7 @@ def make_bucket():
 
 
 def get_tests():
-    global TESTS
+    global TESTS, BUCKET, BUCKET_NAME
 
     test_blobs = os.listdir('queries')
     random.shuffle(test_blobs)
@@ -141,8 +141,16 @@ def get_tests():
         j['RID'] = TEST_ID + j['RID']
         # Randomly put 1% of queries in gs bucket instead
         if random.randrange(0, 100) < 5:
-            print("Using bigquery")
-#            j['queries'] = ['gs://bucket/big.query']
+            print("Using out of band query")
+            objname = BUCKET_NAME + "/queryoob/" + j['RID']
+            # TODO: Copy to GS bucket
+            blob = BUCKET.blob(objname)
+            blob.upload_from_string(j['blast_params']['queries'][0])
+            j['blast_params']['queries'] = ["gs://" + objname]
+            j['query_seq'] = ''
+            j['query_url'] = "gs://" + objname
+            print(json.dumps(j, indent=4))
+
         TESTS[j['RID']] = j
     print("Loaded " + str(len(TESTS)) + " tests")
 
@@ -297,6 +305,7 @@ def results_thread():
             ]
             #print (cmd)
             subprocess.check_output(cmd)
+            # TODO: Check results
 
         if not anything:
             progress(results="No objects in bucket")
@@ -339,6 +348,9 @@ def main():
     TEST_ID = "blast-test-vartanianmh"
     print("TEST_ID is " + TEST_ID)
 
+    # Create output bucket
+    make_bucket()
+
     get_tests()
 
     #TEST_ID="blast_test-" + secrets.token_urlsafe(6)
@@ -348,9 +360,6 @@ def main():
     get_cluster()
     print("Cluster id is: " + CLUSTER_ID)
     # Start if not found?
-
-    # Create output bucket
-    make_bucket()
 
     # Create pubsub queue
     make_pubsub()
