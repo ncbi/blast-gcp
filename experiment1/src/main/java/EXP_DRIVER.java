@@ -229,7 +229,7 @@ class EXP_DRIVER extends Thread
             final JavaPairDStream< EXP_PARTITION, EXP_REQUEST > JOB_STREAM
                 = REQ_STREAM.transformToPair( rdd -> PARTS.cartesian( rdd ) ).cache();
             
-            final JavaPairDStream< String > RES_STREAM = JOB_STREAM.map( item ->
+            final JavaDStream< String > RES_STREAM = JOB_STREAM.map( item ->
             {
                 EXP_PARTITION part = item._1();
                 EXP_REQUEST req = item._2();

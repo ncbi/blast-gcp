@@ -2,8 +2,8 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 24,
-        "num_executor_cores" : 1,
+        "num_executors" : 8,
+        "num_executor_cores" : 2,
         "locality_wait" : "2s"
     },
 
