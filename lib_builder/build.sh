@@ -63,13 +63,17 @@ mvn -q checkstyle:checkstyle > /dev/null 2>&1
 #echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >> rule.json
 #gsutil lifecycle set rule.json gs://blast-builds
 #rm -f rule.json
-CHECKSTYLE="gs://blast-builds/checkstyle.$TS.html"
+CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
 gsutil cp target/site/checkstyle.html $CHECKSTYLE
 echo "Output in $CHECKSTYLE"
 
 mvn -q site > /dev/null 2>&1
 PMD="gs://blast-builds/pmd.$TS.html"
 gsutil cp target/site/pmd.html $PMD
+
+CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
+gsutil cp target/site/checkstyle.html $CHECKSTYLE
+echo "Output in $CHECKSTYLE"
 
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
