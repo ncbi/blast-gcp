@@ -53,7 +53,7 @@ MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
 echo "Compiling Java and running Linters/Static Analyzers"
-TS=`date +"%Y-%m-%d_%H:%M:%S"`
+TS=`date +"%Y-%m-%d_%H%M%S"`
 pushd ../pipeline > /dev/null
 #mvn compile
 ./make_jar.sh

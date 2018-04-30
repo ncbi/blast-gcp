@@ -5,6 +5,7 @@ import atexit
 import datetime
 import getpass
 import json
+import difflib
 import os
 import random
 #import secrets # python 3.6
@@ -314,7 +315,16 @@ def results_thread():
             ]
             #print (cmd)
             subprocess.check_output(cmd)
-            # TODO: Check results
+
+            with open(fname + ".txt") as fnew:
+                fnewlines=fnew.readlines()
+            with open("expected/" + origid + "." + parts[2] + ".txt") as fexpected:
+                fexpectedlines=fexpected.readlines()
+
+            if fnewlines!=fexpectedlines:
+                print("Files differ for " + origid)
+                diff=difflib.ndiff(fnewlines, fexpectedlines)
+                print(diff)
 
         if not anything:
             progress(results="No objects in bucket")
