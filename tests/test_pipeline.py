@@ -126,8 +126,12 @@ def make_bucket():
 
 
 def get_tests():
-    global TESTS, BUCKET, BUCKET_NAME
+    global TESTS
+    largequery_bucket_name = "blast-largequeries"
+    large_bucket = storage.Client().bucket(largequery_bucket_name)
+    largequery_bucket_name = "gs://" + largequery_bucket_name
 
+    # gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-largequeries
     test_blobs = os.listdir('queries')
     random.shuffle(test_blobs)
 
@@ -141,15 +145,19 @@ def get_tests():
         j['pubsub_submit_time'] = "TBD"
         j['RID'] = TEST_ID + j['RID']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 5:
+        if random.randrange(0, 100) < 25:
             print("Using out of band query")
-            objname = BUCKET_NAME + "/queryoob/" + j['RID']
-            # TODO: Copy to GS bucket
-            blob = BUCKET.blob(objname)
+
+            objname = j['RID'] + "-" + str(uuid.uuid4())
+
+            blob = large_bucket.blob(objname)
             blob.upload_from_string(j['blast_params']['queries'][0])
-            j['blast_params']['queries'] = ["gs://" + objname]
+
+            url = largequery_bucket_name + "/" + objname
+
+            j['blast_params']['queries'] = [url]
             j['query_seq'] = ''
-            j['query_url'] = "gs://" + objname
+            j['query_url'] = url
             print(json.dumps(j, indent=4))
 
         TESTS[j['RID']] = j
@@ -346,7 +354,7 @@ def main():
     # register atexit
     atexit.register(cleanup)
     TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
-    TEST_ID=str(uuid.uuid4())
+    TEST_ID = str(uuid.uuid4())
     TEST_ID = "blast-test-vartanianmh"
     print("TEST_ID is " + TEST_ID)
 
