@@ -34,13 +34,13 @@ public class BLAST_LIB {
     try {
       // Java will look for libblastjni.so, thread safe if successful?
       System.loadLibrary("blastjni");
-    } catch (Throwable e) {
+    } catch (Throwable threx) {
       try {
         System.load(SparkFiles.get("libblastjni.so"));
-      } catch (ExceptionInInitializerError x) {
-        invalid = x;
-      } catch (Throwable e2) {
-        invalid = new ExceptionInInitializerError(e2);
+      } catch (ExceptionInInitializerError xininit) {
+        invalid = xininit;
+      } catch (Throwable threx2) {
+        invalid = new ExceptionInInitializerError(threx2);
       }
     }
     processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
@@ -52,8 +52,8 @@ public class BLAST_LIB {
   private static Level logLevel;
 
   final void throwIfBad() {
-    if (invalid != null)
-    {throw invalid;
+    if (invalid != null) {
+      throw invalid;
     }
   }
 
@@ -61,21 +61,21 @@ public class BLAST_LIB {
   // logLevel
   private void log(final String level, final String msg) {
     Logger logger = LogManager.getLogger(BLAST_LIB.class);
-    Level l = Level.toLevel(level);
+    Level lvl = Level.toLevel(level);
 
-    if (l.isGreaterOrEqual(logLevel)) {
+    if (lvl.isGreaterOrEqual(logLevel)) {
       final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + ") " + msg;
-      logger.log(l, newmsg);
+      logger.log(lvl, newmsg);
     }
   }
 
-  final BLAST_HSP_LIST[] jni_prelim_search( final BLAST_PARTITION part, final BLAST_REQUEST req, final String logLevel )
-  {
+  final BLAST_HSP_LIST[] jni_prelim_search(
+      final BLAST_PARTITION part, final BLAST_REQUEST req, final String pslogLevel) {
 
     // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
     throwIfBad();
 
-    BLAST_LIB.logLevel = Level.toLevel(logLevel);
+    BLAST_LIB.logLevel = Level.toLevel(pslogLevel);
 
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
     log("INFO", "Java jni_prelim_search called with");
@@ -85,9 +85,8 @@ public class BLAST_LIB {
     // FIX - top_n_prelim
     log("INFO", "  topn    : " + req.top_n);
 
-    if (req.query.contains("\n"))
-    {
-        log("WARN", "Query contains newline, which may crash Blast library");
+    if (req.query.contains("\n")) {
+      log("WARN", "Query contains newline, which may crash Blast library");
     }
 
     long starttime = System.currentTimeMillis();
@@ -98,22 +97,25 @@ public class BLAST_LIB {
     long finishtime = System.currentTimeMillis();
     log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
     log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
-    int i = 0;
-    for (BLAST_HSP_LIST h : ret) {
-      h.part = part;
-      h.req = req;
-      log("DEBUG", "#" + i + ": " + h.toString());
-      ++i;
+    int hspcnt = 0;
+    for (BLAST_HSP_LIST hspl : ret) {
+      hspl.part = part;
+      hspl.req = req;
+      log("DEBUG", "#" + hspcnt + ": " + hspl.toString());
+      ++hspcnt;
     }
 
     return ret;
   }
 
   final BLAST_TB_LIST[] jni_traceback(
-      BLAST_HSP_LIST[] hspl, final BLAST_PARTITION part, final BLAST_REQUEST req, final String logLevel) {
+      final BLAST_HSP_LIST[] hspl,
+      final BLAST_PARTITION part,
+      final BLAST_REQUEST req,
+      final String tblogLevel) {
     throwIfBad();
 
-    BLAST_LIB.logLevel = Level.toLevel(logLevel);
+    BLAST_LIB.logLevel = Level.toLevel(tblogLevel);
     log("INFO", "Java jni_traceback called with");
     log("INFO", "  query   : " + req.query);
     log("INFO", "  db_spec : " + part.db_spec);
@@ -125,19 +127,19 @@ public class BLAST_LIB {
     log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");
     log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs:");
 
-    int i = 0;
+    int tbcnt = 0;
     for (BLAST_TB_LIST t : ret) {
       t.part = part;
       t.req = req;
-      ++i;
+      ++tbcnt;
     }
 
     return ret;
   }
 
   private native BLAST_HSP_LIST[] prelim_search(
-      String query, String db_spec, String program, String params, int top_n);
+      String query, String dbspec, String program, String params, int topn);
 
   private native BLAST_TB_LIST[] traceback(
-      BLAST_HSP_LIST[] hspl, String query, String db_spec, String program, String params);
+      BLAST_HSP_LIST[] hspl, String query, String dbspec, String program, String params);
 }
