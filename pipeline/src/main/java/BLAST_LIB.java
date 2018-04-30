@@ -51,8 +51,10 @@ public class BLAST_LIB {
   private static ExceptionInInitializerError invalid;
   private static Level logLevel;
 
-  void throwIfBad() {
-    if (invalid != null) throw invalid;
+  final void throwIfBad() {
+    if (invalid != null)
+    {throw invalid;
+    }
   }
 
   // We can't rely on log4j.properties to filter, instead we'll look at
@@ -67,7 +69,7 @@ public class BLAST_LIB {
     }
   }
 
-  BLAST_HSP_LIST[] jni_prelim_search( BLAST_PARTITION part, BLAST_REQUEST req, String logLevel )
+  final BLAST_HSP_LIST[] jni_prelim_search( final BLAST_PARTITION part, final BLAST_REQUEST req, final String logLevel )
   {
 
     // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
@@ -82,6 +84,11 @@ public class BLAST_LIB {
     log("INFO", "  program : " + req.program);
     // FIX - top_n_prelim
     log("INFO", "  topn    : " + req.top_n);
+
+    if (req.query.contains("\n"))
+    {
+        log("WARN", "Query contains newline, which may crash Blast library");
+    }
 
     long starttime = System.currentTimeMillis();
 
@@ -102,8 +109,8 @@ public class BLAST_LIB {
     return ret;
   }
 
-  BLAST_TB_LIST[] jni_traceback(
-      BLAST_HSP_LIST[] hspl, BLAST_PARTITION part, BLAST_REQUEST req, String logLevel) {
+  final BLAST_TB_LIST[] jni_traceback(
+      BLAST_HSP_LIST[] hspl, final BLAST_PARTITION part, final BLAST_REQUEST req, final String logLevel) {
     throwIfBad();
 
     BLAST_LIB.logLevel = Level.toLevel(logLevel);
