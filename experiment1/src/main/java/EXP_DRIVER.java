@@ -121,9 +121,10 @@ class EXP_DRIVER extends Thread
         return res;
     }
 
-    private JavaRDD< EXP_PARTITION > make_partitions( Broadcast< EXP_SETTINGS > SETTINGS )
+    private JavaRDD< EXP_PARTITION > make_partitions( final Broadcast< EXP_SETTINGS > SETTINGS )
     {
         final List< Tuple2< EXP_PARTITION, Seq< String > > > part_list = new ArrayList<>();
+        // this happens on the master-node! we need to prepare later...
         for ( int i = 0; i < settings.num_partitions; i++ )
         {
             String host = yarn_nodes.getHost( i % node_count() );
@@ -156,17 +157,18 @@ class EXP_DRIVER extends Thread
         {
             EXP_SETTINGS se = SETTINGS.getValue();
 
+            // this happens on the worker-node! we have to prepare here...
             if ( se.log_part_prep )
                 EXP_SEND.send( se, String.format( "preparing %s", item ) );
 
             return item;
-        } ).cache();
+        } ).persist( StorageLevel.MEMORY_AND_DISK() );
     }
 
     /* ===========================================================================================
-            create source-stream of Strings
+            create source-stream of Requests
        =========================================================================================== */
-    private JavaDStream< EXP_REQUEST > create_socket_stream( Broadcast< EXP_SETTINGS > SETTINGS )
+    private JavaDStream< EXP_REQUEST > create_socket_stream( final Broadcast< EXP_SETTINGS > SETTINGS )
     {
         JavaDStream< String > tmp = jssc.socketTextStream( settings.trigger_host, settings.trigger_port );
         return tmp.map( item ->
@@ -181,7 +183,216 @@ class EXP_DRIVER extends Thread
         } ).cache();
     }
 
-    private void consum_stream( JavaDStream< String > STRM, Broadcast< EXP_SETTINGS > SETTINGS )
+    /* ===========================================================================================
+            create stream of Product1 from Partitions and Request
+       =========================================================================================== */
+    private JavaPairDStream< String, EXP_PRODUCT1 > produce1(
+                            final JavaDStream< EXP_REQUEST > REQUESTS,
+                            final JavaRDD< EXP_PARTITION > PARTITIONS,
+                            final Broadcast< EXP_SETTINGS > SETTINGS )
+    {
+        final JavaPairDStream< EXP_PARTITION, EXP_REQUEST > JOBS
+                = REQUESTS.transformToPair( rdd -> PARTITIONS.cartesian( rdd ) ).cache();
+            
+        return JOBS.flatMapToPair( item ->
+        {
+            List< Tuple2< String, EXP_PRODUCT1 > > res = new ArrayList<>();
+
+            EXP_SETTINGS se = SETTINGS.getValue();
+
+            EXP_PARTITION part = item._1();
+            EXP_REQUEST req = item._2();
+            Random rand = new Random();
+
+            if ( se.log_prod1 )
+                EXP_SEND.send( se, String.format( "prod1 for %s", part ) );
+
+            for ( int i = 0; i < 5; ++i )
+                res.add( new Tuple2<>( req.id, new EXP_PRODUCT1( req, part.nr, rand.nextInt( 200 ) ) ) );
+
+            return res.iterator();
+        }).cache();
+    }
+
+    /* ===========================================================================================
+            calculate cutoff
+       =========================================================================================== */
+    private JavaPairDStream< String, Integer > calculate_cutoff(
+                            final JavaPairDStream< String, EXP_PRODUCT1 > PROD,
+                            final Broadcast< EXP_SETTINGS > SETTINGS )
+    {
+        // key   : req_id
+        // value : scores, each having a copy of N for picking the cutoff value
+        final JavaPairDStream< String, EXP_RID_SCORE > TEMP1 = PROD.mapToPair( item -> {
+            String key = item._1();
+            EXP_PRODUCT1 prod = item._2();
+            return new Tuple2< String, EXP_RID_SCORE >( prod.req.id, new EXP_RID_SCORE( prod.score, prod.req.top_n ) );
+        }).cache();
+
+        // key   : req_id
+        // value : list of scores, each having a copy of N for picking the cutoff value
+        // this will conentrate all BLAST_RID_SCORE instances for a given req_id on one worker node
+        final JavaPairDStream< String, Iterable< EXP_RID_SCORE > > TEMP2 = TEMP1.groupByKey().cache();
+
+        // key   : req_id
+        // value : the cutoff value
+        // this will run once for a given req_id on one worker node
+        return TEMP2.mapToPair( item -> {
+            Integer cutoff = 0;
+            Integer top_n = 0;
+            ArrayList< Integer > lst = new ArrayList<>();
+            for( EXP_RID_SCORE s : item._2() )
+            {
+                if ( top_n == 0 )
+                    top_n = s.top_n;
+                lst.add( s.score );
+            }
+            if ( lst.size() > top_n )
+            {
+                Collections.sort( lst, Collections.reverseOrder() );
+                cutoff = lst.get( top_n - 1 );                    
+            }
+            EXP_SETTINGS es = SETTINGS.getValue();
+            if ( es.log_cutoff )
+                EXP_SEND.send( es, String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
+            return new Tuple2<>( item._1(), cutoff );
+
+        }).cache();
+    }
+
+    /* ===========================================================================================
+            filter by cutoff
+       =========================================================================================== */
+    private JavaPairDStream< String, EXP_PRODUCT1 > filter_by_cutoff(
+                                final JavaPairDStream< String, EXP_PRODUCT1 > PROD,
+                                final JavaPairDStream< String, Integer > CUTOFF )
+    {
+        return PROD.join( CUTOFF ).filter( item ->
+        {
+            EXP_PRODUCT1 prod = item._2()._1();
+            Integer cutoff = item._2()._2();
+            return ( cutoff == 0 || prod.score >= cutoff );
+        }).mapValues( item -> item._1() ).cache();
+    }
+
+
+    /* ===========================================================================================
+            create stream of Product1 from PRODUCT1 and Request
+       =========================================================================================== */
+    private JavaPairDStream< String, EXP_PRODUCT1 > produce2_v1(
+                                final JavaPairDStream< String, EXP_PRODUCT1 > PROD,
+                                final JavaRDD< EXP_PARTITION > PARTITIONS,
+                                final Broadcast< EXP_SETTINGS > SETTINGS )
+    {
+        final JavaPairDStream< EXP_PARTITION, Tuple2< String, EXP_PRODUCT1 > > temp1
+                = PROD.transformToPair( rdd -> PARTITIONS.cartesian( rdd ) ).cache();
+
+        return temp1.flatMapToPair( item ->
+        {
+            List< Tuple2< String, EXP_PRODUCT1 > > res = new ArrayList<>();
+
+            EXP_PARTITION a_part = item._1();
+            EXP_PRODUCT1  a_prod   = item._2()._2();
+
+            if ( a_part.nr.equals( a_prod.part_nr ) )
+            {
+                EXP_SETTINGS se = SETTINGS.getValue();
+
+                if ( se.log_prod2 )
+                    EXP_SEND.send( se, String.format( "prod2v1: {%s} X {%s}", a_part, a_prod ) );
+
+                String        req_id = item._2()._1();
+                res.add( new Tuple2<>( req_id, new EXP_PRODUCT1( a_prod.req, a_part.nr, a_prod.score ) ) );
+            }
+
+            return res.iterator();
+        }).cache();
+    }
+
+    private JavaPairDStream< String, EXP_PRODUCT1 > produce2_v2(
+                                final JavaPairDStream< String, EXP_PRODUCT1 > PROD,
+                                final JavaPairRDD< Integer, EXP_PARTITION > PARTITIONS,
+                                final Broadcast< EXP_SETTINGS > SETTINGS )
+    {
+        // re-key the product stream by the partition-nr
+        final JavaPairDStream< Integer, EXP_PRODUCT1 > temp1
+                = PROD.mapToPair( item ->
+                {
+                    EXP_PRODUCT1 prod = item._2();
+                    return new Tuple2< Integer, EXP_PRODUCT1 >( prod.part_nr, prod );
+                } );
+
+        // co-group the product-stream with the keyed partitions
+        final JavaPairDStream< Integer, Tuple2< Iterable< EXP_PARTITION >, Iterable< EXP_PRODUCT1 > > > temp2
+                = temp1.transformToPair( rdd -> PARTITIONS.cogroup( rdd ) ).cache();
+
+        return temp2.flatMapToPair( item ->
+        {
+            List< Tuple2< String, EXP_PRODUCT1 > > res = new ArrayList<>();
+            EXP_SETTINGS se = SETTINGS.getValue();
+
+            Tuple2< Iterable< EXP_PARTITION >, Iterable< EXP_PRODUCT1 > > part_prod = item._2();
+
+            Iterable< EXP_PARTITION > part_iter = part_prod._1();
+            Iterable< EXP_PRODUCT1 > prod_iter = part_prod._2();
+
+            List< EXP_PRODUCT1 > products = new ArrayList<>();
+            for ( EXP_PRODUCT1 a_prod : prod_iter )
+                products.add( a_prod );
+
+            for ( EXP_PARTITION a_part : part_iter )
+            {
+                for ( EXP_PRODUCT1 a_prod : products )
+                {
+
+                    if ( a_part.nr.equals( a_prod.part_nr ) )
+                    {
+                        if ( se.log_prod2 )
+                            EXP_SEND.send( se, String.format( "prod2v2: {%s} X {%s}", a_part, a_prod ) );
+
+                        res.add( new Tuple2<>( a_prod.req.id, new EXP_PRODUCT1( a_prod.req, a_part.nr, a_prod.score ) ) );
+                    }
+                }
+            }
+
+            return res.iterator();                
+        } ).cache();
+    }
+
+    private JavaPairDStream< String, EXP_PRODUCT1 > produce2_v3(
+                                final JavaPairDStream< String, EXP_PRODUCT1 > PROD,
+                                final JavaPairRDD< Integer, EXP_PARTITION > PARTITIONS,
+                                final Broadcast< EXP_SETTINGS > SETTINGS )
+    {
+        // re-key the product stream by the partition-nr
+        final JavaPairDStream< Integer, EXP_PRODUCT1 > temp1
+                = PROD.mapToPair( item -> new Tuple2<>( item._2().part_nr, item._2() ) );
+
+        // co-group the product-stream with the keyed partitions
+        final JavaPairDStream< Integer, Tuple2< EXP_PRODUCT1, EXP_PARTITION > > temp2
+                = temp1.transformToPair( rdd -> rdd.join( PARTITIONS ) ).cache();
+
+        return temp2.flatMapToPair( item ->
+        {
+            List< Tuple2< String, EXP_PRODUCT1 > > res = new ArrayList<>();
+            EXP_SETTINGS se = SETTINGS.getValue();
+
+            EXP_PARTITION part = item._2()._2();
+            EXP_PRODUCT1 prod = item._2()._1();
+            if ( se.log_prod2 )
+                EXP_SEND.send( se, String.format( "prod2v3: {%s} X {%s}", part, prod ) );
+
+            res.add( new Tuple2<>( prod.req.id, new EXP_PRODUCT1( prod.req, part.nr, prod.score ) ) );
+
+            return res.iterator();                
+        } ).cache();
+    }
+
+    /* ===========================================================================================
+            consume final product
+       =========================================================================================== */
+    private void consum_final( final JavaPairDStream< String, EXP_PRODUCT1 > STRM,
+                               final Broadcast< EXP_SETTINGS > SETTINGS )
     {
         STRM.foreachRDD( rdd ->
         {
@@ -193,10 +404,14 @@ class EXP_DRIVER extends Thread
                     EXP_SETTINGS se = SETTINGS.getValue();
                     while( iter.hasNext() )
                     {
-                        String item = iter.next();
+                        Tuple2< String, EXP_PRODUCT1 > item = iter.next();
+                        String key = item._1();
+                        EXP_PRODUCT1 prod = item._2();
 
                         if ( se.log_final )
-                            EXP_SEND.send( se, String.format( "final: '%s'", item ) );
+                        {
+                            EXP_SEND.send( se, String.format( "final: {%s} {%s}", key, prod ) );
+                        }
                     }
                 } );
             }
@@ -214,29 +429,49 @@ class EXP_DRIVER extends Thread
             Broadcast< EXP_YARN_NODES > YARN_NODES = sc.broadcast( yarn_nodes );
 
             /* ===========================================================================================
-                    make PARTS
+                    make PARTITIONS
                =========================================================================================== */
-            JavaRDD< EXP_PARTITION > PARTS = make_partitions( SETTINGS );
-            final JavaRDD< Long > P_SIZES = PARTS.map( item -> item.size() );
+            final JavaRDD< EXP_PARTITION > PARTITIONS = make_partitions( SETTINGS );
+            final JavaRDD< Long > P_SIZES = PARTITIONS.map( item -> item.size() );
             final Long total_size = P_SIZES.reduce( ( x, y ) -> x + y );
-
+            
+            final JavaPairRDD< Integer, EXP_PARTITION > KEY_PARTITIONS
+                        = PARTITIONS.mapToPair( item -> new Tuple2< Integer, EXP_PARTITION >( item.nr, item ) ).cache();
 
             /* ===========================================================================================
-                    initialize data-source ( socket as a stand-in for pub-sub )
+                    make REQUESTS
                =========================================================================================== */
-            final JavaDStream< EXP_REQUEST > REQ_STREAM = create_socket_stream( SETTINGS );
+            final JavaDStream< EXP_REQUEST > REQUESTS = create_socket_stream( SETTINGS );
 
-            final JavaPairDStream< EXP_PARTITION, EXP_REQUEST > JOB_STREAM
-                = REQ_STREAM.transformToPair( rdd -> PARTS.cartesian( rdd ) ).cache();
-            
-            final JavaDStream< String > RES_STREAM = JOB_STREAM.map( item ->
-            {
-                EXP_PARTITION part = item._1();
-                EXP_REQUEST req = item._2();
-                return String.format( "%s <---> %s", part, req );
-            }).cache();
+            /* ===========================================================================================
+                    produce PRODUCT1 ( PARTITIONS x REQUESTS )
+               =========================================================================================== */
+            final JavaPairDStream< String, EXP_PRODUCT1 > PROD1
+                        = produce1( REQUESTS, PARTITIONS, SETTINGS );
 
-            consum_stream( RES_STREAM, SETTINGS );
+            /* ===========================================================================================
+                    produce CUTOFF ( PROD1 ---> < REQ_ID, CUTOFF > )
+               =========================================================================================== */
+            final JavaPairDStream< String, Integer > CUTOFF
+                        = calculate_cutoff( PROD1, SETTINGS );
+
+            /* ===========================================================================================
+                    filter by CUTOFF ( PROD1 x < REQ_ID, CUTOFF > ---> PROD1 )
+               =========================================================================================== */
+            final JavaPairDStream< String, EXP_PRODUCT1 > FILTERED_PROD
+                        = filter_by_cutoff( PROD1, CUTOFF );
+
+            /* ===========================================================================================
+                    produce PRODUCT2 ( PARTITIONS x PROD2 )
+               =========================================================================================== */
+            final JavaPairDStream< String, EXP_PRODUCT1 > PROD2
+                        //= produce2_v1( FILTERED_PROD, PARTITIONS, SETTINGS );
+                        = produce2_v3( FILTERED_PROD, KEY_PARTITIONS, SETTINGS );
+
+            /* ===========================================================================================
+                    consume final product
+               =========================================================================================== */
+            consum_final( PROD2, SETTINGS );
 
             /* ===========================================================================================
                     start the streaming

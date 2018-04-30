@@ -58,9 +58,12 @@ public class EXP_SETTINGS_READER
     public static final String key_num_executor_cores = "num_executor_cores";
     public static final String key_executor_memory = "executor_memory";
     public static final String key_log_request = "request";
+    public static final String key_log_cutoff = "cutoff";
     public static final String key_log_final = "final";
     public static final String key_log_pref_loc = "pref-loc";
     public static final String key_log_part_prep = "part-prep";
+    public static final String key_log_prod1 = "prod1";
+    public static final String key_log_prod2 = "prod2";
 
     // ------------------- default values -----------------------------------------
     public static final Integer dflt_batch_duration = 2;
@@ -74,9 +77,13 @@ public class EXP_SETTINGS_READER
     public static final Integer dflt_num_executor_cores = 5;
     public static final String  dflt_executor_memory = "";
     public static final Boolean dflt_log_request = true;
+    public static final Boolean dflt_log_cutoff = true;
     public static final Boolean dflt_log_final = true;
     public static final Boolean dflt_log_pref_loc = false;
     public static final Boolean dflt_log_part_prep = false;
+    public static final Boolean dflt_log_prod1 = true;
+    public static final Boolean dflt_log_prod2 = true;
+
 
     public static EXP_SETTINGS defaults( final String appName )
     {
@@ -91,9 +98,12 @@ public class EXP_SETTINGS_READER
         res.log_host        = dflt_host;
         res.log_port        = dflt_port;
         res.log_request     = dflt_log_request;
+        res.log_cutoff      = dflt_log_cutoff;
         res.log_final       = dflt_log_final;
         res.log_pref_loc    = dflt_log_pref_loc;
         res.log_part_prep   = dflt_log_part_prep;
+        res.log_prod1       = dflt_log_prod1;
+        res.log_prod2       = dflt_log_prod2;
 
         res.trigger_host    = dflt_host;
         res.trigger_port    = dflt_port;
@@ -227,9 +237,12 @@ public class EXP_SETTINGS_READER
             res.log_host = get_host( log_obj, key_host, dflt_host );
 
             res.log_request = get_json_bool( log_obj, key_log_request, dflt_log_request );
+            res.log_cutoff = get_json_bool( log_obj, key_log_cutoff, dflt_log_cutoff );
             res.log_final = get_json_bool( log_obj, key_log_final, dflt_log_final );
             res.log_pref_loc = get_json_bool( log_obj, key_log_pref_loc, dflt_log_pref_loc );
             res.log_part_prep = get_json_bool( log_obj, key_log_part_prep, dflt_log_part_prep );
+            res.log_prod1 = get_json_bool( log_obj, key_log_prod1, dflt_log_prod1 );
+            res.log_prod2 = get_json_bool( log_obj, key_log_prod2, dflt_log_prod2 );
         }
     }
 

@@ -49,9 +49,12 @@ public class EXP_SETTINGS implements Serializable
     public String  executor_memory;
 
     public Boolean log_request;
+    public Boolean log_cutoff;
     public Boolean log_final;
     public Boolean log_pref_loc;
     public Boolean log_part_prep;
+    public Boolean log_prod1;
+    public Boolean log_prod2;
 
     public Boolean valid()
     {
@@ -82,9 +85,12 @@ public class EXP_SETTINGS implements Serializable
 
         String S_log = "";
         if ( log_request )   S_log = S_log + "request ";
+        if ( log_cutoff )    S_log = S_log + "cutoff ";
         if ( log_final )     S_log = S_log + "final ";
         if ( log_pref_loc )  S_log = S_log + "pref-loc ";
         if ( log_part_prep ) S_log = S_log + "part-prep ";
+        if ( log_prod1 )     S_log = S_log + "prod1 ";
+        if ( log_prod2 )     S_log = S_log + "prod2 ";
 
         S  =  S +  String.format( "log ................ %s\n", S_log );
 

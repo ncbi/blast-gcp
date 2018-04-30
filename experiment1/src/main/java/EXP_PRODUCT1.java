@@ -27,23 +27,22 @@ package gov.nih.nlm.ncbi.exp;
 
 import java.io.Serializable;
 
-class EXP_REQUEST implements Serializable
+class EXP_PRODUCT1 implements Serializable
 {
-    public String id;
-    public int top_n;
-    public long startTime;
+    public EXP_REQUEST req;
+    public Integer part_nr;
+    public Integer score;
 
-    EXP_REQUEST( String line )
+    EXP_PRODUCT1( EXP_REQUEST req, Integer part_nr, Integer score )
     {
-        id = line;
-        top_n = 50;
-        startTime = System.currentTimeMillis();
+        this.req = req;
+        this.part_nr = part_nr;
+        this.score = score;
     }
 
     @Override public String toString()
     {
-        long elapsed = ( System.currentTimeMillis() - startTime );
-        return String.format( "req#%s (%,d ms)", id, elapsed );
+        return String.format( "'part %d' <---> '%s' score: %d", part_nr, req, score );
     }
 }
 

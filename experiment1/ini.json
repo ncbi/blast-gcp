@@ -7,7 +7,7 @@
         "locality_wait" : "2s"
     },
 
-    "num_partitions" : 800,
+    "num_partitions" : 32,
 
     "source" :
     {

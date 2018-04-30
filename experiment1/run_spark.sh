@@ -11,7 +11,8 @@
 # on the master-node: 'hadoop fs -ls results' to see produced rdd's
 #
 
-EXP_CLASS="gov.nih.nlm.ncbi.exp.EXP_MAIN"
+EXP_MASTER="--master yarn"
+EXP_CLASS="--class gov.nih.nlm.ncbi.exp.EXP_MAIN"
 EXP_JAR="target/exp-2-jar-with-dependencies.jar"
 EXP_INI="ini.json"
 
@@ -21,5 +22,5 @@ EXP_INI="ini.json"
 #   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
 #
 
-spark-submit --master yarn --class $EXP_CLASS $EXP_JAR $EXP_INI
+spark-submit --deploy-mode client $EXP_MASTER $EXP_CLASS $EXP_JAR $EXP_INI
 
