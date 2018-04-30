@@ -19,7 +19,7 @@ if [ ! -d "bigdata-interop/pubsub/target" ]; then
 fi
 
 echo "compiling java-classes"
-mvn -q package
+mvn package | grep -v INFO
 exit
 
 SPARK_HOME="/usr/lib/spark/jars/*"

@@ -9,16 +9,16 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   public gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
     descriptor: ()V
 
-  void throwIfBad();
+  final void throwIfBad();
     descriptor: ()V
 
   private void log(java.lang.String, java.lang.String);
     descriptor: (Ljava/lang/String;Ljava/lang/String;)V
 
-  gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
     descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 
   private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int);

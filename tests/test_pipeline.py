@@ -12,6 +12,7 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 
 # sudo apt update
 # sudo apt install -y -u python python-dev python3 python3-dev
@@ -345,6 +346,7 @@ def main():
     # register atexit
     atexit.register(cleanup)
     TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
+    TEST_ID=str(uuid.uuid4())
     TEST_ID = "blast-test-vartanianmh"
     print("TEST_ID is " + TEST_ID)
 

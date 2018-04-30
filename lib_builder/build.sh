@@ -52,10 +52,25 @@ rm -rf /tmp/scan-build-*
 MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
-echo "Compiling Java"
+echo "Compiling Java and running Linters/Static Analyzers"
+TS=`date +"%Y-%m-%d_%H:%M:%S"`
 pushd ../pipeline > /dev/null
+#mvn compile
 ./make_jar.sh
-#mvn -q package
+
+mvn -q checkstyle:checkstyle > /dev/null 2>&1
+#gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
+#echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >> rule.json
+#gsutil lifecycle set rule.json gs://blast-builds
+#rm -f rule.json
+CHECKSTYLE="gs://blast-builds/checkstyle.$TS.html"
+gsutil cp target/site/checkstyle.html $CHECKSTYLE
+echo "Output in $CHECKSTYLE"
+
+mvn -q site > /dev/null 2>&1
+PMD="gs://blast-builds/pmd.$TS.html"
+gsutil cp target/site/pmd.html $PMD
+
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
 JAVASRCDIR="../pipeline/src/main/java"
