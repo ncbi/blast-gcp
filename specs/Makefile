@@ -12,10 +12,12 @@ TYPES          := cpp python
 CLEANTYPES     := $(addprefix clean_, $(TYPES))
 EXT_cpp        := .pb.cpp .grpc.pb.cpp .pb.hpp .grpc.pb.hpp 
 EXT_python     := _pb2.py _pb2_grpc.py
+EXT_java       := .pb.java
 
 GENERATED_DIR  := generated
 DIR_cpp        := $(GENERATED_DIR)/gen_cpp
 DIR_python     := $(GENERATED_DIR)/python
+DIR_java       := $(GENERATED_DIR)/java
 
 GS_ARTIFACT_PATH := "gs://ncbi-build-artifacts"
 
@@ -42,11 +44,17 @@ clean_cpp:
 $(DIR_cpp)/%.pb.cc $(DIR_cpp)/%.grpc.pb.cc: %.proto 
 	$(PROTOC) --cpp_out=$(DIR_cpp) --grpc_out=$(DIR_cpp) -I. --plugin=protoc-gen-grpc=$(GRPCDIR)/grpc_cpp_plugin $<
 
+$(DIR_java)/%.pb.java: %.proto 
+	$(PROTOC) --java_out=$(DIR_java) -I. $<
+
 $(DIR_cpp)/%.pb.cpp: $(DIR_cpp)/%.pb.cc
 	mv $< $@
 
 # Build all cpp files needed for grpc
 cpp: cpp_dir $(filter %.cpp,$(call OUTFILES,cpp))
+
+# Build all java files needed for grpc
+java: java_dir $(filter %.java,$(call OUTFILES,java))
 
 # Build all python files needed for grpc
 python: python_dir $(call OUTFILES,python)
@@ -61,15 +69,21 @@ $(GENERATED_DIR)/$(PYTHON_PACKAGE):
 $(GENERATED_DIR)/$(CPP_PACKAGE):
 	(cd $(DIR_cpp); zip -r9 ../$(CPP_PACKAGE) .)
 
-packages: $(GENERATED_DIR)/$(CPP_PACKAGE) $(GENERATED_DIR)/$(PYTHON_PACKAGE)
+$(GENERATED_DIR)/$(JAVA_PACKAGE):
+	(cd $(DIR_java); zip -r9 ../$(JAVA_PACKAGE) .)
+
+packages: $(GENERATED_DIR)/$(CPP_PACKAGE) $(GENERATED_DIR)/$(JAVA_PACKAGE) $(GENERATED_DIR)/$(PYTHON_PACKAGE)
 
 all: dirs blast_request formatter packages
 
 
-dirs: cpp_dir python_dir
+dirs: cpp_dir java_dir python_dir
 
 cpp_dir:
 	@mkdir -p $(DIR_cpp)
+
+java_dir:
+	@mkdir -p $(DIR_java)
 
 python_dir:
 	@mkdir -p $(DIR_python) 
@@ -78,6 +92,6 @@ clean_python:
 	rm -rf $(call OUTFILES,python)
 
 
-push: $(GENERATED_DIR)/*.zip
+push: packages
 	gsutil -m cp $(GENERATED_DIR)/*.zip $(GS_ARTIFACT_PATH)
 
