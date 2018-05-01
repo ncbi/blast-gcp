@@ -16,7 +16,8 @@ EXT_java       := .pb.java
 
 GENERATED_DIR  := generated
 DIR_cpp        := $(GENERATED_DIR)/gen_cpp
-DIR_python     := $(GENERATED_DIR)/python
+DIR_python_pkg := $(GENERATED_DIR)/python
+DIR_python     := $(DIR_python_pkg)
 DIR_java       := $(GENERATED_DIR)/java
 
 GS_ARTIFACT_PATH := "gs://ncbi-build-artifacts"
@@ -63,13 +64,14 @@ $(DIR_python)/%_pb2.py $(DIR_python)/%_pb2_grpc.py: %.proto
 	$(PROTOC) --python_out=$(DIR_python) --grpc_out=$(DIR_python) -I. --plugin=protoc-gen-grpc=$(GRPCDIR)/grpc_python_plugin $<
 	touch $(@D)/__init__.py
 
-$(GENERATED_DIR)/$(PYTHON_PACKAGE):
-	(cd $(DIR_python); zip -r9 ../$(PYTHON_PACKAGE) .)
+$(GENERATED_DIR)/$(PYTHON_PACKAGE): python
+	ln -sf ../../python/setup.py $(DIR_python_pkg)/
+	(cd $(DIR_python_pkg); python setup.py sdist; mv dist/*tar.gz ..)
 
-$(GENERATED_DIR)/$(CPP_PACKAGE):
+$(GENERATED_DIR)/$(CPP_PACKAGE): cpp
 	(cd $(DIR_cpp); zip -r9 ../$(CPP_PACKAGE) .)
 
-$(GENERATED_DIR)/$(JAVA_PACKAGE):
+$(GENERATED_DIR)/$(JAVA_PACKAGE): java
 	(cd $(DIR_java); zip -r9 ../$(JAVA_PACKAGE) .)
 
 packages: $(GENERATED_DIR)/$(CPP_PACKAGE) $(GENERATED_DIR)/$(JAVA_PACKAGE) $(GENERATED_DIR)/$(PYTHON_PACKAGE)
@@ -89,9 +91,9 @@ python_dir:
 	@mkdir -p $(DIR_python) 
 
 clean_python:
-	rm -rf $(call OUTFILES,python)
+	rm -rf $(DIR_python_pkg)
 
 
 push: packages
-	gsutil -m cp $(GENERATED_DIR)/*.zip $(GS_ARTIFACT_PATH)
+	gsutil -m cp $(GENERATED_DIR)/*.{zip,tar.gz} $(GS_ARTIFACT_PATH)
 
