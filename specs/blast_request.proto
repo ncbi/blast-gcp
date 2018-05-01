@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package ncbi.blast.blast_request;
+//import "google/protobuf/timestamp.proto";
+
+option java_package = "gov.nih.nlm.ncbi.blast";
+option java_multiple_files = false;
+option java_outer_classname = "BlastRequestProto";
+option optimize_for = SPEED;
+ 
+ 
+message UserIdentity {
+  // collection of various user identifiers
+  string user_id = 1;
+  string session_id = 2;
+}
+ 
+message UserMetadata {
+  UserIdentity user_identity = 1;
+  string ip = 2; // pick a more suitable datatype, also IPv4 vs IPv6
+  string api_key = 3;
+  string user_agent = 4;
+  string client = 5;
+}
+ 
+enum BlastProgram {
+  BLASTN = 0;
+  BLASTP = 1;
+  BLASTX = 2;
+  TBLASTN = 3;
+  TBLASTX = 4;
+}
+  
+message BlastParams {
+  enum Task {
+    MEGABLAST = 0;
+  }
+
+  enum Matrix {
+    BLOSUM62 = 0;
+    PAM30 = 1;
+    PAM70 = 2;
+    PAM250 = 3;
+    BLOSUM80 = 4;
+    BLOSUM45 = 5;
+    BLOSUM50 = 6;
+    BLOSUM90 = 7;
+  }
+
+  enum CompBasedStats {
+    COND_COMP = 0; // Conditional compositional score matrix adjustment
+    NONE = 1; // No adjustment
+    COMP = 2; // Composition-based statistics
+    UNIVERSAL = 3; // Universal compositional score matrix adjustment
+  }
+
+  enum Strand {
+    BOTH = 0;
+    MINUS = 1;
+    PLUS = 2;
+  }
+
+  Task task = 1;
+  float evalue = 2;
+  string filter_string = 3;
+  uint32 gap_extend = 4;
+  uint32 gap_open = 5;
+  uint32 hitlist_size = 6;
+  float perc_identity = 7;
+  uint32 word_size  = 8;
+  uint32 window_size = 9;
+  sint32 penalty = 10;
+  uint32 reward = 11;
+  Matrix matrix = 12;
+  CompBasedStats comp_based_stats = 13;
+  Strand strand = 14;
+}
+ 
+message PipelineParams {
+  uint32 top_N_prelim = 1;
+  uint32 top_N_traceback = 2;
+}
+ 
+message BlastRequest {
+  message Database {
+    string db_bucket_name = 1;
+    string db_name = 2;
+    string db_version = 3;
+    uint64 db_size = 4;
+  }
+
+  string rid = 1;
+  Database db = 2;
+  repeated uint32 db_volumes = 3;
+  string result_bucket_name = 4;
+  //google.protobuf.Timestamp StartTime = 5;
+  uint32 StartTime = 5;
+
+  oneof query {
+    string query_seq = 6;
+    string query_url = 7;
+  }
+  BlastProgram program = 8;
+  BlastParams blast_params = 9;
+  UserMetadata user_metadata = 10;
+
+  PipelineParams pipeline_params = 11;
+}
+
