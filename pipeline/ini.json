@@ -9,10 +9,9 @@
     "locality_wait" : "5s",
 
     "top_n" : 100,
-    "num_db_partitions" : 50,
-    "num_workers" : 8,
-    "num_executors" : 4,
-    "num_executor_cores" : 3,
+    "num_db_partitions" : 886,
+    "num_executors" : 775,
+    "num_executor_cores" : 1,
     "trigger_port" : 0,
     "project_id" : "ncbi-sandbox-blast",
     "subscript_id" : "sprint4-integration-demo",

@@ -57,14 +57,20 @@ PIPELINEBUCKET=${1:-"gs://blastgcp-pipeline-test"}
 # Dataflow pricing is:
 #    $0.07/vCPU hour
 #    $0.003/GB hour (so at least another $0.01/vCPU hour)
+
+# Yan's suggestion
+# 25xn1-std-32=800 cores, 3TB RAM
+# comparable to 20 x m4.10xlarge in AWS: 800 CPUs, 3.2TB RAM
+MASTER_TYPE=n1-standard-8
+WORKER_TYPE=n1-standard-32
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
-    --master-machine-type n1-standard-8 \
+    --master-machine-type ${MASTER_TYPE} \
         --master-boot-disk-size 100 \
-    --num-workers 2 \
-    --worker-machine-type n1-highcpu-16 \
+    --num-workers 25 \
+    --worker-machine-type ${WORKER_TYPE} \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 4 \
+    --num-preemptible-workers 0 \
         --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
