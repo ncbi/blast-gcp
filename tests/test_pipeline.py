@@ -152,7 +152,7 @@ def get_tests():
         j['pubsub_submit_time'] = "TBD"
         j['RID'] = TEST_ID + j['RID']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 25:
+        if random.randrange(0, 100) < 2:
             print("Using out of band query")
 
             objname = j['RID'] + "-" + str(uuid.uuid4())
@@ -271,7 +271,7 @@ def submit_thread():
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:5]:
+        for test in tests[0:1]:
             # Emulate 1..10 submissions a second
             #time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()

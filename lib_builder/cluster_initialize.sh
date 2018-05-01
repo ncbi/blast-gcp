@@ -13,8 +13,8 @@ cd /tmp
 
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 
-apt-get install nmap netcat -y
-#apt-get install libdw-dev nmap netcat -y
+#apt-get install nmap netcat -y
+apt-get install libdw-dev nmap netcat -y
 
 # /mnt/ram-disk
 #phymem=$(free|awk '/^Mem:/{print $2}')
