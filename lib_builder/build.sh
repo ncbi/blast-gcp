@@ -53,20 +53,21 @@ MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
 echo "Compiling Java and running Linters/Static Analyzers"
+    #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
+    echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >lifecycle.json
+    echo '{ "description": "static_analysis_results", "owner" : "vartanianmh" }' > labels.json
+    #gsutil lifecycle set rule.json gs://blast-builds
+    #gsutil label set labels.json gs://blast-builds
 TS=`date +"%Y-%m-%d_%H%M%S"`
 pushd ../pipeline > /dev/null
 
-protoc -I=../tests/ --java_out=. blast_request.proto
-protoc -I=../tests/ --python_out=../tests/ blast_request.proto
+../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
+../lib_builder/protoc -I../specs/ --python_out=../tests/ blast_request.proto
 #mvn compile
+
 ./make_jar.sh
 
 mvn -q checkstyle:checkstyle > /dev/null 2>&1
-#gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
-echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >> rule.json
-echo '{ "description": "static_analysis_results", "owner" : "$USER" }' > labels.json
-#gsutil lifecycle set rule.json gs://blast-builds
-#gsutil label set labels.json gs://blast-builds
 CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
 gsutil cp target/site/checkstyle.html $CHECKSTYLE
 echo "  Output in $CHECKSTYLE"
@@ -118,6 +119,15 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -std=gnu++11 \
     -Wall -O  -I . \
     -Wextra -pedantic \
+    -Wlogical-op \
+    -Wjump-misses-init \
+    -Wdouble-promotion \
+    -Wshadow \
+    -Wformat=2 \
+    -Wformat-security \
+    -Wswitch-enum \
+    -Woverloaded-virtual \
+    -Wundef \
     -shared \
     -fPIC \
     $JAVA_INC \
