@@ -55,6 +55,9 @@ DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 echo "Compiling Java and running Linters/Static Analyzers"
 TS=`date +"%Y-%m-%d_%H%M%S"`
 pushd ../pipeline > /dev/null
+
+protoc -I=../tests/ --java_out=. blast_request.proto
+protoc -I=../tests/ --python_out=../tests/ blast_request.proto
 #mvn compile
 ./make_jar.sh
 
@@ -66,7 +69,7 @@ echo '{ "description": "static_analysis_results", "owner" : "$USER" }' > labels.
 #gsutil label set labels.json gs://blast-builds
 CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
 gsutil cp target/site/checkstyle.html $CHECKSTYLE
-echo "Output in $CHECKSTYLE"
+echo "  Output in $CHECKSTYLE"
 
 mvn -q site > /dev/null 2>&1
 PMD="gs://blast-builds/pmd.$TS.html"
@@ -74,7 +77,7 @@ gsutil cp target/site/pmd.html $PMD
 
 CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
 gsutil cp target/site/checkstyle.html $CHECKSTYLE
-echo "Output in $CHECKSTYLE"
+echo "  Output in $CHECKSTYLE"
 
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
@@ -86,6 +89,7 @@ JAVASRCDIR="../pipeline/src/main/java"
     #    $JAVASRCDIR/BLAST_LIB.java \
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ./BLAST_TEST.java
+
 echo "Creating JNI header"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ../pipeline/src/main/java/BLAST_LIB.java
