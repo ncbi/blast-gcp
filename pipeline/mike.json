@@ -7,7 +7,7 @@
         "top_n" : 100
     },
     "log" : {
-        "log_port" : 0
+        "log_port" : 10012
     },
     "result" : {
         "asn1" : {
@@ -24,9 +24,9 @@
         }
     },
     "spark" : {
-        "num_executor_cores" : 4,
-        "num_executors" : 180,
-        "with_locality" : false
+        "num_executor_cores" : 2,
+        "num_executors" : 80,
+        "with_locality" : true
     }
 }
 
