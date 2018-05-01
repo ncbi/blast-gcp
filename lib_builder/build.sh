@@ -60,9 +60,10 @@ pushd ../pipeline > /dev/null
 
 mvn -q checkstyle:checkstyle > /dev/null 2>&1
 #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
-#echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >> rule.json
+echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >> rule.json
+echo '{ "description": "static_analysis_results", "owner" : "$USER" }' > labels.json
 #gsutil lifecycle set rule.json gs://blast-builds
-#rm -f rule.json
+#gsutil label set labels.json gs://blast-builds
 CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
 gsutil cp target/site/checkstyle.html $CHECKSTYLE
 echo "Output in $CHECKSTYLE"

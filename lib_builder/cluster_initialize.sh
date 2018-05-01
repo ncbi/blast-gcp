@@ -86,7 +86,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
     echo "master node, skipping DB copy"
     # Need maven to build jars, pip for installing Google APIs for tests
     apt-get update -y
-    apt-get install -y -u maven python python-dev python3 python3-dev
+    apt-get install -y -u maven python python-dev python3 python3-dev protobuf-compiler
 #    sudo easy_install pip
 #    sudo pip install --upgrade virtualenv
 #    sudo pip install --user --upgrade google-cloud-storage
