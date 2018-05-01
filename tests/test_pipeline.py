@@ -133,6 +133,12 @@ def get_tests():
     largequery_bucket_name = "gs://" + largequery_bucket_name
 
     # gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-largequeries
+    #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
+    #echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 1} } ] }' >> ^rule.json
+    # echo '{ "description": "temp_storage", "owner" : "$USER" }' > labels.json
+    #gsutil lifecycle set rule.json gs://blast-builds
+    #gsutil label set labels.json gs://blast-builds
+
     test_blobs = os.listdir('queries')
     random.shuffle(test_blobs)
 
