@@ -15,10 +15,10 @@
     "num_executor_cores" : 3,
     "trigger_port" : 0,
     "project_id" : "ncbi-sandbox-blast",
-    "subscript_id" : "sprint4-integration-demo",
+    "subscript_id" : "spark-input-greg",
     "db_location" : "/tmp/blast/db_test",
-    "result_bucket" : "blast-results",
-    "status_bucket" : "blast-results",
+    "result_bucket" : "blast-src",
+    "status_bucket" : "blast-src",
     "status_file" : "%s/status.txt",
     "result_file" : "%s/seq-annot.asn"
 }
