@@ -15,13 +15,16 @@ import threading
 import time
 import uuid
 
-# sudo apt update
-# sudo apt install -y -u python python-dev python3 python3-dev python3-pip
-# sudo apt get install -y virtualenv
+# sudo apt-get update
+# sudo apt-get install -y -u python python-dev python3 python3-dev #python3-pip
+# sudo apt-get install -y virtualenv
 # virtualenv --python python3 env
-# source env/bin/activate
+# source env/bin/activate # "deactivate to deactivate"
 # cd env
 # pip3 install google-cloud
+# pip3 install google-cloud-pubsub
+# pip3 install google-cloud-storage
+
 
 ## pip3 install --user --upgrade virtualenv # 2/3 doesn't matter
 # sudo pip3 install --upgrade google-cloud-storage

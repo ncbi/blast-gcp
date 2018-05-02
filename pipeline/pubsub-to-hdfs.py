@@ -49,10 +49,12 @@ def receive_messages(project, subscription_name):
             fout.write(s)
         cmd=['hadoop', 'fs', '-copyFromLocal', randname,  HADOOPTMP + randname]
         print (cmd)
-        subprocess.run(cmd)
+        subprocess.call(cmd)
         cmd=['hadoop', 'fs', '-mv', HADOOPTMP + randname , HADOOPDEST + randname]
         print (cmd)
-        subprocess.run(cmd)
+        subprocess.call(cmd)
+        os.remove(randname)
+
 
         message.ack()
 
