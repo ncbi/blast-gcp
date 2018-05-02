@@ -3,7 +3,7 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
-PIPELINEBUCKET=${1:-"gs://blastgcp-pipeline-test"}
+PIPELINEBUCKET=${1:-"gs://blast-test-greg"}
 
 # Note: 100GB enough for NT
 # Larger nodes have faster network, and faster startup
