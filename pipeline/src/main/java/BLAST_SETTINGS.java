@@ -78,13 +78,33 @@ public class BLAST_SETTINGS implements Serializable
     public String gs_status_done;
     public String gs_status_error;
 
+    public Boolean src_pubsub_valid()
+    {
+        if ( project_id.isEmpty() ) return false;
+        if ( subscript_id.isEmpty() ) return false;
+        return true;
+    }
+
+    public Boolean src_socket_valid()
+    {
+        if ( trigger_host.isEmpty() ) return false;
+        if ( trigger_port == 0 ) return false;
+        return true;
+    }
+
+    public Boolean src_valid()
+    {
+        return src_pubsub_valid() || src_socket_valid();
+    }
+
     public Boolean valid()
     {
         if ( db_bucket.isEmpty() ) return false;
         if ( num_db_partitions == 0 ) return false;
         if ( top_n == 0 ) return false;
-        if ( project_id.isEmpty() ) return false;
-        if ( subscript_id.isEmpty() ) return false;
+
+        if ( !src_valid() ) return false;
+
         if ( gs_result_bucket.isEmpty() ) return false;
         if ( gs_status_bucket.isEmpty() ) return false;
         return true;
@@ -96,8 +116,13 @@ public class BLAST_SETTINGS implements Serializable
         if ( db_bucket.isEmpty() ) S = S + "db_bucket is missing\n";
         if ( num_db_partitions == 0 ) S = S + "num_db_partitions is 0\n";
         if ( top_n == 0 ) S = S + "top_n is 0\n";
-        if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
-        if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
+
+        if ( !src_valid() )
+        {
+            if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
+            if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
+        }
+
         if ( gs_result_bucket.isEmpty() ) S = S + "gs_result_bucket is missing\n";
         if ( gs_status_bucket.isEmpty() ) S = S + "gs_status_bucket is missing\n";
         return S;

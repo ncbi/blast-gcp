@@ -18,10 +18,14 @@
 
     "source" :
     {
-        "pubsub" :
+        "x-pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
             "subscript_id" : "spark-test-subscript"
+        },
+        "socket" :
+        {
+            "trigger_port" : 10012
         }
     },
 
