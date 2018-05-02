@@ -10,12 +10,12 @@
         "socket" :
         {
             "trigger_port" : 10012,
-            "use" : "true"
+            "use" : "false"
         },
         "hdfs" :
         {
-            "path" : "hdfs:///user/%s/requests/",
-            "use" : "false"
+            "dir" : "hdfs:///user/vartanianmh/requests",
+            "use" : "true"
         }
     },
 
@@ -24,7 +24,7 @@
         "db" :
         {
             "db_bucket" : "nt_50mb_chunks",
-            "num_db_partitions" : 80
+            "num_db_partitions" : 886
         },
         "top_n" : 100
     },
@@ -44,7 +44,7 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 8,
+        "num_executors" : 60,
         "num_executor_cores" : 3
     },
 
