@@ -14,7 +14,7 @@
         },
         "hdfs" :
         {
-            "dir" : "hdfs:///user/vartanianmh/requests",
+            "dir" : "hdfs:///user/%s/requests",
             "use" : "true"
         }
     },
@@ -24,7 +24,7 @@
         "db" :
         {
             "db_bucket" : "nt_50mb_chunks",
-            "num_db_partitions" : 886
+            "num_db_partitions" : 80
         },
         "top_n" : 100
     },

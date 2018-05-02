@@ -212,7 +212,7 @@ class SOURCE_HDFS_SETTINGS_READER
         if ( obj != null )
         {
             settings.use_hdfs_source = UTILS.get_json_bool( obj, key_use, dflt_use );
-            settings.hdfs_source_dir = UTILS.get_json_string( obj, key_hdfs_source_dir, UTILS.insert_username( dflt_hdfs_source_dir ) );
+            settings.hdfs_source_dir = UTILS.insert_username( UTILS.get_json_string( obj, key_hdfs_source_dir, dflt_hdfs_source_dir ) );
         }
         else
             settings.use_hdfs_source = false;
