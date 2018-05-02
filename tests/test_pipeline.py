@@ -16,9 +16,19 @@ import time
 import uuid
 
 # sudo apt update
-# sudo apt install -y -u python python-dev python3 python3-dev
+# sudo apt install -y -u python python-dev python3 python3-dev python3-pip
+# sudo apt get install -y virtualenv
+# virtualenv --python python3 env
+# source env/bin/activate
+# cd env
+# pip3 install google-cloud
+
+## pip3 install --user --upgrade virtualenv # 2/3 doesn't matter
+# sudo pip3 install --upgrade google-cloud-storage
+
 # easy_install --user pip
 # pip install --upgrade virtualenv
+# pip install --user --upgrade google-cloud
 # pip install --user --upgrade google-cloud-storage
 # pip install --user --upgrade google-cloud-pubsub
 
@@ -71,7 +81,7 @@ def progress(submit=None, results=None):
 def get_cluster():
     global CLUSTER_ID, PROJECT
     user = getpass.getuser()
-    print("user is " + user)
+    #print("user is " + user)
     cmd = [
         'gcloud', 'dataproc', '--project', PROJECT, '--region', 'us-east4',
         'clusters', 'list'
@@ -127,7 +137,7 @@ def make_bucket():
 
 
 def get_tests():
-    global TESTS
+    global TESTS, BUCKET_NAME
     largequery_bucket_name = "blast-largequeries"
     large_bucket = storage.Client().bucket(largequery_bucket_name)
     largequery_bucket_name = "gs://" + largequery_bucket_name
@@ -150,23 +160,28 @@ def get_tests():
         j = json.loads(read_data)
         j['orig_RID'] = j['RID']
         j['pubsub_submit_time'] = "TBD"
-        j['RID'] = TEST_ID + j['RID']
+        j['RID'] = TEST_ID + '-' + j['RID']
+        j['query_url']=''
+        j['blast_params']['task']=j['blast_params']['program']
+        j['result_bucket_name']=BUCKET_NAME
+        del j['query_url']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 20:
+        if random.randrange(0, 100) < 0:
             print("Using out of band query")
 
-            objname = j['RID'] + "-" + str(uuid.uuid4())
-            objname = 'query-%10d' % random.randrange(1, 10000000)
+            #objname = j['RID'] + "-" + str(uuid.uuid4())
+            objname = 'query-' + ('%09d.txt' % random.randrange(1, 1000000000))
 
             blob = large_bucket.blob(objname)
             blob.upload_from_string(j['blast_params']['queries'][0])
+            del j['blast_params']['queries']
 
             url = largequery_bucket_name + "/" + objname
 
-            j['blast_params']['queries'] = [url]
             j['query_seq'] = ''
+            del j['query_seq']
             j['query_url'] = url
-            print(json.dumps(j, indent=4))
+            #print(json.dumps(j, indent=4, sort_keys=True))
 
         TESTS[j['RID']] = j
     print("Loaded " + str(len(TESTS)) + " tests")
@@ -174,7 +189,7 @@ def get_tests():
 
 def publish(jdict):
     global TOPIC_NAME, PUBSUB_CLIENT
-    msg = json.dumps(jdict, indent=4).encode()
+    msg = json.dumps(jdict, indent=4, sort_keys=True).encode()
     PUBSUB_CLIENT.publish(TOPIC_NAME, msg)
 
 
@@ -281,7 +296,7 @@ def submit_thread():
             progress(submit="  Submitted " + TESTS[test]['orig_RID'])
             time.sleep(random.randrange(5, 10))
         progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(180)
+        time.sleep(30)
 
 
 def results_thread():
@@ -393,7 +408,7 @@ def main():
 
     # configure json.ini
     config = make_json()
-    print("JSON config is " + config)
+    #print("JSON config is " + config)
     #print(config)
 
     print()

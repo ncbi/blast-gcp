@@ -52,7 +52,7 @@ rm -rf /tmp/scan-build-*
 MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
-echo "Compiling Java and running Linters/Static Analyzers"
+echo "Compiling Java"
     #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
     echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >lifecycle.json
     echo '{ "description": "static_analysis_results", "owner" : "vartanianmh" }' > labels.json
@@ -67,18 +67,21 @@ pushd ../pipeline > /dev/null
 
 ./make_jar.sh
 
-mvn -q checkstyle:checkstyle > /dev/null 2>&1
-CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
-gsutil cp target/site/checkstyle.html $CHECKSTYLE
-echo "  Output in $CHECKSTYLE"
+if [ "0" == "1" ]; then
+    echo "Running Java linters/static analyzers"
+    mvn -q checkstyle:checkstyle > /dev/null 2>&1
+    CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
+    gsutil cp target/site/checkstyle.html $CHECKSTYLE
+    echo "  Output in $CHECKSTYLE"
 
-mvn -q site > /dev/null 2>&1
-PMD="gs://blast-builds/pmd.$TS.html"
-gsutil cp target/site/pmd.html $PMD
+    mvn -q site > /dev/null 2>&1
+    PMD="gs://blast-builds/pmd.$TS.html"
+    gsutil cp target/site/pmd.html $PMD
 
-CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
-gsutil cp target/site/checkstyle.html $CHECKSTYLE
-echo "  Output in $CHECKSTYLE"
+    CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
+    gsutil cp target/site/checkstyle.html $CHECKSTYLE
+    echo "  Output in $CHECKSTYLE"
+fi
 
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
@@ -91,6 +94,7 @@ JAVASRCDIR="../pipeline/src/main/java"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ./BLAST_TEST.java
 
+echo
 echo "Creating JNI header"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ../pipeline/src/main/java/BLAST_LIB.java
@@ -157,7 +161,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
     -llmdb-static -lpthread -lz -lbz2 \
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
-    -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
+    -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
     scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
 

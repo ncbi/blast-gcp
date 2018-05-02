@@ -14,7 +14,6 @@ cd /tmp
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 
 #apt-get install nmap netcat -y
-apt-get install libdw-dev nmap netcat -y
 
 # /mnt/ram-disk
 #phymem=$(free|awk '/^Mem:/{print $2}')
@@ -87,7 +86,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
     echo "master node, skipping DB copy"
     # Need maven to build jars, pip for installing Google APIs for tests
     apt-get update -y
-    apt-get install -y -u maven python python-dev python3 python3-dev
+    apt-get install -y -u maven python python-dev python3 python3-dev virtualenv
     #protobuf-compiler
 #    sudo easy_install pip
 #    sudo pip install --upgrade virtualenv
