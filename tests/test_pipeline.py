@@ -290,7 +290,7 @@ def submit_thread():
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:1]:
+        for test in tests[0:5]:
             # Emulate 1..10 submissions a second
             #time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
@@ -343,11 +343,11 @@ def results_thread():
 
             with open(fname + ".txt") as fnew:
                 fnewlines=fnew.readlines()
-            with open("expected/" + origid + "." + parts[2] + ".txt") as fexpected:
+            with open("expected/" + origrid + "." + parts[2] + ".txt") as fexpected:
                 fexpectedlines=fexpected.readlines()
 
             if fnewlines!=fexpectedlines:
-                print("Files differ for " + origid)
+                print("Files differ for " + origrid)
                 diff=difflib.ndiff(fnewlines, fexpectedlines)
                 print(diff)
 
