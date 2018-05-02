@@ -17,8 +17,8 @@
     "project_id" : "ncbi-sandbox-blast",
     "subscript_id" : "spark-input-greg",
     "db_location" : "/tmp/blast/db_test",
-    "result_bucket" : "blast-src",
-    "status_bucket" : "blast-src",
+    "result_bucket" : "blast-test-greg",
+    "status_bucket" : "blast-test-greg",
     "status_file" : "%s/status.txt",
     "result_file" : "%s/seq-annot.asn"
 }
