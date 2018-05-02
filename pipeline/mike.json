@@ -1,32 +1,55 @@
 {
-    "blastjni" : {
-        "db" : {
+    "source" :
+    {
+        "pubsub" :
+        {
+            "project_id" : "ncbi-sandbox-blast",
+            "subscript_id" : "spark-test-subscript",
+            "use" : "false"
+        },
+        "socket" :
+        {
+            "trigger_port" : 10012,
+            "use" : "false"
+        },
+        "hdfs" :
+        {
+            "dir" : "hdfs:///user/vartanianmh/requests",
+            "use" : "true"
+        }
+    },
+
+    "blastjni" :
+    {
+        "db" :
+        {
             "db_bucket" : "nt_50mb_chunks",
             "num_db_partitions" : 886
         },
         "top_n" : 100
     },
-    "log" : {
-        "log_port" : 10012
-    },
-    "result" : {
-        "asn1" : {
+
+    "result" :
+    {
+        "asn1" :
+        {
             "bucket" : "blast-test-vartanianmh"
         },
-        "status" : {
-            "bucket" : "blast-test-vartanianmh"
+        "status" :
+        {
+            "bucket"  : "blast-test-vartanianmh"
         }
     },
-    "source" : {
-        "pubsub" : {
-            "project_id" : "ncbi-sandbox-blast",
-            "subscript_id" : "blast-test-vartanianmh"
-        }
+
+    "spark" :
+    {
+        "with_locality" : "true",
+        "num_executors" : 120,
+        "num_executor_cores" : 4
     },
-    "spark" : {
-        "num_executor_cores" : 2,
-        "num_executors" : 6,
-        "with_locality" : true
+
+    "log" :
+    {
+        "log_port" : 10011
     }
 }
-

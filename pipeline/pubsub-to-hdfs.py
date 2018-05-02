@@ -15,7 +15,7 @@ import uuid
 from google.cloud import pubsub_v1
 
 HADOOPTMP="/tmp/"
-HADOOPDEST="/user/spark/queries/"
+HADOOPDEST="/user/vartanianmh/requests/"
 
 def create_subscription(project, topic_name, subscription_name):
     """Create a new pull subscription on the given topic."""
@@ -44,6 +44,7 @@ def receive_messages(project, subscription_name):
         #print(dir(message))
         print(message.data)
         s=message.data.decode()
+        s=s.replace('\n','')
         randname='query-' + str(uuid.uuid4()) + '.json'
         with open(randname,'w') as fout:
             fout.write(s)
