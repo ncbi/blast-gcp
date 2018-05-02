@@ -223,29 +223,71 @@ class BLAST_DRIVER extends Thread
         return pub2.map( item -> item.getData().toStringUtf8() ).cache();
     }
 
+    private JavaDStream< String > create_file_stream()
+    {
+        return jssc.textFileStream( settings.hdfs_source_dir ).cache();
+    }
+
     private JavaDStream< BLAST_REQUEST > create_source( Broadcast< BLAST_SETTINGS > SETTINGS )
     {
-        Boolean use_socket = ( settings.trigger_port > 0 && !settings.trigger_host.isEmpty() );
-        Boolean use_pubsub = ( !settings.project_id.isEmpty() && !settings.subscript_id.isEmpty() );
-
         JavaDStream< String > tmp = null;
 
-        if ( use_socket )
+        if ( settings.use_socket_source )
         {
-            if ( use_pubsub )
+            if ( settings.use_pubsub_source )
             {
-                JavaDStream< String > S1 = create_socket_stream();
-                JavaDStream< String > S2 = create_pubsub_stream();
-                tmp = S1.union( S2 ).cache();
+                if ( settings.use_hdfs_source )
+                {
+                    JavaDStream< String > S1 = create_socket_stream();
+                    JavaDStream< String > S2 = create_pubsub_stream();
+                    JavaDStream< String > S3 = create_file_stream();
+                    tmp = S1.union( S2 ).union( S3 ).cache();
+                }
+                else
+                {
+                    JavaDStream< String > S1 = create_socket_stream();
+                    JavaDStream< String > S2 = create_pubsub_stream();
+                    tmp = S1.union( S2 ).cache();
+                }
             }
             else
-                tmp = create_socket_stream();
+            {
+                if ( settings.use_hdfs_source )
+                {
+                    JavaDStream< String > S1 = create_socket_stream();
+                    JavaDStream< String > S2 = create_file_stream();
+                    tmp = S1.union( S2 ).cache();
+                }
+                else
+                {
+                    tmp = create_socket_stream();
+                }
+            }
         }
         else
         {
-            if ( use_pubsub )
-                tmp = create_pubsub_stream();
+            if ( settings.use_pubsub_source )
+            {
+                if ( settings.use_hdfs_source )
+                {
+                    JavaDStream< String > S1 = create_pubsub_stream();
+                    JavaDStream< String > S2 = create_file_stream();
+                    tmp = S1.union( S2 ).cache();
+                }
+                else
+                {
+                    tmp = create_pubsub_stream();
+                }
+            }
+            else
+            {
+                if ( settings.use_hdfs_source )
+                {
+                    tmp = create_file_stream();
+                }
+            }
         }
+
         if ( tmp != null )
         {
             return tmp.map( item ->
@@ -533,7 +575,8 @@ class BLAST_DRIVER extends Thread
 
                         if ( bls.gs_result_bucket.isEmpty() )
                         {
-                            String path = String.format( "%sreq_%s.txt", bls.save_dir, req_id );
+                            String fn = String.format( bls.hdfs_result_file, req_id );
+                            String path = String.format( "%s/%s", bls.hdfs_result_dir, fn );
                             Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, value );
 
                             if ( bls.log_final )
