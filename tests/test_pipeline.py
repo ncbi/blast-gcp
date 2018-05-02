@@ -152,10 +152,11 @@ def get_tests():
         j['pubsub_submit_time'] = "TBD"
         j['RID'] = TEST_ID + j['RID']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 2:
+        if random.randrange(0, 100) < 20:
             print("Using out of band query")
 
             objname = j['RID'] + "-" + str(uuid.uuid4())
+            objname = 'query-%10d' % random.randrange(1, 10000000)
 
             blob = large_bucket.blob(objname)
             blob.upload_from_string(j['blast_params']['queries'][0])
@@ -369,8 +370,8 @@ def main():
     global TEST_ID, CLUSTER_ID
     # register atexit
     atexit.register(cleanup)
-    TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
-    TEST_ID = str(uuid.uuid4())
+#    TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
+#    TEST_ID = str(uuid.uuid4())
     TEST_ID = "blast-test-vartanianmh"
     print("TEST_ID is " + TEST_ID)
 
@@ -399,7 +400,7 @@ def main():
     print("PubSub subscriptions created")
     print("Cloud Storage bucket created")
     print()
-    submit_application(config)
+    #submit_application(config)
     print()
     print(" " * 20, "*** Start Spark Streaming Job now ***")
     time.sleep(40)

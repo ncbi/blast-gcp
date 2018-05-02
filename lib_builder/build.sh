@@ -61,8 +61,8 @@ echo "Compiling Java and running Linters/Static Analyzers"
 TS=`date +"%Y-%m-%d_%H%M%S"`
 pushd ../pipeline > /dev/null
 
-../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
-../lib_builder/protoc -I../specs/ --python_out=../tests/ blast_request.proto
+#../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
+#../lib_builder/protoc -I../specs/ --python_out=../tests/ blast_request.proto
 #mvn compile
 
 ./make_jar.sh
@@ -112,6 +112,8 @@ if [ "$BUILDENV" = "ncbi" ]; then
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
     #-ldbapi_driver -lncbi_xreader \
     echo "Running static analysis on C++ code"
+    #-Wundef \
+    #-Wdouble-promotion \
     cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
     GPPCOMMAND="
     g++ \
@@ -121,13 +123,11 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -Wextra -pedantic \
     -Wlogical-op \
     -Wjump-misses-init \
-    -Wdouble-promotion \
     -Wshadow \
     -Wformat=2 \
     -Wformat-security \
     -Wswitch-enum \
     -Woverloaded-virtual \
-    -Wundef \
     -shared \
     -fPIC \
     $JAVA_INC \
