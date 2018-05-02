@@ -102,7 +102,7 @@ class BLAST_DRIVER extends Thread
         conf.set( "spark.locality.wait", settings.locality_wait );
 
         sc = new JavaSparkContext( conf );
-        sc.setLogLevel( "ERROR" );
+        sc.setLogLevel( settings.spark_log_level );
 
         // send the given files to all nodes
         for ( String a_file : files_to_transfer )

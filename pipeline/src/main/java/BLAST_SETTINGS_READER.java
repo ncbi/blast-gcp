@@ -53,6 +53,7 @@ public class BLAST_SETTINGS_READER
 
     // ------------------- keys in json-file ---------------------------------------
     public static final String key_appName = "appName";
+    public static final String key_spark_log_level = "log_level";
     public static final String key_db_location = "db_location";
     public static final String key_db_pattern = "db_pattern";
     public static final String key_db_bucket = "db_bucket";
@@ -90,6 +91,7 @@ public class BLAST_SETTINGS_READER
     public static final String key_gs_error = "error";
 
     // ------------------- default values -----------------------------------------
+    public static final String  dflt_spark_log_level = "ERROR";
     public static final String  dflt_db_location = "/tmp/blast/db";
     public static final String  dflt_db_pattern = "nt_50M";
     public static final String  dflt_db_bucket = ""; // "nt_50mb_chunks";
@@ -141,10 +143,11 @@ public class BLAST_SETTINGS_READER
         res.db_pattern  = dflt_db_pattern;
         res.db_bucket   = dflt_db_bucket;
 
-        res.batch_duration = dflt_batch_duration;
-        res.locality_wait  = dflt_locality_wait;
-        res.with_locality  = dflt_with_locality;
-        res.with_dyn_alloc = dflt_with_dyn_alloc;
+        res.batch_duration  = dflt_batch_duration;
+        res.locality_wait   = dflt_locality_wait;
+        res.with_locality   = dflt_with_locality;
+        res.with_dyn_alloc  = dflt_with_dyn_alloc;
+        res.spark_log_level = dflt_spark_log_level;
 
         res.log_host     = dflt_log_host;
         res.log_port = dflt_log_port;
@@ -279,6 +282,7 @@ public class BLAST_SETTINGS_READER
             res.locality_wait  = get_json_string( spark_obj, key_locality_wait, dflt_locality_wait );
             res.with_locality  = get_json_bool( spark_obj, key_with_locality, dflt_with_locality );
             res.with_dyn_alloc = get_json_bool( spark_obj, key_with_dyn_alloc, dflt_with_dyn_alloc );
+            res.spark_log_level = get_json_string( spark_obj, key_spark_log_level, dflt_spark_log_level );
             res.num_executors       = get_json_int( spark_obj, key_num_executors, dflt_num_executors );
             res.num_executor_cores  = get_json_int( spark_obj, key_num_executor_cores, dflt_num_executor_cores );
             res.executor_memory     = get_json_string( spark_obj, key_executor_memory, dflt_executor_memory );

@@ -40,6 +40,7 @@ public class BLAST_SETTINGS implements Serializable
     public String  locality_wait;
     public Boolean with_locality;
     public Boolean with_dyn_alloc;
+    public String  spark_log_level;
 
     public String log_host;
     public Integer log_port;
@@ -105,6 +106,7 @@ public class BLAST_SETTINGS implements Serializable
     @Override public String toString()
     {
         String S = String.format( "appName ............ '%s'\n", appName );
+        S  =  S +  String.format( "spark log level .... '%s'\n", spark_log_level );
         S  =  S +  String.format( "db_location ........ '%s'\n", db_location );
         S  =  S +  String.format( "db_pattern ......... '%s'\n", db_pattern );
         S  =  S +  String.format( "db_bucket .......... '%s'\n", db_bucket );
