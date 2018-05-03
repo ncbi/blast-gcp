@@ -91,7 +91,7 @@ class EXP_DRIVER extends Thread
         conf.set( "spark.locality.wait", settings.locality_wait );
 
         sc = new JavaSparkContext( conf );
-        sc.setLogLevel( "ERROR" );
+        sc.setLogLevel( settings.spark_log_level );
 
         // create a streaming-context from SparkContext given
         jssc = new JavaStreamingContext( sc, Durations.seconds( settings.batch_duration ) );
@@ -316,11 +316,7 @@ class EXP_DRIVER extends Thread
     {
         // re-key the product stream by the partition-nr
         final JavaPairDStream< Integer, EXP_PRODUCT1 > temp1
-                = PROD.mapToPair( item ->
-                {
-                    EXP_PRODUCT1 prod = item._2();
-                    return new Tuple2< Integer, EXP_PRODUCT1 >( prod.part_nr, prod );
-                } );
+                = PROD.mapToPair( item -> new Tuple2<>( item._2().part_nr, item._2() ) );
 
         // co-group the product-stream with the keyed partitions
         final JavaPairDStream< Integer, Tuple2< Iterable< EXP_PARTITION >, Iterable< EXP_PRODUCT1 > > > temp2

@@ -47,6 +47,7 @@ public class EXP_SETTINGS_READER
 
     // ------------------- keys in json-file ---------------------------------------
     public static final String key_appName = "appName";
+    public static final String key_spark_log_level = "log_level";
     public static final String key_batch_duration = "batch_duration";
     public static final String key_locality_wait = "locality_wait";
     public static final String key_with_locality = "with_locality";
@@ -66,6 +67,7 @@ public class EXP_SETTINGS_READER
     public static final String key_log_prod2 = "prod2";
 
     // ------------------- default values -----------------------------------------
+    public static final String  dflt_spark_log_level = "ERROR";
     public static final Integer dflt_batch_duration = 2;
     public static final String  dflt_locality_wait = "3s";
     public static final Boolean dflt_with_locality = false;
@@ -89,7 +91,8 @@ public class EXP_SETTINGS_READER
     {
         EXP_SETTINGS res = new EXP_SETTINGS();
         res.appName = appName;
-        
+
+        res.spark_log_level = dflt_spark_log_level;        
         res.batch_duration  = dflt_batch_duration;
         res.locality_wait   = dflt_locality_wait;
         res.with_locality   = dflt_with_locality;
@@ -210,6 +213,7 @@ public class EXP_SETTINGS_READER
             res.num_executors       = get_json_int( spark_obj, key_num_executors, dflt_num_executors );
             res.num_executor_cores  = get_json_int( spark_obj, key_num_executor_cores, dflt_num_executor_cores );
             res.executor_memory     = get_json_string( spark_obj, key_executor_memory, dflt_executor_memory );
+            res.spark_log_level     = get_json_string( spark_obj, key_spark_log_level, dflt_spark_log_level );
         }
     }
 

@@ -36,6 +36,7 @@ public class EXP_SETTINGS implements Serializable
     public String  locality_wait;
     public Boolean with_locality;
     public Boolean with_dyn_alloc;
+    public String  spark_log_level;
 
     public String log_host;
     public Integer log_port;
@@ -72,6 +73,7 @@ public class EXP_SETTINGS implements Serializable
     @Override public String toString()
     {
         String S = String.format( "appName ............ '%s'\n", appName );
+        S  =  S +  String.format( "spark log level .... '%s'\n", spark_log_level );
         S  =  S +  String.format( "batch_duration ..... %d seconds\n", batch_duration );
         S  =  S +  String.format( "locality.wait ...... %s\n", locality_wait );
         S  =  S +  String.format( "with_locality ...... %s\n", Boolean.toString( with_locality ) );
