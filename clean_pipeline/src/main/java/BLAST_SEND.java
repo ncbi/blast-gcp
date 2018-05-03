@@ -36,22 +36,22 @@ public class BLAST_SEND
 {
     private static BLAST_SEND instance = null;
 
-    private final String host;
-    private final int port;
+    private PrintStream ps;
     private String localName;
 
     private BLAST_SEND( final String host, final int port )
     {
-        this.host = host;
-        this.port = port;
         try
         {
-            InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            localName = localMachine.getHostName();
+            localName = java.net.InetAddress.getLocalHost().getHostName();
+            Socket socket = new Socket( host, port );
+            socket.setTcpNoDelay( true );
+            ps = new PrintStream( socket.getOutputStream() );
         }
         catch ( Exception e )
         {
             localName = "unknown";
+            ps = null;
         }
     }
 
@@ -68,11 +68,7 @@ public class BLAST_SEND
     {
         try
         {
-            Socket socket = new Socket( host, port );
-            PrintStream ps = new PrintStream( socket.getOutputStream() );
             ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId(), msg );
-            socket.close();
-        
         }
         catch ( Exception e )
         {

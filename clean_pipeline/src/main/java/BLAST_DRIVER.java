@@ -160,7 +160,6 @@ class BLAST_DRIVER extends Thread
         } ).cache();
     }
 
-
     private JavaRDD< BLAST_PARTITION > make_db_partitions_2( Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         final List< Tuple2< BLAST_PARTITION, Seq< String > > > part_list = new ArrayList<>();
@@ -234,57 +233,37 @@ class BLAST_DRIVER extends Thread
 
         if ( settings.use_socket_source )
         {
+            JavaDStream< String > S_socket = create_socket_stream();
             if ( settings.use_pubsub_source )
             {
+                JavaDStream< String > S_pubsub = create_pubsub_stream();
                 if ( settings.use_hdfs_source )
-                {
-                    JavaDStream< String > S1 = create_socket_stream();
-                    JavaDStream< String > S2 = create_pubsub_stream();
-                    JavaDStream< String > S3 = create_file_stream();
-                    tmp = S1.union( S2 ).union( S3 ).cache();
-                }
+                    tmp = S_socket.union( S_pubsub ).union( create_file_stream() ).cache();
                 else
-                {
-                    JavaDStream< String > S1 = create_socket_stream();
-                    JavaDStream< String > S2 = create_pubsub_stream();
-                    tmp = S1.union( S2 ).cache();
-                }
+                    tmp = S_socket.union( S_pubsub ).cache();
             }
             else
             {
                 if ( settings.use_hdfs_source )
-                {
-                    JavaDStream< String > S1 = create_socket_stream();
-                    JavaDStream< String > S2 = create_file_stream();
-                    tmp = S1.union( S2 ).cache();
-                }
+                    tmp = S_socket.union( create_file_stream() ).cache();
                 else
-                {
-                    tmp = create_socket_stream();
-                }
+                    tmp = S_socket.cache();
             }
         }
         else
         {
             if ( settings.use_pubsub_source )
             {
+                JavaDStream< String > S_pubsub = create_pubsub_stream();
                 if ( settings.use_hdfs_source )
-                {
-                    JavaDStream< String > S1 = create_pubsub_stream();
-                    JavaDStream< String > S2 = create_file_stream();
-                    tmp = S1.union( S2 ).cache();
-                }
+                    tmp = S_pubsub.union( create_file_stream() ).cache();
                 else
-                {
-                    tmp = create_pubsub_stream();
-                }
+                    tmp = S_pubsub.cache();
             }
             else
             {
                 if ( settings.use_hdfs_source )
-                {
-                    tmp = create_file_stream();
-                }
+                    tmp = create_file_stream().cache();
             }
         }
 

@@ -469,6 +469,7 @@ class LOG_SETTINGS_READER
     public static final String key_log_part_prep = "log_partition_prep";
     public static final String key_log_worker_shift = "log_worker_shift";
     public static final String key_log_pref_loc = "log_pref_loc";
+    public static final String key_log_db_copy = "log_db_copy";
 
     public static final String  dflt_log_host = "";
     public static final Integer dflt_log_port = 0; //10011;
@@ -480,6 +481,7 @@ class LOG_SETTINGS_READER
     public static final Boolean dflt_log_part_prep = false;
     public static final Boolean dflt_log_worker_shift = false;
     public static final Boolean dflt_log_pref_loc = false;
+    public static final Boolean dflt_log_db_copy = false;
 
     public static void defaults( BLAST_SETTINGS settings )
     {
@@ -494,6 +496,7 @@ class LOG_SETTINGS_READER
         settings.log_part_prep      = dflt_log_part_prep;
         settings.log_worker_shift   = dflt_log_worker_shift;
         settings.log_pref_loc       = dflt_log_pref_loc;
+        settings.log_db_copy        = dflt_log_db_copy;
     }
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
@@ -512,6 +515,7 @@ class LOG_SETTINGS_READER
             settings.log_part_prep    = UTILS.get_json_bool( obj, key_log_part_prep, dflt_log_part_prep );
             settings.log_worker_shift = UTILS.get_json_bool( obj, key_log_worker_shift, dflt_log_worker_shift );
             settings.log_pref_loc     = UTILS.get_json_bool( obj, key_log_pref_loc, dflt_log_pref_loc );
+            settings.log_db_copy      = UTILS.get_json_bool( obj, key_log_db_copy, dflt_log_db_copy );
         }
     }
 }

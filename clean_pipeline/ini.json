@@ -10,12 +10,12 @@
         "socket" :
         {
             "trigger_port" : 10012,
-            "use" : "false"
+            "use" : "true"
         },
         "hdfs" :
         {
             "dir" : "hdfs:///user/%s/requests",
-            "use" : "true"
+            "use" : "false"
         }
     },
 
@@ -44,7 +44,7 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 60,
+        "num_executors" : 7,
         "num_executor_cores" : 3
     },
 

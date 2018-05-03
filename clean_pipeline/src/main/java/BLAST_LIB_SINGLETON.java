@@ -119,7 +119,8 @@ class PART_INST
 
                         Files.createDirectories( Paths.get( dst_path ) );
 
-                        BLAST_SEND.send( settings, String.format( "'%s:%s' --> '%s'", settings.db_bucket, obj_name, dst_fn ) );
+                        if ( settings.log_db_copy )
+                            BLAST_SEND.send( settings, String.format( "'%s:%s' --> '%s'", settings.db_bucket, obj_name, dst_fn ) );
                         
                         File f = new File( dst_fn );
                         FileOutputStream f_out = new FileOutputStream( f );
