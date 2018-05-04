@@ -203,7 +203,7 @@ echo "  Testing JNI"
     -cp $MAIN_JAR:.  \
     gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
     > output.$$ 2>&1
-sort -u output.$$ | grep -e "^HSP:" -e "^TB: " > test.result
+sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
 CMP=$(cmp test.result test.expected)
 if [[ $? -ne 0 ]]; then
     cat -tn output.$$
