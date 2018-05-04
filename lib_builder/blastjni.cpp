@@ -201,7 +201,7 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
                                   std::vector< BlastHSPList * > & hsp_lists,
                                   int                             topn )
 {
-    log( jenv, jthis, jlog_method, "INFO", "iterate_HSPs has %lu HSP lists:",
+    log( jenv, jthis, jlog_method, "INFO", "iterate_HSPs has %lu HSP lists",
          hsp_lists.size() );
 
     jclass hsplclass
@@ -389,9 +389,6 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
             }
         }
 
-        log( jenv, jthis, jlog_method, "DEBUG", "  min_score is %d",
-             min_score );
-
         for ( size_t i = 0; i != max_scores.size(); ++i )
             if ( max_scores[i] >= min_score )
                 ++num_tuples;
@@ -399,8 +396,8 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
     else
         num_tuples = hsp_lists.size();
 
-    log( jenv, jthis, jlog_method, "DEBUG", "  num_tuples is %lu",
-         num_tuples );
+    log( jenv, jthis, jlog_method, "DEBUG", "  min_score is %d", min_score );
+    log( jenv, jthis, jlog_method, "DEBUG", "  num_tuples is %lu", num_tuples );
 
     /*   allocate return array/sequence/set
 tuples := JVM . allocateMeAnObjectArray ( num-tuples )
@@ -418,6 +415,9 @@ tuples := JVM . allocateMeAnObjectArray ( num-tuples )
     {
         if ( max_scores[i] >= min_score )
         {
+            log( jenv, jthis, jlog_method, "DEBUG",
+                 "  adding hsp_list[%d]: max_scores[%d]=%d >= min_score of %d",
+                 i, i, max_scores[i], min_score );
             /*
                apply filtering
                if max_scores [ i ] >= min-score

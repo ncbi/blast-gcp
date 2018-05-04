@@ -44,7 +44,7 @@ rm -f *.jar
 rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
-rm -rf /tmp/scan-build-*
+rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-*
 set -o errexit
 
 
