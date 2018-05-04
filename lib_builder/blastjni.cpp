@@ -732,6 +732,7 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
 
     jint                                 oid = -1;
     std::vector< ncbi::blast::SFlatHSP > flat_hsp_list;
+    flat_hsp_list.reserve(hspl_sz * 4/3);
     // Iterate through HSP_LIST[]
     for ( int h = 0; h != hspl_sz; ++h )
     {
