@@ -102,7 +102,7 @@ class BLAST_TEST {
         BLAST_LIB blaster = new BLAST_LIB();
         System.out.println("Created  blaster");
 
-        final String logLevel = "INFO";
+        final String logLevel = "DEBUG";
         params = "nt"; // FIX - When Blast team ready for JSON params
 
         BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj, logLevel);
@@ -110,7 +110,7 @@ class BLAST_TEST {
         if (hspl != null) {
             System.out.println(" prelim_search returned " + hspl.length + " HSP lists:");
             for (BLAST_HSP_LIST hsp : hspl) {
-                System.out.println(hsp.toString());
+                System.out.println("HSP: " + hsp.toString().replace("\n"," "));
             }
         } else {
             System.out.println("NULL hspl");
@@ -123,7 +123,7 @@ class BLAST_TEST {
 
         if (tbs != null) {
             for (BLAST_TB_LIST tb : tbs) {
-                System.out.println(tb.toString());
+                System.out.println("TB: " + tb.toString().replace("\n"," "));
             }
 
             byte[][] oneasn = new byte[1][0];

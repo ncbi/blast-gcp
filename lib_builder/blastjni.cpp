@@ -304,6 +304,7 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
             min-score : a cutoff score for our own top-N filtering
             tuples    : an array to act as sequence for our tuples
             */
+
         std::vector< int > max_scores;
     std::set< int >    score_set;
     size_t             num_tuples = 0;
@@ -326,27 +327,29 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
     score_set . add ( max-score )
     }
     */
+    max_scores.reserve(hsp_lists.size());
     for ( size_t i = 0; i != hsp_lists.size(); ++i )
     {
         const BlastHSPList * hsp_list = hsp_lists[i];
         log( jenv, jthis, jlog_method, "DEBUG", "  HSP list #%d, oid=0x%x", i,
              hsp_list->oid );
-        if ( !hsp_list->hspcnt )
-        {
-            log( jenv, jthis, jlog_method, "DEBUG",
-                 "iterate_HSPs, zero hspcnt" );
-            continue;
-        }
         int max_score = INT_MIN;
 
-        for ( int h = 0; h != hsp_list->hspcnt; ++h )
+        if ( hsp_list->hspcnt )
         {
-            int hsp_score = hsp_list->hsp_array[h]->score;
-            log( jenv, jthis, jlog_method, "DEBUG",
-                 "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score, hsp_score );
-            if ( max_score < hsp_score )
-                max_score = hsp_score;
+            for ( int h = 0; h != hsp_list->hspcnt; ++h )
+            {
+                int hsp_score = hsp_list->hsp_array[h]->score;
+                log( jenv, jthis, jlog_method, "DEBUG",
+                     "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score, hsp_score );
+                if ( max_score < hsp_score )
+                    max_score = hsp_score;
+            }
+        } else
+        {
+            log( jenv, jthis, jlog_method, "INFO", "iterate_HSPs, zero hspcnt" );
         }
+
         max_scores.push_back( max_score );
         score_set.insert( max_score );
 
@@ -596,7 +599,6 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
     }
 
     std::vector< BlastHSPList * > hsp_lists;
-
     try
     {
         log( jenv, jthis, jlog_method, "DEBUG",
