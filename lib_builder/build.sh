@@ -123,7 +123,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     #-Wundef \
     #-Wswitch-enum \
     #-Wdouble-promotion \
-    cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+    cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
     GPPCOMMAND="
     g++ \
     blastjni.cpp \
