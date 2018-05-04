@@ -36,6 +36,7 @@ echo "Building at $BUILDENV on $DISTRO"
 JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
+set +errexit
 rm -f *.class
 rm -rf gov
 rm -f *test.result
@@ -44,6 +45,7 @@ rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
 rm -rf /tmp/scan-build-*
+set -o errexit
 
 
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
@@ -93,6 +95,8 @@ JAVASRCDIR="../pipeline/src/main/java"
     #    $JAVASRCDIR/BLAST_LIB.java \
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ./BLAST_TEST.java
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+    ./BLAST_BENCH.java
 
 echo
 echo "Creating JNI header"
@@ -117,6 +121,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     #-ldbapi_driver -lncbi_xreader \
     echo "Running static analysis on C++ code"
     #-Wundef \
+    #-Wswitch-enum \
     #-Wdouble-promotion \
     cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
     GPPCOMMAND="
@@ -130,7 +135,6 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -Wshadow \
     -Wformat=2 \
     -Wformat-security \
-    -Wswitch-enum \
     -Woverloaded-virtual \
     -shared \
     -fPIC \

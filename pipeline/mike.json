@@ -4,7 +4,7 @@
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
-            "subscript_id" : "spark-test-subscript",
+            "subscript_id" : "blast-test-vartanianmh",
             "use" : "false"
         },
         "socket" :
@@ -14,7 +14,7 @@
         },
         "hdfs" :
         {
-            "dir" : "hdfs:///user/vartanianmh/requests",
+            "dir" : "hdfs:///user/%s/requests",
             "use" : "true"
         }
     },
@@ -24,7 +24,7 @@
         "db" :
         {
             "db_bucket" : "nt_50mb_chunks",
-            "num_db_partitions" : 886
+            "num_db_partitions" : 60
         },
         "top_n" : 100
     },
@@ -44,8 +44,9 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 120,
-        "num_executor_cores" : 4
+        "num_executors" : 60,
+        "num_executor_cores" : 1,
+        "executor_memory" : "2G"
     },
 
     "log" :

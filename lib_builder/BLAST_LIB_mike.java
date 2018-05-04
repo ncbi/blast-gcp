@@ -77,16 +77,18 @@ public class BLAST_LIB {
 
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
     log("INFO", "\nJava jni_prelim_search called with");
-    log("INFO", "  query   : " + req.query);
-    log("INFO", "  db_spec : " + part.db_spec);
-    log("INFO", "  program : " + req.program);
+    log("INFO", "  query_seq : " + req.query_seq);
+    log("INFO", "  query_url : " + req.query_url);
+    log("INFO", "  db_spec   : " + part.db_spec);
+    log("INFO", "  program   : " + req.program);
     // FIX - top_n_prelim
-    log("INFO", "  topn    : " + req.top_n);
+    log("INFO", "  topn      : " + req.top_n);
 
     long starttime = System.currentTimeMillis();
 
+    // TODO: Retrieve query_url
     BLAST_HSP_LIST[] ret =
-        prelim_search(req.query, part.db_spec, req.program, req.params, req.top_n);
+        prelim_search(query, part.db_spec, req.program, req.params, req.top_n);
 
     long finishtime = System.currentTimeMillis();
     log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
@@ -108,11 +110,13 @@ public class BLAST_LIB {
 
     BLAST_LIB.logLevel = Level.toLevel(logLevel);
     log("INFO", "\nJava jni_traceback called with");
-    log("INFO", "  query   : " + req.query);
+    log("INFO", "  query_seq : " + req.query_seq);
+    log("INFO", "  query_url : " + req.query_url);
     log("INFO", "  db_spec : " + part.db_spec);
 
+    // TODO: Retrieve query_url
     long starttime = System.currentTimeMillis();
-    BLAST_TB_LIST[] ret = traceback(hspl, req.query, part.db_spec, req.program, req.params);
+    BLAST_TB_LIST[] ret = traceback(hspl, query, part.db_spec, req.program, req.params);
     long finishtime = System.currentTimeMillis();
 
     log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");

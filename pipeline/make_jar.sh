@@ -9,17 +9,17 @@ else
 fi
 
 
-if [ ! -d "bigdata-interop/pubsub/target" ]; then
-    echo "compiling pubsub library"
-    git clone https://github.com/GoogleCloudPlatform/bigdata-interop.git
-    pushd bigdata-interop/pubsub
-    mvn -q package
-    popd
-    echo
-fi
+#if [ ! -d "bigdata-interop/pubsub/target" ]; then
+#    echo "compiling pubsub library"
+#    git clone https://github.com/GoogleCloudPlatform/bigdata-interop.git
+#    pushd bigdata-interop/pubsub
+#    mvn -q package
+#    popd
+#    echo
+#fi
 
 echo "compiling java-classes"
-clear
+#clear
 #mvn package | grep -v INFO
 mvn -q package
 exit

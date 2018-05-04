@@ -290,16 +290,16 @@ def submit_thread():
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:5]:
+        for test in tests[0:3]:
             # Emulate 1..10 submissions a second
             #time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
             progress(submit="  Submitted " + TESTS[test]['orig_RID'])
-            time.sleep(random.randrange(5, 10))
+            time.sleep(random.randrange(5, 10)/10)
         progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(30)
+        time.sleep(60)
 
 
 def results_thread():
@@ -331,7 +331,7 @@ def results_thread():
             dtstart = datetime.datetime.utcfromtimestamp(
                 result['pubsub_submit_time'])
             elapsed = dtend - dtstart
-            progress(results="%s took %0.2f seconds" % (
+            progress(results="%s took %6.2f seconds" % (
                 origrid, elapsed.total_seconds()))
 
             cmd = [

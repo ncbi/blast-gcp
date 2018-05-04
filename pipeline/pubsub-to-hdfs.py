@@ -13,6 +13,15 @@ import time
 import uuid
 
 from google.cloud import pubsub_v1
+# virtualenv --python python3 env
+# source env/bin/activate # "deactivate to deactivate"
+# cd env
+# pip3 install google-cloud
+# pip3 install google-cloud-pubsub
+# pip3 install google-cloud-storage
+
+#  hadoop fs -rm -r -f /user/vartanainmh/requests
+#  hadoop fs -mkdir -p /user/vartanianmh/requests
 
 HADOOPTMP="/tmp/"
 HADOOPDEST="/user/vartanianmh/requests/"

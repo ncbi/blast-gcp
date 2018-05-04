@@ -15,7 +15,10 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   private void log(java.lang.String, java.lang.String);
     descriptor: (Ljava/lang/String;Ljava/lang/String;)V
 
-  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+  final java.lang.String get_blob(java.lang.String);
+    descriptor: (Ljava/lang/String;)Ljava/lang/String;
+
+  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
   final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);

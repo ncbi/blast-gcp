@@ -49,6 +49,7 @@
 #include <objects/seqloc/Seq_id.hpp>
 #include <objects/seqset/Bioseq_set.hpp>
 #include <objects/seqset/Seq_entry.hpp>
+#include <pthread.h>
 #include <set>
 #include <stdexcept>
 
@@ -100,9 +101,9 @@ static void jni_throw( JNIEnv * jenv, uint32_t xtype, const char * fmt,
     // select exception types
     switch ( xtype )
     {
-        case xc_java_exception:
-            jexcept_cls = jenv->FindClass( "java/lang/Exception" );
-            break;
+      case xc_java_exception:
+          jexcept_cls = jenv->FindClass( "java/lang/Exception" );
+          break;
     }
 
     // if not a known type, must throw RuntimeException
@@ -177,11 +178,12 @@ static jmethodID getlogger( JNIEnv * jenv, jobject jthis )
     if ( !thiscls )
         fprintf( stderr, "couldn't log %p\n", (void *)thiscls );
     jmethodID jlog_method = jenv->GetMethodID(
-        thiscls, "log", "(Ljava/lang/String;Ljava/lang/String;)V" );
+                                              thiscls, "log", "(Ljava/lang/String;Ljava/lang/String;)V" );
     if ( jlog_method )
     {
-        log( jenv, jthis, jlog_method, "DEBUG", "Logger method %p, pid=%04d",
-             (void *)jlog_method, getpid() );
+        log( jenv, jthis, jlog_method, "INFO",
+             "Logger method %p, pid=%04d, thread_id=%u", (void *)jlog_method,
+             getpid(), pthread_self() );
     }
     else
     {
@@ -218,41 +220,41 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
 
         prelim-search has returned to us a "stream" ( iterator upon a list ) of
         hsp_list objects, which are tuples. Conceptually, they are intended to
-       be
+        be
 
-            ( query, subject, max-score, { hsps } )
+        ( query, subject, max-score, { hsps } )
 
         So the stream is really a sequence of these tuples, i.e.
 
-            < ( q, s, max, { hsps } ), ( q, s, max, { hsps }, ... >
+        < ( q, s, max, { hsps } ), ( q, s, max, { hsps }, ... >
 
         The actual hsp_list is not quite like this. The query has no
         representation because it is common across all hsp_lists, and so is
         factored out. The subject is not represented by value, but by the pair
-       (
+        (
         db-spec, oid ), yielding
-            ( implicit-query, ( db-spec, oid ), max-score, { hsps } )
+        ( implicit-query, ( db-spec, oid ), max-score, { hsps } )
 
         The db-spec is again not represented, but factored out since it is
         common.  The max-score is implied as a function on the set of hsps,
-       giving
-            ( implicit-query, ( implicit-db-spec, oid ), implicit-max-score, {
+        giving
+        ( implicit-query, ( implicit-db-spec, oid ), implicit-max-score, {
         hsps
         } )
 
         What we need to return is again a sequence of tuples, but our tuples
         should look like this:
-            ( implicit-query, implicit-db-spec, oid, max-score, { hsps } )
+        ( implicit-query, implicit-db-spec, oid, max-score, { hsps } )
 
         where the main difference is that we make max-score explicit, since it
         is the basis for the reduce phase. We regroup the implicit members into
         a single tuple called job:
 
-            job = ( query, db-spec, ... )
+        job = ( query, db-spec, ... )
 
         giving us a ( hopefully ) final tuple of
 
-            ( job, oid, max-score, { hsps } )
+        ( job, oid, max-score, { hsps } )
 
         Note that you added some timing information, which is great, but it has
         to be associated with the job and not with each hsp_list tuple.
@@ -264,8 +266,8 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
 
         So we need to return a sequence:
 
-            < ( job, oid, max-score, { hsps } ), ( job, oid, max-score, { hsps
-       }
+        < ( job, oid, max-score, { hsps } ), ( job, oid, max-score, { hsps
+        }
         ),
         ... >
 
@@ -273,8 +275,8 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
         implied ordering of them, and each entry is required to be unique by at
         least oid.
 
-            { ( job, oid1, max-score, { hsps } ), ( job, oid2, max-score, {
-       hsps
+        { ( job, oid1, max-score, { hsps } ), ( job, oid2, max-score, {
+        hsps
         }
         ), ... }
 
@@ -285,24 +287,24 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
         more than N tuples.
 
         NB - the top-N does NOT apply to the inner set of hsps, which are
-        allowed to exceed N.  */
+    allowed to exceed N.  */
 
-    /*  PSEUDO/SKELETON CODE
+        /*  PSEUDO/SKELETON CODE
             given:
-                job       : an externally created tuple of implied members
-                hsp_lists : a sequence of hsp_list*
-                topn         : the maximum number of tuples to return
+            job       : an externally created tuple of implied members
+            hsp_lists : a sequence of hsp_list*
+            topn         : the maximum number of tuples to return
 
             declare:
-                max_scores: a sequence of int corresponding by ordinal to the
-                            hsp_lists
-                score_set : a set of max-scores observed
-                num-tuples: a count of the number of tuples to return in
-                            sequence/set
-                min-score : a cutoff score for our own top-N filtering
-                tuples    : an array to act as sequence for our tuples
-    */
-    std::vector< int > max_scores;
+            max_scores: a sequence of int corresponding by ordinal to the
+            hsp_lists
+            score_set : a set of max-scores observed
+            num-tuples: a count of the number of tuples to return in
+            sequence/set
+            min-score : a cutoff score for our own top-N filtering
+            tuples    : an array to act as sequence for our tuples
+            */
+        std::vector< int > max_scores;
     std::set< int >    score_set;
     size_t             num_tuples = 0;
     int                min_score  = INT_MIN;
@@ -312,17 +314,17 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
         throw std::runtime_error( "can't create byte array" );
 
     /*     begin
-                // determine the max scores
-                for i in 0 .. hsp_lists . size
-                {
-                    declare hsp_list := hsp_lists [ i ]
-                    declare max-score := MIN_INT;
-                    for each hsp in hsp_list . hsp_array
-                        if max-score < hsp . score
-                            max-score := hsp . score
-                    max_scores [ i ] := max-score
-                    score_set . add ( max-score )
-                }
+    // determine the max scores
+    for i in 0 .. hsp_lists . size
+    {
+    declare hsp_list := hsp_lists [ i ]
+    declare max-score := MIN_INT;
+    for each hsp in hsp_list . hsp_array
+    if max-score < hsp . score
+    max-score := hsp . score
+    max_scores [ i ] := max-score
+    score_set . add ( max-score )
+    }
     */
     for ( size_t i = 0; i != hsp_lists.size(); ++i )
     {
@@ -357,20 +359,20 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
     /*  assume for the moment that all tuples will make cut
         num-tuples := hsp_lists . size
 
-        // determine minimum cutoff on max-score
-        min-score := MIN_INT;
-        if |score_set| > N
-        {
-            min-score := min ( top-N ( score_set ) )
+    // determine minimum cutoff on max-score
+    min-score := MIN_INT;
+    if |score_set| > N
+    {
+    min-score := min ( top-N ( score_set ) )
 
-            // count how many tuples are going to make the cut
-            num-tuples := 0
-            for each score in max_scores
-                if score >= min-score
-                    num-tuples := num-tuples + 1
-        }
-        */
-    num_tuples = hsp_lists.size();
+    // count how many tuples are going to make the cut
+    num-tuples := 0
+    for each score in max_scores
+    if score >= min-score
+    num-tuples := num-tuples + 1
+    }
+    */
+
     if ( (int)score_set.size() > topn )
     {
         int top = topn;
@@ -390,41 +392,43 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
         for ( size_t i = 0; i != max_scores.size(); ++i )
             if ( max_scores[i] >= min_score )
                 ++num_tuples;
-
-        log( jenv, jthis, jlog_method, "DEBUG", "  num_tuples is %lu",
-             num_tuples );
     }
+    else
+        num_tuples = hsp_lists.size();
+
+    log( jenv, jthis, jlog_method, "DEBUG", "  num_tuples is %lu",
+         num_tuples );
 
     /*   allocate return array/sequence/set
-         tuples := JVM . allocateMeAnObjectArray ( num-tuples )
-    */
+tuples := JVM . allocateMeAnObjectArray ( num-tuples )
+*/
     jobjectArray retarray = jenv->NewObjectArray( num_tuples, hsplclass, NULL );
 
     /*
        build the sequence
-      declare j := 0
-      for i in 0 .. hsp_lists . size
-      {
-    */
+       declare j := 0
+       for i in 0 .. hsp_lists . size
+       {
+       */
+    size_t j = 0;
     for ( size_t i = 0; i != hsp_lists.size(); ++i )
     {
         if ( max_scores[i] >= min_score )
         {
             /*
                apply filtering
-            if max_scores [ i ] >= min-score
-                declare hsp_list := hsp_lists [ i ];
+               if max_scores [ i ] >= min-score
+               declare hsp_list := hsp_lists [ i ];
 
-                // we now have enough information to have the JVM allocate
-                // our tuple. It is proper to include the oid in this tuple,
-                // because it is supposed to have an unique constraint on it
-                // as a set key, and will be useful for logging. But
-            otherwise,
-                // our Java code won't need it.
+               we now have enough information to have the JVM allocate
+               our tuple. It is proper to include the oid in this tuple,
+               because it is supposed to have an unique constraint on it
+               as a set key, and will be useful for logging. But otherwise,
+               our Java code won't need it.
 
-                // "**" if we are using an integer packing format for the
-            HSPs,  the work would need to be done up front so we know the
-            */
+               "**" if we are using an integer packing format for the
+               HSPs,  the work would need to be done up front so we know the
+               */
             const BlastHSPList * hsp_list = hsp_lists[i];
             size_t               blob_size
                 = hsp_list->hspcnt * sizeof( ncbi::blast::SFlatHSP );
@@ -437,13 +441,13 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
             try
             {
                 /*
-                  declare tuple := JVM . allocateTuple ( job, hsp_list . oid,
-                  max_scores [ i ], hsp_list . num_hsps * HSP_STRUCT_SIZE
-                  )
+                   declare tuple := JVM . allocateTuple ( job, hsp_list . oid,
+                   max_scores [ i ], hsp_list . num_hsps * HSP_STRUCT_SIZE
+                   )
 
-                  // the JVM will have allocated memory for us in the form of
-                  // a byte[] used as a blob for the { hsps }
-                  */
+                   the JVM will have allocated memory for us in the form of
+                   a byte[] used as a blob for the { hsps }
+                   */
                 log( jenv, jthis, jlog_method, "DEBUG",
                      "  blob #%d size is %lu", i, blob_size );
                 jbyteArray tuple = jenv->NewByteArray( blob_size );
@@ -451,21 +455,21 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
                     throw std::runtime_error( "Couldn't create ByteArray" );
 
                 /*
-                  declare hsp_blob: a sequence of HSP tuples, each with
-                  size
-                  HSP_STRUCT_SIZE
-                  hsp_blob := tuple . hsp_blob
+                   declare hsp_blob: a sequence of HSP tuples, each with
+                   size
+                   HSP_STRUCT_SIZE
+hsp_blob := tuple . hsp_blob
 
-                  // we now record the HSP data within the blob
-                  // NB - this is NOT subject to top-N
-                  for each hsp in hsp_list . hsp_array
-                  // NB - this might eventually be accomplished with
-                  integer
-                  compression  by using a packing format. The size would
-                  need to
-                  be known well above, where I place "**"
+we now record the HSP data within the blob
+                // NB - this is NOT subject to top-N
+                for each hsp in hsp_list . hsp_array
+                // NB - this might eventually be accomplished with
+                integer
+                compression  by using a packing format. The size would
+                need to
+                be known well above, where I place "**"
 
-                  append hsp to hsp_blob
+                append hsp to hsp_blob
                 */
                 size_t idx = 0;
                 int    oid = hsp_list->oid;
@@ -497,42 +501,62 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
                 // Copy hspblob into Java tuple
                 jenv->SetByteArrayRegion( tuple, 0, blob_size,
                                           (const jbyte *)hspblob );
-                /* done with this tuple
-                   tuples [ j ] := tuple
-                   j := j + 1
-                */
-
                 // Create a new HSP_LIST
                 jobject hspl_obj = jenv->NewObject( hsplclass, hspl_ctor_id,
                                                     oid, max_scores[i], tuple );
                 if ( !hspl_obj )
+                {
+                    log( jenv, jthis, jlog_method, "ERROR",
+                         "Couldn't make new HSP_LIST" );
                     throw std::runtime_error( "Couldn't make new HSP_LIST" );
+                }
 
-                jenv->SetObjectArrayElement( retarray, i, hspl_obj );
+                /* done with this tuple
+                 * tuples [ j ] := tuple
+                 * j := j + 1
+                 */
+                if (j > num_tuples)
+                    log( jenv, jthis, jlog_method, "ERROR", "array overflow");
+                log( jenv, jthis, jlog_method, "DEBUG",
+                     "ps Setting Java Object Array Element %d", j );
+                jenv->SetObjectArrayElement( retarray, j, hspl_obj );
+                log( jenv, jthis, jlog_method, "DEBUG",
+                     "ps Set     Java Object Array Element %d", j );
+                ++j;
             }
             catch ( ... )
             {
+                log( jenv, jthis, jlog_method, "ERROR",
+                     "exception in iterate_HSPs" );
                 free( hspblob );
                 throw;
             }
 
             free( hspblob );
         }
+        else
+        {
+            log( jenv, jthis, jlog_method, "DEBUG",
+                 "  skipping hsp_list[%d]: max_scores[%d]=%d < min_score of %d",
+                 i, i, max_scores[i], min_score );
+        }
     }
+    log( jenv, jthis, jlog_method, "DEBUG", "  iterate_HSPs done" );
     // Return tuples to Java object
     // done
     return retarray;
 
     /*
-    The pseudo code above has the properties of only allocating memory in the
-    JVM, and only when necessary, and only in the amounts necessary. It also
-    has the property of creating the correct units for reduce.
+       The pseudo code above has the properties of only allocating memory in the
+       JVM, and only when necessary, and only in the amounts necessary. It also
+       has the property of creating the correct units for reduce.
 
-    The same procedure would be applied for the results of traceback, except
-    of course that you would use bottom-N evalues instead of top-N scores. It
-    almost begs for abstracting the "max-scores" array and "score-set" so that
-    they do the right thing.
-    */
+       The same procedure would be applied for the results of traceback, except
+       of course that you would use bottom-N evalues instead of top-N scores. It
+       almost begs for abstracting the "max-scores" array and "score-set" so
+       that
+       they do the right thing.
+       */
 }
 
 static void whack_hsp_lists( std::vector< BlastHSPList * > & hsp_lists )
@@ -547,7 +571,7 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
                                    const char * jdb_spec, const char * jprogram,
                                    const char * jparams, jint topn )
 {
-    if ( jenv->EnsureLocalCapacity( 64 ) )
+    if ( jenv->EnsureLocalCapacity( 16384 ) )
         throw std::runtime_error( "Can't ensure local capacity" );
 
     log( jenv, jthis, jlog_method, "DEBUG",
@@ -560,8 +584,8 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
     //      "  params  : %s"
 
     ncbi::blast::TBlastHSPStream * hsp_stream = ncbi::blast::PrelimSearch(
-        std::string( jquery ), std::string( jdb_spec ), std::string( jprogram ),
-        std::string( jparams ) );
+                                                                          std::string( jquery ), std::string( jdb_spec ), std::string( jprogram ),
+                                                                          std::string( jparams ) );
 
     log( jenv, jthis, jlog_method, "INFO", "Blast prelim_search returned" );
 
@@ -589,7 +613,7 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
                 log( jenv, jthis, jlog_method, "ERROR",
                      "kBlastHSPStream_Error" );
                 throw std::runtime_error(
-                    "prelim_search - Exception from BlastHSPStreamRead" );
+                                         "prelim_search - Exception from BlastHSPStreamRead" );
             }
 
             if ( status != kBlastHSPStream_Success || !hsp_list )
@@ -625,9 +649,9 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
  * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;)Z
  */
 JNIEXPORT jobjectArray JNICALL
-                       Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_1search(
-    JNIEnv * jenv, jobject jthis, jstring jquery, jstring jdb_spec,
-    jstring jprogram, jstring jparams, jint topn )
+Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_1search(
+                                                         JNIEnv * jenv, jobject jthis, jstring jquery, jstring jdb_spec,
+                                                         jstring jprogram, jstring jparams, jint topn )
 {
     uint32_t xtype = xc_no_err;
 
@@ -657,13 +681,13 @@ JNIEXPORT jobjectArray JNICALL
     // FIX -
     // https://ncbiconfluence.ncbi.nlm.nih.gov/pages/viewpage.action?spaceKey=BLASTGCP&title=Errors+reported+by+BLAST
     /*
-    catch (ncbi::blast::CInputException& x) {
-        jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());
-    }
-    catch (CException& x) {
-        jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());
-    }
-    */
+       catch (ncbi::blast::CInputException& x) {
+       jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());
+       }
+       catch (CException& x) {
+       jni_throw(jenv, xtype = xc_blast_exception, "%s", x.GetMsg().data());
+       }
+       */
     catch ( ... )
     {
         jni_throw( jenv, xtype = xc_java_runtime_exception,
@@ -684,6 +708,9 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
                                const char * jdb_spec, const char * jprogram,
                                const char * jparams, jobjectArray hspl_obj )
 {
+    if ( jenv->EnsureLocalCapacity( 16384 ) )
+        throw std::runtime_error( "Can't ensure local capacity" );
+
     log( jenv, jthis, jlog_method, "INFO", "Blast traceback called with" );
     log( jenv, jthis, jlog_method, "INFO", "  query    : %s", jquery );
     log( jenv, jthis, jlog_method, "INFO", "  db_spec  : %s", jdb_spec );
@@ -733,12 +760,13 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
         }
         jenv->ReleaseByteArrayElements( blobarr, be,
                                         JNI_ABORT );  // Didn't update the array
+        // FIX - DeleteLocalRef(jenv, hspl); blobobj?
     }
 
     ncbi::blast::TIntermediateAlignments alignments;
     int                                  result = ncbi::blast::TracebackSearch(
-        std::string( jquery ), std::string( jdb_spec ), std::string( jprogram ),
-        std::string( jparams ), flat_hsp_list, alignments );
+                                                                               std::string( jquery ), std::string( jdb_spec ), std::string( jprogram ),
+                                                                               std::string( jparams ), flat_hsp_list, alignments );
     size_t num_alignments = alignments.size();
     log( jenv, jthis, jlog_method, "INFO",
          "Blast traceback returned status=%d. Got %d alignments", result,
@@ -754,7 +782,7 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
         throw std::runtime_error( "Can't find tb ctor method" );
 
     jobjectArray retarray = jenv->NewObjectArray( num_alignments, tbcls, NULL );
-    for ( size_t i = 0; i != alignments.size(); ++i )
+    for ( size_t i = 0; i != num_alignments; ++i )
     {
         jdouble     evalue = alignments[i].first;
         std::string asn    = alignments[i].second;
@@ -773,7 +801,9 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
         if ( !tb_obj )
             throw std::runtime_error( "Couldn't make new TB_LIST" );
 
+        log( jenv, jthis, jlog_method, "DEBUG", "tb Setting Java Object Array Element %d", i );
         jenv->SetObjectArrayElement( retarray, i, tb_obj );
+        log( jenv, jthis, jlog_method, "DEBUG", "tb Set     Java Object Array Element %d", i );
     }
 
     return retarray;
@@ -786,9 +816,9 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
  * (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_JOB;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
  */
 JNIEXPORT jobjectArray JNICALL
-                       Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceback(
-    JNIEnv * jenv, jobject jthis, jobjectArray hspl, jstring jquery,
-    jstring jdb_spec, jstring jprogram, jstring jparams )
+Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceback(
+                                                    JNIEnv * jenv, jobject jthis, jobjectArray hspl, jstring jquery,
+                                                    jstring jdb_spec, jstring jprogram, jstring jparams )
 {
     jmethodID jlog_method = getlogger( jenv, jthis );
     uint32_t  xtype       = xc_no_err;

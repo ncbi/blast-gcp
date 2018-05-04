@@ -30,17 +30,22 @@ import java.io.Serializable;
 
 class BLAST_REQUEST implements Serializable
 {
-    public String id, db, query, program, params;
+    public String id, db, query_seq="", query_url="", program, params;
     public Integer top_n;
 
     @Override public String toString()
     {
-        if ( query.length() > 10 )
-            return String.format( "req( rid:'%s' dbsel:'%s' query:'%s...' prog:'%s' params:'%s' )",
-                    id, db, query.substring( 0, 10 ), program, params );
+        if (query_url.length() > 0)
+        {
+            return String.format( "req( rid:'%s' dbsel:'%s' query_url:'%s...' prog:'%s' params:'%s' )",
+                    id, db, query_url, program, params );
+        } else
+        if ( query_seq.length() > 10 )
+            return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s...' prog:'%s' params:'%s' )",
+                    id, db, query_seq.substring( 0, 10 ), program, params );
         else
-            return String.format( "req( rid:'%s' dbsel:'%s' query:'%s' prog:'%s' params:'%s' )",
-                    id, db, query, program, params );
+            return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s' prog:'%s' params:'%s' )",
+                    id, db, query_seq, program, params );
     }
 }
 
