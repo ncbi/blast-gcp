@@ -292,7 +292,7 @@ class BLASTJNI_SETTINGS_READER
     public static final String key_jni_log_level = "jni_log_level";
 
     public static final Integer dflt_top_n = 10;
-    public static final String  dflt_jni_log_level = "Info";
+    public static final String  dflt_jni_log_level = "INFO";
 
     public static void defaults( BLAST_SETTINGS settings )
     {

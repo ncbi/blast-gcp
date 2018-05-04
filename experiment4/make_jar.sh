@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "compiling java-classes"
 clear
+echo "compiling java-classes"
 mvn -q package
 

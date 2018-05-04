@@ -322,16 +322,22 @@ class BLAST_DRIVER extends Thread
                 try
                 {
                     BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
-                    try
+                    if ( search_res != null )
                     {
-                        BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
-                        for ( BLAST_TB_LIST tbl : tb_results )
-                            res.add( new Tuple2<>( req.id, tbl ) );
-                    }
-                    catch ( Exception e )
-                    {
-                        BLAST_SEND.send( bls,
-                                         String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                        try
+                        {
+                            BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
+                            if ( tb_results != null )
+                            {
+                                for ( BLAST_TB_LIST tbl : tb_results )
+                                    res.add( new Tuple2<>( req.id, tbl ) );
+                            }
+                        }
+                        catch ( Exception e )
+                        {
+                            BLAST_SEND.send( bls,
+                                             String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                        }
                     }
                 }
                 catch ( Exception e )
@@ -345,11 +351,12 @@ class BLAST_DRIVER extends Thread
         } ).cache();
     }
 
-    private void write_results( final JavaPairDStream< String, BLAST_TB_LIST > SRC, Broadcast< BLAST_SETTINGS > SETTINGS )
+    private JavaPairDStream< String, ByteBuffer > group_results( final JavaPairDStream< String, BLAST_TB_LIST > SRC,
+                Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > TMP1 = SRC.groupByKey();
 
-        final JavaPairDStream< String, ByteBuffer > TMP2 = TMP1.mapValues( item ->
+        return TMP1.mapValues( item ->
         {
             List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
             for ( BLAST_TB_LIST e : item )
@@ -373,9 +380,24 @@ class BLAST_DRIVER extends Thread
             ret.put( seq_annot_suffix );
 
             return ret;
-        });
+        }).cache();
+    }
 
-        TMP2.foreachRDD( rdd ->
+    private JavaPairDStream< String, ByteBuffer > reduce_results( final JavaPairDStream< String, BLAST_TB_LIST > SRC,
+                Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        
+        final JavaPairDStream< String, ByteBuffer > TMP1 = SRC.reduceByKey( ( item1, item2 ) ->
+        {
+            return null;
+        });
+        return TMP1.cache();
+    }
+
+
+    private void write_results( final JavaPairDStream< String, ByteBuffer > SRC, Broadcast< BLAST_SETTINGS > SETTINGS )
+    {
+        SRC.foreachRDD( rdd ->
         {
             long count = rdd.count();
             if ( count > 0 )
@@ -453,10 +475,17 @@ class BLAST_DRIVER extends Thread
                         perform prelim_search + traceback + final cutoff + writeout for each
                         intersection of PARTITION and REQUEST
                    =========================================================================================== */
-                JavaPairDStream< String, BLAST_TB_LIST> RESULTS 
-                    = prelim_search_and_traceback( JOB_STREAM, SETTINGS );
+                final JavaPairDStream< String, BLAST_TB_LIST> RESULTS = prelim_search_and_traceback( JOB_STREAM, SETTINGS );
 
-                write_results( RESULTS, SETTINGS );
+                /* ===========================================================================================
+                        concentrate the results by REQID
+                   =========================================================================================== */
+                final JavaPairDStream< String, ByteBuffer > COLLECTED = group_results( RESULTS, SETTINGS );
+
+                /* ===========================================================================================
+                        write the results to storage
+                   =========================================================================================== */
+                write_results( COLLECTED, SETTINGS );
 
                 /* ===========================================================================================
                         start the streaming

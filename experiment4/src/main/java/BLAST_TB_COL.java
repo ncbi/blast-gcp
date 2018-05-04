@@ -23,25 +23,14 @@
 * ===========================================================================
 *
 */
-
 package gov.nih.nlm.ncbi.blastjni;
 
-import org.apache.spark.Partitioner;
-import java.lang.String;
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-
-class BLAST_PARTITIONER2 extends BLAST_PARTITIONER
+class BLAST_TB_COL implements Serializable
 {
-	public BLAST_PARTITIONER2( int n )
-    {
-		super( n );
-	}
 
-	@Override public int getPartition( Object key )
-    {
-		String pjob=( String )key;
-		Integer pnum = Integer.valueOf( pjob.substring( 0, pjob.indexOf( ' ' ) ) );
-		return pnum % numParts;
-    }
 }
-

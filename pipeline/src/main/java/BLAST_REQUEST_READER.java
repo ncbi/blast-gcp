@@ -55,6 +55,7 @@ class BLAST_REQUEST_READER
         String[] parts  = line.split( "\\:" );
         res.id         = ( parts.length > 0 ) ? parts[ 0 ] : dflt_id;
         res.query_seq  = ( parts.length > 1 ) ? parts[ 1 ] : dflt_query;
+        res.query_url  = "";
         res.top_n      = ( parts.length > 2 ) ? Integer.parseInt( parts[ 2 ] ) : top_n;
         res.db         = ( parts.length > 3 ) ? parts[ 3 ] : dflt_db;
         res.program    = ( parts.length > 4 ) ? parts[ 4 ] : dflt_program;

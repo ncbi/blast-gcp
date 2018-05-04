@@ -21,7 +21,7 @@ PUBSUB_JAR="$PUBSUB_JAR1"
 #
 # on google-cluster:
 #   --num-executers X   : X should match the number or worker-nodes
-#   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
+#   --executor-cores Y  : Y should match the number of vCPU's per worker-node - 1
 #
 
 #spark-submit --master local[4] --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI

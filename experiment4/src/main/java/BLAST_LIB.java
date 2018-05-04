@@ -95,6 +95,13 @@ public class BLAST_LIB {
         prelim_search(req.query, part.db_spec, req.program, req.params, req.top_n);
 
     long finishtime = System.currentTimeMillis();
+
+    if ( ret == null )
+    {
+        log("ERROR", "jni_prelim_search returned a null-ptr " + (finishtime - starttime) + " ms.");        
+        return null;
+    }
+
     log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
     log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
     int hspcnt = 0;
