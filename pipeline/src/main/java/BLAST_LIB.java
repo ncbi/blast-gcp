@@ -90,19 +90,19 @@ public class BLAST_LIB {
         String path = url.substring(5); // foo/bar
         String bucketName = path.substring(0, path.indexOf("/", 1)); // foo
         String object = path.substring(path.indexOf("/", 1) + 1); // bar
-        log("INFO", "path is " + path);
-        log("INFO", "bucket is " + bucketName);
-        log("INFO", "object is " + object);
+        log("DEBUG", "path is " + path);
+        log("DEBUG", "bucket is " + bucketName);
+        log("DEBUG", "object is " + object);
         Storage storage = StorageOptions.getDefaultInstance().getService();
 
         BlobId blobId = BlobId.of(bucketName, object);
         byte[] content = storage.readAllBytes(blobId);
         String res = "";
         try {
-            log("INFO", "Retrieved " + content.length + " bytes from gs bucket.");
+            log("INFO", "Retrieved " + content.length + " bytes from cloud storage: " + url);
             res = new String(content, "UTF-8");
         } catch (java.io.UnsupportedEncodingException uee) {
-            log("ERROR", "blob isn't UTF-8");
+            log("ERROR", "blob isn't UTF-8: " + url);
             // FIX - Throw
         }
 
