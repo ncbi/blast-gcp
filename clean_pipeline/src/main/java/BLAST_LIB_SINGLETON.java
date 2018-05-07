@@ -95,7 +95,7 @@ class PART_INST
             {
                 String fn = String.format( "%s.%s", part.db_spec, ext );
                 File f = new File( fn );
-                if ( !f.exists() )
+                if ( !f.exists() || ( f.length() == 0 ) )
                     obj_names.add( String.format( "%s.%s", part.name, ext ) );
             }
             if ( !obj_names.isEmpty() )
@@ -119,8 +119,7 @@ class PART_INST
 
                         Files.createDirectories( Paths.get( dst_path ) );
 
-                        if ( settings.log_db_copy )
-                            BLAST_SEND.send( settings, String.format( "'%s:%s' --> '%s'", settings.db_bucket, obj_name, dst_fn ) );
+                        BLAST_SEND.send( settings, String.format( "'%s:%s' --> '%s'", settings.db_bucket, obj_name, dst_fn ) );
                         
                         File f = new File( dst_fn );
                         FileOutputStream f_out = new FileOutputStream( f );

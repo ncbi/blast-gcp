@@ -87,7 +87,6 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean log_part_prep;
     public Boolean log_worker_shift;
     public Boolean log_pref_loc;
-    public Boolean log_db_copy;
 
     public Boolean src_pubsub_valid()
     {
@@ -210,7 +209,6 @@ public class BLAST_SETTINGS implements Serializable
         if ( log_part_prep )     S_log = S_log + "part-prep ";
         if ( log_worker_shift )  S_log = S_log + "worker-shift ";
         if ( log_pref_loc )  S_log = S_log + "pref_log ";
-        if ( log_db_copy )   S_log = S_log + "db-copy ";
 
         S = S + String.format( "\tlog ................ %s\n", S_log );
         return S;
