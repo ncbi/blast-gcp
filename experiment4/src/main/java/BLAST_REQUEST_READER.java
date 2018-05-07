@@ -54,11 +54,14 @@ class BLAST_REQUEST_READER
 
         String[] parts  = line.split( "\\:" );
         res.id         = ( parts.length > 0 ) ? parts[ 0 ] : dflt_id;
-        res.query      = ( parts.length > 1 ) ? parts[ 1 ] : dflt_query;
+        res.query_seq  = ( parts.length > 1 ) ? parts[ 1 ] : dflt_query;
+        res.query_url  = "";
         res.top_n      = ( parts.length > 2 ) ? Integer.parseInt( parts[ 2 ] ) : top_n;
         res.db         = ( parts.length > 3 ) ? parts[ 3 ] : dflt_db;
         res.program    = ( parts.length > 4 ) ? parts[ 4 ] : dflt_program;
         res.params     = ( parts.length > 5 ) ? parts[ 5 ] : dflt_params;
+
+        res.started_at = System.currentTimeMillis();
 
         return res;
     }
@@ -66,7 +69,7 @@ class BLAST_REQUEST_READER
     private static void set_defaults( BLAST_REQUEST req, final Integer top_n )
     {
         if ( req.id.isEmpty() ) req.id = dflt_id;
-        if ( req.query.isEmpty() ) req.query = dflt_query;
+        if ( req.query_seq.isEmpty() ) req.query_seq = dflt_query;
         if ( req.top_n < 1 ) req.top_n = top_n;
         if ( req.db.isEmpty() ) req.db = dflt_db;
         if ( req.program.isEmpty() ) req.program = dflt_program;
@@ -119,6 +122,8 @@ class BLAST_REQUEST_READER
                 JsonObject root = tree.getAsJsonObject();
 
                 res.id = get_json_string( root, "RID", dflt_id );
+                res.query_seq = get_json_string (root, "query_seq",dflt_query );
+                res.query_url = get_json_string (root, "query_url", "");
                 JsonElement blast_params_elem = root.get( "blast_params" );
                 if ( blast_params_elem != null )
                 {
@@ -134,22 +139,24 @@ class BLAST_REQUEST_READER
                                 res.params = res.program;
                                 res.top_n = get_json_int( blast_params, "hitlist_size", top_n );
 
-                                try
-                                {
-                                    JsonElement queries = blast_params.get( "queries" );
-                                    if ( queries != null )
-                                    {
-                                        JsonArray query_array = queries.getAsJsonArray();
-                                        if ( query_array.size() > 0 )
-                                        {
-                                            JsonElement first_query = query_array.get( 0 );
-                                            res.query = first_query.getAsString();
-                                        }
-                                    }
-                                }
-                                catch( Exception e )
-                                {
-                                }
+                                /*
+                                   try
+                                   {
+                                   JsonElement queries = blast_params.get( "queries" );
+                                   if ( queries != null )
+                                   {
+                                   JsonArray query_array = queries.getAsJsonArray();
+                                   if ( query_array.size() > 0 )
+                                   {
+                                   JsonElement first_query = query_array.get( 0 );
+                                   res.query = first_query.getAsString();
+                                   }
+                                   }
+                                   }
+                                   catch( Exception e )
+                                   {
+                                   }
+                                   */
                             }
                         }
                     }

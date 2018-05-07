@@ -289,10 +289,10 @@ class BLAST_DRIVER extends Thread
 
 
     /* ===========================================================================================
-            perform prelim search
+            perform prelim search and traceback in one step
 
             IN  :   SRC: JavaPairDStream < BLAST_PARTITION, BLAST_REQUEST >
-            OUT :   JavaPairDStream < STRING: 'PARTITION.NR REQ.ID', BLAST_HSP_LIST >
+            OUT :   JavaPairDStream < REQ.ID, BLAST_TB_LIST >
        =========================================================================================== */
     private JavaPairDStream< String, BLAST_TB_LIST > prelim_search_and_traceback(
                         final JavaPairDStream< BLAST_PARTITION, BLAST_REQUEST > SRC,
@@ -351,51 +351,18 @@ class BLAST_DRIVER extends Thread
         } ).cache();
     }
 
-    private JavaPairDStream< String, ByteBuffer > group_results( final JavaPairDStream< String, BLAST_TB_LIST > SRC,
-                Broadcast< BLAST_SETTINGS > SETTINGS )
+    /* ===========================================================================================
+            group all Traceback-results into a 'Iterable' of them on one worker-node
+
+            IN  :   SRC: JavaPairDStream < REQ.ID, BLAST_TB_LIST >
+            OUT :   JavaPairDStream < NR REQ.ID, Iterable< BLAST_TB_LIST > >
+       =========================================================================================== */
+    private JavaPairDStream< String, Iterable< BLAST_TB_LIST > > group_results( final JavaPairDStream< String, BLAST_TB_LIST > SRC )
     {
-        final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > TMP1 = SRC.groupByKey();
-
-        return TMP1.mapValues( item ->
-        {
-            List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
-            for ( BLAST_TB_LIST e : item )
-                all_seq_annots.add( e );
-
-            Collections.sort( all_seq_annots );
-            Integer top_n = all_seq_annots.get( 0 ).req.top_n;
-
-            List< BLAST_TB_LIST > top_n_seq_annots = all_seq_annots.subList( 0, min( all_seq_annots.size(), top_n ) );
-            int sum = 0;
-            for ( BLAST_TB_LIST e : top_n_seq_annots )
-                sum += e.asn1_blob.length;
-
-            byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
-            byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            ByteBuffer ret = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
-
-            ret.put( seq_annot_prefix );
-            for ( BLAST_TB_LIST e : top_n_seq_annots )
-                ret.put( e.asn1_blob );
-            ret.put( seq_annot_suffix );
-
-            return ret;
-        }).cache();
+        return SRC.groupByKey().cache();
     }
 
-    private JavaPairDStream< String, ByteBuffer > reduce_results( final JavaPairDStream< String, BLAST_TB_LIST > SRC,
-                Broadcast< BLAST_SETTINGS > SETTINGS )
-    {
-        
-        final JavaPairDStream< String, ByteBuffer > TMP1 = SRC.reduceByKey( ( item1, item2 ) ->
-        {
-            return null;
-        });
-        return TMP1.cache();
-    }
-
-
-    private void write_results( final JavaPairDStream< String, ByteBuffer > SRC, Broadcast< BLAST_SETTINGS > SETTINGS )
+    private void write_results( final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > SRC, Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         SRC.foreachRDD( rdd ->
         {
@@ -406,30 +373,59 @@ class BLAST_DRIVER extends Thread
                 {
                     while( iter.hasNext() )
                     {
-                        Tuple2< String, ByteBuffer > item = iter.next();
+                        Tuple2< String, Iterable< BLAST_TB_LIST > > item = iter.next();
                         String req_id = item._1();
-                        ByteBuffer buff = item._2();
+                        Iterable< BLAST_TB_LIST > tb_lists = item._2();
+                        Long start_time = 0L;
+
+                        List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
+                        for ( BLAST_TB_LIST e : tb_lists )
+                        {
+                            all_seq_annots.add( e );
+                            if ( start_time == 0 )
+                                start_time = e.req.started_at;
+                            else 
+                                start_time = min( start_time, e.req.started_at );
+                        }
+
+                        Collections.sort( all_seq_annots );
+                        Integer top_n = all_seq_annots.get( 0 ).req.top_n;
+
+                        List< BLAST_TB_LIST > top_n_seq_annots = all_seq_annots.subList( 0, min( all_seq_annots.size(), top_n ) );
+                        int sum = 0;
+                        for ( BLAST_TB_LIST e : top_n_seq_annots )
+                            sum += e.asn1_blob.length;
+
+                        byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+                        byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                        ByteBuffer buf = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
+
+                        buf.put( seq_annot_prefix );
+                        for ( BLAST_TB_LIST e : top_n_seq_annots )
+                            buf.put( e.asn1_blob );
+                        buf.put( seq_annot_suffix );
 
                         BLAST_SETTINGS bls = SETTINGS.getValue();
+                        Long elapsed = System.currentTimeMillis() - start_time;
 
                         if ( bls.gs_or_hdfs.contains( "hdfs" ) )
                         {
                             String fn = String.format( bls.hdfs_result_file, req_id );
                             String path = String.format( "%s/%s", bls.hdfs_result_dir, fn );
-                            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buff );
+                            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
 
                             if ( bls.log_final )
-                                BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s'",
-                                        uploaded, path ) );
+                                BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' (%,d ms)",
+                                        uploaded, path, elapsed ) );
                         }
                         if ( bls.gs_or_hdfs.contains( "gs" ) )
                         {
                             String gs_result_key = String.format( bls.gs_result_file, req_id );
-                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buff );
+                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buf );
 
                             if ( bls.log_final )
-                                BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s'",
-                                        uploaded, bls.gs_result_bucket, gs_result_key ) );
+                                BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' (%,d ms)",
+                                        uploaded, bls.gs_result_bucket, gs_result_key, elapsed ) );
                         }
                     }
                 } );
@@ -478,9 +474,9 @@ class BLAST_DRIVER extends Thread
                 final JavaPairDStream< String, BLAST_TB_LIST> RESULTS = prelim_search_and_traceback( JOB_STREAM, SETTINGS );
 
                 /* ===========================================================================================
-                        concentrate the results by REQID
+                        concentrate the results by REQ.ID
                    =========================================================================================== */
-                final JavaPairDStream< String, ByteBuffer > COLLECTED = group_results( RESULTS, SETTINGS );
+                final JavaPairDStream< String, Iterable< BLAST_TB_LIST > > COLLECTED = group_results( RESULTS );
 
                 /* ===========================================================================================
                         write the results to storage
