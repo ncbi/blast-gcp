@@ -59,6 +59,7 @@ public class BLAST_SETTINGS implements Serializable
     public String gs_result_file;
     public String hdfs_result_dir;
     public String hdfs_result_file;
+    public String gs_or_hdfs;
 
     public String gs_status_bucket;
     public String gs_status_file;
@@ -87,6 +88,7 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean log_part_prep;
     public Boolean log_worker_shift;
     public Boolean log_pref_loc;
+    public Boolean log_db_copy;
 
     public Boolean src_pubsub_valid()
     {
@@ -184,6 +186,7 @@ public class BLAST_SETTINGS implements Serializable
         S = S + "\nRESULTS:\n";
         S = S + String.format( "\tGS result .......... '%s' : '%s'\n", gs_result_bucket, gs_result_file );
         S = S + String.format( "\tHDFS result ........ '%s%s'\n", hdfs_result_dir, hdfs_result_file );
+        S = S + String.format( "\tGS OR HDFS ......... '%s'\n", gs_or_hdfs );
         S = S + String.format( "\tGS status .......... '%s' : '%s'\n", gs_status_bucket, gs_status_file );
         S = S + String.format( "\tGS status-codes  ... '%s', '%s', '%s'\n", gs_status_running, gs_status_done, gs_status_error );
 
@@ -209,6 +212,7 @@ public class BLAST_SETTINGS implements Serializable
         if ( log_part_prep )     S_log = S_log + "part-prep ";
         if ( log_worker_shift )  S_log = S_log + "worker-shift ";
         if ( log_pref_loc )  S_log = S_log + "pref_log ";
+        if ( log_db_copy )   S_log = S_log + "db-copy ";
 
         S = S + String.format( "\tlog ................ %s\n", S_log );
         return S;

@@ -95,7 +95,7 @@ class PART_INST
             {
                 String fn = String.format( "%s.%s", part.db_spec, ext );
                 File f = new File( fn );
-                if ( !f.exists() )
+                if ( ( !f.exists() ) || ( f.length() == 0 ) )
                     obj_names.add( String.format( "%s.%s", part.name, ext ) );
             }
             if ( !obj_names.isEmpty() )
