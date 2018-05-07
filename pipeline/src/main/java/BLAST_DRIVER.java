@@ -342,7 +342,6 @@ class BLAST_DRIVER extends Thread
                                  String.format( "starting request: '%s' at '%s' ", req.id, part.db_spec ) );
 
             ArrayList< Tuple2< String, BLAST_HSP_LIST > > ret = new ArrayList<>();
-            Integer count = 0;
             try
             {
                 BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, bls );
@@ -353,14 +352,12 @@ class BLAST_DRIVER extends Thread
                     BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
                     long elapsed = System.currentTimeMillis() - startTime;
 
-                    count = search_res.length;
-                
-                    if ( bls.log_job_done )
-                        BLAST_SEND.send( bls,
-                                         String.format( "request '%s'.'%s' done -> count = %d", req.id, part.db_spec, count ) );
-
                     for ( BLAST_HSP_LIST S : search_res )
                         ret.add( new Tuple2<>( String.format( "%d %s", part.nr, req.id ), S ) );
+
+                    if ( bls.log_job_done )
+                        BLAST_SEND.send( bls,
+                                         String.format( "request '%s'.'%s' done -> count = %d", req.id, part.db_spec, search_res.length ) );
                 }
             }
             catch ( Exception e )
@@ -386,9 +383,12 @@ class BLAST_DRIVER extends Thread
         // key   : req_id
         // value : scores, each having a copy of N for picking the cutoff value
         final JavaPairDStream< String, BLAST_RID_SCORE > TEMP1 = HSPS.mapToPair( item -> {
-            BLAST_RID_SCORE ris = new BLAST_RID_SCORE( item._2().max_score, item._2().req.top_n );
-            String key = item._1();
+            String key = item._1(); /* 'PARTITION.NR REQ.ID' */
+            BLAST_HSP_LIST hsp_list = item._2();
+
             String req_id = key.substring( key.indexOf( ' ' ) + 1, key.length() );
+
+            BLAST_RID_SCORE ris = new BLAST_RID_SCORE( hsp_list.max_score, hsp_list.req.top_n );
             return new Tuple2< String, BLAST_RID_SCORE >( req_id, ris );
         }).cache();
 
@@ -410,11 +410,11 @@ class BLAST_DRIVER extends Thread
                     top_n = s.top_n;
                 lst.add( s.score );
             }
-            if ( lst.size() > top_n )
-            {
-                Collections.sort( lst, Collections.reverseOrder() );
-                cutoff = lst.get( top_n - 1 );                    
-            }
+            Collections.sort( lst, Collections.reverseOrder() );
+
+            Integer nr = ( lst.size() > top_n ) ? top_n - 1 : lst.size() - 1;
+            cutoff = lst.get( nr );                    
+
             BLAST_SETTINGS bls = SETTINGS.getValue();
             if ( bls.log_cutoff )
                 BLAST_SEND.send( bls, String.format( "CUTOFF[ %s ] : %d", item._1(), cutoff ) );
