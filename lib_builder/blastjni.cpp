@@ -149,6 +149,9 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
     else if ( (size_t)size >= sizeof buffer )
         strcpy( buffer, "log: failed to make a String ( string too long )" );
 
+    if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
+        fprintf( stderr, "Log method had pending exception\n" );
+
     // make String object, JVM will garbage collect the jstring
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
     jstring jbuffer = jenv->NewStringUTF( buffer );
@@ -159,14 +162,16 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
     if ( !jloglevel )
         throw std::runtime_error( "Can't create JVM string" );
 
-
     jenv->CallVoidMethod( jthis, jlog_method, jloglevel, jbuffer );
+
     if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
         fprintf( stderr,
                  "Log method threw an exception, which it should never do.\n" );
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &etime);
     // fprintf(stderr, "1000 iterations took %lu ns\n", etime.tv_nsec -
     // stime.tv_nsec);
+    jenv->DeleteLocalRef( jbuffer );
+    jenv->DeleteLocalRef( jloglevel );
     return;
 }
 
@@ -327,7 +332,7 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
     score_set . add ( max-score )
     }
     */
-    max_scores.reserve(hsp_lists.size());
+    max_scores.reserve( hsp_lists.size() );
     for ( size_t i = 0; i != hsp_lists.size(); ++i )
     {
         const BlastHSPList * hsp_list = hsp_lists[i];
@@ -341,13 +346,16 @@ static jobjectArray iterate_HSPs( JNIEnv * jenv, jobject jthis,
             {
                 int hsp_score = hsp_list->hsp_array[h]->score;
                 log( jenv, jthis, jlog_method, "DEBUG",
-                     "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score, hsp_score );
+                     "      HSP #%d hsp_score=%d (0x%x)", h, hsp_score,
+                     hsp_score );
                 if ( max_score < hsp_score )
                     max_score = hsp_score;
             }
-        } else
+        }
+        else
         {
-            log( jenv, jthis, jlog_method, "INFO", "iterate_HSPs, zero hspcnt" );
+            log( jenv, jthis, jlog_method, "INFO",
+                 "iterate_HSPs, zero hspcnt" );
         }
 
         max_scores.push_back( max_score );
@@ -514,15 +522,17 @@ we now record the HSP data within the blob
                     throw std::runtime_error( "Couldn't make new HSP_LIST" );
                 }
 
+                jenv->DeleteLocalRef( tuple );
                 /* done with this tuple
                  * tuples [ j ] := tuple
                  * j := j + 1
                  */
-                if (j > num_tuples)
-                    log( jenv, jthis, jlog_method, "ERROR", "array overflow");
+                if ( j > num_tuples )
+                    log( jenv, jthis, jlog_method, "ERROR", "array overflow" );
                 log( jenv, jthis, jlog_method, "DEBUG",
                      "ps Setting Java Object Array Element %d", j );
                 jenv->SetObjectArrayElement( retarray, j, hspl_obj );
+                jenv->DeleteLocalRef( hspl_obj );
                 log( jenv, jthis, jlog_method, "DEBUG",
                      "ps Set     Java Object Array Element %d", j );
                 ++j;
@@ -574,8 +584,8 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
                                    const char * jdb_spec, const char * jprogram,
                                    const char * jparams, jint topn )
 {
-    if ( jenv->EnsureLocalCapacity( 16384 ) )
-        throw std::runtime_error( "Can't ensure local capacity" );
+    //    if ( jenv->EnsureLocalCapacity( 16384 ) )
+    //        throw std::runtime_error( "Can't ensure local capacity" );
 
     log( jenv, jthis, jlog_method, "DEBUG",
          "Blast prelim_search called with\n"
@@ -710,8 +720,8 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
                                const char * jdb_spec, const char * jprogram,
                                const char * jparams, jobjectArray hspl_obj )
 {
-    if ( jenv->EnsureLocalCapacity( 16384 ) )
-        throw std::runtime_error( "Can't ensure local capacity" );
+    //    if ( jenv->EnsureLocalCapacity( 16384 ) )
+    //        throw std::runtime_error( "Can't ensure local capacity" );
 
     log( jenv, jthis, jlog_method, "INFO", "Blast traceback called with" );
     log( jenv, jthis, jlog_method, "INFO", "  query    : %s", jquery );
@@ -732,7 +742,7 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
 
     jint                                 oid = -1;
     std::vector< ncbi::blast::SFlatHSP > flat_hsp_list;
-    flat_hsp_list.reserve(hspl_sz * 4/3);
+    flat_hsp_list.reserve( hspl_sz * 4 / 3 );
     // Iterate through HSP_LIST[]
     for ( int h = 0; h != hspl_sz; ++h )
     {
@@ -763,7 +773,8 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
         }
         jenv->ReleaseByteArrayElements( blobarr, be,
                                         JNI_ABORT );  // Didn't update the array
-        // FIX - DeleteLocalRef(jenv, hspl); blobobj?
+        jenv->DeleteLocalRef( hspl );
+        jenv->DeleteLocalRef( blobobj );
     }
 
     ncbi::blast::TIntermediateAlignments alignments;
@@ -804,9 +815,13 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
         if ( !tb_obj )
             throw std::runtime_error( "Couldn't make new TB_LIST" );
 
-        log( jenv, jthis, jlog_method, "DEBUG", "tb Setting Java Object Array Element %d", i );
+        log( jenv, jthis, jlog_method, "DEBUG",
+             "tb Setting Java Object Array Element %d", i );
         jenv->SetObjectArrayElement( retarray, i, tb_obj );
-        log( jenv, jthis, jlog_method, "DEBUG", "tb Set     Java Object Array Element %d", i );
+        jenv->DeleteLocalRef( asn_blob );
+        jenv->DeleteLocalRef( tb_obj );
+        log( jenv, jthis, jlog_method, "DEBUG",
+             "tb Set     Java Object Array Element %d", i );
     }
 
     return retarray;

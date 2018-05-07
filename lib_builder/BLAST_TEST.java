@@ -102,7 +102,7 @@ class BLAST_TEST {
         BLAST_LIB blaster = new BLAST_LIB();
         System.out.println("Created  blaster");
 
-        final String logLevel = "INFO";
+        final String logLevel = "DEBUG";
         params = "nt"; // FIX - When Blast team ready for JSON params
 
         BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj, logLevel);

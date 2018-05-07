@@ -90,8 +90,8 @@ class ConcDoit extends Thread {
 
 class BLAST_BENCH {
 
-    public static void doit(int part_num, BLAST_REQUEST requestobj, BLAST_PARTITION partitionobj) {
-        final String logLevel = "INFO";
+    public static void doit_seq(int part_num, BLAST_REQUEST requestobj, BLAST_PARTITION partitionobj) {
+        final String logLevel = "DEBUG";
 
         long starttime = System.currentTimeMillis();
         BLAST_LIB blaster = new BLAST_LIB();
@@ -179,7 +179,7 @@ class BLAST_BENCH {
         for (int part_num = 0; part_num != 886; ++part_num) {
             BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, part_num, true);
             if (false) {
-                doit(part_num, requestobj, partitionobj);
+                doit_seq(part_num, requestobj, partitionobj);
             } else {
                 if ((part_num % 10) != mod) continue;
 
