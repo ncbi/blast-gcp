@@ -406,7 +406,6 @@ class BLAST_DRIVER extends Thread
                         buf.put( seq_annot_suffix );
 
                         BLAST_SETTINGS bls = SETTINGS.getValue();
-                        Long elapsed = System.currentTimeMillis() - start_time;
 
                         if ( bls.gs_or_hdfs.contains( "hdfs" ) )
                         {
@@ -415,8 +414,11 @@ class BLAST_DRIVER extends Thread
                             Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
 
                             if ( bls.log_final )
+                            {
+                                Long elapsed = System.currentTimeMillis() - start_time;
                                 BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' (%,d ms)",
                                         uploaded, path, elapsed ) );
+                            }
                         }
                         if ( bls.gs_or_hdfs.contains( "gs" ) )
                         {
@@ -424,8 +426,11 @@ class BLAST_DRIVER extends Thread
                             Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buf );
 
                             if ( bls.log_final )
+                            {
+                                Long elapsed = System.currentTimeMillis() - start_time;
                                 BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' (%,d ms)",
                                         uploaded, bls.gs_result_bucket, gs_result_key, elapsed ) );
+                            }
                         }
                     }
                 } );
