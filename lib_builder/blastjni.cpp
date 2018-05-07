@@ -152,7 +152,7 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
     if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
         fprintf( stderr, "Log method had pending exception\n" );
 
-    // make String object, JVM will garbage collect the jstring
+    // make String object
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
     jstring jbuffer = jenv->NewStringUTF( buffer );
     if ( !jbuffer )
@@ -584,8 +584,8 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
                                    const char * jdb_spec, const char * jprogram,
                                    const char * jparams, jint topn )
 {
-    //    if ( jenv->EnsureLocalCapacity( 16384 ) )
-    //        throw std::runtime_error( "Can't ensure local capacity" );
+    // if ( jenv->EnsureLocalCapacity( 1024 ) )
+    //    throw std::runtime_error( "Can't ensure local capacity" );
 
     log( jenv, jthis, jlog_method, "DEBUG",
          "Blast prelim_search called with\n"
@@ -720,8 +720,8 @@ static jobjectArray traceback( JNIEnv * jenv, jobject jthis,
                                const char * jdb_spec, const char * jprogram,
                                const char * jparams, jobjectArray hspl_obj )
 {
-    //    if ( jenv->EnsureLocalCapacity( 16384 ) )
-    //        throw std::runtime_error( "Can't ensure local capacity" );
+    // if ( jenv->EnsureLocalCapacity( 1024 ) )
+    //    throw std::runtime_error( "Can't ensure local capacity" );
 
     log( jenv, jthis, jlog_method, "INFO", "Blast traceback called with" );
     log( jenv, jthis, jlog_method, "INFO", "  query    : %s", jquery );

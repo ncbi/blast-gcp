@@ -169,7 +169,7 @@ def get_tests():
         j['result_bucket_name']=BUCKET_NAME
         del j['query_url']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 0:
+        if random.randrange(0, 100) < 20:
             print("Using out of band query")
 
             #objname = j['RID'] + "-" + str(uuid.uuid4())

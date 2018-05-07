@@ -22,12 +22,9 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-/*
-   import com.google.cloud.storage.Blob;
-   import com.google.cloud.storage.BlobId;
-   import com.google.cloud.storage.Storage;
-   import com.google.cloud.storage.StorageOptions;
-   */
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import java.lang.management.ManagementFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -88,8 +85,6 @@ public class BLAST_LIB {
             log("ERROR", "url: " + url + " not in a gs:// bucket");
             return "";
         }
-        return "";
-        /*
 
         // url is gs://foo/bar
         String path = url.substring(5); // foo/bar
@@ -98,30 +93,20 @@ public class BLAST_LIB {
         log("INFO", "path is " + path);
         log("INFO", "bucket is " + bucketName);
         log("INFO", "object is " + object);
-
         Storage storage = StorageOptions.getDefaultInstance().getService();
+
         BlobId blobId = BlobId.of(bucketName, object);
         byte[] content = storage.readAllBytes(blobId);
-        Blob blob = storage.get(blobId);
-        if (blob == null) {
-        log("ERROR", "blob " + url + " not found");
-        return "";
-        }
         String res = "";
-        byte[] content = blob.getContent();
-        if (content.length == 0) {
-        log("WARN", "empty blob for " + url);
-        return "";
-        }
         try {
-        res = new String(content, "UTF-8");
+            log("INFO", "Retrieved " + content.length + " bytes from gs bucket.");
+            res = new String(content, "UTF-8");
         } catch (java.io.UnsupportedEncodingException uee) {
-        log("ERROR", "blob isn't UTF-8");
-        res = "";
-        // FIX - Throw
+            log("ERROR", "blob isn't UTF-8");
+            // FIX - Throw
         }
+
         return res;
-        */
     }
 
     final BLAST_HSP_LIST[] jni_prelim_search(
@@ -154,8 +139,6 @@ public class BLAST_LIB {
             }
             if (req.query_url.length() > 0) {
                 query = get_blob(req.query_url);
-                // FIX
-                query = req.query_seq;
             } else {
                 query = req.query_seq;
             }
@@ -202,8 +185,6 @@ public class BLAST_LIB {
         }
         if (req.query_url.length() > 0) {
             query = get_blob(req.query_url);
-            // FIX
-            query = req.query_seq;
         } else {
             query = req.query_seq;
         }

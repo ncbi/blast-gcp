@@ -44,7 +44,7 @@ rm -f *.jar
 rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
-rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-*
+rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-* > /dev/null 2>&1
 set -o errexit
 
 
@@ -119,11 +119,9 @@ if [ "$BUILDENV" = "ncbi" ]; then
     # Eugene has:
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
     #-ldbapi_driver -lncbi_xreader \
-    echo "Running static analysis on C++ code"
     #-Wundef \
     #-Wswitch-enum \
     #-Wdouble-promotion \
-    cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
     GPPCOMMAND="
     g++ \
     blastjni.cpp \
@@ -167,9 +165,14 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
-    scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
 
-    echo "Static analysis on C++ code complete"
+    if [ "0" == "1" ]; then
+        echo "Running static analysis on C++ code"
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+        echo "Static analysis on C++ code complete"
+    fi
+
     echo "Compiling and linking blastjni.cpp"
     $GPPCOMMAND
     cp libblastjni.so ../pipeline
