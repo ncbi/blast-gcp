@@ -16,7 +16,7 @@ SPARK_BLAST_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 #SPARK_BLAST_INI="test.ini"
 SPARK_BLAST_INI="ini.json"
 PUBSUB_JAR1="$HOME/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT.jar"
-PUBSUB_JAR2="./bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
+PUBSUB_JAR2="$HOME/google-pso/streaming/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
 
 #
 # on google-cluster:
