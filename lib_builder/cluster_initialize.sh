@@ -26,7 +26,7 @@ sudo mount -t tmpfs -o size=50% /mnt/ram-disk
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 DBBUCKET="gs://nt_50mb_chunks/"
 BLASTTMP=/tmp/blast/
-BLASTDBDIR=$BLASTTMP/db
+BLASTDBDIR=$BLASTTMP/db/preloaded
 
 #curl -sSO https://repo.stackdriver.com/stack-install.sh
 #sudo bash stack-install.sh --write-gcm 2>&1 | tee -a stack-install.log
