@@ -72,8 +72,10 @@ import org.apache.spark.rdd.RDD;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+/*
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
+*/
 
 class BLAST_DRIVER extends Thread
 {
@@ -148,7 +150,7 @@ class BLAST_DRIVER extends Thread
             db_list.add( new Tuple2<>( i, part ) );
         }
 
-        return sc.parallelizePairs( db_list, node_count() ).partitionBy(
+        return sc.parallelizePairs( db_list, settings.num_executors ).partitionBy(
             PARTITIONER0.getValue() ).map( item ->
         {
             BLAST_PARTITION part = item._2();
@@ -214,6 +216,7 @@ class BLAST_DRIVER extends Thread
 
     private JavaDStream< String > create_pubsub_stream()
     {
+        /*
         final DStream< PubsubMessage > pub1 = PubsubUtils.createStream( jssc.ssc(),
             settings.project_id, settings.subscript_id );
 
@@ -221,6 +224,8 @@ class BLAST_DRIVER extends Thread
             scala.reflect.ClassTag$.MODULE$.apply( PubsubMessage.class ) );
 
         return pub2.map( item -> item.getData().toStringUtf8() ).cache();
+        */
+        return null;
     }
 
     private JavaDStream< String > create_file_stream()
@@ -366,6 +371,10 @@ class BLAST_DRIVER extends Thread
         } ).cache();
         return TEMP1.reduceByKey( ( item1, item2 ) ->
         {
+            if ( item1.list.isEmpty() )
+                return item2;
+            else if ( item2.list.isEmpty() )
+                return item1;
             return new BLAST_TB_LIST_LIST( item1, item2 );
         } ).cache();
     }
@@ -374,73 +383,74 @@ class BLAST_DRIVER extends Thread
     {
         SRC.foreachRDD( rdd ->
         {
-            long count = rdd.count();
-            if ( count > 0 )
+            rdd.foreachPartition( iter ->
             {
-                rdd.foreachPartition( iter ->
+                while( iter.hasNext() )
                 {
-                    while( iter.hasNext() )
+                    Tuple2< String, BLAST_TB_LIST_LIST > item = iter.next();
+                    String req_id = item._1();
+                    BLAST_TB_LIST_LIST ll = item._2();
+                    Long start_time = 0L;
+                    int sum = 0;
+
+                    for ( BLAST_TB_LIST e : ll.list )
                     {
-                        Tuple2< String, BLAST_TB_LIST_LIST > item = iter.next();
-                        String req_id = item._1();
-                        BLAST_TB_LIST_LIST ll = item._2();
-                        Long start_time = 0L;
+                        if ( start_time == 0 )
+                            start_time = e.req.started_at;
+                        else 
+                            start_time = min( start_time, e.req.started_at );
+                        sum += e.asn1_blob.length;
+                    }
 
-                        for ( BLAST_TB_LIST e : ll.list )
+                    byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+                    byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                    sum = sum + seq_annot_prefix.length + seq_annot_suffix.length;
+                    ByteBuffer buf = ByteBuffer.allocate( sum );
+
+                    buf.put( seq_annot_prefix );
+                    for ( BLAST_TB_LIST e : ll.list )
+                        buf.put( e.asn1_blob );
+                    buf.put( seq_annot_suffix );
+
+                    BLAST_SETTINGS bls = SETTINGS.getValue();
+
+                    if ( bls.gs_or_hdfs.contains( "hdfs" ) )
+                    {
+                        String fn = String.format( bls.hdfs_result_file, req_id );
+                        String path = String.format( "%s/%s", bls.hdfs_result_dir, fn );
+                        Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
+
+                        if ( bls.log_final )
                         {
-                            if ( start_time == 0 )
-                                start_time = e.req.started_at;
-                            else 
-                                start_time = min( start_time, e.req.started_at );
-                        }
-
-                        Collections.sort( ll.list );
-                        Integer top_n = ll.list.get( 0 ).req.top_n;
-
-                        List< BLAST_TB_LIST > top_n_seq_annots = ll.list.subList( 0, min( ll.list.size(), top_n ) );
-                        int sum = 0;
-                        for ( BLAST_TB_LIST e : top_n_seq_annots )
-                            sum += e.asn1_blob.length;
-
-                        byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
-                        byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
-                        ByteBuffer buf = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
-
-                        buf.put( seq_annot_prefix );
-                        for ( BLAST_TB_LIST e : top_n_seq_annots )
-                            buf.put( e.asn1_blob );
-                        buf.put( seq_annot_suffix );
-
-                        BLAST_SETTINGS bls = SETTINGS.getValue();
-
-                        if ( bls.gs_or_hdfs.contains( "hdfs" ) )
-                        {
-                            String fn = String.format( bls.hdfs_result_file, req_id );
-                            String path = String.format( "%s/%s", bls.hdfs_result_dir, fn );
-                            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
-
-                            if ( bls.log_final )
-                            {
-                                Long elapsed = System.currentTimeMillis() - start_time;
-                                BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' (%,d ms)",
-                                        uploaded, path, elapsed ) );
-                            }
-                        }
-                        if ( bls.gs_or_hdfs.contains( "gs" ) )
-                        {
-                            String gs_result_key = String.format( bls.gs_result_file, req_id );
-                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buf );
-
-                            if ( bls.log_final )
-                            {
-                                Long elapsed = System.currentTimeMillis() - start_time;
-                                BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' (%,d ms)",
-                                        uploaded, bls.gs_result_bucket, gs_result_key, elapsed ) );
-                            }
+                            Long elapsed = System.currentTimeMillis() - start_time;
+                            BLAST_SEND.send( bls, String.format( "[%s] %d bytes written to hdfs at '%s' (%,d ms)",
+                                    req_id, uploaded, path, elapsed ) );
                         }
                     }
-                } );
-            }
+                    if ( bls.gs_or_hdfs.contains( "gs" ) )
+                    {
+                        String gs_result_key = String.format( bls.gs_result_file, req_id );
+                        Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buf );
+
+                        if ( bls.log_final )
+                        {
+                            Long elapsed = System.currentTimeMillis() - start_time;
+                            BLAST_SEND.send( bls, String.format( "[%s] %d bytes written to gs '%s':'%s' (%,d ms)",
+                                    req_id, uploaded, bls.gs_result_bucket, gs_result_key, elapsed ) );
+                        }
+                    }
+
+                    if ( bls.gs_or_hdfs.contains( "time" ) )
+                    {
+                        if ( bls.log_final )
+                        {
+                            Long elapsed = System.currentTimeMillis() - start_time;
+                            BLAST_SEND.send( bls, String.format( "[%s] %d bytes summed up (%,d ms) n=%,d",
+                                    req_id, sum, elapsed, ll.list.size() ) );
+                        }
+                    }
+                }
+            } );
         } );
     }
 

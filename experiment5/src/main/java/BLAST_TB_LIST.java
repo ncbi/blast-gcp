@@ -31,6 +31,8 @@ import java.io.Serializable;
 
 class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
 {
+    static double epsilon = 1.0e-6;
+
     public BLAST_PARTITION part;
     public BLAST_REQUEST req;
     public int oid;
@@ -49,16 +51,46 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         return ( asn1_blob.length == 0 );
     }
 
+    /* recommended by BLAST-team */
+    static int FuzzyEvalueComp( double evalue1, double evalue2 )
+    {
+        if ( evalue1 < ( 1.0 - epsilon ) * evalue2 )
+        {
+            return -1;
+        }
+        else if ( evalue1 > ( 1.0 + epsilon ) * evalue2 )
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /*
+        0  ... equal
+        -1 ... this > other
+        +1 ... this < other
+    */
     public int compareTo( BLAST_TB_LIST other )
     {
         // ascending order
-        double v = this.evalue - other.evalue;
-        if ( v == 0.0 )
-            return 0;
-        else if ( v < 0.0 )
-            return -1;
-        else
+        double delta = ( this.evalue - other.evalue );
+        if ( delta < epsilon && delta > -epsilon )
+        {
+            int oid_delta = ( this.oid - other.oid );
+            if ( oid_delta == 0 )
+                return 0;
+            else if ( oid_delta > 0 )
+                return 1;
+            else
+                return -1;
+        }
+        else if ( delta > epsilon )
             return 1;
+        else
+            return -1;
     }
 
     public static String toHex(byte[] blob)

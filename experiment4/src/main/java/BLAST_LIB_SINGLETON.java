@@ -186,14 +186,16 @@ class BLAST_LIB_SINGLETON
 
     public static BLAST_LIB get_lib( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        PART_INST p_inst = getPartInst( part );
-        if ( p_inst != null )
+        if ( !settings.with_locality )
         {
-            if ( !p_inst.prepared )
-                p_inst.prepared = p_inst.prepare( part, settings );
-            return blaster;
+            PART_INST p_inst = getPartInst( part );
+            if ( p_inst != null )
+            {
+                if ( !p_inst.prepared )
+                    p_inst.prepared = p_inst.prepare( part, settings );
+            }
         }
-        return null;
+        return blaster;
     }
 
     public static Long get_size( final BLAST_PARTITION part )

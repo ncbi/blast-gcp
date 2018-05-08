@@ -91,6 +91,8 @@ class BLAST_DRIVER extends Thread
         conf.setAppName( settings.appName );
 
         conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( settings.with_dyn_alloc ) );
+        if ( settings.with_dyn_alloc )
+            conf.set( "spark.dynamicAllocation.minExecutors", String.format( "%d", settings.num_executors ) );
         conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
         conf.set( "spark.streaming.receiver.maxRate", String.format( "%d", settings.receiver_max_rate ) );
         if ( settings.num_executors > 0 )
@@ -100,6 +102,9 @@ class BLAST_DRIVER extends Thread
         if ( !settings.executor_memory.isEmpty() )
             conf.set( "spark.executor.memory", settings.executor_memory );
         conf.set( "spark.locality.wait", settings.locality_wait );
+        conf.set( "spark.shuffle.reduceLocality.enabled", Boolean.toString( settings.shuffle_reduceLocality_enabled ) );
+        if ( settings.scheduler_fair )
+            conf.set( "spark.scheduler.mode", "FAIR" );
 
         sc = new JavaSparkContext( conf );
         sc.setLogLevel( settings.spark_log_level );
@@ -147,7 +152,8 @@ class BLAST_DRIVER extends Thread
             db_list.add( new Tuple2<>( i, part ) );
         }
 
-        return sc.parallelizePairs( db_list, node_count() ).partitionBy(
+        /*use number of executers */
+        return sc.parallelizePairs( db_list, settings.num_executors ).partitionBy(
             PARTITIONER0.getValue() ).map( item ->
         {
             BLAST_PARTITION part = item._2();
@@ -395,7 +401,8 @@ class BLAST_DRIVER extends Thread
 
                     byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
                     byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
-                    ByteBuffer buf = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
+                    sum = sum + seq_annot_prefix.length + seq_annot_suffix.length;
+                    ByteBuffer buf = ByteBuffer.allocate( sum );
 
                     buf.put( seq_annot_prefix );
                     for ( BLAST_TB_LIST e : top_n_seq_annots )
@@ -427,6 +434,16 @@ class BLAST_DRIVER extends Thread
                             Long elapsed = System.currentTimeMillis() - start_time;
                             BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' (%,d ms) n=%,d",
                                     uploaded, bls.gs_result_bucket, gs_result_key, elapsed, all_seq_annots.size() ) );
+                        }
+                    }
+
+                    if ( bls.gs_or_hdfs.contains( "time" ) )
+                    {
+                        if ( bls.log_final )
+                        {
+                            Long elapsed = System.currentTimeMillis() - start_time;
+                            BLAST_SEND.send( bls, String.format( "%d bytes summed up (%,d ms) n=%,d",
+                                    sum, elapsed, all_seq_annots.size() ) );
                         }
                     }
                 }

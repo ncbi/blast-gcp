@@ -76,6 +76,8 @@ public class BLAST_SETTINGS implements Serializable
     public Integer num_executors;
     public Integer num_executor_cores;
     public String  executor_memory;
+    public Boolean shuffle_reduceLocality_enabled;
+    public Boolean scheduler_fair;
 
     /* LOG */
     public String log_host;
@@ -198,6 +200,8 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\twith_locality ...... %s\n", Boolean.toString( with_locality ) );
         S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
         S = S + String.format( "\texecutors .......... %d ( %d cores )\n", num_executors, num_executor_cores );
+        S = S + String.format( "\treduce_loc_enabled . %s\n", Boolean.toString( shuffle_reduceLocality_enabled ) );
+        S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
 
