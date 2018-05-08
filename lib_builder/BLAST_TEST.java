@@ -54,7 +54,8 @@ class BLAST_TEST {
             String query_url = "";
 
             String part =
-                "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/nt_50M.14"; // 14 & 18
+                "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/nt_50M.14"; // 14 & 18 have hits
+            //  "/tmp/blast/db/nt_50M.14" for GCP
             final String location = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
             final String db_part = "nt_50M";
             final String program = "blastn";
