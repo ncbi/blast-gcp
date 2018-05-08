@@ -84,7 +84,7 @@ class PART_INST
         try
         {
             List< String > extensions = new LinkedList<>();
-            extensions.add( "nhr" );
+            extensions.add( "nax" );
             extensions.add( "nin" );
             extensions.add( "nsq" );
 

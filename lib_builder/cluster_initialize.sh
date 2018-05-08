@@ -105,7 +105,7 @@ else
         #mkdir lock
         gsutil -m cp $DBBUCKET$piece.*in . &
         gsutil -m cp $DBBUCKET$piece.*sq . &
-        gsutil -m cp $DBBUCKET$piece.*hr . &
+        gsutil -m cp $DBBUCKET$piece.*ax . &
         touch done
         #rmdir lock
 
