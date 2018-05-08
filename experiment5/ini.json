@@ -46,7 +46,8 @@
     {
         "with_locality" : "true",
         "num_executors" : 8,
-        "num_executor_cores" : 4
+        "num_executor_cores" : 4,
+        "shuffle_reduceLocality_enabled" : "false"
     },
 
     "log" :

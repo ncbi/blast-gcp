@@ -100,6 +100,7 @@ class BLAST_DRIVER extends Thread
         if ( !settings.executor_memory.isEmpty() )
             conf.set( "spark.executor.memory", settings.executor_memory );
         conf.set( "spark.locality.wait", settings.locality_wait );
+        conf.set( "spark.shuffle.reduceLocality.enabled", Boolean.toString( settings.shuffle_reduceLocality_enabled ) );
 
         sc = new JavaSparkContext( conf );
         sc.setLogLevel( settings.spark_log_level );

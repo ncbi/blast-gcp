@@ -421,6 +421,7 @@ class SPARK_SETTINGS_READER
     public static final String key_num_executors = "num_executors";
     public static final String key_num_executor_cores = "num_executor_cores";
     public static final String key_executor_memory = "executor_memory";
+    public static final String key_shuffle_reduceLocality_enabled = "shuffle_reduceLocality_enabled";
 
     public static final String  dflt_spark_log_level = "ERROR";
     public static final Integer dflt_batch_duration = 2;
@@ -430,6 +431,7 @@ class SPARK_SETTINGS_READER
     public static final Integer dflt_num_executors = 10;
     public static final Integer dflt_num_executor_cores = 5;
     public static final String  dflt_executor_memory = "";
+    public static final Boolean dflt_shuffle_reduceLocality_enabled = false;
 
     public static void defaults( BLAST_SETTINGS settings )
     {
@@ -441,6 +443,7 @@ class SPARK_SETTINGS_READER
         settings.num_executors      = dflt_num_executors;
         settings.num_executor_cores = dflt_num_executor_cores;
         settings.executor_memory    = dflt_executor_memory;
+        settings.shuffle_reduceLocality_enabled = dflt_shuffle_reduceLocality_enabled;
     }
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
@@ -456,6 +459,8 @@ class SPARK_SETTINGS_READER
             settings.num_executors      = UTILS.get_json_int( obj, key_num_executors, dflt_num_executors );
             settings.num_executor_cores = UTILS.get_json_int( obj, key_num_executor_cores, dflt_num_executor_cores );
             settings.executor_memory    = UTILS.get_json_string( obj, key_executor_memory, dflt_executor_memory );
+            settings.shuffle_reduceLocality_enabled = UTILS.get_json_bool( obj, key_shuffle_reduceLocality_enabled,
+                                                                           dflt_shuffle_reduceLocality_enabled );
         }
     }
 }

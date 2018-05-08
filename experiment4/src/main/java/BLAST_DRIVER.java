@@ -322,7 +322,7 @@ class BLAST_DRIVER extends Thread
                 try
                 {
                     BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
-                    if ( search_res != null )
+                    if ( search_res != null && search_res.length > 0 )
                     {
                         try
                         {
@@ -366,75 +366,71 @@ class BLAST_DRIVER extends Thread
     {
         SRC.foreachRDD( rdd ->
         {
-            long count = rdd.count();
-            if ( count > 0 )
+            rdd.foreachPartition( iter ->
             {
-                rdd.foreachPartition( iter ->
+                while( iter.hasNext() )
                 {
-                    while( iter.hasNext() )
+                    Tuple2< String, Iterable< BLAST_TB_LIST > > item = iter.next();
+                    String req_id = item._1();
+                    Iterable< BLAST_TB_LIST > tb_lists = item._2();
+                    Long start_time = 0L;
+
+                    List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
+                    for ( BLAST_TB_LIST e : tb_lists )
                     {
-                        Tuple2< String, Iterable< BLAST_TB_LIST > > item = iter.next();
-                        String req_id = item._1();
-                        Iterable< BLAST_TB_LIST > tb_lists = item._2();
-                        Long start_time = 0L;
+                        all_seq_annots.add( e );
+                        if ( start_time == 0 )
+                            start_time = e.req.started_at;
+                        else 
+                            start_time = min( start_time, e.req.started_at );
+                    }
 
-                        List< BLAST_TB_LIST > all_seq_annots = new ArrayList<>();
-                        for ( BLAST_TB_LIST e : tb_lists )
+                    Collections.sort( all_seq_annots );
+                    Integer top_n = all_seq_annots.get( 0 ).req.top_n;
+
+                    List< BLAST_TB_LIST > top_n_seq_annots = all_seq_annots.subList( 0, min( all_seq_annots.size(), top_n ) );
+                    int sum = 0;
+                    for ( BLAST_TB_LIST e : top_n_seq_annots )
+                        sum += e.asn1_blob.length;
+
+                    byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+                    byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                    ByteBuffer buf = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
+
+                    buf.put( seq_annot_prefix );
+                    for ( BLAST_TB_LIST e : top_n_seq_annots )
+                        buf.put( e.asn1_blob );
+                    buf.put( seq_annot_suffix );
+
+                    BLAST_SETTINGS bls = SETTINGS.getValue();
+
+                    if ( bls.gs_or_hdfs.contains( "hdfs" ) )
+                    {
+                        String fn = String.format( bls.hdfs_result_file, req_id );
+                        String path = String.format( "%s/%s", bls.hdfs_result_dir, fn );
+                        Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
+
+                        if ( bls.log_final )
                         {
-                            all_seq_annots.add( e );
-                            if ( start_time == 0 )
-                                start_time = e.req.started_at;
-                            else 
-                                start_time = min( start_time, e.req.started_at );
-                        }
-
-                        Collections.sort( all_seq_annots );
-                        Integer top_n = all_seq_annots.get( 0 ).req.top_n;
-
-                        List< BLAST_TB_LIST > top_n_seq_annots = all_seq_annots.subList( 0, min( all_seq_annots.size(), top_n ) );
-                        int sum = 0;
-                        for ( BLAST_TB_LIST e : top_n_seq_annots )
-                            sum += e.asn1_blob.length;
-
-                        byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
-                        byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
-                        ByteBuffer buf = ByteBuffer.allocate( sum + seq_annot_prefix.length + seq_annot_suffix.length );
-
-                        buf.put( seq_annot_prefix );
-                        for ( BLAST_TB_LIST e : top_n_seq_annots )
-                            buf.put( e.asn1_blob );
-                        buf.put( seq_annot_suffix );
-
-                        BLAST_SETTINGS bls = SETTINGS.getValue();
-
-                        if ( bls.gs_or_hdfs.contains( "hdfs" ) )
-                        {
-                            String fn = String.format( bls.hdfs_result_file, req_id );
-                            String path = String.format( "%s/%s", bls.hdfs_result_dir, fn );
-                            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
-
-                            if ( bls.log_final )
-                            {
-                                Long elapsed = System.currentTimeMillis() - start_time;
-                                BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' (%,d ms)",
-                                        uploaded, path, elapsed ) );
-                            }
-                        }
-                        if ( bls.gs_or_hdfs.contains( "gs" ) )
-                        {
-                            String gs_result_key = String.format( bls.gs_result_file, req_id );
-                            Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buf );
-
-                            if ( bls.log_final )
-                            {
-                                Long elapsed = System.currentTimeMillis() - start_time;
-                                BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' (%,d ms)",
-                                        uploaded, bls.gs_result_bucket, gs_result_key, elapsed ) );
-                            }
+                            Long elapsed = System.currentTimeMillis() - start_time;
+                            BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' (%,d ms) n=%,d",
+                                    uploaded, path, elapsed, all_seq_annots.size() ) );
                         }
                     }
-                } );
-            }
+                    if ( bls.gs_or_hdfs.contains( "gs" ) )
+                    {
+                        String gs_result_key = String.format( bls.gs_result_file, req_id );
+                        Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, buf );
+
+                        if ( bls.log_final )
+                        {
+                            Long elapsed = System.currentTimeMillis() - start_time;
+                            BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' (%,d ms) n=%,d",
+                                    uploaded, bls.gs_result_bucket, gs_result_key, elapsed, all_seq_annots.size() ) );
+                        }
+                    }
+                }
+            } );
         } );
     }
 

@@ -309,6 +309,8 @@ class BLAST_DRIVER extends Thread
                     while( iter.hasNext() )
                     {
                         long startTime = System.currentTimeMillis();
+                        long t_search = 0L;
+                        long t_tb = 0L;
 
                         Tuple2< BLAST_PARTITION, BLAST_REQUEST > item = iter.next();
                         BLAST_PARTITION part = item._1();
@@ -332,17 +334,26 @@ class BLAST_DRIVER extends Thread
                         {
                             try
                             {
+                                long t1 = System.currentTimeMillis();
                                 BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
-                                try
+                                t_search = System.currentTimeMillis() - t1;
+                                if ( search_res.length > 0 )
                                 {
-                                    BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
-                                    for ( BLAST_TB_LIST tbl : tb_results )
-                                        tb_list.add( tbl );
-                                }
-                                catch ( Exception e )
-                                {
-                                    BLAST_SEND.send( bls,
-                                                     String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                                    try
+                                    {
+                                        long t2 = System.currentTimeMillis();
+                                        BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
+                                        t_tb = System.currentTimeMillis() - t2;
+
+                                        t_search = System.currentTimeMillis() - startTime;
+                                        for ( BLAST_TB_LIST tbl : tb_results )
+                                            tb_list.add( tbl );
+                                    }
+                                    catch ( Exception e )
+                                    {
+                                        BLAST_SEND.send( bls,
+                                                         String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                                    }
                                 }
                             }
                             catch ( Exception e )
@@ -389,8 +400,8 @@ class BLAST_DRIVER extends Thread
                                 if ( bls.log_final )
                                 {
                                     long elapsed = System.currentTimeMillis() - startTime;
-                                    BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' %,d ms",
-                                            uploaded, path, elapsed ) );
+                                    BLAST_SEND.send( bls, String.format( "%d bytes written to hdfs at '%s' ( s=%,d, t=%,d, a=%,d ms )",
+                                            uploaded, path, t_search, t_tb, elapsed ) );
                                 }
                             }
                             if ( bls.gs_or_hdfs.contains( "gs" ) )
@@ -401,8 +412,8 @@ class BLAST_DRIVER extends Thread
                                 if ( bls.log_final )
                                 {
                                     long elapsed = System.currentTimeMillis() - startTime;
-                                    BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' %,d ms",
-                                            uploaded, bls.gs_result_bucket, gs_result_key, elapsed ) );
+                                    BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s' ( s=%,d, t=%,d, a=%,d ms )",
+                                            uploaded, bls.gs_result_bucket, gs_result_key, t_search, t_tb, elapsed ) );
                                 }
                             }
                         }
