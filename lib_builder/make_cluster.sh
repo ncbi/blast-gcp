@@ -88,7 +88,7 @@ gcloud beta dataproc --region us-east4 \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
-    --worker-machine-type n1-highcpu-64 \
+    --worker-machine-type custom-64-71680 \
         --worker-boot-disk-size 250 \
     --num-preemptible-workers 14 \
         --preemptible-worker-boot-disk-size 250 \
