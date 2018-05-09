@@ -75,6 +75,7 @@ class BLAST_DRIVER extends Thread {
         conf.set("spark.sql.shuffle.partitions", "300");
         conf.set("spark.default.parallelism", "300");
         conf.set("spark.shuffle.reduceLocality.enabled", "false");
+        conf.set("spark.sql.streaming.schemaInference", "true");
 
         builder.config(conf);
         System.out.println(conf.toDebugString());
@@ -113,7 +114,7 @@ class BLAST_DRIVER extends Thread {
     public void run() {
         System.out.println("in run()");
 
-        StructType query_schema = StructType.fromDDL("RID string, db string, query_seq string");
+//        StructType query_schema = StructType.fromDDL("RID string, db string, query_seq string");
 
         StructType parts_schema = StructType.fromDDL("db string, num int");
 
@@ -145,9 +146,9 @@ class BLAST_DRIVER extends Thread {
            */
         DataStreamReader query_stream = ss.readStream();
         query_stream.format("json");
-        query_stream.schema(query_schema);
+//        query_stream.schema(query_schema);
         query_stream.option("maxFilesPerTrigger", 1);
-        query_stream.option("multiLine", false);
+        query_stream.option("multiLine", true);
 
         Dataset<Row> queries = query_stream.json("/user/vartanianmh/requests");
         queries.printSchema();
@@ -158,7 +159,7 @@ class BLAST_DRIVER extends Thread {
         joined.createOrReplaceTempView("joined");
         //    Dataset<Row> joined=queries.join(parts2,"db");
 
-        Dataset<Row> qp = ss.sql("select concat(num,query_seq) as combo from joined").repartition(886);
+        Dataset<Row> qp = ss.sql("select concat(num,' ',query_seq) as combo from joined").repartition(886);
         Dataset<String> qs = qp.as(Encoders.STRING());
 
         Dataset<Row> out =
@@ -169,7 +170,7 @@ class BLAST_DRIVER extends Thread {
 
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = "test ";
-                        requestobj.query_seq = ts[2];
+                        requestobj.query_seq = ts[1];
                         requestobj.query_url = "";
                         requestobj.params = "nt:" + t;
                         requestobj.db = "nt";
@@ -177,7 +178,7 @@ class BLAST_DRIVER extends Thread {
                         requestobj.top_n = 100;
                         BLAST_PARTITION partitionobj =
                             new BLAST_PARTITION(
-                                    "/tmp/blast/db", "nt_50M", Integer.parseInt(ts[1]), false);
+                                    "/tmp/blast/db", "nt_50M", Integer.parseInt(ts[0]), false);
 
                         BLAST_LIB blaster =
                             new BLAST_LIB(); // BLAST_LIB_SINGLETON.get_lib(part, bls);
@@ -194,7 +195,7 @@ class BLAST_DRIVER extends Thread {
                       Encoders.STRING())
                           .toDF("fromflatmap");
 
-        StreamingQuery results = queries.writeStream().outputMode("append").format("console").start();
+        StreamingQuery results = out.writeStream().outputMode("append").format("console").start();
 
         System.out.println("driver starting...");
         try {
