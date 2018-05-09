@@ -50,6 +50,7 @@ cd ~/blast-gcp/pipeline
 ./make_jar.sh
 cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
 hadoop fs -mkdir -p /user/$USER/requests
+# EDIT ini.json to replace blast-test-USERNAME with blast-test-yourusername
 cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
 If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes.
