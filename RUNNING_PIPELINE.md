@@ -61,7 +61,7 @@ If Blast databases aren't prefetched into /tmp/blast/db, first query may require
 
 # Window 2 - Spark logs
 ```console
-$ nc -lk 10011 &
+nc -lk 10011 &
 ```
 
 # Window 3 - Test Harness
