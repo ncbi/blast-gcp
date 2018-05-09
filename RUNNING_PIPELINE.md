@@ -44,7 +44,7 @@ cd blast-gcp
 git checkout engineering
 ```
 
-# Producing Spark Application
+## Producing Spark Application
 ```shell
 cd ~/blast-gcp/pipeline
 ./make_jar.sh
@@ -59,9 +59,13 @@ $ nc -lk 10011 &
 ```
 
 # Window 3 - Test Harness
-** PubSub Topic, Subscription and Cloud Storage output bucket will be deleted
-upon completion **
+** PubSub Topic, Subscription and Cloud Storage output bucket will be deleted upon completion **
+Likely need a ~/google-service-account-file.json
+( gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS )
 ```console
+
+
+
 $ hadoop fs -ls results
 -rw-r--r--   2 userid hadoop       7550 2018-04-11 14:11 results/req_T1.txt
 $ cd ~/blast-gcp/lib_builder/
@@ -80,6 +84,16 @@ Seq-annot ::= {
 ```
 
 # Window 4 - Google Connector
+``console
+$ cd ~/blast-gcp/pipeline
+$ virtualenv --python python3 env
+$ source env/bin/activate
+$ cd env
+$ pip3 install google-cloud
+$ pip3 install google-cloud-pubsub
+$ pip3 install google-cloud-storage
+$ ~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests
+```
 
 # Shutdown your cluster
 **All data not stored in a Google Cloud Storage bucket will be lost.**
