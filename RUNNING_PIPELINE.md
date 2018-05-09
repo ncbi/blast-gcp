@@ -51,6 +51,7 @@ cd ~/blast-gcp/pipeline
 * (optional) Edit the file 'test.ini' to adjust the settings. FIX
 ** on google-cluster:  --num-executers X   : X should match the number or worker-nodes --executor-cores Y  : Y should match the number of vCPU's per worker-node
 $ cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
+$ hadoop fs -mkdir -p /user/$USER/requests
 $ cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
 If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes
