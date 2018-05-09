@@ -83,6 +83,10 @@ cd ..
 ./test-pipeline.py
  . . . 
            *** Start Spark Streaming Job now, press Enter when readu ***
+. . .
+
+                       | AFEWMY2E014 took  12.85 seconds       
+
 ```
 
 # Window 4 - Google Connector
