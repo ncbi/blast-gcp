@@ -14,7 +14,7 @@
         },
         "hdfs" :
         {
-            "dir" : "hdfs:///user/%s/requests",
+            "dir" : "hdfs:///user/%s/requests/",
             "use" : "true"
         }
     },
@@ -34,7 +34,7 @@
     {
         "asn1" :
         {
-            "bucket" : "blastgcp-pipeline-test"
+            "bucket" : "blast-test-USERNAME"
         },
         "status" :
         {
