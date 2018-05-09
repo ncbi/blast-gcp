@@ -48,13 +48,16 @@ git checkout engineering
 ```shell
 cd ~/blast-gcp/pipeline
 ./make_jar.sh
-* (optional) Edit the file 'test.ini' to adjust the settings. FIX
-** on google-cluster:  --num-executers X   : X should match the number or worker-nodes --executor-cores Y  : Y should match the number of vCPU's per worker-node
 $ cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
 $ hadoop fs -mkdir -p /user/$USER/requests
 $ cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
-If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes
+If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes.
+### If using a non-standard cluster size:
+1. num_db_partitions may be increased to 886.
+2. num_executors should be approximately the number of vCPUS on all of your worker nodes, minus some overhead
+3. num_executor_cores should be 1, we believe YARN enforces this
+
 
 # Window 2 - Spark logs
 ```console
