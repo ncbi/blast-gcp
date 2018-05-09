@@ -169,7 +169,7 @@ public class BLAST_LIB {
             final BLAST_HSP_LIST[] hspl,
             final BLAST_PARTITION part,
             final BLAST_REQUEST req,
-            final String tblogLevel) {
+            final String tblogLevel) throws Exception {
         throwIfBad();
 
         BLAST_LIB.logLevel = Level.toLevel(tblogLevel);
@@ -206,8 +206,8 @@ public class BLAST_LIB {
             }
 
     private native BLAST_HSP_LIST[] prelim_search(
-            String query, String dbspec, String program, String params, int topn);
+            String query, String dbspec, String program, String params, int topn) throws Exception;
 
     private native BLAST_TB_LIST[] traceback(
-            BLAST_HSP_LIST[] hspl, String query, String dbspec, String program, String params);
+            BLAST_HSP_LIST[] hspl, String query, String dbspec, String program, String params) throws Exception;
 }

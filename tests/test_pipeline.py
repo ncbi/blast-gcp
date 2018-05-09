@@ -147,6 +147,7 @@ def get_tests():
         j['RID'] = TEST_ID + '-' + j['RID']
         j['query_url']=''
         j['blast_params']['task']=j['blast_params']['program']
+        j['blast_params']['dbpath']=""
         j['result_bucket_name']=BUCKET_NAME
         del j['query_url']
         # Randomly put 1% of queries in gs bucket instead
@@ -204,7 +205,7 @@ def make_json():
         j['spark']['num_executor_cores'] = 1
         j['blastjni'] = {}
         j['blastjni']['db'] = {}
-        j['blastjni']['db']['db_bucket'] = 'nt_50mb_chunks'
+        j['blastjni']['db']['db_bucket'] = 'nt_100mb_chunks'
         j['blastjni']['db']['num_db_partitions'] = 886
         j['blastjni']['top_n'] = 100
         j['source'] = {}

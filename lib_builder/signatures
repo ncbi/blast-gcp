@@ -21,13 +21,13 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
     descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 
-  private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int);
+  private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int) throws java.lang.Exception;
     descriptor: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], java.lang.String, java.lang.String, java.lang.String, java.lang.String);
+  private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], java.lang.String, java.lang.String, java.lang.String, java.lang.String) throws java.lang.Exception;
     descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 }
 Compiled from "BLAST_HSP_LIST.java"
