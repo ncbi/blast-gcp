@@ -114,7 +114,7 @@ class BLAST_DRIVER extends Thread {
     public void run() {
         System.out.println("in run()");
 
-//        StructType query_schema = StructType.fromDDL("RID string, db string, query_seq string");
+        //        StructType query_schema = StructType.fromDDL("RID string, db string, query_seq string");
 
         StructType parts_schema = StructType.fromDDL("db string, num int");
 
@@ -146,7 +146,7 @@ class BLAST_DRIVER extends Thread {
            */
         DataStreamReader query_stream = ss.readStream();
         query_stream.format("json");
-//        query_stream.schema(query_schema);
+        //        query_stream.schema(query_schema);
         query_stream.option("maxFilesPerTrigger", 1);
         query_stream.option("multiLine", true);
 
@@ -155,49 +155,95 @@ class BLAST_DRIVER extends Thread {
         queries.createOrReplaceTempView("queries");
 
         Dataset<Row> joined =
-            ss.sql("select * from queries, parts2 where queries.db=parts2.db distribute by num");
+            ss.sql("select RID, queries.db, query_seq, num from queries, parts2 where queries.db=parts2.db distribute by num");
         joined.createOrReplaceTempView("joined");
-        //    Dataset<Row> joined=queries.join(parts2,"db");
+        joined.printSchema();
 
-        Dataset<Row> qp = ss.sql("select concat(num,' ',query_seq) as combo from joined").repartition(886);
-        Dataset<String> qs = qp.as(Encoders.STRING());
+        //        StructType out_schema=StructType.fromDDL("foo string, foo2 string");
+        //        ExpressionEncoder<Row> encoder = RowEncoder.apply(out_schema);
 
-        Dataset<Row> out =
-            qs.flatMap(
-                    (FlatMapFunction<String, String>)
-                    t -> {
-                        String[] ts = t.split(" ");
+        Dataset<Row> out2 =
+            joined.flatMap(
+                    (FlatMapFunction<Row, String>)
+                    inrow -> {
+                        BLAST_LIB blaster = new BLAST_LIB();
+                        blaster.log("INFO", inrow.mkString(":"));
+
+                        String rid=inrow.getString(0);
+                        String db=inrow.getString(1);
+                        String query_seq=inrow.getString(2);
+                        int num=-999;
+                        if (!inrow.isNullAt(3))
+                            num=inrow.getInt(3);
 
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = "test ";
-                        requestobj.query_seq = ts[0];
-                        requestobj.query_seq = t;
+                        requestobj.query_seq = query_seq;
                         requestobj.query_url = "";
-                        requestobj.params = "nt:" + t + t.length() + " " + ts.length;
+                        requestobj.params = "nt:" + inrow.mkString();
                         requestobj.db = "nt";
                         requestobj.program = "blastn";
                         requestobj.top_n = 100;
                         BLAST_PARTITION partitionobj =
                             new BLAST_PARTITION(
-                                    "/tmp/blast/db", "nt_50M", Integer.parseInt(ts[0]), false);
-
-                        BLAST_LIB blaster =
-                            new BLAST_LIB(); // BLAST_LIB_SINGLETON.get_lib(part, bls);
-                        blaster.log("DEBUG", "hi there");
+                                    "/tmp/blast/db/prefetched", "nt_50M", num, false);
 
                         List<String> result = new ArrayList<>();
                         if (blaster != null) {
                             BLAST_HSP_LIST[] search_res =
-                                blaster.jni_prelim_search(partitionobj, requestobj, "DEBUG");
+                                blaster.jni_prelim_search(partitionobj, requestobj, "INFO");
 
-                            for (BLAST_HSP_LIST S : search_res) result.add(S.toString());
-                        } else result.add("null blaster " + t);
+                            for (BLAST_HSP_LIST S : search_res) 
+                            {
+                                //String rec=String.format("%d, %d = %d", S.oid, S.max_score, S.hsp_blob.length);
+                                String rec=S.toString();
+                                result.add(rec);
+                            }
+                        } else result.add("null blaster " );
                         return result.iterator();
                     },
-                      Encoders.STRING())
-                          .toDF("fromflatmap");
+                          Encoders.STRING())
+                              .toDF("fromflatmap");
 
-        StreamingQuery results = out.writeStream().outputMode("append").format("console").start();
+        /*
+           Dataset<Row> qp = ss.sql("select concat(num,' ',query_seq) as combo from joined").repartition(886);
+           Dataset<String> qs = qp.as(Encoders.STRING());
+           Dataset<Row> out =
+           qs.flatMap(
+           (FlatMapFunction<String, String>)
+           t -> {
+           String[] ts = t.split(" ");
+
+           BLAST_REQUEST requestobj = new BLAST_REQUEST();
+           requestobj.id = "test ";
+           requestobj.query_seq = ts[0];
+           requestobj.query_seq = t;
+           requestobj.query_url = "";
+           requestobj.params = "nt:" + t + t.length() + " " + ts.length;
+           requestobj.db = "nt";
+           requestobj.program = "blastn";
+           requestobj.top_n = 100;
+           BLAST_PARTITION partitionobj =
+           new BLAST_PARTITION(
+           "/tmp/blast/db/prefetched", "nt_50M", Integer.parseInt(ts[0]), false);
+
+           BLAST_LIB blaster =
+           new BLAST_LIB(); // BLAST_LIB_SINGLETON.get_lib(part, bls);
+           blaster.log("INFO", "hi there");
+
+           List<String> result = new ArrayList<>();
+           if (blaster != null) {
+           BLAST_HSP_LIST[] search_res =
+           blaster.jni_prelim_search(partitionobj, requestobj, "INFO");
+
+           for (BLAST_HSP_LIST S : search_res) result.add(S.toString());
+           } else result.add("null blaster " + t);
+           return result.iterator();
+           },
+           Encoders.STRING())
+           .toDF("fromflatmap");
+           */
+        StreamingQuery results = out2.writeStream().outputMode("append").format("console").start();
 
         System.out.println("driver starting...");
         try {
