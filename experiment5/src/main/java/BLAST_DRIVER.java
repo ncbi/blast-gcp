@@ -150,7 +150,7 @@ class BLAST_DRIVER extends Thread
             db_list.add( new Tuple2<>( i, part ) );
         }
 
-        return sc.parallelizePairs( db_list, settings.num_executors ).partitionBy(
+        return sc.parallelizePairs( db_list, settings.num_db_partitions ).partitionBy(
             PARTITIONER0.getValue() ).map( item ->
         {
             BLAST_PARTITION part = item._2();
@@ -462,7 +462,7 @@ class BLAST_DRIVER extends Thread
                     broadcast settings
                =========================================================================================== */
             Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
-            Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 = sc.broadcast( new BLAST_PARTITIONER0( node_count() ) );
+            Broadcast< BLAST_PARTITIONER0 > PARTITIONER0 = sc.broadcast( new BLAST_PARTITIONER0( settings.num_db_partitions ) );
 
             /* ===========================================================================================
                     create database-sections as a static RDD
