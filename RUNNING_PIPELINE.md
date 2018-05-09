@@ -73,6 +73,8 @@ $ pip3 install google-cloud-pubsub
 $ pip3 install google-cloud-storage
 $ cd ..
 $ ./test-pipeline.py
+ . . . 
+           *** Start Spark Streaming Job now, press Enter when readu ***
 ```
 
 
