@@ -72,8 +72,10 @@ import org.apache.spark.rdd.RDD;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+/*
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
+*/
 
 class BLAST_DRIVER extends Thread
 {
@@ -174,7 +176,7 @@ class BLAST_DRIVER extends Thread
             if ( settings.log_pref_loc )
                 BLAST_SEND.send( settings, String.format( "adding %s for %s", host, part ) );
 
-            List< String > prefered_loc = new ArrayList<>();            
+            List< String > prefered_loc = new ArrayList<>();
             prefered_loc.add( host );
 
             Seq< String > prefered_loc_seq = JavaConversions.asScalaBuffer( prefered_loc ).toSeq();
@@ -214,6 +216,7 @@ class BLAST_DRIVER extends Thread
 
     private JavaDStream< String > create_pubsub_stream()
     {
+        /*
         final DStream< PubsubMessage > pub1 = PubsubUtils.createStream( jssc.ssc(),
             settings.project_id, settings.subscript_id );
 
@@ -221,6 +224,8 @@ class BLAST_DRIVER extends Thread
             scala.reflect.ClassTag$.MODULE$.apply( PubsubMessage.class ) );
 
         return pub2.map( item -> item.getData().toStringUtf8() ).cache();
+        */
+        return null;
     }
 
     private JavaDStream< String > create_file_stream()
@@ -320,7 +325,7 @@ class BLAST_DRIVER extends Thread
             Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         return SRC.flatMapToPair( item -> {
-            BLAST_SETTINGS bls = SETTINGS.getValue();            
+            BLAST_SETTINGS bls = SETTINGS.getValue();
 
             BLAST_PARTITION part = item._1();
             BLAST_REQUEST req = item._2();
@@ -413,7 +418,7 @@ class BLAST_DRIVER extends Thread
             Collections.sort( lst, Collections.reverseOrder() );
 
             Integer nr = ( lst.size() > top_n ) ? top_n - 1 : lst.size() - 1;
-            cutoff = lst.get( nr );                    
+            cutoff = lst.get( nr );
 
             BLAST_SETTINGS bls = SETTINGS.getValue();
             if ( bls.log_cutoff )
@@ -436,11 +441,11 @@ class BLAST_DRIVER extends Thread
                                 JavaPairDStream< String, Integer > CUTOFF,
                                 Broadcast< BLAST_PARTITIONER2 > PARTITIONER2 )
     {
-        JavaPairDStream< String, String > ACTIVE_PARTITIONS = 
+        JavaPairDStream< String, String > ACTIVE_PARTITIONS =
             HSPS.transform( rdd -> rdd.keys().distinct() )
             .mapToPair( item-> new Tuple2<>( item.substring( item.indexOf( ' ' ) + 1, item.length() ), item ) );
 
-        JavaPairDStream< String, Integer > CUTOFF2 = 
+        JavaPairDStream< String, Integer > CUTOFF2 =
             ACTIVE_PARTITIONS.join( CUTOFF ).mapToPair( item -> item._2() ).
                 transformToPair( rdd -> rdd.partitionBy( PARTITIONER2.getValue() ) );
 
@@ -468,7 +473,7 @@ class BLAST_DRIVER extends Thread
             IN  : HSPS: JavaPairDStream< STRING: 'REQ.ID', Tuple2< BLAST_HSP_LIST, INTEGER : CUTOFF > >
             OUT : JavaPairDStream< STRING: 'REQ.ID', BLAST_TB_LIST >
        =========================================================================================== */
-    private JavaPairDStream< String, BLAST_TB_LIST > perform_traceback( 
+    private JavaPairDStream< String, BLAST_TB_LIST > perform_traceback(
             JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer > > HSPS,
             Broadcast< BLAST_PARTITIONER2 > PARTITIONER2,
             Broadcast< BLAST_SETTINGS > SETTINGS )
@@ -508,7 +513,7 @@ class BLAST_DRIVER extends Thread
 
             BLAST_TB_LIST [] results = blaster.jni_traceback( a, part, a[ 0 ].req, bls.jni_log_level );
 
-            ArrayList< Tuple2< String, BLAST_TB_LIST> > ret = new ArrayList<>();            
+            ArrayList< Tuple2< String, BLAST_TB_LIST> > ret = new ArrayList<>();
             for ( BLAST_TB_LIST L : results )
                 ret.add( new Tuple2<>( key, L ) );
 
@@ -521,7 +526,7 @@ class BLAST_DRIVER extends Thread
             collect and write traceback
        =========================================================================================== */
     private void write_traceback( JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS,
-                                  Broadcast< BLAST_SETTINGS > SETTINGS ) 
+                                  Broadcast< BLAST_SETTINGS > SETTINGS )
     {
         // key is now req-id
         final JavaPairDStream< String, BLAST_TB_LIST > SEQANNOTS1 = SEQANNOTS.mapToPair( item ->
@@ -636,7 +641,7 @@ class BLAST_DRIVER extends Thread
                         join request-line from data-source with database-sections
                    =========================================================================================== */
                 final JavaPairDStream< BLAST_PARTITION, BLAST_REQUEST > JOB_STREAM
-                    = REQ_STREAM.transformToPair( rdd -> 
+                    = REQ_STREAM.transformToPair( rdd ->
                                 DB_SECS.cartesian( rdd ).partitionBy( PARTITIONER1.getValue() ) ).cache();
 
                 /* ===========================================================================================
@@ -652,7 +657,7 @@ class BLAST_DRIVER extends Thread
                 /* ===========================================================================================
                         filter by cutoff
                    =========================================================================================== */
-                final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED_HSPS 
+                final JavaPairDStream< String, Tuple2< BLAST_HSP_LIST, Integer> > FILTERED_HSPS
                     = filter_by_cutoff( HSPS, CUTOFF, PARTITIONER2 );
 
                 /* ===========================================================================================

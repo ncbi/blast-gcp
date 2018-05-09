@@ -68,6 +68,7 @@
         <artifactId>guava</artifactId>
         <version>23.0</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.google.cloud.bigdataoss</groupId>
       <artifactId>spark-pubsub</artifactId>
@@ -75,6 +76,7 @@
       <scope>system</scope>
       <systemPath>${project.basedir}/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar</systemPath>
     </dependency>
+    -->
     <!-- FIX: Apache Log4J 1.2 was EOL'ed on 8/2015, but Spark still uses it,
          so shall we. -->
     <dependency>

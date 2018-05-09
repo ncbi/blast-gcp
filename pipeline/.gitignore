@@ -3,3 +3,4 @@ libblastjni.so
 target
 bigdata-interop/
 gov/
+env/

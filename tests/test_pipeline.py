@@ -15,25 +15,6 @@ import threading
 import time
 import uuid
 
-# sudo apt-get update
-# sudo apt-get install -y -u python python-dev python3 python3-dev #python3-pip
-# sudo apt-get install -y virtualenv
-# virtualenv --python python3 env
-# source env/bin/activate # "deactivate to deactivate"
-# cd env
-# pip3 install google-cloud
-# pip3 install google-cloud-pubsub
-# pip3 install google-cloud-storage
-
-
-## pip3 install --user --upgrade virtualenv # 2/3 doesn't matter
-# sudo pip3 install --upgrade google-cloud-storage
-
-# easy_install --user pip
-# pip install --upgrade virtualenv
-# pip install --user --upgrade google-cloud
-# pip install --user --upgrade google-cloud-storage
-# pip install --user --upgrade google-cloud-pubsub
 
 # gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS
 
@@ -169,7 +150,7 @@ def get_tests():
         j['result_bucket_name']=BUCKET_NAME
         del j['query_url']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 20:
+        if random.randrange(0, 100) < 0:
             print("Using out of band query")
 
             #objname = j['RID'] + "-" + str(uuid.uuid4())
@@ -291,8 +272,8 @@ def submit_thread():
         tests = list(TESTS.keys())
         random.shuffle(tests)
         for test in tests[0:3]:
-            # Emulate 1..10 submissions a second
-            #time.sleep(random.randrange(0, 100) / 1000)
+            # Emulate 1..10 submissions a second with jitter
+            time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
@@ -420,10 +401,7 @@ def main():
     print()
     #submit_application(config)
     print()
-    print(" " * 20, "*** Start Spark Streaming Job now ***")
-    time.sleep(40)
-    print()
-    time.sleep(1)
+    input(" " * 10 + "*** Start Spark Streaming Job now, press Enter when ready ***")
 
     # Start threads
     #  submits

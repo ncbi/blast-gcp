@@ -10,12 +10,12 @@
         "socket" :
         {
             "trigger_port" : 10012,
-            "use" : "true"
+            "use" : "false"
         },
         "hdfs" :
         {
             "dir" : "hdfs:///user/%s/requests",
-            "use" : "false"
+            "use" : "true"
         }
     },
 
@@ -27,7 +27,7 @@
             "num_db_partitions" : 80
         },
         "top_n" : 100,
-        "jni_log_level" : "DEBUG"
+        "jni_log_level" : "INFO"
     },
 
     "result" :
