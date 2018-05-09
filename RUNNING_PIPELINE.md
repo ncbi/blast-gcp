@@ -28,7 +28,7 @@ gcloud beta dataproc --region us-east4 \
 ```
 
 * Once cluster has begun, click on [ DataProc ->  Clusters ](https://console.cloud.google.com/dataproc/clusters?project=ncbi-sandbox-blast)
-* you should see your cluster "Provisioning" (takes about 10 minutes to copy Blast databases from Google Cloud Storage), and then "Running."
+* you should see your cluster "Provisioning", and then "Running."
 * **DATA LOSS WARNING:** Cluster filesystems, including /home and HDFS, are not persistent, and clusters automatically terminate after 8 hours.
 
 # SSH'ing to your cluster
