@@ -93,7 +93,7 @@ cd env
 pip3 install google-cloud
 pip3 install google-cloud-pubsub
 pip3 install google-cloud-storage
-~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests
+~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests/
 ```
 
 # Shutdown your cluster
