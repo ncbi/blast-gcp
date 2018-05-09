@@ -316,7 +316,7 @@ def results_thread():
                 origrid, elapsed.total_seconds()))
 
             cmd = [
-                "asntool", "-m", "/am/ncbiapdata/asn/asn.all", "-t",
+                "./asntool", "-m", "asn.all", "-t",
                 "Seq-annot", "-d", fname, "-p", fname + ".txt"
             ]
             #print (cmd)
@@ -329,8 +329,8 @@ def results_thread():
 
             if fnewlines!=fexpectedlines:
                 print("Files differ for " + origrid)
-                diff=difflib.ndiff(fnewlines, fexpectedlines)
-                print(diff)
+                #diff=difflib.ndiff(fnewlines, fexpectedlines)
+                #print(diff)
 
         if not anything:
             progress(results="No objects in bucket")
