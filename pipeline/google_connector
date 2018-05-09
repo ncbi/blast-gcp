@@ -81,9 +81,10 @@ def main():
         sys.stderr.write("   ex: " + sys.argv[0] + " blast-test-%s" %
                 user + " /user/%s/requests/" % user + "\n" )
         return 1
-    cmd=['hadoop', 'fs', '-rm', '-r', '-f', '/user/%s/requests' % user]
-    print(cmd)
-    subprocess.call(cmd)
+
+    #cmd=['hadoop', 'fs', '-rm', '-r', '-f', '/user/%s/requests' % user]
+    #print(cmd)
+    #subprocess.call(cmd)
     cmd=['hadoop', 'fs', '-mkdir', '-p', '/user/%s/requests' % user]
     print(cmd)
     subprocess.call(cmd)
