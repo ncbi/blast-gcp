@@ -95,9 +95,9 @@ if [[ "${ROLE}" == 'Master' ]]; then
 #    sudo pip install --user --upgrade google-cloud-pubsub
 else
     # Worker node, copy DBs from GCS
-    # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
     MAXJOBS=8
     parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
+    parts=''
     for part in $parts; do
         logger -t cluster_initialize.sh "BLASTJNI Preloading Blast DB $part"
         piece="nt_50M.$part"
