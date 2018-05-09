@@ -170,9 +170,10 @@ class BLAST_DRIVER extends Thread {
 
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = "test ";
-                        requestobj.query_seq = ts[1];
+                        requestobj.query_seq = ts[0];
+                        requestobj.query_seq = t;
                         requestobj.query_url = "";
-                        requestobj.params = "nt:" + t;
+                        requestobj.params = "nt:" + t + t.length() + " " + ts.length;
                         requestobj.db = "nt";
                         requestobj.program = "blastn";
                         requestobj.top_n = 100;
@@ -182,6 +183,7 @@ class BLAST_DRIVER extends Thread {
 
                         BLAST_LIB blaster =
                             new BLAST_LIB(); // BLAST_LIB_SINGLETON.get_lib(part, bls);
+                        blaster.log("DEBUG", "hi there");
 
                         List<String> result = new ArrayList<>();
                         if (blaster != null) {
