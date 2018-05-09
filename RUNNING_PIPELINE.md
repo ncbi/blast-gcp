@@ -63,6 +63,16 @@ $ nc -lk 10011 &
 ** PubSub Topic, Subscription and Cloud Storage output bucket will be deleted upon completion **
 Likely need a ~/google-service-account-file.json
 ( gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS )
+
+$ cd ~/blast-gcp/tests
+$ virtualenv --python python3 env
+$ source env/bin/activate
+$ cd env
+$ pip3 install google-cloud
+$ pip3 install google-cloud-pubsub
+$ pip3 install google-cloud-storage
+$ cd ..
+$ ./test-pipeline.py
 ```
 
 
