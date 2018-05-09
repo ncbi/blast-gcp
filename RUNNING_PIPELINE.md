@@ -53,8 +53,9 @@ cd ~/blast-gcp/pipeline
 $ cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
 $ cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
+If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes
 
-# Windows 2 - Spark logs
+# Window 2 - Spark logs
 ```console
 $ nc -lk 10011 &
 ```
@@ -78,25 +79,6 @@ $ ./test-pipeline.py
            *** Start Spark Streaming Job now, press Enter when readu ***
 ```
 
-
-
-$ hadoop fs -ls results
--rw-r--r--   2 userid hadoop       7550 2018-04-11 14:11 results/req_T1.txt
-$ cd ~/blast-gcp/lib_builder/
-$ hadoop fs -copyToLocal results/req_T1.txt req_T1.txt
-$ ./asntool -m asn.all -t Seq-an stdout -d req_T1.txt
-Seq-annot ::= {
-  data
-    align {
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-```
-
 # Window 4 - Google Connector
 ```console
 $ cd ~/blast-gcp/pipeline
@@ -111,6 +93,8 @@ $ ~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests
 
 # Shutdown your cluster
 **All data not stored in a Google Cloud Storage bucket will be lost.**
+**DATA LOSS WARNING: Cluster filesystems, including /home and HDFS, are not persistent, and clusters automatically terminate after 8 hours. **
+
 ```console
 In the spark (application terminal : exit
 gcloud dataproc --region us-east4 clusters list
