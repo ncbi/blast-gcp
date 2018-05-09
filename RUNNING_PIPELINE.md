@@ -59,10 +59,11 @@ $ nc -lk 10011 &
 ```
 
 # Window 3 - Test Harness
+```console
 ** PubSub Topic, Subscription and Cloud Storage output bucket will be deleted upon completion **
 Likely need a ~/google-service-account-file.json
 ( gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS )
-```console
+```
 
 
 
@@ -84,7 +85,7 @@ Seq-annot ::= {
 ```
 
 # Window 4 - Google Connector
-``console
+```console
 $ cd ~/blast-gcp/pipeline
 $ virtualenv --python python3 env
 $ source env/bin/activate
