@@ -16,8 +16,6 @@ import uuid
 #       BLAST_DRIVER. Possibly handle Job Orchestration here as well.
 
 from google.cloud import pubsub_v1
-#  hadoop fs -rm -r -f /user/$USER/requests
-#  hadoop fs -mkdir -p /user/$USER/requests
 
 HADOOPTMP="/tmp/"
 HADOOPDEST=""
@@ -83,6 +81,12 @@ def main():
         sys.stderr.write("   ex: " + sys.argv[0] + " blast-test-%s" %
                 user + " /user/%s/requests/" % user + "\n" )
         return 1
+    cmd=['hadoop', 'fs', '-rm', '-r', '-f', '/user/%s/requests' % user]
+    print(cmd)
+    subprocess.call(cmd)
+    cmd=['hadoop', 'fs', '-mkdir', '-p', '/user/%s/requests' % user]
+    print(cmd)
+    subprocess.call(cmd)
 
     topic=sys.argv[1]
     HADOOPDEST=sys.argv[2]
