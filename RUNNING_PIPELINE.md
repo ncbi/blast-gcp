@@ -53,7 +53,7 @@ hadoop fs -mkdir -p /user/$USER/requests
 # EDIT ini.json to replace blast-test-USERNAME with blast-test-yourusername
 cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
-If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes.
+If Blast databases aren't prefetched into /tmp/blast/db, first queries may require 10+ minutes to warm up.
 ### If using a non-standard cluster size:
 1. num_db_partitions may be increased to 886.
 2. num_executors should be approximately the number of vCPUS on all of your worker nodes, minus some overhead
