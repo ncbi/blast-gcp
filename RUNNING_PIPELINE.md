@@ -50,7 +50,8 @@ cd ~/blast-gcp/pipeline
 ./make_jar.sh
 * (optional) Edit the file 'test.ini' to adjust the settings. FIX
 ** on google-cluster:  --num-executers X   : X should match the number or worker-nodes --executor-cores Y  : Y should match the number of vCPU's per worker-node
-In the spark (application) terminal: cd ~/blast-gcp/pipeline;./run_spark.sh to start Spark
+$ cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
+$ cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
 
 # Windows 2 - Spark logs
