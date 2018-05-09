@@ -84,9 +84,13 @@ cd ..
  . . . 
            *** Start Spark Streaming Job now, press Enter when readu ***
 . . .
-
                        | AFEWMY2E014 took  12.85 seconds       
-
+                       | AFEWJJ3Z014 took  21.40 seconds
+                       | AFEVMVZM014 took  40.35 seconds
+                       | AFEW0RN2014 took  41.12 seconds
+                       | AFEVKCK9014 took  26.61 seconds
+                       | AFEX4420014 took  25.76 seconds
+                       | AFEVN6PB014 took  40.64 seconds
 ```
 
 # Window 4 - Google Connector
