@@ -38,7 +38,7 @@
         },
         "status" :
         {
-            "bucket"  : "blastgcp-pipeline-test"
+            "bucket"  : "blast-test-USERNAME"
         }
     },
 
@@ -46,7 +46,7 @@
     {
         "with_locality" : "true",
         "num_executors" : 8,
-        "num_executor_cores" : 3
+        "num_executor_cores" : 1
     },
 
     "log" :
