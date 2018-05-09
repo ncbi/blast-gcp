@@ -48,9 +48,9 @@ git checkout engineering
 ```shell
 cd ~/blast-gcp/pipeline
 ./make_jar.sh
-$ cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
-$ hadoop fs -mkdir -p /user/$USER/requests
-$ cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
+cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
+hadoop fs -mkdir -p /user/$USER/requests
+cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
 If Blast databases aren't prefetched into /tmp/blast/db, first query may require 5-10 minutes.
 ### If using a non-standard cluster size:
@@ -86,14 +86,14 @@ $ ./test-pipeline.py
 
 # Window 4 - Google Connector
 ```console
-$ cd ~/blast-gcp/pipeline
-$ virtualenv --python python3 env
-$ source env/bin/activate
-$ cd env
-$ pip3 install google-cloud
-$ pip3 install google-cloud-pubsub
-$ pip3 install google-cloud-storage
-$ ~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests
+cd ~/blast-gcp/pipeline
+virtualenv --python python3 env
+source env/bin/activate
+cd env
+pip3 install google-cloud
+pip3 install google-cloud-pubsub
+pip3 install google-cloud-storage
+~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests
 ```
 
 # Shutdown your cluster
@@ -106,5 +106,3 @@ gcloud dataproc --region us-east4 clusters list
 gcloud dataproc --region us-east4 clusters delete cluster-$USER-...
 ```
 or [ select your cluster ](https://console.cloud.google.com/dataproc/clusters?project=ncbi-sandbox-blast) and press Delete.
-
-
