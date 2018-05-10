@@ -215,7 +215,7 @@ class BLAST_DRIVER extends Thread {
                   scores.col("rid")).count().orderBy("window");
         windows.createOrReplaceTempView("windows");
 
-        Dataset<Row> topn = ss.sql("select rid, dense_rank() over (partition by rid order by score desc) as rk from windows");
+        Dataset<Row> topn = ss.sql("select rid, dense_rank() over (partition by rid order by rid desc) as rk from windows");
         /*
            Dataset<Row> qp = ss.sql("select concat(num,' ',query_seq) as combo from joined").repartition(886);
            Dataset<String> qs = qp.as(Encoders.STRING());
@@ -254,7 +254,7 @@ class BLAST_DRIVER extends Thread {
            Encoders.STRING())
            .toDF("fromflatmap");
            */
-        StreamingQuery results = windows.writeStream().outputMode("append").format("console").start();
+        StreamingQuery results = windows.writeStream().outputMode("complete").format("console").start();
 
         System.out.println("driver starting...");
         try {
