@@ -88,9 +88,11 @@ gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
-    --num-workers 4 \
+    --num-workers 2 \
         --worker-boot-disk-size 250 \
-    --worker-machine-type n1-highcpu-64 \
+    --worker-machine-type n1-standard-64 \
+    --num-preemptible-workers 4 \
+        --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
@@ -100,7 +102,7 @@ gcloud beta dataproc --region us-east4 \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "$PIPELINEBUCKET/scripts/cluster_initialize_mike.sh" \
+    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
     --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 
