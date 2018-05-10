@@ -75,6 +75,9 @@ import org.apache.log4j.Logger;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.cloud.spark.pubsub.PubsubUtils;
 
+import gov.nih.nlm.ncbi.blast.RID;
+import gov.nih.nlm.ncbi.blast.Status;
+
 class BLAST_DRIVER extends Thread
 {
     private final BLAST_SETTINGS settings;
@@ -257,8 +260,9 @@ class BLAST_DRIVER extends Thread
                 if ( bls.log_request )
                     BLAST_SEND.send( bls, String.format( "REQ: '%s'", request.id ) );
 
-                String gs_status_key = String.format( bls.gs_status_file, request.id );
-                BLAST_GS_UPLOADER.upload( bls.gs_status_bucket, gs_status_key, bls.gs_status_running );
+                RID rid = new RID( request.id );
+                rid.SetStatus( gov.nih.nlm.ncbi.blast.Status.RUNNING );
+                //BLAST_GS_UPLOADER.upload( bls.gs_status_bucket, gs_status_key, bls.gs_status_running );
 
                 return request;
             }).cache();
@@ -545,8 +549,10 @@ class BLAST_DRIVER extends Thread
                             String gs_result_key = String.format( bls.gs_result_file, req_id );
                             Integer uploaded = BLAST_GS_UPLOADER.upload( bls.gs_result_bucket, gs_result_key, value );
 
-                            String gs_status_key = String.format( bls.gs_status_file, req_id );
-                            BLAST_GS_UPLOADER.upload( bls.gs_status_bucket, gs_status_key, bls.gs_status_done );
+                            //String gs_status_key = String.format( bls.gs_status_file, req_id );
+                            //BLAST_GS_UPLOADER.upload( bls.gs_status_bucket, gs_status_key, bls.gs_status_done );
+                            RID rid = new RID( req_id );
+                            rid.SetStatus( gov.nih.nlm.ncbi.blast.Status.DONE );
 
                             if ( bls.log_final )
                                 BLAST_SEND.send( bls, String.format( "%d bytes written to gs '%s':'%s'",

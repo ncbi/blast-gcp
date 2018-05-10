@@ -18,6 +18,15 @@ if [ ! -d "bigdata-interop/pubsub/target" ]; then
     echo
 fi
 
+if [ ! -d "google-pso" ]; then
+    echo "Fetching BLAST-GCP status-tracker sub-system"
+    gcloud source repos clone google-pso
+    pushd google-pso/status-tracker
+    make deploy_java
+    popd
+    echo
+fi
+
 echo "compiling java-classes"
 mvn -q package
 exit
