@@ -32,7 +32,6 @@ class BLAST_REQUEST implements Serializable
 {
     public String id, db, query_seq="", query_url="", program, params;
     public Integer top_n;
-    public Long started_at;
 
     @Override public String toString()
     {

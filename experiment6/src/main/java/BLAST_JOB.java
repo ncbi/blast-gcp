@@ -28,69 +28,46 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Random;
-
-import static java.lang.Math.min;
-
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.nio.ByteBuffer;
 
-import scala.Option;
-import scala.Tuple2;
-import scala.collection.Seq;
-import scala.collection.JavaConversions;
-import scala.reflect.ClassTag;
-
-import org.apache.spark.api.java.Optional;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function0;
-import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
-import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.dstream.DStream;
-import org.apache.spark.streaming.api.java.JavaDStream$;
-import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
-
-import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
-import org.apache.spark.SparkFiles;
-import org.apache.spark.HashPartitioner;
-import org.apache.spark.SparkEnv;
 import org.apache.spark.rdd.RDD;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 class BLAST_JOB extends Thread
 {
-    private final BLAST_SETTINGS settings;
     private final JavaSparkContext sc;
-    private Broadcast< BLAST_SETTINGS > SETTINGS;
-    private JavaRDD< BLAST_PARTITION > DB_SECS;
-    private final String job_line;
 
-    public BLAST_JOB( final BLAST_SETTINGS settings, JavaSparkContext sc,
-                        Broadcast< BLAST_SETTINGS > SETTINGS,
-                        JavaRDD< BLAST_PARTITION > DB_SECS,
-                        final String job_line
-                    )
+    private final BLAST_SETTINGS settings;
+    private Broadcast< BLAST_SETTINGS > SETTINGS;
+
+    private JavaRDD< BLAST_PARTITION > DB_SECS;
+
+    private final ConcurrentLinkedQueue< BLAST_REQUEST > requests;
+    private final AtomicBoolean running;
+
+    public BLAST_JOB( final BLAST_SETTINGS settings,
+                      JavaSparkContext sc,
+                      Broadcast< BLAST_SETTINGS > SETTINGS,
+                      JavaRDD< BLAST_PARTITION > DB_SECS,
+                      ConcurrentLinkedQueue< BLAST_REQUEST > a_requests )
     {
         this.settings = settings;
         this.sc = sc;
         this.SETTINGS = SETTINGS;
         this.DB_SECS = DB_SECS;
-        this.job_line = job_line;
+        this.requests = a_requests;
+        running = new AtomicBoolean( false );
+    }
+
+    public void signal_done()
+    {
+        running.set( false );
     }
 
     /* ===========================================================================================
@@ -172,19 +149,12 @@ class BLAST_JOB extends Thread
         } );
     }
 
-    private void write_results( final String req_id, final BLAST_TB_LIST_LIST ll )
+    private void write_results( final String req_id, final BLAST_TB_LIST_LIST ll, Long started_at )
     {
-        Long start_time = 0L;
         int sum = 0;
 
         for ( BLAST_TB_LIST e : ll.list )
-        {
-            if ( start_time == 0 )
-                start_time = e.req.started_at;
-            else 
-                start_time = min( start_time, e.req.started_at );
             sum += e.asn1_blob.length;
-        }
 
         byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
         byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -204,7 +174,7 @@ class BLAST_JOB extends Thread
 
             if ( settings.log_final )
             {
-                Long elapsed = System.currentTimeMillis() - start_time;
+                Long elapsed = System.currentTimeMillis() - started_at;
                 BLAST_SEND.send( settings, String.format( "[%s] %d bytes written to hdfs at '%s' (%,d ms)",
                         req_id, uploaded, path, elapsed ) );
             }
@@ -216,7 +186,7 @@ class BLAST_JOB extends Thread
 
             if ( settings.log_final )
             {
-                Long elapsed = System.currentTimeMillis() - start_time;
+                Long elapsed = System.currentTimeMillis() - started_at;
                 BLAST_SEND.send( settings, String.format( "[%s] %d bytes written to gs '%s':'%s' (%,d ms)",
                         req_id, uploaded, settings.gs_result_bucket, gs_result_key, elapsed ) );
             }
@@ -226,19 +196,19 @@ class BLAST_JOB extends Thread
         {
             if ( settings.log_final )
             {
-                Long elapsed = System.currentTimeMillis() - start_time;
+                Long elapsed = System.currentTimeMillis() - started_at;
                 BLAST_SEND.send( settings, String.format( "[%s] %d bytes summed up (%,d ms) n=%,d",
                         req_id, sum, elapsed, ll.list.size() ) );
             }
         }
     }
 
-    @Override public void run()
+    private void handle_request( final BLAST_REQUEST request )
     {
-        BLAST_REQUEST req = BLAST_REQUEST_READER.parse( job_line, settings.top_n );
-
         final List< BLAST_REQUEST > req_list = new ArrayList<>();
-        req_list.add( req );
+        req_list.add( request );
+
+        Long started_at = System.currentTimeMillis();
 
         final JavaRDD< BLAST_REQUEST > REQUESTS = sc.parallelize( req_list, settings.num_executors ).cache();
 
@@ -250,13 +220,35 @@ class BLAST_JOB extends Thread
         try
         {
             the_result = reduce_results( RESULTS );
-            write_results( req.id, the_result );
+            write_results( request.id, the_result, started_at );
         }
         catch ( Exception e )
         {
-            BLAST_SEND.send( settings, String.format( "[ %s ] empty", req.id ) );
+            Long elapsed = System.currentTimeMillis() - started_at;
+            BLAST_SEND.send( settings, String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
         }
     }
 
+    @Override public void run()
+    {
+        running.set( true );
+
+        while( running.get() )
+        {
+            BLAST_REQUEST request = requests.poll();
+            if ( request != null )
+                handle_request( request );
+            else
+            {
+                try
+                {
+                    Thread.sleep( 10 );
+                }
+                catch ( InterruptedException e )
+                {
+                }
+            }
+        }
+    }
 }
 

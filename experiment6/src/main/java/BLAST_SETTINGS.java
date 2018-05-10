@@ -69,7 +69,6 @@ public class BLAST_SETTINGS implements Serializable
 
     /* SPARK */
     public String  spark_log_level;
-    public Integer batch_duration;
     public String  locality_wait;
     public Boolean with_locality;
     public Boolean with_dyn_alloc;
@@ -78,6 +77,7 @@ public class BLAST_SETTINGS implements Serializable
     public String  executor_memory;
     public Boolean shuffle_reduceLocality_enabled;
     public Boolean scheduler_fair;
+    public Integer parallel_jobs;
 
     /* LOG */
     public String log_host;
@@ -195,13 +195,13 @@ public class BLAST_SETTINGS implements Serializable
         S = S + "\nSPARK:\n";
         S = S + String.format( "\tappName ............ '%s'\n", appName );
         S = S + String.format( "\tspark log level .... '%s'\n", spark_log_level );
-        S = S + String.format( "\tbatch_duration ..... %d seconds\n", batch_duration );
         S = S + String.format( "\tlocality.wait ...... %s\n", locality_wait );
         S = S + String.format( "\twith_locality ...... %s\n", Boolean.toString( with_locality ) );
         S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
         S = S + String.format( "\texecutors .......... %d ( %d cores )\n", num_executors, num_executor_cores );
         S = S + String.format( "\treduce_loc_enabled . %s\n", Boolean.toString( shuffle_reduceLocality_enabled ) );
         S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
+        S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
 

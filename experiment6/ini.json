@@ -24,7 +24,7 @@
         "db" :
         {
             "db_bucket" : "nt_50mb_chunks",
-            "num_db_partitions" : 120
+            "num_db_partitions" : 160
         },
         "top_n" : 100
     },
@@ -45,11 +45,12 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 7,
+        "num_executors" : 8,
         "num_executor_cores" : 4,
         "locality_wait" : "3s",
         "shuffle_reduceLocality_enabled" : "false",
-        "scheduler_fair" : "true"
+        "scheduler_fair" : "false",
+        "parallel_jobs" : 2
     },
 
     "log" :

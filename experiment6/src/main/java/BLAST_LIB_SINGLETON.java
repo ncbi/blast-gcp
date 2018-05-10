@@ -186,14 +186,11 @@ class BLAST_LIB_SINGLETON
 
     public static BLAST_LIB get_lib( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
-        if ( !settings.with_locality )
+        PART_INST p_inst = getPartInst( part );
+        if ( p_inst != null )
         {
-            PART_INST p_inst = getPartInst( part );
-            if ( p_inst != null )
-            {
-                if ( !p_inst.prepared )
-                    p_inst.prepared = p_inst.prepare( part, settings );
-            }
+            if ( !p_inst.prepared )
+                p_inst.prepared = p_inst.prepare( part, settings );
         }
         return blaster;
     }

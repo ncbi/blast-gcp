@@ -28,63 +28,40 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static java.lang.Math.min;
-
-import java.nio.ByteBuffer;
-
-import scala.Option;
 import scala.Tuple2;
 import scala.collection.Seq;
 import scala.collection.JavaConversions;
 import scala.reflect.ClassTag;
 
-import org.apache.spark.api.java.Optional;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function0;
-import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
-import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.dstream.DStream;
-import org.apache.spark.streaming.api.java.JavaDStream$;
-import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
-
-import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
-import org.apache.spark.SparkFiles;
-import org.apache.spark.HashPartitioner;
-import org.apache.spark.SparkEnv;
 import org.apache.spark.rdd.RDD;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 class BLAST_DRIVER extends Thread
 {
     private final BLAST_SETTINGS settings;
     private final BLAST_YARN_NODES nodes;
     private final JavaSparkContext sc;
-    private Boolean running;
     private Broadcast< BLAST_SETTINGS > SETTINGS;
-    private JavaRDD< BLAST_PARTITION > DB_SECS;    
+    private JavaRDD< BLAST_PARTITION > DB_SECS;
 
-    public BLAST_DRIVER( final BLAST_SETTINGS settings, final List< String > files_to_transfer )
+    private final ConcurrentLinkedQueue< BLAST_REQUEST > requests;
+    private final ConcurrentLinkedQueue< String > cmd;
+
+    public BLAST_DRIVER( final BLAST_SETTINGS settings,
+                         final ConcurrentLinkedQueue< BLAST_REQUEST > a_requests,
+                         final ConcurrentLinkedQueue< String > a_cmd )
     {
         this.settings = settings;
         this.nodes = new BLAST_YARN_NODES();    // discovers yarn-nodes
+        this.requests = a_requests;
+        this.cmd = a_cmd;
 
         SparkConf conf = new SparkConf();
         conf.setAppName( settings.appName );
@@ -107,41 +84,12 @@ class BLAST_DRIVER extends Thread
 
         sc = new JavaSparkContext( conf );
         sc.setLogLevel( settings.spark_log_level );
-
-        // send the given files to all nodes
-        for ( String a_file : files_to_transfer )
-            sc.addFile( a_file );
+        sc.addFile( "libblastjni.so" );
 
         /* ===========================================================================================
                 broadcast settings
            =========================================================================================== */
         SETTINGS = sc.broadcast( settings );
-        running = true;
-    }
-
-    public Boolean handle_line( final String line )
-    {
-        try
-        {
-            if ( line.equals( "exit" ) )
-            {
-                running = false;
-            }
-            else if ( line.startsWith( "R" ) )
-            {
-                BLAST_JOB job = new BLAST_JOB( settings, sc, SETTINGS, DB_SECS, line );
-                job.start();
-            }
-            else
-            {
-                System.out.println( "unknown '%s'" + line );
-            }
-        }
-        catch ( Exception e )
-        {
-            System.out.println( "JavaStreamingContext.stop() : " + e );
-        }
-        return running;
     }
 
     private Integer node_count()
@@ -239,16 +187,40 @@ class BLAST_DRIVER extends Thread
             System.out.println( String.format( "total database size: %,d bytes", total_size ) );
             System.out.println( "driver started..." );
 
+            List< BLAST_JOB > jobs = new ArrayList<>();
+            for ( int i = 0; i < settings.parallel_jobs; ++i )
+                jobs.add( new BLAST_JOB( settings, sc, SETTINGS, DB_SECS, requests ) );
+            for ( BLAST_JOB j : jobs )
+                j.start();
+
+            Boolean running = true;
             while( running )
             {
-                try
+                String line = cmd.poll();
+                if ( line != null )
                 {
-                    Thread.sleep( 500 );
+                    if ( line.startsWith( "exit" ) )
+                    {
+                        running = false;
+                    }
                 }
-                catch ( InterruptedException e )
+                else
                 {
+                    try
+                    {
+                        Thread.sleep( 500 );
+                    }
+                    catch ( InterruptedException e )
+                    {
+                    }
                 }
             }
+
+            for ( BLAST_JOB j : jobs )
+                j.signal_done();
+
+            for ( BLAST_JOB j : jobs )
+                j.join();
 
             System.out.println( "driver done..." );
         }

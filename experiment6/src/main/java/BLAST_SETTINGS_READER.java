@@ -414,7 +414,6 @@ class SPARK_SETTINGS_READER
 {
     public static final String key = "spark";
     public static final String key_spark_log_level = "log_level";
-    public static final String key_batch_duration = "batch_duration";
     public static final String key_locality_wait = "locality_wait";
     public static final String key_with_locality = "with_locality";
     public static final String key_with_dyn_alloc = "with_dyn_alloc";
@@ -423,9 +422,9 @@ class SPARK_SETTINGS_READER
     public static final String key_executor_memory = "executor_memory";
     public static final String key_shuffle_reduceLocality_enabled = "shuffle_reduceLocality_enabled";
     public static final String key_scheduler_fair = "scheduler_fair";
+    public static final String key_parallel_jobs = "parallel_jobs";
 
     public static final String  dflt_spark_log_level = "ERROR";
-    public static final Integer dflt_batch_duration = 2;
     public static final String  dflt_locality_wait = "3s";
     public static final Boolean dflt_with_locality = false;
     public static final Boolean dflt_with_dyn_alloc = false;
@@ -434,11 +433,11 @@ class SPARK_SETTINGS_READER
     public static final String  dflt_executor_memory = "";
     public static final Boolean dflt_shuffle_reduceLocality_enabled = false;
     public static final Boolean dflt_scheduler_fair = false;
+    public static final Integer dflt_parallel_jobs = 3;
 
     public static void defaults( BLAST_SETTINGS settings )
     {
         settings.spark_log_level    = dflt_spark_log_level;
-        settings.batch_duration     = dflt_batch_duration;
         settings.locality_wait      = dflt_locality_wait;
         settings.with_locality      = dflt_with_locality;
         settings.with_dyn_alloc     = dflt_with_dyn_alloc;
@@ -447,6 +446,7 @@ class SPARK_SETTINGS_READER
         settings.executor_memory    = dflt_executor_memory;
         settings.shuffle_reduceLocality_enabled = dflt_shuffle_reduceLocality_enabled;
         settings.scheduler_fair     = dflt_scheduler_fair;
+        settings.parallel_jobs      = dflt_parallel_jobs;
     }
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
@@ -455,7 +455,6 @@ class SPARK_SETTINGS_READER
         if ( obj != null )
         {
             settings.spark_log_level    = UTILS.get_json_string( obj, key_spark_log_level, dflt_spark_log_level );
-            settings.batch_duration     = UTILS.get_json_int( obj, key_batch_duration, dflt_batch_duration );
             settings.locality_wait      = UTILS.get_json_string( obj, key_locality_wait, dflt_locality_wait );
             settings.with_locality      = UTILS.get_json_bool( obj, key_with_locality, dflt_with_locality );
             settings.with_dyn_alloc     = UTILS.get_json_bool( obj, key_with_dyn_alloc, dflt_with_dyn_alloc );
@@ -465,6 +464,7 @@ class SPARK_SETTINGS_READER
             settings.shuffle_reduceLocality_enabled = UTILS.get_json_bool( obj, key_shuffle_reduceLocality_enabled,
                                                                            dflt_shuffle_reduceLocality_enabled );
             settings.scheduler_fair     = UTILS.get_json_bool( obj, key_scheduler_fair, dflt_scheduler_fair );
+            settings.parallel_jobs      = UTILS.get_json_int( obj, key_parallel_jobs, dflt_parallel_jobs );
         }
     }
 }

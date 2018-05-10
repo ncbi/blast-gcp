@@ -61,8 +61,6 @@ class BLAST_REQUEST_READER
         res.program    = ( parts.length > 4 ) ? parts[ 4 ] : dflt_program;
         res.params     = ( parts.length > 5 ) ? parts[ 5 ] : dflt_params;
 
-        res.started_at = System.currentTimeMillis();
-
         return res;
     }
 

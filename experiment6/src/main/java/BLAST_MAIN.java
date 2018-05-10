@@ -26,36 +26,10 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Console;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public final class BLAST_MAIN
 {
-    private static void read_console( Integer sleeptime_ms, BLAST_DRIVER driver )
-    {
-        Console cons = System.console();
-        boolean running = true;
-
-        while( running && cons != null )
-        {
-            String line = cons.readLine().trim();
-            if ( !line.isEmpty() )
-                running = driver.handle_line( line );
-            else if ( running )
-            {
-                try
-                {
-                    Thread.sleep( sleeptime_ms );
-                }
-                catch ( InterruptedException e )
-                {
-                }
-            }
-        }
-    }
-
    public static void main( String[] args ) throws Exception
    {
         if ( args.length < 1 )
@@ -72,23 +46,23 @@ public final class BLAST_MAIN
             {
                 System.out.println( settings.toString() );
 
-                List< String > files_to_transfer = new ArrayList<>();
-                files_to_transfer.add( "libblastjni.so" );
-                
-                BLAST_DRIVER driver = new BLAST_DRIVER( settings, files_to_transfer );
-                driver.start();
+                ConcurrentLinkedQueue< BLAST_REQUEST > requests = new ConcurrentLinkedQueue<>();
+                ConcurrentLinkedQueue< String > cmd = new ConcurrentLinkedQueue<>();
+
+                BLAST_DRIVER driver = new BLAST_DRIVER( settings, requests, cmd );
+                BLAST_CONSOLE cons = new BLAST_CONSOLE( requests, cmd, 200, settings.top_n );
+
                 try
                 {
-                    read_console( 100, driver );
+                    driver.start();
+                    cons.start();
+
+                    cons.join();
                     driver.join();
                 }
-                catch ( InterruptedException e1 )
+                catch( Exception e )
                 {
-                    System.out.println( String.format( "driver interrupted: %s", e1 ) );
-                }
-                catch( Exception e2 )
-                {
-                    System.out.println( String.format( "stopping driver: %s", e2 ) );
+                    System.out.println( String.format( "BLAST_MAIN : %s", e ) );
                 }
             }
         }
