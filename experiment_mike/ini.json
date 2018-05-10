@@ -1,5 +1,5 @@
 {
-    "appName" : "streamtest",
+    "appName" : "experiment_mike",
     "source" :
     {
         "pubsub" :
@@ -45,7 +45,7 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 100,
+        "num_executors" : 200,
         "num_executor_cores" : 1,
         "executor_memory" : "1G"
     },

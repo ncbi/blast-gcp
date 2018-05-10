@@ -27,9 +27,13 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.TreeMap;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -45,16 +49,27 @@ import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.StructType;
 
-class BLAST_DRIVER extends Thread {
-  private final BLAST_SETTINGS settings;
-  private final BLAST_YARN_NODES nodes;
-  private final SparkSession ss;
-  private final SparkContext sc;
-  private final JavaSparkContext jsc;
+public final class BLAST_DRIVER {
+  public static void main(String[] args) throws Exception {
+    BLAST_SETTINGS settings;
+    SparkSession ss;
+    SparkContext sc;
+    JavaSparkContext jsc;
 
-  public BLAST_DRIVER(final BLAST_SETTINGS settings, final List<String> files_to_transfer) {
-    this.settings = settings;
-    this.nodes = new BLAST_YARN_NODES(); // discovers yarn-nodes
+    if (args.length != 1) {
+      System.out.println("settings json-file missing");
+      return;
+    }
+    String ini_path = args[0];
+
+    String appName = "experiment_mike";
+    settings = BLAST_SETTINGS_READER.read_from_json(ini_path, appName);
+    System.out.println(String.format("settings read from '%s'", ini_path));
+    if (!settings.valid()) {
+      System.out.println(settings.missing());
+      return;
+    }
+    System.out.println(settings.toString());
 
     SparkSession.Builder builder = new SparkSession.Builder();
     builder.appName(settings.appName);
@@ -91,30 +106,11 @@ class BLAST_DRIVER extends Thread {
     sc.setLogLevel(settings.spark_log_level);
 
     // send the given files to all nodes
+    List<String> files_to_transfer = new ArrayList<>();
+    files_to_transfer.add("libblastjni.so");
     for (String a_file : files_to_transfer) sc.addFile(a_file);
 
-    // create a streaming-context from SparkContext given
-    //        jssc = new JavaStreamingContext(sc, Durations.seconds(settings.batch_duration));
-  }
-
-  public void stop_blast() {
-    System.out.println("stop_blast()");
-    try {
-      if (jsc != null) jsc.stop();
-    } catch (Exception e) {
-      System.out.println("JavaStreamingContext.stop() : " + e);
-    }
-  }
-
-  private Integer node_count() {
-    Integer res = nodes.count();
-    if (res == 0) res = settings.num_executors;
-    return res;
-  }
-
-  @Override
-  public void run() {
-    System.out.println("in run()");
+    System.out.println("starting");
 
     //        StructType query_schema = StructType.fromDDL("RID string, db string, query_seq
     // string");
@@ -143,7 +139,7 @@ class BLAST_DRIVER extends Thread {
     DataStreamReader query_stream = ss.readStream();
     query_stream.format("json");
     //        query_stream.schema(query_schema);
-    query_stream.option("maxFilesPerTrigger", 10);
+    query_stream.option("maxFilesPerTrigger", 5);
     query_stream.option("multiLine", true);
     query_stream.option("includeTimestamp", true);
 
@@ -154,7 +150,7 @@ class BLAST_DRIVER extends Thread {
     Dataset<Row> joined =
         ss.sql(
                 "select RID, queries.db, query_seq, num from queries, parts2 where queries.db=parts2.db distribute by num")
-            .repartition(1000);
+            .repartition(200);
     joined.createOrReplaceTempView("joined");
     joined.printSchema();
 
@@ -262,74 +258,124 @@ class BLAST_DRIVER extends Thread {
     .toDF("fromflatmap");
     */
 
-    Dataset<Row> out3 = ss.sql("select * from out2");
+    //    Dataset<Row> out3 = ss.sql("select * from out2 distribute by 1");
+    Dataset<Row> out3 = out2.repartition(1);
     //        Dataset<String> out3=out2.toDF();
 
     DataStreamWriter<Row> dsw = out3.writeStream();
     DataStreamWriter<Row> dsw2 =
         dsw.foreach(
             new ForeachWriter<Row>() {
-              //                  private TreeMap<Integer, String> tmap;
+              private TreeMap<Integer, String> tmap;
+              private long starttime;
+              private long finishtime;
+              private PrintWriter out;
+              private long partitionId;
+              private int recordcount = 0;
 
               @Override
               public boolean open(long partitionId, long version) {
-                // BLAST_LIB blaster = new BLAST_LIB();
-                // blaster.log("INFO", String.format("in open %d %d", partitionId, version));
+                starttime = System.currentTimeMillis();
+                tmap = new TreeMap<Integer, String>();
+
+                this.partitionId = partitionId;
+
+                try {
+                  out = new PrintWriter(new FileWriter("/tmp/mike2.log", true), true);
+                  out.println(String.format("open %d %d", partitionId, version));
+                  if (partitionId != 0)
+                    out.println(String.format(" *** not partition 0 %d ??? ", partitionId));
+                } catch (IOException e) {
+                  System.err.println(e);
+                }
                 return true;
               }
 
               @Override
               public void process(Row value) {
+                ++recordcount;
+                out.println(String.format(" in process %d", partitionId));
+                out.println("  " + value.mkString(":"));
+                String line = value.getString(0);
+                out.println("  line is " + line);
+                String[] csv = line.split(",");
+                out.println("  has " + csv.length);
+                Integer score = Integer.parseInt(csv[0]);
+                out.println(String.format("score is %d", score));
+                tmap.put(score, csv[1]);
                 // write string to connection
               }
 
               @Override
               public void close(Throwable errorOrNull) {
+                finishtime = System.currentTimeMillis();
+                out.println(String.format(" foreach finished at %d", finishtime));
+                out.println(String.format(" foreach loop took %d ms", finishtime - starttime));
+                out.println(String.format(" saw %d records", recordcount));
+                out.println(String.format(" treemap had %d", tmap.size()));
+                out.println(String.format("close %d", partitionId));
+                out.flush();
                 // close the connection
               }
             });
     DataStreamWriter<Row> dsw3 = dsw2.outputMode("Append");
     /*
-        StreamingQuery results =
-            out3.writeStream()
-                .foreach(
-                    new ForeachWriter<Row>() {
-                      private TreeMap<Integer, String> tmap;
+       StreamingQuery results =
+       out3.writeStream()
+       .foreach(
+       new ForeachWriter<Row>() {
+       private TreeMap<Integer, String> tmap;
 
-                      @Override
-                      public boolean open(long partitionId, long version) {
-                        BLAST_LIB blaster = new BLAST_LIB();
-                        blaster.log("INFO", String.format("in open %d %d", partitionId, version));
-                        return true;
-                      }
+       @Override
+       public boolean open(long partitionId, long version) {
+       BLAST_LIB blaster = new BLAST_LIB();
+       blaster.log("INFO", String.format("in open %d %d", partitionId, version));
+       return true;
+       }
 
-                      @Override
-                      public void process(Row value) {
-                        // write string to connection
-                      }
+       @Override
+       public void process(Row value) {
+    // write string to connection
+       }
 
-                      @Override
-                      public void close(Throwable errorOrNull) {
-                        // close the connection
-                      }
-                    })
-                .start();
-    */
-    //        StreamingQuery results =
-    // out2.writeStream().outputMode("append").format("console").start();
+       @Override
+       public void close(Throwable errorOrNull) {
+    // close the connection
+       }
+       })
+       .start();
+       */
+    StreamingQuery results2 = out3.writeStream().outputMode("append").format("console").start();
 
-    System.out.println("driver starting...");
+    System.out.println("starting stream...");
     try {
-      while (true) {
+      for (int i = 0; i < 9; ++i) {
         StreamingQuery results = dsw3.start();
-        System.out.println("driver started...");
-        Thread.sleep(1000);
+        System.out.println("stream running...");
+        Thread.sleep(10000);
         System.out.println(results.lastProgress());
         System.out.println(results.status());
-        // results.awaitTermination();
       }
     } catch (Exception e) {
       System.out.println("Spark exception: " + e);
     }
+    System.out.println("That is enough for now");
+  } // run
+
+  /*
+
+         try {
+         wait_for_console("exit", 500);
+         driver.stop_blast();
+         driver.join();
+         } catch (InterruptedException e1) {
+         System.out.println(String.format("driver interrupted: %s", e1));
+         } catch (Exception e2) {
+         System.out.println(String.format("stopping driver: %s", e2));
+         }
   }
+  }
+
+  */
+
 }

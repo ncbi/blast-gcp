@@ -11,7 +11,7 @@
 # on the master-node: 'hadoop fs -ls results' to see produced rdd's
 #
 
-SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
+SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_DRIVER"
 SPARK_BLAST_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 SPARK_BLAST_INI="ini.json"
 
