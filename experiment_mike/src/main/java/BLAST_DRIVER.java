@@ -30,19 +30,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.TreeMap;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.DataStreamWriter;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.ForeachWriter;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.streaming.DataStreamReader;
+import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.StructType;
 
@@ -266,43 +265,69 @@ class BLAST_DRIVER extends Thread {
     Dataset<Row> out3 = ss.sql("select * from out2");
     //        Dataset<String> out3=out2.toDF();
 
-    DataStreamWriter<String> dsw = out3.writeStream();
-    DataStreamWriter<String> dsw2 = dsw.foreach();
-    DataStreamWriter<String> dsw3 = dsw2.outputMode("Append");
-    DataStreamWriter<String> dsw4 = dsw3.start();
+    DataStreamWriter<Row> dsw = out3.writeStream();
+    DataStreamWriter<Row> dsw2 =
+        dsw.foreach(
+            new ForeachWriter<Row>() {
+              //                  private TreeMap<Integer, String> tmap;
 
-    StreamingQuery results =
-        out3.writeStream()
-            .foreach(
-                new ForeachWriter<Row>() {
-                  private TreeMap<Integer, String> tmap;
+              @Override
+              public boolean open(long partitionId, long version) {
+                // BLAST_LIB blaster = new BLAST_LIB();
+                // blaster.log("INFO", String.format("in open %d %d", partitionId, version));
+                return true;
+              }
 
-                  @Override
-                  public boolean open(long partitionId, long version) {
-                    BLAST_LIB blaster = new BLAST_LIB();
-                    blaster.log("INFO", String.format("in open %d %d", partitionId, version));
-                    return true;
-                  }
+              @Override
+              public void process(Row value) {
+                // write string to connection
+              }
 
-                  @Override
-                  public void process(Row value) {
-                    // write string to connection
-                  }
+              @Override
+              public void close(Throwable errorOrNull) {
+                // close the connection
+              }
+            });
+    DataStreamWriter<Row> dsw3 = dsw2.outputMode("Append");
+    /*
+        StreamingQuery results =
+            out3.writeStream()
+                .foreach(
+                    new ForeachWriter<Row>() {
+                      private TreeMap<Integer, String> tmap;
 
-                  @Override
-                  public void close(Throwable errorOrNull) {
-                    // close the connection
-                  }
-                })
-            .start();
+                      @Override
+                      public boolean open(long partitionId, long version) {
+                        BLAST_LIB blaster = new BLAST_LIB();
+                        blaster.log("INFO", String.format("in open %d %d", partitionId, version));
+                        return true;
+                      }
 
+                      @Override
+                      public void process(Row value) {
+                        // write string to connection
+                      }
+
+                      @Override
+                      public void close(Throwable errorOrNull) {
+                        // close the connection
+                      }
+                    })
+                .start();
+    */
     //        StreamingQuery results =
     // out2.writeStream().outputMode("append").format("console").start();
 
     System.out.println("driver starting...");
     try {
-      results.awaitTermination();
-      System.out.println("driver started...");
+      while (true) {
+        StreamingQuery results = dsw3.start();
+        System.out.println("driver started...");
+        Thread.sleep(1000);
+        System.out.println(results.lastProgress());
+        System.out.println(results.status());
+        // results.awaitTermination();
+      }
     } catch (Exception e) {
       System.out.println("Spark exception: " + e);
     }
