@@ -8,15 +8,15 @@
 hadoop fs -mkdir -p /user/vartanianmh/requests/
 hadoop fs -ls /user/vartanianmh/requests/
 
-for I in `seq 10`; do
+for I in `seq 100`; do
     x="test$RANDOM"
     echo "Test is $x"
     TS=`date +%Y-%m-%dT%H:%M:%S.%N`
-    echo ' { "timestamp" : "'$TS'", "RID":  "'$x'", "db": "nt", "query_seq": "ATAGGAAGTTATATTAAGGGTTCCGGATCTGGATC" } ' > $x.json
+    echo ' { "timestamp_hdfs" : "'$TS'", "RID":  "'$x'", "db": "nt", "query_seq": "ATAGGAAGTTATATTAAGGGTTCCGGATCTGGATC" } ' > $x.json
     cat $x.json
-    hadoop fs -copyFromLocal -f $x.json /user/vartanianmh/requests/
-    rm -f $x.json
 done
+hadoop fs -copyFromLocal -f test*.json /user/vartanianmh/requests/
+rm -f test*.json
 
 hadoop fs -ls /user/vartanianmh/requests/
 

@@ -45,9 +45,9 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 30,
-        "num_executor_cores" : 4,
-        "executor_memory" : "2G"
+        "num_executors" : 100,
+        "num_executor_cores" : 1,
+        "executor_memory" : "1G"
     },
 
     "log" :
