@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.TreeMap;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.sql.Dataset;
@@ -48,6 +49,7 @@ import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.storage.StorageLevel;
 
 public final class BLAST_DRIVER {
   public static void main(String[] args) throws Exception {
@@ -89,8 +91,8 @@ public final class BLAST_DRIVER {
     conf.set("spark.locality.wait", settings.locality_wait);
     String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
     conf.set("spark.sql.warehouse.dir", warehouseLocation);
-    // conf.set("spark.sql.shuffle.partitions", "900");
-    // conf.set("spark.default.parallelism", "900");
+    conf.set("spark.sql.shuffle.partitions", "886");
+    conf.set("spark.default.parallelism", "886");
     conf.set("spark.shuffle.reduceLocality.enabled", "false");
     conf.set("spark.sql.streaming.schemaInference", "true");
 
@@ -125,7 +127,8 @@ public final class BLAST_DRIVER {
     }
     Dataset<Row> parts2 = ss.createDataFrame(data, parts_schema);
     parts2.createOrReplaceTempView("parts2");
-    Dataset<Row> parts3 = parts2.repartition(886, parts2.col("num")).cache();
+    Dataset<Row> parts3 =
+        parts2.repartition(886, parts2.col("num")).persist(StorageLevel.MEMORY_AND_DISK_2());
     //       return sc.parallelizePairs(db_list, node_count())
 
     // Dataset<Row> parts=ss.read().json("/user/vartanianmh/parts.json");
@@ -150,7 +153,7 @@ public final class BLAST_DRIVER {
     Dataset<Row> joined =
         ss.sql(
                 "select RID, queries.db, query_seq, num from queries, parts2 where queries.db=parts2.db distribute by num")
-            .repartition(200);
+            .repartition(886);
     joined.createOrReplaceTempView("joined");
     joined.printSchema();
 
@@ -262,6 +265,7 @@ public final class BLAST_DRIVER {
     Dataset<Row> out3 = out2.repartition(1);
     //        Dataset<String> out3=out2.toDF();
 
+//    RDD<Row>f= out3.rdd();
     DataStreamWriter<Row> dsw = out3.writeStream();
     DataStreamWriter<Row> dsw2 =
         dsw.foreach(
