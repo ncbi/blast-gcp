@@ -34,6 +34,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -72,8 +73,8 @@ class BLAST_DRIVER extends Thread {
         conf.set("spark.locality.wait", settings.locality_wait);
         String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
         conf.set("spark.sql.warehouse.dir", warehouseLocation);
-        conf.set("spark.sql.shuffle.partitions", "300");
-        conf.set("spark.default.parallelism", "300");
+        conf.set("spark.sql.shuffle.partitions", "500");
+        conf.set("spark.default.parallelism", "500");
         conf.set("spark.shuffle.reduceLocality.enabled", "false");
         conf.set("spark.sql.streaming.schemaInference", "true");
 
@@ -136,26 +137,19 @@ class BLAST_DRIVER extends Thread {
         parts2.createOrReplaceTempView("parts2");
         //    dsquery.show();
 
-        /*
-           Dataset<Row> queries=ss.readStream()
-           .schema(schema).json("/user/vartanianmh/requests");
-           */
-        /*
-           .format("json")
-           .load("/user/vartanianmh/requests/");
-           */
         DataStreamReader query_stream = ss.readStream();
         query_stream.format("json");
         //        query_stream.schema(query_schema);
         query_stream.option("maxFilesPerTrigger", 1);
         query_stream.option("multiLine", true);
+        query_stream.option("includeTimestamp", true);
 
         Dataset<Row> queries = query_stream.json("/user/vartanianmh/requests");
         queries.printSchema();
         queries.createOrReplaceTempView("queries");
 
         Dataset<Row> joined =
-            ss.sql("select RID, queries.db, query_seq, num from queries, parts2 where queries.db=parts2.db distribute by num");
+            ss.sql("select RID, queries.db, query_seq, num, timestamp from queries, parts2 where queries.db=parts2.db distribute by num");
         joined.createOrReplaceTempView("joined");
         joined.printSchema();
 
@@ -166,6 +160,7 @@ class BLAST_DRIVER extends Thread {
             joined.flatMap(
                     (FlatMapFunction<Row, String>)
                     inrow -> {
+                        long starttime = System.currentTimeMillis();
                         BLAST_LIB blaster = new BLAST_LIB();
                         blaster.log("INFO", inrow.mkString(":"));
 
@@ -192,19 +187,35 @@ class BLAST_DRIVER extends Thread {
                         if (blaster != null) {
                             BLAST_HSP_LIST[] search_res =
                                 blaster.jni_prelim_search(partitionobj, requestobj, "INFO");
+                            //result.add(String.format("Got %d", search_res.length));
 
                             for (BLAST_HSP_LIST S : search_res) 
                             {
                                 //String rec=String.format("%d, %d = %d", S.oid, S.max_score, S.hsp_blob.length);
-                                String rec=S.toString();
+                                String rec=String.format("%d", S.max_score);
                                 result.add(rec);
                             }
+                            long finishtime = System.currentTimeMillis();
+                            //String bench=String.format("Took %d", finishtime-starttime);
+                            //result.add(bench);
+
                         } else result.add("null blaster " );
                         return result.iterator();
                     },
                           Encoders.STRING())
                               .toDF("fromflatmap");
 
+        out2.createOrReplaceTempView("out2");
+        Dataset<Row> scores = ss.sql("select '2018-01-01 01:00:00.0' as timestamp2, 'fakerid' as rid, fromflatmap as score from out2");
+        scores.createOrReplaceTempView("scores");
+
+        Dataset<Row> windows=scores.groupBy(
+                functions.window(
+                  scores.col("timestamp2"), "1 seconds"),
+                  scores.col("rid")).count().orderBy("window");
+        windows.createOrReplaceTempView("windows");
+
+        Dataset<Row> topn = ss.sql("select rid, dense_rank() over (partition by rid order by score desc) as rk from windows");
         /*
            Dataset<Row> qp = ss.sql("select concat(num,' ',query_seq) as combo from joined").repartition(886);
            Dataset<String> qs = qp.as(Encoders.STRING());
@@ -243,7 +254,7 @@ class BLAST_DRIVER extends Thread {
            Encoders.STRING())
            .toDF("fromflatmap");
            */
-        StreamingQuery results = out2.writeStream().outputMode("append").format("console").start();
+        StreamingQuery results = windows.writeStream().outputMode("append").format("console").start();
 
         System.out.println("driver starting...");
         try {

@@ -127,6 +127,9 @@ public class BLAST_LIB {
             // FIX - top_n_prelim
             log("INFO", "  topn      : " + req.top_n);
 
+            if (req.query_seq==null)
+                    throw new Exception("query_seq is null");
+
             if (req.query_seq.contains("\n")) {
                 log("WARN", "Query contains newline, which may crash Blast library");
             }

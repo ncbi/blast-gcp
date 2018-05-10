@@ -25,7 +25,7 @@
         "db" :
         {
             "db_bucket" : "nt_50mb_chunks",
-            "num_db_partitions" : 60
+            "num_db_partitions" : 886
         },
         "top_n" : 100
     },
