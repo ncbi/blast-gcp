@@ -1,5 +1,6 @@
 TS=`date +%Y-%m-%dT%H:%M:%S.%N`
 echo ' { "timestamp": "'$TS'", "RID": "sample", "db": "nt", "query_seq": "ATAGGAAGTTATATTAAGGGTTCCGGATCTGGATC" }' > sample.json
+cat sample.json
 hadoop fs -copyFromLocal -f sample.json /user/vartanianmh/sample.json
 
 #hadoop fs -rm -f -R /user/vartanianmh/requests/
