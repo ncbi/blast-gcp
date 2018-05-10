@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.TreeMap;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.sql.Dataset;
@@ -129,20 +128,13 @@ public final class BLAST_DRIVER {
     parts2.createOrReplaceTempView("parts2");
     Dataset<Row> parts3 =
         parts2.repartition(886, parts2.col("num")).persist(StorageLevel.MEMORY_AND_DISK_2());
-    //       return sc.parallelizePairs(db_list, node_count())
 
-    // Dataset<Row> parts=ss.read().json("/user/vartanianmh/parts.json");
     parts3.show();
-    // Dataset<Row> parts2=ss.sql("select * from parts distribute by num");
-    //    Dataset<Row> parts2=parts.repartition(886,parts.col("num"));
-    //    parts2.cache();
     parts3.createOrReplaceTempView("parts3");
-    //    dsquery.show();
 
     DataStreamReader query_stream = ss.readStream();
     query_stream.format("json");
-    //        query_stream.schema(query_schema);
-    query_stream.option("maxFilesPerTrigger", 5);
+    query_stream.option("maxFilesPerTrigger", 3);
     query_stream.option("multiLine", true);
     query_stream.option("includeTimestamp", true);
 
@@ -158,7 +150,6 @@ public final class BLAST_DRIVER {
     joined.printSchema();
 
     //        StructType out_schema=StructType.fromDDL("foo string, foo2 string");
-    //        ExpressionEncoder<Row> encoder = RowEncoder.apply(out_schema);
 
     Dataset<Row> out2 =
         joined
@@ -190,19 +181,14 @@ public final class BLAST_DRIVER {
                       if (blaster != null) {
                         BLAST_HSP_LIST[] search_res =
                             blaster.jni_prelim_search(partitionobj, requestobj, "INFO");
-                        // result.add(String.format("Got %d", search_res.length));
 
                         for (BLAST_HSP_LIST S : search_res) {
-                          // String rec=String.format("%d, %d = %d", S.oid, S.max_score,
-                          // S.hsp_blob.length);
                           byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
                           String b64blob = new String(encoded);
                           String rec = String.format("%d,%s", S.max_score, b64blob);
                           result.add(rec);
                         }
                         long finishtime = System.currentTimeMillis();
-                        // String bench=String.format("Took %d", finishtime-starttime);
-                        // result.add(bench);
 
                       } else result.add("null blaster ");
                       return result.iterator();
@@ -210,62 +196,8 @@ public final class BLAST_DRIVER {
                 Encoders.STRING())
             .toDF("fromflatmap");
     out2.createOrReplaceTempView("out2");
-    /*
-    Dataset<Row> scores = ss.sql("select '2018-01-01 01:00:00.0' as timestamp2, 'fakerid' as rid, fromflatmap as score from out2");
-    scores.createOrReplaceTempView("scores");
-
-    Dataset<Row> windows=scores.groupBy(
-    functions.window(
-    scores.col("timestamp2"), "1 seconds"),
-    scores.col("rid")).count().orderBy("window");
-    windows.createOrReplaceTempView("windows");
-
-    Dataset<Row> topn = ss.sql("select rid, dense_rank() over (partition by rid order by rid desc) as rk from windows");
-    */
-    /*
-    Dataset<Row> qp = ss.sql("select concat(num,' ',query_seq) as combo from joined").repartition(886);
-    Dataset<String> qs = qp.as(Encoders.STRING());
-    Dataset<Row> out =
-    qs.flatMap(
-    (FlatMapFunction<String, String>)
-    t -> {
-    String[] ts = t.split(" ");
-
-    BLAST_REQUEST requestobj = new BLAST_REQUEST();
-    requestobj.id = "test ";
-    requestobj.query_seq = ts[0];
-    requestobj.query_seq = t;
-    requestobj.query_url = "";
-    requestobj.params = "nt:" + t + t.length() + " " + ts.length;
-    requestobj.db = "nt";
-    requestobj.program = "blastn";
-    requestobj.top_n = 100;
-    BLAST_PARTITION partitionobj =
-    new BLAST_PARTITION(
-    "/tmp/blast/db/prefetched", "nt_50M", Integer.parseInt(ts[0]), false);
-
-    BLAST_LIB blaster =
-    new BLAST_LIB(); // BLAST_LIB_SINGLETON.get_lib(part, bls);
-    blaster.log("INFO", "hi there");
-
-    List<String> result = new ArrayList<>();
-    if (blaster != null) {
-    BLAST_HSP_LIST[] search_res =
-    blaster.jni_prelim_search(partitionobj, requestobj, "INFO");
-
-    for (BLAST_HSP_LIST S : search_res) result.add(S.toString());
-    } else result.add("null blaster " + t);
-    return result.iterator();
-    },
-    Encoders.STRING())
-    .toDF("fromflatmap");
-    */
-
-    //    Dataset<Row> out3 = ss.sql("select * from out2 distribute by 1");
     Dataset<Row> out3 = out2.repartition(1);
-    //        Dataset<String> out3=out2.toDF();
 
-//    RDD<Row>f= out3.rdd();
     DataStreamWriter<Row> dsw = out3.writeStream();
     DataStreamWriter<Row> dsw2 =
         dsw.foreach(
@@ -307,7 +239,6 @@ public final class BLAST_DRIVER {
                 Integer score = Integer.parseInt(csv[0]);
                 out.println(String.format("score is %d", score));
                 tmap.put(score, csv[1]);
-                // write string to connection
               }
 
               @Override
@@ -319,36 +250,10 @@ public final class BLAST_DRIVER {
                 out.println(String.format(" treemap had %d", tmap.size()));
                 out.println(String.format("close %d", partitionId));
                 out.flush();
-                // close the connection
               }
             });
     DataStreamWriter<Row> dsw3 = dsw2.outputMode("Append");
-    /*
-       StreamingQuery results =
-       out3.writeStream()
-       .foreach(
-       new ForeachWriter<Row>() {
-       private TreeMap<Integer, String> tmap;
 
-       @Override
-       public boolean open(long partitionId, long version) {
-       BLAST_LIB blaster = new BLAST_LIB();
-       blaster.log("INFO", String.format("in open %d %d", partitionId, version));
-       return true;
-       }
-
-       @Override
-       public void process(Row value) {
-    // write string to connection
-       }
-
-       @Override
-       public void close(Throwable errorOrNull) {
-    // close the connection
-       }
-       })
-       .start();
-       */
     StreamingQuery results2 = out3.writeStream().outputMode("append").format("console").start();
 
     System.out.println("starting stream...");
@@ -365,21 +270,4 @@ public final class BLAST_DRIVER {
     }
     System.out.println("That is enough for now");
   } // run
-
-  /*
-
-         try {
-         wait_for_console("exit", 500);
-         driver.stop_blast();
-         driver.join();
-         } catch (InterruptedException e1) {
-         System.out.println(String.format("driver interrupted: %s", e1));
-         } catch (Exception e2) {
-         System.out.println(String.format("stopping driver: %s", e2));
-         }
-  }
-  }
-
-  */
-
 }
