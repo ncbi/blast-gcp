@@ -198,7 +198,7 @@ public final class BLAST_DRIVER {
 
                         for (BLAST_HSP_LIST S : search_res) {
                           byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
-                          String b64blob = new String(encoded);
+                          String b64blob = new String(encoded, "UTF_8");
                           // oid, max_score, blob
                           String rec =
                               String.format(
