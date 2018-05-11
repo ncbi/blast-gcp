@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -130,7 +131,6 @@ public final class BLAST_DRIVER {
     }
 
     Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
-    // parts.createOrReplaceTempView("parts");
     // Paranoia. Want to make sure the underlying RDD is
     // never recomputed, even if nodes are lost.
     Dataset<Row> blast_partitions =
@@ -155,9 +155,9 @@ public final class BLAST_DRIVER {
         sparksession
             .sql(
                 "select RID, queries.db, partition_num, "
-                    + "query_seq, timestamp_hdfs"
+                    + "query_seq, timestamp_hdfs "
                     + "from queries, blast_partitions "
-                    + "where queries.db=parts2.db "
+                    + "where queries.db=blast_partitions.db "
                     + "distribute by partition_num")
             .repartition(886);
     joined.createOrReplaceTempView("joined");
@@ -198,7 +198,7 @@ public final class BLAST_DRIVER {
 
                         for (BLAST_HSP_LIST S : search_res) {
                           byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
-                          String b64blob = new String(encoded, "UTF_8");
+                          String b64blob = new String(encoded, StandardCharsets.UTF_8);
                           // oid, max_score, blob
                           String rec =
                               String.format(
@@ -261,10 +261,10 @@ public final class BLAST_DRIVER {
                     String line = value.getString(0);
                     log.println("  line is " + line);
                     String[] csv = line.split(",", 0);
-                    log.println("  has " + csv.length);
+                    log.println("  csv has " + csv.length);
                     String rid = csv[0];
                     Integer max_score = Integer.parseInt(csv[5]);
-                    log.println(String.format("max_score is %d", max_score));
+                    log.println(String.format(" max_score is %d", max_score));
 
                     if (!score_map.containsKey(rid)) {
                       TreeMap<Integer, ArrayList<String>> tm =
@@ -287,8 +287,10 @@ public final class BLAST_DRIVER {
 
                   @Override
                   public void close(Throwable errorOrNull) {
+                    log.println("close results:");
+                    log.println("---------------");
                     log.println(String.format(" saw %d records", recordcount));
-                    log.println(String.format(" treemap has %d", score_map.size()));
+                    log.println(String.format(" hashmap has %d", score_map.size()));
 
                     for (String rid : score_map.keySet()) {
                       TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
@@ -297,9 +299,13 @@ public final class BLAST_DRIVER {
                         if (i < top_n) {
                           ArrayList<String> al = tm.get(k);
                           for (String line : al) {
-                            log.println(String.format("i=%d, line=%s", i, line));
+                            log.println(String.format("  rid=%s, k=%d, i=%d, line=%s", rid, k, i, line));
                           }
-                        } else break;
+                        } else 
+                        {
+                            log.println(" Skipping");
+                            break;
+                        }
 
                         ++i;
                       }
@@ -319,7 +325,7 @@ public final class BLAST_DRIVER {
 
   private static boolean run_streams(DataStreamWriter<Row> prelim_dsw) {
     System.out.println("starting stream...");
-    StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
+  //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
     try {
       for (int i = 0; i < 9; ++i) {
         StreamingQuery results = prelim_dsw.start();
