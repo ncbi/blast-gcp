@@ -74,12 +74,7 @@ You'll likely need a ~/google-service-account-file.json
 ```console
 cd ~/blast-gcp/tests
 virtualenv --python python3 env
-source env/bin/activate
-cd env
-pip3 install google-cloud
-pip3 install google-cloud-pubsub
-pip3 install google-cloud-storage
-cd ..
+source env/bin/activate && pip install -r requirements.txt
 ./test-pipeline.py
  . . . 
            *** Start Spark Streaming Job now, press Enter when readu ***
