@@ -54,7 +54,8 @@ import org.apache.spark.storage.StorageLevel;
 public final class BLAST_DRIVER {
   private static BLAST_SETTINGS settings;
   private static SparkSession sparksession;
-  private static JavaSparkContext javasparkcontext; // Only one spark context allowed per JVM
+  // Only one spark context allowed per JVM
+  private static JavaSparkContext javasparkcontext;
 
   public static boolean init(final String[] args) {
     if (args.length != 1) {
@@ -124,7 +125,7 @@ public final class BLAST_DRIVER {
     ArrayList<Row> data = new ArrayList<Row>();
 
     for (int i = 0; i < settings.num_db_partitions; i++) {
-      Row r = RowFactory.create("nt", new Integer(i));
+      Row r = RowFactory.create("nt", Integer.valueOf(i));
       data.add(r);
     }
 
@@ -259,7 +260,7 @@ public final class BLAST_DRIVER {
                     log.println("  " + value.mkString(":"));
                     String line = value.getString(0);
                     log.println("  line is " + line);
-                    String[] csv = line.split(",");
+                    String[] csv = line.split(",", 0);
                     log.println("  has " + csv.length);
                     String rid = csv[0];
                     Integer max_score = Integer.parseInt(csv[5]);
