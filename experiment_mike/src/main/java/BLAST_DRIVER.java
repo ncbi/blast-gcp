@@ -147,7 +147,7 @@ public final class BLAST_DRIVER {
 
     DataStreamReader query_stream = sparksession.readStream();
     query_stream.format("json");
-    query_stream.option("maxFilesPerTrigger", 3); // TODO: Configureable
+    query_stream.option("maxFilesPerTrigger", 5); // TODO: Configureable
     query_stream.option("multiLine", true);
     query_stream.option("includeTimestamp", true);
 
@@ -368,10 +368,10 @@ public final class BLAST_DRIVER {
     System.out.println("starting stream...");
     //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
     try {
-      for (int i = 0; i < 9; ++i) {
+      for (int i = 0; i < 10; ++i) {
         StreamingQuery results = prelim_dsw.start();
         System.out.println("stream running...");
-        Thread.sleep(10000);
+        Thread.sleep(30000);
         System.out.println(results.lastProgress());
         System.out.println(results.status());
       }
