@@ -27,6 +27,7 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class BLAST_SETTINGS implements Serializable
 {
@@ -68,6 +69,7 @@ public class BLAST_SETTINGS implements Serializable
     public String gs_status_error;
 
     /* SPARK */
+    public List< String > transfer_files;
     public String  spark_log_level;
     public String  locality_wait;
     public Boolean with_locality;
@@ -194,6 +196,7 @@ public class BLAST_SETTINGS implements Serializable
 
         S = S + "\nSPARK:\n";
         S = S + String.format( "\tappName ............ '%s'\n", appName );
+        S = S + String.format( "\ttransfer files ..... %s\n", transfer_files );
         S = S + String.format( "\tspark log level .... '%s'\n", spark_log_level );
         S = S + String.format( "\tlocality.wait ...... %s\n", locality_wait );
         S = S + String.format( "\twith_locality ...... %s\n", Boolean.toString( with_locality ) );

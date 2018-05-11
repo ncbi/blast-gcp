@@ -26,12 +26,19 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+//import java.util.List;
+//import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 
 public final class BLAST_MAIN
 {
-   public static void main( String[] args ) throws Exception
-   {
+    public static void main( String[] args ) throws Exception
+    {
         if ( args.length < 1 )
             System.out.println( "settings json-file missing" );
         else
@@ -45,20 +52,43 @@ public final class BLAST_MAIN
             else
             {
                 System.out.println( settings.toString() );
+                SparkConf conf = BLAST_SETTINGS_READER.configure( settings );
+
+                JavaSparkContext sc = new JavaSparkContext( conf );
+                sc.setLogLevel( settings.spark_log_level );
+                for ( String fn : settings.transfer_files )
+                    sc.addFile( fn );
 
                 ConcurrentLinkedQueue< BLAST_REQUEST > requests = new ConcurrentLinkedQueue<>();
-                ConcurrentLinkedQueue< String > cmd = new ConcurrentLinkedQueue<>();
-
-                BLAST_DRIVER driver = new BLAST_DRIVER( settings, requests, cmd );
-                BLAST_CONSOLE cons = new BLAST_CONSOLE( requests, cmd, 200, settings.top_n );
+                AtomicBoolean running = new AtomicBoolean( false );
+                BLAST_CONSOLE cons = new BLAST_CONSOLE( requests, running, 200, settings.top_n );
+                cons.start();
 
                 try
                 {
-                    driver.start();
-                    cons.start();
+                    BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
 
+                    Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
+                    BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes );
+                    System.out.println( "driver started..." );
+
+                    BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db, requests );
+
+                    while( running.get() )
+                    {
+                        try
+                        {
+                            Thread.sleep( 500 );
+                        }
+                        catch ( InterruptedException e )
+                        {
+                        }
+                    }
+
+                    jobs.stop();
                     cons.join();
-                    driver.join();
+
+                    System.out.println( "driver done..." );
                 }
                 catch( Exception e )
                 {

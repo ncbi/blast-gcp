@@ -32,9 +32,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.io.FileReader;
 
+import org.apache.spark.SparkConf;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 import com.google.gson.stream.JsonReader;
 
 class UTILS
@@ -124,6 +128,27 @@ class UTILS
         final String username = System.getProperty( "user.name" );
         return String.format( pattern, username );
         //return String.format( "hdfs:///user/%s/results/", username );
+    }
+
+    public static void get_string_list( JsonObject root, final String key, final String dflt, List< String > lst )
+    {
+        try
+        {
+            JsonArray a = root.getAsJsonArray( key );
+            Gson googleJson = new Gson();
+            ArrayList l = googleJson.fromJson( a, ArrayList.class );
+            if ( l.isEmpty() )
+                lst.add( dflt );
+            else
+            {
+                for ( int i = 0; i < l.size(); ++i )
+                    lst.add( l.get( i ).toString() );
+            }
+        }
+        catch ( Exception e )
+        {
+            lst.add( dflt );
+        }
     }
 }
 
@@ -413,6 +438,7 @@ class RESULTS_SETTINGS_READER
 class SPARK_SETTINGS_READER
 {
     public static final String key = "spark";
+    public static final String key_transfer_files = "transfer_files";
     public static final String key_spark_log_level = "log_level";
     public static final String key_locality_wait = "locality_wait";
     public static final String key_with_locality = "with_locality";
@@ -424,6 +450,7 @@ class SPARK_SETTINGS_READER
     public static final String key_scheduler_fair = "scheduler_fair";
     public static final String key_parallel_jobs = "parallel_jobs";
 
+    public static final String  dflt_transfer_file = "libblastjni.so";
     public static final String  dflt_spark_log_level = "ERROR";
     public static final String  dflt_locality_wait = "3s";
     public static final Boolean dflt_with_locality = false;
@@ -437,6 +464,9 @@ class SPARK_SETTINGS_READER
 
     public static void defaults( BLAST_SETTINGS settings )
     {
+        settings.transfer_files     = new ArrayList<>();
+        settings.transfer_files.add( dflt_transfer_file );
+
         settings.spark_log_level    = dflt_spark_log_level;
         settings.locality_wait      = dflt_locality_wait;
         settings.with_locality      = dflt_with_locality;
@@ -451,9 +481,11 @@ class SPARK_SETTINGS_READER
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
+        settings.transfer_files     = new ArrayList<>();
         JsonObject obj = UTILS.get_sub( root, key );
         if ( obj != null )
         {
+            UTILS.get_string_list( obj, key_transfer_files, dflt_transfer_file, settings.transfer_files );
             settings.spark_log_level    = UTILS.get_json_string( obj, key_spark_log_level, dflt_spark_log_level );
             settings.locality_wait      = UTILS.get_json_string( obj, key_locality_wait, dflt_locality_wait );
             settings.with_locality      = UTILS.get_json_bool( obj, key_with_locality, dflt_with_locality );
@@ -466,6 +498,8 @@ class SPARK_SETTINGS_READER
             settings.scheduler_fair     = UTILS.get_json_bool( obj, key_scheduler_fair, dflt_scheduler_fair );
             settings.parallel_jobs      = UTILS.get_json_int( obj, key_parallel_jobs, dflt_parallel_jobs );
         }
+        else
+            settings.transfer_files.add( dflt_transfer_file );
     }
 }
 
@@ -579,5 +613,29 @@ public class BLAST_SETTINGS_READER
         }
         return res;
     }
- 
+
+    public static SparkConf configure( BLAST_SETTINGS settings )
+    {
+        SparkConf conf = new SparkConf();
+        conf.setAppName( settings.appName );
+
+        conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( settings.with_dyn_alloc ) );
+        conf.set( "spark.streaming.stopGracefullyOnShutdown", "true" );
+        conf.set( "spark.streaming.receiver.maxRate", String.format( "%d", settings.receiver_max_rate ) );
+        if ( settings.num_executors > 0 )
+            conf.set( "spark.executor.instances", String.format( "%d", settings.num_executors ) );
+        if ( settings.num_executor_cores > 0 )
+            conf.set( "spark.executor.cores", String.format( "%d", settings.num_executor_cores ) );
+        if ( !settings.executor_memory.isEmpty() )
+            conf.set( "spark.executor.memory", settings.executor_memory );
+        conf.set( "spark.locality.wait", settings.locality_wait );
+        conf.set( "spark.shuffle.reduceLocality.enabled", Boolean.toString( settings.shuffle_reduceLocality_enabled ) );
+
+        if ( settings.scheduler_fair )
+        {
+            conf.set( "spark.scheduler.mode", "FAIR" );
+            conf.set( "spark.scheduler.allocation.file", "./pooles.xml" );
+        }
+        return conf;
+    }
 }

@@ -41,26 +41,23 @@ import org.apache.spark.rdd.RDD;
 
 class BLAST_JOB extends Thread
 {
-    private final JavaSparkContext sc;
-
     private final BLAST_SETTINGS settings;
     private Broadcast< BLAST_SETTINGS > SETTINGS;
-
-    private JavaRDD< BLAST_PARTITION > DB_SECS;
-
+    private final JavaSparkContext sc;
+    private BLAST_DATABASE db;
     private final ConcurrentLinkedQueue< BLAST_REQUEST > requests;
     private final AtomicBoolean running;
 
     public BLAST_JOB( final BLAST_SETTINGS settings,
-                      JavaSparkContext sc,
                       Broadcast< BLAST_SETTINGS > SETTINGS,
-                      JavaRDD< BLAST_PARTITION > DB_SECS,
+                      JavaSparkContext sc,
+                      BLAST_DATABASE a_db,
                       ConcurrentLinkedQueue< BLAST_REQUEST > a_requests )
     {
         this.settings = settings;
-        this.sc = sc;
         this.SETTINGS = SETTINGS;
-        this.DB_SECS = DB_SECS;
+        this.sc = sc;
+        this.db = a_db;
         this.requests = a_requests;
         running = new AtomicBoolean( false );
     }
@@ -175,7 +172,7 @@ class BLAST_JOB extends Thread
             if ( settings.log_final )
             {
                 Long elapsed = System.currentTimeMillis() - started_at;
-                BLAST_SEND.send( settings, String.format( "[%s] %d bytes written to hdfs at '%s' (%,d ms)",
+                System.out.println( String.format( "[%s] %d bytes written to hdfs at '%s' (%,d ms)",
                         req_id, uploaded, path, elapsed ) );
             }
         }
@@ -187,7 +184,7 @@ class BLAST_JOB extends Thread
             if ( settings.log_final )
             {
                 Long elapsed = System.currentTimeMillis() - started_at;
-                BLAST_SEND.send( settings, String.format( "[%s] %d bytes written to gs '%s':'%s' (%,d ms)",
+                System.out.println( String.format( "[%s] %d bytes written to gs '%s':'%s' (%,d ms)",
                         req_id, uploaded, settings.gs_result_bucket, gs_result_key, elapsed ) );
             }
         }
@@ -197,7 +194,7 @@ class BLAST_JOB extends Thread
             if ( settings.log_final )
             {
                 Long elapsed = System.currentTimeMillis() - started_at;
-                BLAST_SEND.send( settings, String.format( "[%s] %d bytes summed up (%,d ms) n=%,d",
+                System.out.println( String.format( "[%s] %d bytes summed up (%,d ms) n=%,d",
                         req_id, sum, elapsed, ll.list.size() ) );
             }
         }
@@ -212,7 +209,7 @@ class BLAST_JOB extends Thread
 
         final JavaRDD< BLAST_REQUEST > REQUESTS = sc.parallelize( req_list, settings.num_executors ).cache();
 
-        final JavaPairRDD< BLAST_PARTITION, BLAST_REQUEST > JOBS = DB_SECS.cartesian( REQUESTS ).cache();
+        final JavaPairRDD< BLAST_PARTITION, BLAST_REQUEST > JOBS = db.DB_SECS.cartesian( REQUESTS ).cache();
 
         final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( JOBS, SETTINGS );
 
@@ -225,7 +222,7 @@ class BLAST_JOB extends Thread
         catch ( Exception e )
         {
             Long elapsed = System.currentTimeMillis() - started_at;
-            BLAST_SEND.send( settings, String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
+            System.out.println( String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
         }
     }
 

@@ -47,7 +47,7 @@ public class BLAST_YARN_NODES
         try
         {
             Runtime r = Runtime.getRuntime();
-            Process p = r.exec( "yarn node -list -all" );
+            Process p = r.exec( "yarn node -list" );
             p.waitFor();
             InputStreamReader isr = new InputStreamReader( p.getInputStream() );
             BufferedReader b = new BufferedReader( isr );
@@ -57,7 +57,8 @@ public class BLAST_YARN_NODES
                 String l = line.trim();
                 if ( !l.startsWith( "Total Nodes" ) && !l.startsWith( "Node-Id" ) )
                 {
-                    nodes.add( l.substring( 0, l.indexOf( ':' ) ) );
+                    String name = l.substring( 0, l.indexOf( ':' ) );
+                    nodes.add( name );
                 }
             }
             b.close();
