@@ -105,7 +105,7 @@ gcloud beta dataproc --region us-east4 \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "${USER}-test/cluster_initialize.sh" \
+    "gs://${USER}-test/cluster_initialize.sh" \
     --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 
