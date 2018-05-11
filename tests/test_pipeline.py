@@ -106,6 +106,12 @@ def make_pubsub():
     return
 
 
+def get_user_name():
+    import os
+    import pwd
+    return pwd.getpwuid( os.getuid() )[ 0 ]
+
+
 def make_bucket():
     global STORAGE_CLIENT, TEST_ID, BUCKET, BUCKET_NAME, PROJECT
     STORAGE_CLIENT = storage.Client()
@@ -372,7 +378,7 @@ def main():
     atexit.register(cleanup)
 #    TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
 #    TEST_ID = str(uuid.uuid4())
-    TEST_ID = "blast-test-vartanianmh"
+    TEST_ID = "blast-test-" + get_user_name()
     print("TEST_ID is " + TEST_ID)
 
     # Create output bucket
