@@ -167,8 +167,9 @@ public final class BLAST_DRIVER {
     joined.createOrReplaceTempView("joined");
     joined.printSchema();
 
-    Integer top_n = 10; // TODO: settings.top_n;
+    Integer top_n = settings.top_n;
     String jni_log_level = settings.jni_log_level;
+    String hdfs_result_dir = settings.hdfs_result_dir;
 
     Dataset<Row> prelim_search_results =
         joined
@@ -332,7 +333,7 @@ public final class BLAST_DRIVER {
                   } // close
 
                   private void write_to_hdfs(String rid, String output) {
-                    String outdir = "/user/vartanianmh/output"; // TODO
+                    String outdir = hdfs_result_dir;
                     String outfile = "";
                     try {
                       outfile = String.format("%s/%s.txt", outdir, rid);
@@ -345,7 +346,7 @@ public final class BLAST_DRIVER {
                       }
 
                       FSDataOutputStream os = fs.create(new Path(outfile));
-                      os.writeUTF(output);
+                      os.writeBytes(output);
                       os.close();
 
                       log.println(
