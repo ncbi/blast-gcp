@@ -37,6 +37,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
@@ -163,7 +170,7 @@ public final class BLAST_DRIVER {
     joined.createOrReplaceTempView("joined");
     joined.printSchema();
 
-    Integer top_n = settings.top_n;
+    Integer top_n = 10; // TODO: settings.top_n;
     String jni_log_level = settings.jni_log_level;
 
     Dataset<Row> prelim_search_results =
@@ -204,13 +211,13 @@ public final class BLAST_DRIVER {
                               String.format(
                                   "%s," + // RID
                                       "%s," + // DB
-                                      "%d," + // partition_num
-                                      "%s," + // query_seq
+                                      "%02d," + // partition_num
                                       "%d," + // oid
                                       "%d," + // max_score
+                                      "%s," + // query_seq
                                       "%s" + // blob
                                       "",
-                                  rid, db, partition_num, query_seq, S.oid, S.max_score, b64blob);
+                                  rid, db, partition_num, S.oid, S.max_score, query_seq, b64blob);
 
                           hsp_csvs.add(rec);
                         }
@@ -231,39 +238,41 @@ public final class BLAST_DRIVER {
                   private long partitionId;
                   PrintWriter log;
                   int recordcount = 0;
-                  // HashMap maps RID -> TreeMap (reversed) of scores and HSPlist
+                  FileSystem fs;
+
                   // So we can efficiently compute topN scores by RID
                   HashMap<String, TreeMap<Integer, ArrayList<String>>> score_map;
 
                   @Override
                   public boolean open(long partitionId, long version) {
                     score_map = new HashMap<String, TreeMap<Integer, ArrayList<String>>>();
-
                     this.partitionId = partitionId;
-
-                    try {
-                      log = new PrintWriter(new FileWriter("/tmp/foreach.log", true), true);
-                      log.println(String.format("open %d %d", partitionId, version));
-                      if (partitionId != 0)
-                        log.println(String.format(" *** not partition 0 %d ??? ", partitionId));
+                    try
+                    {
+                        Configuration conf=new Configuration();
+                        FileSystem fs = FileSystem.get(conf);
+                        log = new PrintWriter(new FileWriter("/tmp/foreach.log", true), true);
                     } catch (IOException e) {
                       System.err.println(e);
                       return false;
                     }
+                    log.println(String.format("open %d %d", partitionId, version));
+                    if (partitionId != 0)
+                    log.println(String.format(" *** not partition 0 %d ??? ", partitionId));
                     return true;
-                  }
+                  } // open
 
                   @Override
                   public void process(Row value) {
                     ++recordcount;
                     log.println(String.format(" in process %d", partitionId));
-                    log.println("  " + value.mkString(":"));
+                    log.println("  " + value.mkString(":").substring(0,30));
                     String line = value.getString(0);
-                    log.println("  line is " + line);
+                    log.println("  line is " + line.substring(0,30));
                     String[] csv = line.split(",", 0);
                     log.println("  csv has " + csv.length);
                     String rid = csv[0];
-                    Integer max_score = Integer.parseInt(csv[5]);
+                    Integer max_score = Integer.parseInt(csv[4]);
                     log.println(String.format(" max_score is %d", max_score));
 
                     if (!score_map.containsKey(rid)) {
@@ -294,30 +303,60 @@ public final class BLAST_DRIVER {
 
                     for (String rid : score_map.keySet()) {
                       TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
+                      String output="";
                       int i = 0;
-                      for (Integer k : tm.keySet()) {
+                      for (Integer score : tm.keySet()) {
                         if (i < top_n) {
-                          ArrayList<String> al = tm.get(k);
+                          ArrayList<String> al = tm.get(score);
                           for (String line : al) {
-                            log.println(String.format("  rid=%s, k=%d, i=%d, line=%s", rid, k, i, line));
+                            log.println(String.format("  rid=%s, score=%d, i=%d,\n" +
+                                        "    line=%s",
+                                        rid, score, i, line.substring(0,60)));
+                            output=output + line + "\n";
                           }
-                        } else 
+                        } else
                         {
-                            log.println(" Skipping");
+                            log.println(" Skipping rest");
                             break;
                         }
-
                         ++i;
                       }
+                      write_to_hdfs(rid, output);
                     }
 
-                    //                Integer max_score=score_map.lastKey();
-                    // Find the
                     log.println(String.format("close %d", partitionId));
                     log.flush();
                     return;
-                  }
-                })
+                  } // close
+
+
+                private void write_to_hdfs(String rid, String output)
+                {
+                    try
+                    {
+                        String outdir="/user/vartanianmh/output"; // TODO
+                        //==== Create folder if not exists
+                        //Path workingDir=fs.getWorkingDirectory();
+                        Path newFolderPath= new Path(outdir);
+                        if(!fs.exists(newFolderPath)) {
+                            log.println("Creating HDFS dir " + outdir);
+                            fs.mkdirs(newFolderPath);
+                        }
+
+                        String outfile=String.format("%s/%s.txt", outdir, rid);
+                        FSDataOutputStream os = fs.create( new Path( outfile ) );
+                        os.writeUTF( output );
+                        os.close();
+
+                        fs.close();
+                        log.println(String.format("Wrote %d bytes to HDFS %s",output.length(), outfile));
+                    } catch (IOException ioe ) {
+                        log.println("Couldn't create HDFS");
+                    }
+
+                } // write_to_hdfs
+                } // ForeachWriter
+                ) // foreach
             .outputMode("Append");
 
     return topn_dsw;
