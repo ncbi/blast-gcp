@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -333,28 +334,32 @@ public final class BLAST_DRIVER {
                   } // close
 
                   private void write_to_hdfs(String rid, String output) {
-                    String outdir = hdfs_result_dir;
-                    String outfile = "";
                     try {
-                      outfile = String.format("%s/%s.txt", outdir, rid);
-                      // log.println("outdir is" + outdir);
-                      Path newFolderPath = new Path(outdir);
-                      // log.println("newfolder is " + newFolderPath.toString());
-                      if (!fs.exists(newFolderPath)) {
-                        log.println("Creating HDFS dir " + outdir);
-                        fs.mkdirs(newFolderPath);
-                      }
-
-                      FSDataOutputStream os = fs.create(new Path(outfile));
+                      SecureRandom random = new SecureRandom();
+                      byte[] bytes = new byte[10];
+                      random.nextBytes(bytes);
+                      byte[] encoded = Base64.getEncoder().encode(bytes);
+                      String tmpfile =
+                          String.format("/tmp/%s", new String(encoded, StandardCharsets.UTF_8));
+                      FSDataOutputStream os = fs.create(new Path(tmpfile));
                       os.writeBytes(output);
                       os.close();
 
+                      Path newFolderPath = new Path(hdfs_result_dir);
+                      if (!fs.exists(newFolderPath)) {
+                        log.println("Creating HDFS dir " + hdfs_result_dir);
+                        fs.mkdirs(newFolderPath);
+                      }
+                      String outfile = String.format("%s/%s.txt", hdfs_result_dir, rid);
+                      fs.delete(new Path(outfile), false);
+                      // Rename in HDFS is supposed to be atomic
+                      fs.rename(new Path(tmpfile), new Path(outfile));
                       log.println(
                           String.format("Wrote %d bytes to HDFS %s", output.length(), outfile));
+
                     } catch (IOException ioe) {
-                      log.println("Couldn't create HDFS");
+                      log.println("Couldn't write to HDFS");
                       log.println(ioe.toString());
-                      log.println(outfile);
                     }
                   } // write_to_hdfs
                 } // ForeachWriter
