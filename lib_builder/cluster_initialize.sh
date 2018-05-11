@@ -95,26 +95,26 @@ else
     # Worker node, copy DBs from GCS
     # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
     MAXJOBS=8
-    parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
-    for part in $parts; do
-        logger -t cluster_initialize.sh "BLASTJNI Preloading Blast DB $part"
-        piece="nt_50M.$part"
-        mkdir -p $BLASTDBDIR/$piece
-        cd $BLASTDBDIR/$piece
-        #mkdir lock
-        gsutil -m cp $DBBUCKET$piece.*in . &
-        gsutil -m cp $DBBUCKET$piece.*sq . &
-        gsutil -m cp $DBBUCKET$piece.*hr . &
-        touch done
-        #rmdir lock
+    ### parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
+    ### for part in $parts; do
+    ###     logger -t cluster_initialize.sh "BLASTJNI Preloading Blast DB $part"
+    ###     piece="nt_50M.$part"
+    ###     mkdir -p $BLASTDBDIR/$piece
+    ###     cd $BLASTDBDIR/$piece
+    ###     #mkdir lock
+    ###     gsutil -m cp $DBBUCKET$piece.*in . &
+    ###     gsutil -m cp $DBBUCKET$piece.*sq . &
+    ###     gsutil -m cp $DBBUCKET$piece.*hr . &
+    ###     touch done
+    ###     #rmdir lock
 
-        j=`jobs | wc -l`
-        while [ $j -ge $MAXJOBS ]; do
-            j=`jobs | wc -l`
-            echo "$j waiting ..."
-            sleep 0.5
-        done
-    done
+    ###     j=`jobs | wc -l`
+    ###     while [ $j -ge $MAXJOBS ]; do
+    ###         j=`jobs | wc -l`
+    ###         echo "$j waiting ..."
+    ###         sleep 0.5
+    ###     done
+    ### done
 fi
 
 # Set lax permissions

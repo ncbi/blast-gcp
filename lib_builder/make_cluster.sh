@@ -83,6 +83,9 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 # ~$15/hour for 56 node cluster
 # ~$21/hour for 16 X 64
+
+gsutil cp cluster_initialize.sh gs://${USER}-test/
+
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
@@ -101,7 +104,7 @@ gcloud beta dataproc --region us-east4 \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
+    "${USER}-test/cluster_initialize.sh" \
     --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 
