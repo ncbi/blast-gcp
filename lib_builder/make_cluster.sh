@@ -86,14 +86,15 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 gsutil cp cluster_initialize.sh gs://${USER}-test/
 
+#    --worker-machine-type custom-64-71680 \
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
-    --worker-machine-type n1-highcpu-64 \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 14 \
+    --worker-machine-type n1-highcpu-64 \
+    --num-preemptible-workers 4 \
         --preemptible-worker-boot-disk-size 250 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \

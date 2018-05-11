@@ -4,30 +4,31 @@ From your google cloud shell (the >_) box in upper right, paste
 (ctrl-shift-v in my browser, very finicky)
 ```shell
 # Copied from lib_builder/make_cluster.sh
-gcloud dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER-$(date +%Y%m%d) \
+gcloud beta dataproc --region us-east4 \
+    clusters create blast-dataproc-$USER \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
-    --worker-machine-type n1-highcpu-16 \
         --worker-boot-disk-size 250 \
-    --num-preemptible-workers 2 \
+    --worker-machine-type n1-highcpu-64 \
+    --num-preemptible-workers 4 \
         --preemptible-worker-boot-disk-size 250 \
-    --scopes 'https://www.googleapis.com/auth/cloud-platform' \
+    --scopes cloud-platform \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
     --region us-east4 \
     --zone   us-east4-b \
+    --max-age=8h \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "gs://blastgcp-pipeline-test/scripts/cluster_initialize.sh" \
+    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
     --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 ```
 
 * Once cluster has begun, click on [ DataProc ->  Clusters ](https://console.cloud.google.com/dataproc/clusters?project=ncbi-sandbox-blast)
-* you should see your cluster "Provisioning" (takes about 10 minutes to copy Blast databases from Google Cloud Storage), and then "Running."
+* you should see your cluster "Provisioning", and then "Running."
 * **DATA LOSS WARNING:** Cluster filesystems, including /home and HDFS, are not persistent, and clusters automatically terminate after 8 hours.
 
 # SSH'ing to your cluster
@@ -36,56 +37,81 @@ master node and open an SSH session on it. If using another ssh client, note tha
 
 We highly recommend creating 4 ssh sessions with an external client into the master node, and arranging them so that all 4 can be viewed on your monitor at the same time. If you have not yet created/registered a key pair with GCP, you will need to do this before connecting with an external client.
 
-# Checkout git repository
+# Window 1 - Checkout git repository
 ```shell
 git clone https://github.com/ncbi/blast-gcp.git
 cd blast-gcp
 git checkout engineering
 ```
 
-# Producing Spark Application
+## Compiling and Starting Spark Application
 ```shell
 cd ~/blast-gcp/pipeline
 ./make_jar.sh
+cp ~/blast-gcp/lib_builder/libblastjni.so ~/blast-gcp/pipeline # Avoid if libblastjni.so is in flux
+hadoop fs -mkdir -p /user/$USER/requests
+# EDIT ini.json to replace blast-test-USERNAME with blast-test-yourusername
+cd ~/blast-gcp/pipeline;./run_spark.sh # to start Spark
 ```
+Note: Blast databases are no longer prefetched into /tmp/blast/db. First queries may require 10+ minutes to warm up.
+### If using a non-standard cluster size:
+1. num_db_partitions may be increased to 886.
+2. num_executors should be approximately the number of vCPUS on all of your worker nodes, minus some overhead
+3. num_executor_cores should be 1, we believe YARN enforces this
 
-# Setting up test environment
-* (optional) Edit the file 'test.ini' to adjust the settings.
-* (optional) Edit the script run_spark.sh to adjust local/yarn, number of executors/cores
-** on google-cluster:  --num-executers X   : X should match the number or worker-nodes --executor-cores Y  : Y should match the number of vCPU's per worker-node 
-```
-In the log (output) terminal: ncat -lk 10011 to see the log-output
-In the job (input) terminal: ncat -lk 10012 to trigger jobs
-In the spark (application) terminal: cd ~/blast-gcp/pipeline;./run_spark.sh to start Spark
-In the job (input) terminal with "ncat -lk 10012", type in a query ("T1" as a test Request-ID)
-```
 
-# Viewing results
+# Window 2 - Spark logs
 ```console
-$ hadoop fs -ls results
--rw-r--r--   2 userid hadoop       7550 2018-04-11 14:11 results/req_T1.txt
-$ cd ~/blast-gcp/lib_builder/
-$ hadoop fs -copyToLocal results/req_T1.txt req_T1.txt
-$ ./asntool -m asn.all -t Seq-an stdout -d req_T1.txt 
-Seq-annot ::= {
-  data
-    align {
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
+nc -lk 10011 &
+```
+
+# Window 3 - Test Harness
+**PubSub Topic, Subscription and Cloud Storage output bucket will be deleted upon completion**
+
+You'll likely need a ~/google-service-account-file.json
+( gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS )
+
+```console
+cd ~/blast-gcp/tests
+virtualenv --python python3 env
+source env/bin/activate
+cd env
+pip3 install google-cloud
+pip3 install google-cloud-pubsub
+pip3 install google-cloud-storage
+cd ..
+./test-pipeline.py
+ . . . 
+           *** Start Spark Streaming Job now, press Enter when readu ***
+. . .
+                       | AFEWMY2E014 took  12.85 seconds       
+                       | AFEWJJ3Z014 took  21.40 seconds
+                       | AFEVMVZM014 took  40.35 seconds
+                       | AFEW0RN2014 took  41.12 seconds
+                       | AFEVKCK9014 took  26.61 seconds
+                       | AFEX4420014 took  25.76 seconds
+                       | AFEVN6PB014 took  40.64 seconds
+```
+
+# Window 4 - Google Connector
+```console
+cd ~/blast-gcp/pipeline
+virtualenv --python python3 env
+source env/bin/activate
+cd env
+pip3 install google-cloud
+pip3 install google-cloud-pubsub
+pip3 install google-cloud-storage
+~/blast-gcp/pipeline/google_connector blast-test-$USER /user/$USER/requests/
 ```
 
 # Shutdown your cluster
 **All data not stored in a Google Cloud Storage bucket will be lost.**
+**DATA LOSS WARNING: Cluster filesystems, including /home and HDFS, are not persistent, and clusters automatically terminate after 8 hours. **
+
 ```console
 In the spark (application terminal : exit
 gcloud dataproc --region us-east4 clusters list
 gcloud dataproc --region us-east4 clusters delete cluster-$USER-...
 ```
 or [ select your cluster ](https://console.cloud.google.com/dataproc/clusters?project=ncbi-sandbox-blast) and press Delete.
-
-

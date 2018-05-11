@@ -1,0 +1,58 @@
+{
+    "source" :
+    {
+        "pubsub" :
+        {
+            "project_id" : "ncbi-sandbox-blast",
+            "subscript_id" : "spark-test-subscript",
+            "use" : "false"
+        },
+        "socket" :
+        {
+            "trigger_port" : 10012,
+            "use" : "true"
+        },
+        "hdfs" :
+        {
+            "dir" : "hdfs:///user/%s/requests",
+            "use" : "false"
+        }
+    },
+
+    "blastjni" :
+    {
+        "db" :
+        {
+            "db_bucket" : "nt_50mb_chunks",
+            "num_db_partitions" : 80
+        },
+        "top_n" : 100
+    },
+
+    "result" :
+    {
+        "asn1" :
+        {
+            "bucket" : "blastgcp-pipeline-test",
+            "gs_or_hdfs" : "time"
+        },
+        "status" :
+        {
+            "bucket"  : "blastgcp-pipeline-test"
+        }
+    },
+
+    "spark" :
+    {
+        "with_locality" : "false",
+        "num_executors" : 24,
+        "num_executor_cores" : 1,
+        "locality_wait" : "1s",
+        "shuffle_reduceLocality_enabled" : "true"
+    },
+
+    "log" :
+    {
+        "log_port" : 10011
+    }
+}

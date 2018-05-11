@@ -9,687 +9,27 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 390 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 390 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 0, 10, 0 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 721313658, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 390 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 555847457, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1083886081 } ,
-            starts {
-              2 ,
-              633 } ,
-            lens {
-              390 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 673300767, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 519124293, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1083886082 } ,
-            starts {
-              2 ,
-              633 } ,
-            lens {
-              364 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 390 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 390 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 721313658, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 411 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 598220338, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 3 ,
-            ids {
-              local
-                str "query" ,
-              gi 3061270 } ,
-            starts {
-              2 ,
-              593 ,
-              -1 ,
-              985 ,
-              394 ,
-              986 } ,
-            lens {
-              392 ,
-              1 ,
-              28 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 420 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 420 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 776713148, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 420 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 598220338, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1027855739 } ,
-            starts {
-              2 ,
-              652 } ,
-            lens {
-              420 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 417 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 417 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 771173199, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 419 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 598220338, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 310920 } ,
-            starts {
-              2 ,
-              403 } ,
-            lens {
-              420 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 673300767, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 382 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 557259887, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1025033955 } ,
-            starts {
-              1 ,
-              628 } ,
-            lens {
-              391 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 381 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 381 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 704693811, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 407 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 598220338, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 62865754 } ,
-            starts {
-              2 ,
-              141 } ,
-            lens {
-              420 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 379 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 379 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 701000512, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 407 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 599632768, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 62865756 } ,
-            starts {
-              1 ,
-              143 } ,
-            lens {
-              421 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 369 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 369 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 682534015, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 383 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 555847457, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1111061573 } ,
-            starts {
-              2 ,
-              586 } ,
-            lens {
-              390 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 369 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 369 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 682534015, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 383 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 555847457, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1111061569 } ,
-            starts {
-              2 ,
-              627 } ,
-            lens {
-              390 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 673300767, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 384 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 561497175, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 22550385 } ,
-            starts {
-              1 ,
-              651 } ,
-            lens {
-              394 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 355 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 355 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 65668092, 10, -5 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 381 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 561497175, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1238375495 } ,
-            starts {
-              1 ,
-              572 } ,
-            lens {
-              394 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 364 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 673300767, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 384 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 561497175, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 1027852629 } ,
-            starts {
-              1 ,
-              651 } ,
-            lens {
-              394 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 708 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 708 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 0, 10, 0 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 130854824, 10, -5 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 708 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
@@ -702,12 +42,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 8096276 } ,
+              gi 126544570 } ,
             starts {
               0 ,
-              0 } ,
+              381 } ,
             lens {
-              708 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -719,32 +59,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 394 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 394 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 0, 10, 0 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 728700257, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 412 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 599632768, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -752,12 +92,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 698435946 } ,
+              gi 126544552 } ,
             starts {
-              1 ,
-              623 } ,
+              0 ,
+              381 } ,
             lens {
-              421 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -769,32 +109,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 364 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 364 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 0, 10, 0 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 673300767, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 382 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 557259887, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -802,12 +142,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 698435952 } ,
+              gi 126544551 } ,
             starts {
-              1 ,
-              412 } ,
+              0 ,
+              381 } ,
             lens {
-              391 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -819,32 +159,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 364 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 364 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 0, 10, 0 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 673300767, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 382 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 557259887, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -852,12 +192,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 698435940 } ,
+              gi 126544548 } ,
             starts {
-              1 ,
-              625 } ,
+              0 ,
+              381 } ,
             lens {
-              391 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -869,32 +209,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 343 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 343 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 113414939, 10, -185 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 634521124, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 357 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 519124293, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -902,12 +242,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1111061571 } ,
+              gi 126544533 } ,
             starts {
-              2 ,
-              626 } ,
+              0 ,
+              381 } ,
             lens {
-              364 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -919,32 +259,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 338 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 338 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 682582188, 10, -183 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 625287876, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 356 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 520536723, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -952,12 +292,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1025033959 } ,
+              gi 126544532 } ,
             starts {
-              1 ,
-              628 } ,
+              0 ,
+              381 } ,
             lens {
-              365 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -969,32 +309,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 286 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 286 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 550548605, 10, -154 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 529262094, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 286 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 408954802, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1002,12 +342,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 8096274 } ,
+              gi 126544529 } ,
             starts {
-              422 ,
-              0 } ,
+              0 ,
+              381 } ,
             lens {
-              286 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1019,32 +359,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 270 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 270 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 43166482, 10, -144 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 4997157, 10, -4 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 350 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 555847457, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1052,12 +392,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 971535045 } ,
+              gi 126544528 } ,
             starts {
-              2 ,
-              805 } ,
+              0 ,
+              381 } ,
             lens {
-              390 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1069,102 +409,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 270 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 270 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 43166482, 10, -144 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 4997157, 10, -4 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 351 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 555847457, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1026030599 } ,
-            starts {
-              2 ,
-              866 ,
-              -1 ,
-              1041 ,
-              177 ,
-              1042 ,
-              181 ,
-              -1 ,
-              182 ,
-              1046 } ,
-            lens {
-              175 ,
-              1 ,
-              4 ,
-              1 ,
-              210 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 270 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 270 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 43166482, 10, -144 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 4997157, 10, -4 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 350 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 555847457, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1172,12 +442,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 387157285 } ,
+              gi 126544500 } ,
             starts {
-              2 ,
-              573 } ,
+              0 ,
+              381 } ,
             lens {
-              390 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1189,32 +459,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 267 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 267 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 200834105, 10, -143 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 494175751, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 355 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 568559322, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1222,12 +492,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 56562176 } ,
+              gi 126544485 } ,
             starts {
-              2 ,
-              841 } ,
+              0 ,
+              381 } ,
             lens {
-              399 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1239,32 +509,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 267 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 267 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 200834105, 10, -143 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 494175751, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 355 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 568559322, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1272,12 +542,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 921274039 } ,
+              gi 126544481 } ,
             starts {
-              2 ,
-              841 } ,
+              0 ,
+              381 } ,
             lens {
-              399 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1289,32 +559,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 267 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 267 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 200834105, 10, -143 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 494175751, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 355 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 568559322, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1322,12 +592,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 225311910 } ,
+              gi 38350379 } ,
             starts {
-              2 ,
-              809 } ,
+              0 ,
+              359 } ,
             lens {
-              399 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1339,32 +609,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 266 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 266 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 722327922, 10, -143 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 492329101, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 270 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 38918079, 10, -6 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1372,12 +642,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1025335496 } ,
+              gi 179679054 } ,
             starts {
-              423 ,
-              190 } ,
+              0 ,
+              155 } ,
             lens {
-              272 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1389,32 +659,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 261 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 261 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 434729476, 10, -140 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 483095853, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 349 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 560084745, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1422,12 +692,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 997818071 } ,
+              gi 179679032 } ,
             starts {
-              2 ,
-              573 } ,
+              0 ,
+              155 } ,
             lens {
-              393 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1439,32 +709,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 261 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 261 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 434729476, 10, -140 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 483095853, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 347 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 555847457, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1472,12 +742,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 970010043 } ,
+              gi 179678935 } ,
             starts {
-              2 ,
-              842 } ,
+              0 ,
+              155 } ,
             lens {
-              390 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1489,32 +759,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 260 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 260 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 15635653, 10, -138 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 481249203, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 268 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 38918079, 10, -6 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1522,12 +792,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 698479980 } ,
+              gi 179678913 } ,
             starts {
-              423 ,
-              200 } ,
+              0 ,
+              155 } ,
             lens {
-              272 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1539,32 +809,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 258 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 258 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 202259951, 10, -138 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 477555904, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 346 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 555847457, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1572,12 +842,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 921274044 } ,
+              gi 179678880 } ,
             starts {
-              2 ,
-              782 } ,
+              0 ,
+              155 } ,
             lens {
-              390 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1589,102 +859,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 244 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 244 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 122593378, 10, -130 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 451702809, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 325 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 519124293, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1026030601 } ,
-            starts {
-              2 ,
-              865 ,
-              -1 ,
-              1040 ,
-              177 ,
-              1041 ,
-              181 ,
-              -1 ,
-              182 ,
-              1045 } ,
-            lens {
-              175 ,
-              1 ,
-              4 ,
-              1 ,
-              184 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 215 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 215 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 161986261, 10, -114 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 398149969, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 253 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 38918079, 10, -6 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1692,12 +892,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1083858820 } ,
+              gi 179678829 } ,
             starts {
-              423 ,
-              213 } ,
+              0 ,
+              155 } ,
             lens {
-              272 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1709,92 +909,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 201 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 201 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 981827739, 10, -107 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 372296874, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 249 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 38918079, 10, -6 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 3 ,
-            ids {
-              local
-                str "query" ,
-              gi 1111035056 } ,
-            starts {
-              423 ,
-              199 ,
-              581 ,
-              -1 ,
-              585 ,
-              357 } ,
-            lens {
-              158 ,
-              4 ,
-              110 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 194 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 194 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 764387991, 10, -103 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 359370326, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 194 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 279011299, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1802,12 +942,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1025324718 } ,
+              gi 164523693 } ,
             starts {
-              228 ,
-              849 } ,
+              0 ,
+              172 } ,
             lens {
-              194 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1819,32 +959,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 173 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 173 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 360702813, 10, -91 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 320590684, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 201 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 308672316, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -1852,12 +992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1025050910 } ,
+              gi 22532184 } ,
             starts {
-              423 ,
-              216 } ,
+              0 ,
+              349 } ,
             lens {
-              215 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -1869,242 +1009,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 143 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 143 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 171418477, 10, -74 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 265191194, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 310 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 558672316, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1216957233 } ,
-            starts {
-              14 ,
-              428 ,
-              197 ,
-              -1 ,
-              198 ,
-              611 ,
-              -1 ,
-              617 ,
-              204 ,
-              618 } ,
-            lens {
-              183 ,
-              1 ,
-              6 ,
-              1 ,
-              202 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 143 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 143 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 171418477, 10, -74 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 265191194, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 310 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 558672316, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1216957231 } ,
-            starts {
-              14 ,
-              517 ,
-              197 ,
-              -1 ,
-              198 ,
-              700 ,
-              -1 ,
-              706 ,
-              204 ,
-              707 } ,
-            lens {
-              183 ,
-              1 ,
-              6 ,
-              1 ,
-              202 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 143 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 143 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 171418477, 10, -74 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 265191194, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 310 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 558672316, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1216957229 } ,
-            starts {
-              14 ,
-              756 ,
-              197 ,
-              -1 ,
-              198 ,
-              939 ,
-              -1 ,
-              945 ,
-              204 ,
-              946 } ,
-            lens {
-              183 ,
-              1 ,
-              6 ,
-              1 ,
-              202 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 134 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 134 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 172635483, 10, -69 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 248571347, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 160 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 249350282, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -2112,12 +1042,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 663680699 } ,
+              gi 22532181 } ,
             starts {
-              228 ,
-              44017953 } ,
+              0 ,
+              349 } ,
             lens {
-              173 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2129,32 +1059,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 134 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 134 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 172635483, 10, -69 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 248571347, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 160 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 249350282, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -2162,12 +1092,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1273855411 } ,
+              gi 22532178 } ,
             starts {
-              228 ,
-              49441195 } ,
+              0 ,
+              351 } ,
             lens {
-              173 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2179,32 +1109,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 134 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 134 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 172635483, 10, -69 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 248571347, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 160 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 249350282, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -2212,12 +1142,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 663673440 } ,
+              gi 22532177 } ,
             starts {
-              228 ,
-              53574248 } ,
+              0 ,
+              351 } ,
             lens {
-              173 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2229,32 +1159,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 134 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 134 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 172635483, 10, -69 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 248571347, 10, -6 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 160 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 249350282, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -2262,62 +1192,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 170763644 } ,
+              gi 21950263 } ,
             starts {
-              228 ,
-              17791 } ,
+              0 ,
+              142 } ,
             lens {
-              173 } ,
-            strands {
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 134 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 134 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 172635483, 10, -69 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 248571347, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 160 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 249350282, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 1 ,
-            ids {
-              local
-                str "query" ,
-              gi 170763631 } ,
-            starts {
-              228 ,
-              25514 } ,
-            lens {
-              173 } ,
+              70 } ,
             strands {
               minus ,
               plus } } } ,
@@ -2329,136 +1209,2646 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 126 } ,
+              int 70 } ,
           {
             id
               str "blast_score" ,
             value
-              int 126 } ,
+              int 70 } ,
           {
             id
               str "e_value" ,
             value
-              real { 483398791, 10, -65 } } ,
+              real { 378491133, 10, -35 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 23379815, 10, -5 } } ,
+              real { 130385769, 10, -6 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 209 } ,
+              int 70 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 356694915, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
-            numseg 5 ,
+            numseg 1 ,
             ids {
               local
                 str "query" ,
-              gi 1111057335 } ,
+              gi 588264303 } ,
             starts {
-              128 ,
-              475 ,
-              -1 ,
-              565 ,
-              218 ,
-              566 ,
-              220 ,
-              -1 ,
-              221 ,
-              568 } ,
+              0 ,
+              350 } ,
             lens {
-              90 ,
-              1 ,
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 588264183 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555734 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555733 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555731 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555730 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555729 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555728 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555727 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 824555726 } ,
+            starts {
+              0 ,
+              350 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 184216255 } ,
+            starts {
+              0 ,
+              155 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 134261277 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 134261135 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 134261250 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 134261127 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 134261115 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 62123278 } ,
+            starts {
+              0 ,
+              334 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 4566619 } ,
+            starts {
+              0 ,
+              133 } ,
+            lens {
+              70 } ,
+            strands {
+              minus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 18150491 } ,
+            starts {
+              0 ,
+              196 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 444292844 } ,
+            starts {
+              0 ,
+              1021 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 444292843 } ,
+            starts {
+              0 ,
+              1027 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 444292841 } ,
+            starts {
+              0 ,
+              1028 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 444292840 } ,
+            starts {
+              0 ,
+              1022 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 444292837 } ,
+            starts {
+              0 ,
+              1023 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 444292836 } ,
+            starts {
+              0 ,
+              342 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 651209463 } ,
+            starts {
+              0 ,
+              357 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 46849553 } ,
+            starts {
+              0 ,
+              372 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 1005664386 } ,
+            starts {
+              0 ,
+              354 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 1005664385 } ,
+            starts {
+              0 ,
+              319 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 26984248 } ,
+            starts {
+              0 ,
+              353 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 26984240 } ,
+            starts {
+              0 ,
+              356 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 1081750397 } ,
+            starts {
+              0 ,
+              383 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 289546330 } ,
+            starts {
+              0 ,
+              378 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 289546299 } ,
+            starts {
+              0 ,
+              378 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 158633606 } ,
+            starts {
+              0 ,
+              335 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 158633598 } ,
+            starts {
+              0 ,
+              335 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 158633597 } ,
+            starts {
+              0 ,
+              335 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 158633569 } ,
+            starts {
+              0 ,
+              391 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 218464261 } ,
+            starts {
+              0 ,
+              1248 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 16267327 } ,
+            starts {
+              0 ,
+              2415 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 281495698 } ,
+            starts {
+              0 ,
+              351 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 281495696 } ,
+            starts {
+              0 ,
+              351 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 940413938 } ,
+            starts {
+              0 ,
+              353 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 940413936 } ,
+            starts {
+              0 ,
+              353 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439051 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439048 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439047 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439046 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439041 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439035 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439034 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 378491133, 10, -35 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 130385769, 10, -6 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 70 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 227439032 } ,
+            starts {
+              0 ,
+              386 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 68 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 68 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 489609215, 10, -34 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12669247, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 68 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 976428571, 10, -7 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 22532175 } ,
+            starts {
               2 ,
-              1 ,
-              156 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 126 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 126 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 483398791, 10, -65 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 23379815, 10, -5 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 299 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 547372881, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1217023411 } ,
-            starts {
-              8 ,
-              509 ,
-              197 ,
-              -1 ,
-              198 ,
-              698 ,
-              -1 ,
-              704 ,
-              204 ,
-              705 } ,
+              352 } ,
             lens {
-              189 ,
-              1 ,
-              6 ,
-              1 ,
-              188 } ,
+              68 } ,
             strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
               plus ,
               plus } } } ,
       {
@@ -2469,172 +3859,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 126 } ,
+              int 67 } ,
           {
             id
               str "blast_score" ,
             value
-              int 126 } ,
+              int 67 } ,
           {
             id
               str "e_value" ,
             value
-              real { 483398791, 10, -65 } } ,
+              real { 176094795, 10, -33 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 23379815, 10, -5 } } ,
+              real { 12484582, 10, -5 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 299 } ,
+              int 69 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 547372881, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1217023409 } ,
-            starts {
-              8 ,
-              757 ,
-              197 ,
-              -1 ,
-              198 ,
-              946 ,
-              -1 ,
-              952 ,
-              204 ,
-              953 } ,
-            lens {
-              189 ,
-              1 ,
-              6 ,
-              1 ,
-              188 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 126 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 126 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 483398791, 10, -65 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 23379815, 10, -5 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 299 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 547372881, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1217023407 } ,
-            starts {
-              8 ,
-              757 ,
-              197 ,
-              -1 ,
-              198 ,
-              946 ,
-              -1 ,
-              952 ,
-              204 ,
-              953 } ,
-            lens {
-              189 ,
-              1 ,
-              6 ,
-              1 ,
-              188 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 122 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 122 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 808897155, 10, -63 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 226411551, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 122 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 177316384, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -2642,12 +3892,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1025324718 } ,
+              gi 126544543 } ,
             starts {
-              2 ,
-              635 } ,
+              0 ,
+              381 } ,
             lens {
-              122 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -2659,462 +3909,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 102 } ,
+              int 67 } ,
           {
             id
               str "blast_score" ,
             value
-              int 102 } ,
+              int 67 } ,
           {
             id
               str "e_value" ,
             value
-              real { 106128504, 10, -51 } } ,
+              real { 176094795, 10, -33 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 189478558, 10, -6 } } ,
+              real { 12484582, 10, -5 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 288 } ,
+              int 69 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 538898305, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 5 ,
-            ids {
-              local
-                str "query" ,
-              gi 1098833150 } ,
-            starts {
-              14 ,
-              628 ,
-              -1 ,
-              822 ,
-              208 ,
-              824 ,
-              218 ,
-              -1 ,
-              220 ,
-              834 } ,
-            lens {
-              194 ,
-              2 ,
-              10 ,
-              2 ,
-              172 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 83 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 83 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 387145169, 10, -41 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 154392215, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 276 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 517711864, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 27 ,
-            ids {
-              local
-                str "query" ,
-              gi 593788837 } ,
-            starts {
-              1 ,
-              587 ,
-              25 ,
-              -1 ,
-              26 ,
-              611 ,
-              -1 ,
-              614 ,
-              29 ,
-              615 ,
-              -1 ,
-              653 ,
-              67 ,
-              654 ,
-              70 ,
-              -1 ,
-              71 ,
-              657 ,
-              115 ,
-              -1 ,
-              116 ,
-              701 ,
-              -1 ,
-              705 ,
-              120 ,
-              706 ,
-              162 ,
-              -1 ,
-              163 ,
-              748 ,
-              -1 ,
-              753 ,
-              168 ,
-              754 ,
-              -1 ,
-              771 ,
-              185 ,
-              772 ,
-              197 ,
-              -1 ,
-              198 ,
-              784 ,
-              -1 ,
-              803 ,
-              217 ,
-              804 ,
-              220 ,
-              -1 ,
-              221 ,
-              807 ,
-              357 ,
-              -1 ,
-              358 ,
-              943 } ,
-            lens {
-              24 ,
-              1 ,
-              3 ,
-              1 ,
-              38 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              17 ,
-              1 ,
-              12 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              136 ,
-              1 ,
-              6 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 83 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 83 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 387145169, 10, -41 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 154392215, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 276 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 517711864, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 27 ,
-            ids {
-              local
-                str "query" ,
-              gi 593788835 } ,
-            starts {
-              1 ,
-              834 ,
-              25 ,
-              -1 ,
-              26 ,
-              858 ,
-              -1 ,
-              861 ,
-              29 ,
-              862 ,
-              -1 ,
-              900 ,
-              67 ,
-              901 ,
-              70 ,
-              -1 ,
-              71 ,
-              904 ,
-              115 ,
-              -1 ,
-              116 ,
-              948 ,
-              -1 ,
-              952 ,
-              120 ,
-              953 ,
-              162 ,
-              -1 ,
-              163 ,
-              995 ,
-              -1 ,
-              1000 ,
-              168 ,
-              1001 ,
-              -1 ,
-              1018 ,
-              185 ,
-              1019 ,
-              197 ,
-              -1 ,
-              198 ,
-              1031 ,
-              -1 ,
-              1050 ,
-              217 ,
-              1051 ,
-              220 ,
-              -1 ,
-              221 ,
-              1054 ,
-              357 ,
-              -1 ,
-              358 ,
-              1190 } ,
-            lens {
-              24 ,
-              1 ,
-              3 ,
-              1 ,
-              38 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              17 ,
-              1 ,
-              12 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              136 ,
-              1 ,
-              6 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 72 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 72 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 504359435, 10, -35 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 134079069, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 112 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 191440677, 10, -7 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -3122,12 +3942,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 1098850035 } ,
+              gi 126544542 } ,
             starts {
-              260 ,
-              0 } ,
+              0 ,
+              381 } ,
             lens {
-              132 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -3139,962 +3959,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 61 } ,
+              int 67 } ,
           {
             id
               str "blast_score" ,
             value
-              int 61 } ,
+              int 67 } ,
           {
             id
               str "e_value" ,
             value
-              real { 657062157, 10, -29 } } ,
+              real { 176094795, 10, -33 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 113765923, 10, -6 } } ,
+              real { 12484582, 10, -5 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 245 } ,
+              int 69 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 469689265, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 23 ,
-            ids {
-              local
-                str "query" ,
-              gi 1255108487 } ,
-            starts {
-              35 ,
-              658 ,
-              -1 ,
-              690 ,
-              67 ,
-              691 ,
-              70 ,
-              -1 ,
-              71 ,
-              694 ,
-              115 ,
-              -1 ,
-              116 ,
-              738 ,
-              -1 ,
-              742 ,
-              120 ,
-              743 ,
-              162 ,
-              -1 ,
-              163 ,
-              785 ,
-              -1 ,
-              790 ,
-              168 ,
-              791 ,
-              -1 ,
-              806 ,
-              183 ,
-              807 ,
-              197 ,
-              -1 ,
-              198 ,
-              821 ,
-              -1 ,
-              840 ,
-              217 ,
-              841 ,
-              220 ,
-              -1 ,
-              221 ,
-              844 ,
-              357 ,
-              -1 ,
-              358 ,
-              980 } ,
-            lens {
-              32 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              15 ,
-              1 ,
-              14 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              136 ,
-              1 ,
-              6 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 61 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 61 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 657062157, 10, -29 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 113765923, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 245 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 469689265, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 23 ,
-            ids {
-              local
-                str "query" ,
-              gi 1255108486 } ,
-            starts {
-              35 ,
-              647 ,
-              -1 ,
-              679 ,
-              67 ,
-              680 ,
-              70 ,
-              -1 ,
-              71 ,
-              683 ,
-              115 ,
-              -1 ,
-              116 ,
-              727 ,
-              -1 ,
-              731 ,
-              120 ,
-              732 ,
-              162 ,
-              -1 ,
-              163 ,
-              774 ,
-              -1 ,
-              779 ,
-              168 ,
-              780 ,
-              -1 ,
-              795 ,
-              183 ,
-              796 ,
-              197 ,
-              -1 ,
-              198 ,
-              810 ,
-              -1 ,
-              829 ,
-              217 ,
-              830 ,
-              220 ,
-              -1 ,
-              221 ,
-              833 ,
-              357 ,
-              -1 ,
-              358 ,
-              969 } ,
-            lens {
-              32 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              15 ,
-              1 ,
-              14 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              136 ,
-              1 ,
-              6 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 61 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 61 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 657062157, 10, -29 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 113765923, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 245 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 469689265, 10, -7 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 23 ,
-            ids {
-              local
-                str "query" ,
-              gi 1255108485 } ,
-            starts {
-              35 ,
-              722 ,
-              -1 ,
-              754 ,
-              67 ,
-              755 ,
-              70 ,
-              -1 ,
-              71 ,
-              758 ,
-              115 ,
-              -1 ,
-              116 ,
-              802 ,
-              -1 ,
-              806 ,
-              120 ,
-              807 ,
-              162 ,
-              -1 ,
-              163 ,
-              849 ,
-              -1 ,
-              854 ,
-              168 ,
-              855 ,
-              -1 ,
-              870 ,
-              183 ,
-              871 ,
-              197 ,
-              -1 ,
-              198 ,
-              885 ,
-              -1 ,
-              904 ,
-              217 ,
-              905 ,
-              220 ,
-              -1 ,
-              221 ,
-              908 ,
-              357 ,
-              -1 ,
-              358 ,
-              1044 } ,
-            lens {
-              32 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              15 ,
-              1 ,
-              14 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              136 ,
-              1 ,
-              6 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 56 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 56 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 395449598, 10, -26 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 104532674, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 227 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 43579096, 10, -6 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 21 ,
-            ids {
-              local
-                str "query" ,
-              gi 1044581837 } ,
-            starts {
-              35 ,
-              670 ,
-              -1 ,
-              702 ,
-              67 ,
-              703 ,
-              70 ,
-              -1 ,
-              71 ,
-              706 ,
-              115 ,
-              -1 ,
-              116 ,
-              750 ,
-              -1 ,
-              754 ,
-              120 ,
-              755 ,
-              162 ,
-              -1 ,
-              163 ,
-              797 ,
-              -1 ,
-              802 ,
-              168 ,
-              803 ,
-              -1 ,
-              818 ,
-              183 ,
-              819 ,
-              197 ,
-              -1 ,
-              198 ,
-              833 ,
-              -1 ,
-              852 ,
-              217 ,
-              853 ,
-              220 ,
-              -1 ,
-              221 ,
-              856 } ,
-            lens {
-              32 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              15 ,
-              1 ,
-              14 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              119 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 56 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 56 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 395449598, 10, -26 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 104532674, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 227 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 43579096, 10, -6 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 21 ,
-            ids {
-              local
-                str "query" ,
-              gi 1044581835 } ,
-            starts {
-              35 ,
-              660 ,
-              -1 ,
-              692 ,
-              67 ,
-              693 ,
-              70 ,
-              -1 ,
-              71 ,
-              696 ,
-              115 ,
-              -1 ,
-              116 ,
-              740 ,
-              -1 ,
-              744 ,
-              120 ,
-              745 ,
-              162 ,
-              -1 ,
-              163 ,
-              787 ,
-              -1 ,
-              792 ,
-              168 ,
-              793 ,
-              -1 ,
-              808 ,
-              183 ,
-              809 ,
-              197 ,
-              -1 ,
-              198 ,
-              823 ,
-              -1 ,
-              842 ,
-              217 ,
-              843 ,
-              220 ,
-              -1 ,
-              221 ,
-              846 } ,
-            lens {
-              32 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              15 ,
-              1 ,
-              14 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              119 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 56 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 56 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 395449598, 10, -26 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 104532674, 10, -6 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 227 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 43579096, 10, -6 } } } ,
-        segs
-          denseg {
-            dim 2 ,
-            numseg 21 ,
-            ids {
-              local
-                str "query" ,
-              gi 1044581833 } ,
-            starts {
-              35 ,
-              675 ,
-              -1 ,
-              707 ,
-              67 ,
-              708 ,
-              70 ,
-              -1 ,
-              71 ,
-              711 ,
-              115 ,
-              -1 ,
-              116 ,
-              755 ,
-              -1 ,
-              759 ,
-              120 ,
-              760 ,
-              162 ,
-              -1 ,
-              163 ,
-              802 ,
-              -1 ,
-              807 ,
-              168 ,
-              808 ,
-              -1 ,
-              823 ,
-              183 ,
-              824 ,
-              197 ,
-              -1 ,
-              198 ,
-              838 ,
-              -1 ,
-              857 ,
-              217 ,
-              858 ,
-              220 ,
-              -1 ,
-              221 ,
-              861 } ,
-            lens {
-              32 ,
-              1 ,
-              3 ,
-              1 ,
-              44 ,
-              1 ,
-              4 ,
-              1 ,
-              42 ,
-              1 ,
-              5 ,
-              1 ,
-              15 ,
-              1 ,
-              14 ,
-              1 ,
-              19 ,
-              1 ,
-              3 ,
-              1 ,
-              119 } ,
-            strands {
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus ,
-              plus } } } ,
-      {
-        type partial ,
-        dim 2 ,
-        score {
-          {
-            id
-              str "score" ,
-            value
-              int 32 } ,
-          {
-            id
-              str "blast_score" ,
-            value
-              int 32 } ,
-          {
-            id
-              str "e_value" ,
-            value
-              real { 868195685, 10, -13 } } ,
-          {
-            id
-              str "bit_score" ,
-            value
-              real { 602130831, 10, -7 } } ,
-          {
-            id
-              str "num_ident" ,
-            value
-              int 36 } ,
-          {
-            id
-              str "hsp_percent_coverage" ,
-            value
-              real { 586723163, 10, -8 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -4102,12 +3992,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 388491235 } ,
+              gi 126544541 } ,
             starts {
-              128 ,
-              585 } ,
+              0 ,
+              381 } ,
             lens {
-              38 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4119,32 +4009,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 32 } ,
+              int 67 } ,
           {
             id
               str "blast_score" ,
             value
-              int 32 } ,
+              int 67 } ,
           {
             id
               str "e_value" ,
             value
-              real { 868195685, 10, -13 } } ,
+              real { 176094795, 10, -33 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 602130831, 10, -7 } } ,
+              real { 12484582, 10, -5 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 36 } ,
+              int 69 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 586723163, 10, -8 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -4152,12 +4042,12 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 29122732 } ,
+              gi 126544540 } ,
             starts {
-              128 ,
-              24873 } ,
+              0 ,
+              381 } ,
             lens {
-              38 } ,
+              70 } ,
             strands {
               plus ,
               plus } } } ,
@@ -4169,32 +4059,32 @@ Seq-annot ::= {
             id
               str "score" ,
             value
-              int 32 } ,
+              int 67 } ,
           {
             id
               str "blast_score" ,
             value
-              int 32 } ,
+              int 67 } ,
           {
             id
               str "e_value" ,
             value
-              real { 868195685, 10, -13 } } ,
+              real { 176094795, 10, -33 } } ,
           {
             id
               str "bit_score" ,
             value
-              real { 602130831, 10, -7 } } ,
+              real { 12484582, 10, -5 } } ,
           {
             id
               str "num_ident" ,
             value
-              int 36 } ,
+              int 69 } ,
           {
             id
               str "hsp_percent_coverage" ,
             value
-              real { 586723163, 10, -8 } } } ,
+              real { 1, 10, 2 } } } ,
         segs
           denseg {
             dim 2 ,
@@ -4202,13 +4092,912 @@ Seq-annot ::= {
             ids {
               local
                 str "query" ,
-              gi 28625016 } ,
+              gi 126544516 } ,
             starts {
-              128 ,
-              577 } ,
+              0 ,
+              381 } ,
             lens {
-              38 } ,
+              70 } ,
             strands {
               plus ,
-              plus } } }
-      
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 126544515 } ,
+            starts {
+              0 ,
+              381 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 179679008 } ,
+            starts {
+              0 ,
+              126 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 179678981 } ,
+            starts {
+              0 ,
+              155 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 179678962 } ,
+            starts {
+              0 ,
+              155 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 179678804 } ,
+            starts {
+              0 ,
+              155 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 179678781 } ,
+            starts {
+              0 ,
+              155 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 179678756 } ,
+            starts {
+              0 ,
+              155 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581838 } ,
+            starts {
+              0 ,
+              2415 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581824 } ,
+            starts {
+              0 ,
+              2415 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581810 } ,
+            starts {
+              0 ,
+              2415 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581796 } ,
+            starts {
+              0 ,
+              2415 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581782 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581768 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581754 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581740 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581726 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581712 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } ,
+      {
+        type partial ,
+        dim 2 ,
+        score {
+          {
+            id
+              str "score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "blast_score" ,
+            value
+              int 67 } ,
+          {
+            id
+              str "e_value" ,
+            value
+              real { 176094795, 10, -33 } } ,
+          {
+            id
+              str "bit_score" ,
+            value
+              real { 12484582, 10, -5 } } ,
+          {
+            id
+              str "num_ident" ,
+            value
+              int 69 } ,
+          {
+            id
+              str "hsp_percent_coverage" ,
+            value
+              real { 1, 10, 2 } } } ,
+        segs
+          denseg {
+            dim 2 ,
+            numseg 1 ,
+            ids {
+              local
+                str "query" ,
+              gi 153581698 } ,
+            starts {
+              0 ,
+              2416 } ,
+            lens {
+              70 } ,
+            strands {
+              plus ,
+              plus } } } } }

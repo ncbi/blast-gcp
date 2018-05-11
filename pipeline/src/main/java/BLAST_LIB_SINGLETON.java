@@ -36,8 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 
-import com.google.cloud.storage.Bucket;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
@@ -83,19 +81,20 @@ class PART_INST
     public Boolean prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
     {
         Boolean res = false;
+        Boolean isProtein = false;  //FIXME: change this to support protein BLASTDBs
         try
         {
             List< String > extensions = new LinkedList<>();
-            extensions.add( "nhr" );
-            extensions.add( "nin" );
-            extensions.add( "nsq" );
+            extensions.add( String.format( "%sax", ( isProtein ? "p" : "n" ) ) );
+            extensions.add( String.format( "%sin", ( isProtein ? "p" : "n" ) ) );
+            extensions.add( String.format( "%ssq", ( isProtein ? "p" : "n" ) ) );
 
             List< String > obj_names = new LinkedList<>();
             for ( String ext : extensions )
             {
                 String fn = String.format( "%s.%s", part.db_spec, ext );
                 File f = new File( fn );
-                if ( !f.exists() )
+                if ( !f.exists() || ( f.length() == 0 ) )
                     obj_names.add( String.format( "%s.%s", part.name, ext ) );
             }
             if ( !obj_names.isEmpty() )

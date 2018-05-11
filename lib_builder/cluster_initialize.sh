@@ -13,7 +13,7 @@ cd /tmp
 
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 
-apt-get install libdw-dev nmap netcat -y
+#apt-get install nmap netcat -y
 
 # /mnt/ram-disk
 #phymem=$(free|awk '/^Mem:/{print $2}')
@@ -26,7 +26,7 @@ sudo mount -t tmpfs -o size=50% /mnt/ram-disk
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 DBBUCKET="gs://nt_50mb_chunks/"
 BLASTTMP=/tmp/blast/
-BLASTDBDIR=$BLASTTMP/db
+BLASTDBDIR=$BLASTTMP/db/prefetched
 
 #curl -sSO https://repo.stackdriver.com/stack-install.sh
 #sudo bash stack-install.sh --write-gcm 2>&1 | tee -a stack-install.log
@@ -84,16 +84,17 @@ mkdir -p $BLASTDBDIR
 if [[ "${ROLE}" == 'Master' ]]; then
     # For master node only, skip copy
     echo "master node, skipping DB copy"
-    # Need maven to build jars, pip for installing Google APIs for tests
+    # Need maven to build jars, virtualenv for installing Google APIs for tests
     apt-get update -y
-    apt-get install -y -u maven python python-dev python3 python3-dev
+    apt-get install -y -u maven python python-dev python3 python3-dev virtualenv
+    #protobuf-compiler
+    # chromium # for looking at webserver with X11 forwarding?
 #    sudo easy_install pip
 #    sudo pip install --upgrade virtualenv
 #    sudo pip install --user --upgrade google-cloud-storage
 #    sudo pip install --user --upgrade google-cloud-pubsub
 else
     # Worker node, copy DBs from GCS
-    # FIX exit: Expected from Wolfgang's partition_mapper EOB 4/19
     MAXJOBS=8
     ### parts=`gsutil ls $DBBUCKET  | cut -d'.' -f2 | sort -Ru`
     ### for part in $parts; do

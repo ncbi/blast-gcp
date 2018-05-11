@@ -36,6 +36,7 @@ echo "Building at $BUILDENV on $DISTRO"
 JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
+set +errexit
 rm -f *.class
 rm -rf gov
 rm -f *test.result
@@ -43,7 +44,8 @@ rm -f *.jar
 rm -f /tmp/blastjni.$USER.log
 rm -f signatures
 rm -f core.* hs_err_* output.*
-rm -rf /tmp/scan-build-*
+rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-* > /dev/null 2>&1
+set -o errexit
 
 
 # FIX: Unfortunately, BlastJNI.h can only be built @ Google, due to
@@ -53,9 +55,36 @@ MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
 echo "Compiling Java"
+    #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
+    echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >lifecycle.json
+    echo '{ "description": "static_analysis_results", "owner" : "vartanianmh" }' > labels.json
+    #gsutil lifecycle set rule.json gs://blast-builds
+    #gsutil label set labels.json gs://blast-builds
+TS=`date +"%Y-%m-%d_%H%M%S"`
 pushd ../pipeline > /dev/null
+
+#../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
+#../lib_builder/protoc -I../specs/ --python_out=../tests/ blast_request.proto
+#mvn compile
+
 ./make_jar.sh
-#mvn -q package
+
+if [ "0" == "1" ]; then
+    echo "Running Java linters/static analyzers"
+    mvn -q checkstyle:checkstyle > /dev/null 2>&1
+    CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
+    gsutil cp target/site/checkstyle.html $CHECKSTYLE
+    echo "  Output in $CHECKSTYLE"
+
+    mvn -q site > /dev/null 2>&1
+    PMD="gs://blast-builds/pmd.$TS.html"
+    gsutil cp target/site/pmd.html $PMD
+
+    CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
+    gsutil cp target/site/checkstyle.html $CHECKSTYLE
+    echo "  Output in $CHECKSTYLE"
+fi
+
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
 JAVASRCDIR="../pipeline/src/main/java"
@@ -66,6 +95,10 @@ JAVASRCDIR="../pipeline/src/main/java"
     #    $JAVASRCDIR/BLAST_LIB.java \
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ./BLAST_TEST.java
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+    ./BLAST_BENCH.java
+
+echo
 echo "Creating JNI header"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
     ../pipeline/src/main/java/BLAST_LIB.java
@@ -86,14 +119,21 @@ if [ "$BUILDENV" = "ncbi" ]; then
     # Eugene has:
     #        -static-libstdc++  # Needed for NCBI's Spark cluster (RHEL7?)
     #-ldbapi_driver -lncbi_xreader \
-    echo "Running static analysis on C++ code"
-    echo "WARN: static analyzer checks temporarily disabled"
-    # TODO cppcheck --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+    #-Wundef \
+    #-Wswitch-enum \
+    #-Wdouble-promotion \
     GPPCOMMAND="
-    g++ blastjni.cpp \
+    g++ \
+    blastjni.cpp \
     -std=gnu++11 \
     -Wall -O  -I . \
     -Wextra -pedantic \
+    -Wlogical-op \
+    -Wjump-misses-init \
+    -Wshadow \
+    -Wformat=2 \
+    -Wformat-security \
+    -Woverloaded-virtual \
     -shared \
     -fPIC \
     $JAVA_INC \
@@ -123,14 +163,18 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
     -llmdb-static -lpthread -lz -lbz2 \
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
-    -llzo2 -ldl -lz -lnsl -ldw -lrt -ldl -lm -lpthread \
+    -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
-    # scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
 
-    echo "Static analysis on C++ code complete"
+    if [ "0" == "1" ]; then
+        echo "Running static analysis on C++ code"
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+        echo "Static analysis on C++ code complete"
+    fi
+
     echo "Compiling and linking blastjni.cpp"
-    echo "WARN: g++ temporarily disabled"
-    # $GPPCOMMAND
+    $GPPCOMMAND
     cp libblastjni.so ../pipeline
 fi
 
@@ -162,7 +206,7 @@ echo "  Testing JNI"
     -cp $MAIN_JAR:.  \
     gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
     > output.$$ 2>&1
-sort output.$$ | grep -e "000 " > test.result
+sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
 CMP=$(cmp test.result test.expected)
 if [[ $? -ne 0 ]]; then
     cat -tn output.$$

@@ -28,103 +28,112 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 class ConcLoad extends Thread {
-  private BLAST_PARTITION part;
+    private BLAST_PARTITION part;
 
-  public ConcLoad(BLAST_PARTITION part) {
-    this.part = part;
-  }
+    public ConcLoad(BLAST_PARTITION part) {
+        this.part = part;
+    }
 
-  public void run() {
-    System.out.println("thread started");
-    //    BLAST_SETTINGS bls = SETTINGS.getValue();
-    //   BLAST_LIB blaster = BLAST_LIB.get_lib(part, bls);
-  }
+    public void run() {
+        System.out.println("thread started");
+        //    BLAST_SETTINGS bls = SETTINGS.getValue();
+        //   BLAST_LIB blaster = BLAST_LIB.get_lib(part, bls);
+    }
 }
 
 class BLAST_TEST {
 
-  public static void main(String[] args) {
-    Logger logger = LogManager.getLogger(BLAST_TEST.class);
-    logger.info("Beginning");
-    String rid = "ReqID123";
-    String query = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
-    String part =
-        "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/nt_50M.14"; // 14 & 18
-    final String location = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
-    final String db_part = "nt_50M";
-    final String program = "blastn";
+    public static void main(String[] args) 
+            throws Exception
+        {
+            Logger logger = LogManager.getLogger(BLAST_TEST.class);
+            logger.info("Beginning");
+            String rid = "ReqID123";
+            String query_seq = "CCGCAAGCCAGAGCAACAGCTCTAACAAGCAGAAATTCTGACCAAACTGATCCGGTAAAACCGATCAACG";
+            //String query_url = "gs://blast-largequeries/query-021125518.txt";
+            String query_url = "";
 
-    String params = "{";
-    params += "\n\"version\": 1,";
-    params += "\n \"RID\": \"" + rid + "\" ,";
-    params += "\n \"blast_params\": { \"todo\": \"todo\" } }";
-    params += "\n";
+            String part =
+                "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/nt_50M.14"; // 14 & 18 have hits
+            //  "/tmp/blast/db/nt_50M.14" for GCP
+            final String location = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
+            final String db_part = "nt_50M";
+            final String program = "blastn";
 
-    final Integer top_n = 100;
+            String params = "{";
+            params += "\n\"version\": 1,";
+            params += "\n \"RID\": \"" + rid + "\" ,";
+            params += "\n \"blast_params\": { \"todo\": \"todo\" } }";
+            params += "\n";
 
-    if (args.length > 0) {
-      String[] req = args[0].split("\\:");
-      if (req.length > 0) part = req[0];
-      if (req.length > 1) rid = req[1];
-      if (req.length > 2) query = req[2];
-      if (req.length > 3) params = req[3];
-    }
+            final Integer top_n = 100;
 
-    String S = String.format("partition ... %s\n", part);
-    S = S + String.format("req-id ...... %s\n", rid);
-    S = S + String.format("query ....... %s\n", query);
-    S = S + String.format("params ...... %s\n", params);
-    logger.info(S);
+            if (args.length > 0) {
+                String[] req = args[0].split("\\:");
+                if (req.length > 0) part = req[0];
+                if (req.length > 1) rid = req[1];
+                if (req.length > 2) query_seq = req[2];
+                if (req.length > 3) params = req[3];
+            }
 
-    BLAST_REQUEST requestobj = new BLAST_REQUEST();
-    requestobj.id = rid;
-    requestobj.query = query;
-    requestobj.params = params;
-    requestobj.db = params;
-    requestobj.program = program;
-    requestobj.top_n = top_n;
-    BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
+            String S = String.format("partition ... %s\n", part);
+            S = S + String.format("req-id ...... %s\n", rid);
+            S = S + String.format("query ....... %s\n", query_seq);
+            S = S + String.format("params ...... %s\n", params);
+            logger.info(S);
 
-    //    for (int i = 0; i != 10; ++i) {
-    //      ConcLoad p = new ConcLoad( partitionobj );
-    //      p.start();
-    //    }
+            BLAST_REQUEST requestobj = new BLAST_REQUEST();
+            requestobj.id = rid;
+            requestobj.query_seq = query_seq;
+            requestobj.query_url = query_url;
+            requestobj.params = params;
+            requestobj.db = params;
+            requestobj.program = program;
+            requestobj.top_n = top_n;
+            BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db_part, 14, true);
 
-    // BLAST_SETTINGS bls = BLAST_SETTINGS.getValue();
-    // BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj, bls);
-    BLAST_LIB blaster = new BLAST_LIB();
+            //    for (int i = 0; i != 10; ++i) {
+            //      ConcLoad p = new ConcLoad( partitionobj );
+            //      p.start();
+            //    }
 
-    final String logLevel = "INFO";
-    params = "nt"; // FIX - When Blast team ready for JSON params
+            // BLAST_SETTINGS bls = BLAST_SETTINGS.getValue();
+            // BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj, bls);
+            System.out.println("Creating blaster");
+            BLAST_LIB blaster = new BLAST_LIB();
+            System.out.println("Created  blaster");
 
-    BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj, logLevel);
-    System.out.println("--- PRELIM_SEARCH RESULTS ---");
-    if (hspl != null) {
-      System.out.println(" prelim_search returned " + hspl.length + " HSP lists:");
-      for (BLAST_HSP_LIST hsp : hspl) {
-        System.out.println(hsp.toString());
-      }
-    } else {
-      System.out.println("NULL hspl");
-    }
+            final String logLevel = "DEBUG";
+            params = "nt"; // FIX - When Blast team ready for JSON params
 
-    BLAST_TB_LIST[] tbs = blaster.jni_traceback(hspl, partitionobj, requestobj, logLevel);
+            BLAST_HSP_LIST hspl[] = blaster.jni_prelim_search(partitionobj, requestobj, logLevel);
+            System.out.println("--- PRELIM_SEARCH RESULTS ---");
+            if (hspl != null) {
+                System.out.println(" prelim_search returned " + hspl.length + " HSP lists:");
+                for (BLAST_HSP_LIST hsp : hspl) {
+                    System.out.println("HSP: " + hsp.toString().replace("\n"," "));
+                }
+            } else {
+                System.out.println("NULL hspl");
+            }
 
-    System.out.println("traceback done");
-    System.out.println("--- TRACEBACK RESULTS ---");
+            BLAST_TB_LIST[] tbs = blaster.jni_traceback(hspl, partitionobj, requestobj, logLevel);
 
-    if (tbs != null) {
-      for (BLAST_TB_LIST tb : tbs) {
-        System.out.println(tb.toString());
-      }
+            System.out.println("traceback done");
+            System.out.println("--- TRACEBACK RESULTS ---");
 
-      byte[][] oneasn = new byte[1][0];
-      oneasn[0] = tbs[0].asn1_blob;
-      // BLAST_TB_LIST.save(rid + ".seq-annot.asn1", oneasn);
-      System.out.println("Dumped " + rid + " to file.");
-    } else {
-      System.out.println("NULL asn1");
-    }
-    logger.info("Finishing");
-  }
+            if (tbs != null) {
+                for (BLAST_TB_LIST tb : tbs) {
+                    System.out.println("TB: " + tb.toString().replace("\n"," "));
+                }
+
+                byte[][] oneasn = new byte[1][0];
+                oneasn[0] = tbs[0].asn1_blob;
+                // BLAST_TB_LIST.save(rid + ".seq-annot.asn1", oneasn);
+                System.out.println("Dumped " + rid + " to file.");
+            } else {
+                System.out.println("NULL asn1");
+            }
+            logger.info("Finishing");
+        }
 }

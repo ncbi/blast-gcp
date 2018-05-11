@@ -5,6 +5,7 @@ import atexit
 import datetime
 import getpass
 import json
+import difflib
 import os
 import random
 #import secrets # python 3.6
@@ -12,13 +13,8 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 
-# sudo apt update
-# sudo apt install -y -u python python-dev python3 python3-dev
-# easy_install --user pip
-# pip install --upgrade virtualenv
-# pip install --user --upgrade google-cloud-storage
-# pip install --user --upgrade google-cloud-pubsub
 
 # gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS
 
@@ -30,7 +26,7 @@ PROJECT = "ncbi-sandbox-blast"
 CLUSTER_ID = ""
 TEST_ID = ""
 STORAGE_CLIENT = None
-BUCKET = ""
+BUCKET = None
 BUCKET_NAME = ""
 TESTS = {}
 PUBSUB_CLIENT = None
@@ -69,7 +65,7 @@ def progress(submit=None, results=None):
 def get_cluster():
     global CLUSTER_ID, PROJECT
     user = getpass.getuser()
-    print("user is " + user)
+    #print("user is " + user)
     cmd = [
         'gcloud', 'dataproc', '--project', PROJECT, '--region', 'us-east4',
         'clusters', 'list'
@@ -125,7 +121,17 @@ def make_bucket():
 
 
 def get_tests():
-    global TESTS
+    global TESTS, BUCKET_NAME
+    largequery_bucket_name = "blast-largequeries"
+    large_bucket = storage.Client().bucket(largequery_bucket_name)
+    largequery_bucket_name = "gs://" + largequery_bucket_name
+
+    # gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-largequeries
+    #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
+    #echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 1} } ] }' >> ^rule.json
+    # echo '{ "description": "temp_storage", "owner" : "$USER" }' > labels.json
+    #gsutil lifecycle set rule.json gs://blast-builds
+    #gsutil label set labels.json gs://blast-builds
 
     test_blobs = os.listdir('queries')
     random.shuffle(test_blobs)
@@ -138,18 +144,37 @@ def get_tests():
         j = json.loads(read_data)
         j['orig_RID'] = j['RID']
         j['pubsub_submit_time'] = "TBD"
-        j['RID'] = TEST_ID + j['RID']
+        j['RID'] = TEST_ID + '-' + j['RID']
+        j['query_url']=''
+        j['blast_params']['task']=j['blast_params']['program']
+        j['blast_params']['dbpath']=""
+        j['result_bucket_name']=BUCKET_NAME
+        del j['query_url']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 5:
-            print("Using bigquery")
-#            j['queries'] = ['gs://bucket/big.query']
+        if random.randrange(0, 100) < 0:
+            print("Using out of band query")
+
+            #objname = j['RID'] + "-" + str(uuid.uuid4())
+            objname = 'query-' + ('%09d.txt' % random.randrange(1, 1000000000))
+
+            blob = large_bucket.blob(objname)
+            blob.upload_from_string(j['blast_params']['queries'][0])
+            del j['blast_params']['queries']
+
+            url = largequery_bucket_name + "/" + objname
+
+            j['query_seq'] = ''
+            del j['query_seq']
+            j['query_url'] = url
+            #print(json.dumps(j, indent=4, sort_keys=True))
+
         TESTS[j['RID']] = j
     print("Loaded " + str(len(TESTS)) + " tests")
 
 
 def publish(jdict):
     global TOPIC_NAME, PUBSUB_CLIENT
-    msg = json.dumps(jdict, indent=4).encode()
+    msg = json.dumps(jdict, indent=4, sort_keys=True).encode()
     PUBSUB_CLIENT.publish(TOPIC_NAME, msg)
 
 
@@ -171,16 +196,16 @@ def make_json():
         j['top_n'] = 100
         j['num_db_partitions'] = 886
         j['num_executors'] = 180
-        j['num_executor_cores'] = 4
+        j['num_executor_cores'] = 1
         j['project_id'] = PROJECT
     else:
         j['spark'] = {}
         j['spark']['with_locality'] = False
         j['spark']['num_executors'] = 180
-        j['spark']['num_executor_cores'] = 4
+        j['spark']['num_executor_cores'] = 1
         j['blastjni'] = {}
         j['blastjni']['db'] = {}
-        j['blastjni']['db']['db_bucket'] = 'nt_50mb_chunks'
+        j['blastjni']['db']['db_bucket'] = 'nt_100mb_chunks'
         j['blastjni']['db']['num_db_partitions'] = 886
         j['blastjni']['top_n'] = 100
         j['source'] = {}
@@ -247,16 +272,16 @@ def submit_thread():
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:5]:
-            # Emulate 1..10 submissions a second
-            #time.sleep(random.randrange(0, 100) / 1000)
+        for test in tests[0:3]:
+            # Emulate 1..10 submissions a second with jitter
+            time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
             progress(submit="  Submitted " + TESTS[test]['orig_RID'])
-            time.sleep(random.randrange(5, 10))
+            time.sleep(random.randrange(5, 10)/10)
         progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(180)
+        time.sleep(60)
 
 
 def results_thread():
@@ -288,15 +313,25 @@ def results_thread():
             dtstart = datetime.datetime.utcfromtimestamp(
                 result['pubsub_submit_time'])
             elapsed = dtend - dtstart
-            progress(results="%s took %0.2f seconds" % (
+            progress(results="%s took %6.2f seconds" % (
                 origrid, elapsed.total_seconds()))
 
             cmd = [
-                "asntool", "-m", "/am/ncbiapdata/asn/asn.all", "-t",
+                "./asntool", "-m", "asn.all", "-t",
                 "Seq-annot", "-d", fname, "-p", fname + ".txt"
             ]
             #print (cmd)
             subprocess.check_output(cmd)
+
+            with open(fname + ".txt") as fnew:
+                fnewlines=fnew.readlines()
+            with open("expected/" + origrid + "." + parts[2] + ".txt") as fexpected:
+                fexpectedlines=fexpected.readlines()
+
+            if fnewlines!=fexpectedlines:
+                print("Files differ for " + origrid)
+                #diff=difflib.ndiff(fnewlines, fexpectedlines)
+                #print(diff)
 
         if not anything:
             progress(results="No objects in bucket")
@@ -335,9 +370,13 @@ def main():
     global TEST_ID, CLUSTER_ID
     # register atexit
     atexit.register(cleanup)
-    TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
+#    TEST_ID = "blast-test-" + hex(random.randint(0, sys.maxsize))[2:]
+#    TEST_ID = str(uuid.uuid4())
     TEST_ID = "blast-test-vartanianmh"
     print("TEST_ID is " + TEST_ID)
+
+    # Create output bucket
+    make_bucket()
 
     get_tests()
 
@@ -349,27 +388,21 @@ def main():
     print("Cluster id is: " + CLUSTER_ID)
     # Start if not found?
 
-    # Create output bucket
-    make_bucket()
-
     # Create pubsub queue
     make_pubsub()
 
     # configure json.ini
     config = make_json()
-    print("JSON config is " + config)
+    #print("JSON config is " + config)
     #print(config)
 
     print()
     print("PubSub subscriptions created")
     print("Cloud Storage bucket created")
     print()
-    submit_application(config)
+    #submit_application(config)
     print()
-    print(" " * 20, "*** Start Spark Streaming Job now ***")
-    time.sleep(40)
-    print()
-    time.sleep(1)
+    input(" " * 10 + "*** Start Spark Streaming Job now, press Enter when ready ***")
 
     # Start threads
     #  submits
