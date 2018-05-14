@@ -97,7 +97,7 @@ public final class BLAST_DRIVER {
     conf.set("spark.locality.wait", settings.locality_wait);
     String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
     conf.set("spark.sql.warehouse.dir", warehouseLocation);
-    conf.set("spark.sql.shuffle.partitions", "886"); // TODO: Configurable
+    conf.set("spark.sql.shuffle.partitions", "886"); // FIX: Configurable
     conf.set("spark.default.parallelism", "886");
     conf.set("spark.shuffle.reduceLocality.enabled", "false");
     conf.set("spark.sql.streaming.schemaInference", "true");
@@ -149,7 +149,7 @@ public final class BLAST_DRIVER {
 
     DataStreamReader query_stream = sparksession.readStream();
     query_stream.format("json");
-    query_stream.option("maxFilesPerTrigger", 5); // TODO: Configureable
+    query_stream.option("maxFilesPerTrigger", 5); // FIX: Configureable
     query_stream.option("multiLine", true);
     query_stream.option("includeTimestamp", true);
 
@@ -172,6 +172,8 @@ public final class BLAST_DRIVER {
     Integer top_n = settings.top_n;
     String jni_log_level = settings.jni_log_level;
     String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
+
+    BLAST_SETTINGS settings_closure = settings;
 
     Dataset<Row> prelim_search_results =
         joined
@@ -196,7 +198,8 @@ public final class BLAST_DRIVER {
                       BLAST_PARTITION partitionobj =
                           new BLAST_PARTITION("/tmp/blast/db/", "nt_50M", partition_num, false);
 
-                      BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj, settings);
+                      BLAST_LIB blaster =
+                          BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
                       blaster.log("INFO", "SPARK:" + inrow.mkString(":"));
 
                       List<String> hsp_json;
@@ -239,7 +242,7 @@ public final class BLAST_DRIVER {
                   private long partitionId;
                   private int recordcount = 0;
                   private FileSystem fs;
-                  private PrintWriter log; // TODO: log4j
+                  private PrintWriter log; // FIX: log4j
 
                   // So we can efficiently compute topN scores by RID
                   HashMap<String, TreeMap<Integer, ArrayList<String>>> score_map;
@@ -289,7 +292,7 @@ public final class BLAST_DRIVER {
 
                     TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
 
-                    // TODO optimize: early cutoff if tm.size>topn
+                    // FIX optimize: early cutoff if tm.size>topn
                     if (!tm.containsKey(max_score)) {
                       ArrayList<String> al = new ArrayList<String>();
                       tm.put(max_score, al);
