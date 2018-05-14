@@ -93,7 +93,6 @@ class PART_INST
     {
         Logger logger = LogManager.getLogger(BLAST_LIB_SINGLETON.class);
         logger.log(Level.INFO, "in prepare");
-        if (settings == null) logger.log(Level.ERROR,"null settings");
 
         Boolean res = false;
         try
@@ -102,7 +101,6 @@ class PART_INST
             extensions.add( "nhr" );
             extensions.add( "nin" );
             extensions.add( "nsq" );
-logger.log(Level.INFO, extensions.toString());
 
             List< String > obj_names = new LinkedList<>();
             for ( String ext : extensions )
@@ -112,16 +110,12 @@ logger.log(Level.INFO, extensions.toString());
                 if ( !f.exists() || ( f.length() == 0 ) )
                     obj_names.add( String.format( "%s.%s", part.name, ext ) );
             }
-logger.log(Level.INFO, "obj_names is " + obj_names.toString());
             if ( !obj_names.isEmpty() )
             {
                 Storage storage = buildStorageService();
                 if (storage == null) logger.log(Level.ERROR,"null storage");
                 for ( String obj_name : obj_names )
                 {
-logger.log(Level.INFO, "getting " + obj_name);
-if (settings.db_bucket ==null) logger.log(Level.ERROR, "null db_bucket");
-logger.log(Level.INFO, "bucket is " + settings.db_bucket);
                     Storage.Objects.Get obj = storage.objects().get( settings.db_bucket, obj_name );
                     if ( obj != null )
                     {
@@ -133,7 +127,6 @@ logger.log(Level.INFO, "bucket is " + settings.db_bucket);
                             dst_path = settings.db_location;
                         else
                             dst_path = String.format( "%s/%s", settings.db_location, part.name );
-logger.log(Level.INFO, "dst_path is " + dst_path);
                         dst_fn = String.format( "%s/%s", dst_path, obj_name );
 logger.log(Level.INFO, "dst_fn is " + dst_fn);
 

@@ -79,6 +79,8 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 # check Spark Web UI
 
+# standard-16 and highcpu-64 have >58GB
+
 # ~$15/hour for 56 node cluster
 # ~$21/hour for 16 X 64
 #    --worker-machine-type custom-64-71680 \
@@ -88,7 +90,7 @@ gcloud beta dataproc --region us-east4 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
         --worker-boot-disk-size 100 \
-    --worker-machine-type n1-standard-8 \
+    --worker-machine-type n1-standard-32 \
     --num-preemptible-workers 12 \
         --preemptible-worker-boot-disk-size 100 \
     --scopes cloud-platform \

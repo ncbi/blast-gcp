@@ -27,6 +27,7 @@
             "db_bucket" : "nt_50mb_chunks",
             "num_db_partitions" : 886
         },
+        "jni_log_level": "DEBUG",
         "top_n" : 100
     },
 
@@ -45,7 +46,7 @@
     "spark" :
     {
         "with_locality" : "true",
-        "num_executors" : 200,
+        "num_executors" : 100,
         "num_executor_cores" : 1,
         "executor_memory" : "1G"
     },

@@ -41,6 +41,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
@@ -97,8 +100,8 @@ public final class BLAST_DRIVER {
     conf.set("spark.locality.wait", settings.locality_wait);
     String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
     conf.set("spark.sql.warehouse.dir", warehouseLocation);
-    conf.set("spark.sql.shuffle.partitions", "886"); // FIX: Configurable
-    conf.set("spark.default.parallelism", "886");
+    conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_executors));
+    conf.set("spark.default.parallelism", Integer.toString(settings.num_executors));
     conf.set("spark.shuffle.reduceLocality.enabled", "false");
     conf.set("spark.sql.streaming.schemaInference", "true");
 
@@ -137,19 +140,17 @@ public final class BLAST_DRIVER {
     }
 
     Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
-    // Paranoia. Want to make sure the underlying RDD is
-    // never recomputed, even if nodes are lost.
     Dataset<Row> blast_partitions =
         parts
-            .repartition(886, parts.col("partition_num"))
-            .persist(StorageLevel.MEMORY_AND_DISK_2());
+            .repartition(settings.num_executors, parts.col("partition_num"))
+            .persist(StorageLevel.MEMORY_AND_DISK());
 
     blast_partitions.show();
     blast_partitions.createOrReplaceTempView("blast_partitions");
 
     DataStreamReader query_stream = sparksession.readStream();
     query_stream.format("json");
-    query_stream.option("maxFilesPerTrigger", 5); // FIX: Configureable
+    query_stream.option("maxFilesPerTrigger", 1); // FIX: Configureable
     query_stream.option("multiLine", true);
     query_stream.option("includeTimestamp", true);
 
@@ -165,7 +166,7 @@ public final class BLAST_DRIVER {
                     + "from queries, blast_partitions "
                     + "where queries.db=blast_partitions.db "
                     + "distribute by partition_num")
-            .repartition(886);
+            .repartition(settings.num_executors);
     joined.createOrReplaceTempView("joined");
     joined.printSchema();
 
@@ -180,12 +181,17 @@ public final class BLAST_DRIVER {
             .flatMap( // FIX: Make a functor
                 (FlatMapFunction<Row, String>)
                     inrow -> {
-                      // BLAST_LIB blaster = new BLAST_LIB();
+                      Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
+
+//                        Runtime rt=Runtime.getRuntime();
+//                        Process pr = rt.exec("/bin/rm -rf /tmp/blast/db/");
 
                       String rid = inrow.getString(inrow.fieldIndex("RID"));
+                      logger.log(Level.INFO,"Flatmapped RID " + rid);
                       String db = inrow.getString(inrow.fieldIndex("db"));
                       int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                       String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
+                      logger.log(Level.INFO, String.format("in flatmap %d", partition_num));
 
                       BLAST_REQUEST requestobj = new BLAST_REQUEST();
                       requestobj.id = rid;
@@ -196,17 +202,18 @@ public final class BLAST_DRIVER {
                       requestobj.program = "blastn";
                       requestobj.top_n = top_n;
                       BLAST_PARTITION partitionobj =
-                          new BLAST_PARTITION("/tmp/blast/db/", "nt_50M", partition_num, false);
+                          new BLAST_PARTITION("/tmp/blast/db", "nt_50M", partition_num, true);
 
                       BLAST_LIB blaster =
                           BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
-                      blaster.log("INFO", "SPARK:" + inrow.mkString(":"));
+                      logger.log(Level.INFO, "<row> is :" + inrow.mkString(":"));
 
                       List<String> hsp_json;
                       if (blaster != null) {
                         BLAST_HSP_LIST[] search_res =
                             blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
 
+                        logger.log(Level.INFO, String.format(" prelim returned %d hsps to Spark", search_res.length));
                         hsp_json = new ArrayList<>(search_res.length);
                         for (BLAST_HSP_LIST S : search_res) {
                           byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
@@ -221,9 +228,11 @@ public final class BLAST_DRIVER {
                           json.put("hsp_blob", b64blob);
 
                           hsp_json.add(json.toString());
+                          //logger.log(Level.INFO, "json is " + json.toString());
                         }
-
+                        logger.log(Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
                       } else {
+                        logger.log(Level.ERROR, "NULL blaster library");
                         hsp_json = new ArrayList<>();
                         hsp_json.add("null blaster ");
                       }
@@ -235,6 +244,7 @@ public final class BLAST_DRIVER {
     Dataset<Row> prelim_search_1 = prelim_search_results.repartition(1);
 
     DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
+
     DataStreamWriter<Row> topn_dsw =
         prelim_dsw
             .foreach( // FIX: Make a separate function
@@ -242,7 +252,7 @@ public final class BLAST_DRIVER {
                   private long partitionId;
                   private int recordcount = 0;
                   private FileSystem fs;
-                  private PrintWriter log; // FIX: log4j
+                  private Logger logger;
 
                   // So we can efficiently compute topN scores by RID
                   HashMap<String, TreeMap<Integer, ArrayList<String>>> score_map;
@@ -251,27 +261,28 @@ public final class BLAST_DRIVER {
                   public boolean open(long partitionId, long version) {
                     score_map = new HashMap<>(); // String, TreeMap<Integer, ArrayList<String>>>();
                     this.partitionId = partitionId;
+                    logger = LogManager.getLogger(BLAST_DRIVER.class);
                     try {
                       Configuration conf = new Configuration();
                       fs = FileSystem.get(conf);
-                      log = new PrintWriter(new FileWriter("/tmp/foreach.log", true), true);
                     } catch (IOException e) {
                       System.err.println(e);
                       return false;
                     }
-                    log.println(String.format("open %d %d", partitionId, version));
+
+                    logger.log(Level.DEBUG,String.format("open %d %d", partitionId, version));
                     if (partitionId != 0)
-                      log.println(String.format(" *** not partition 0 %d ??? ", partitionId));
+                      logger.log(Level.DEBUG,String.format(" *** not partition 0 %d ??? ", partitionId));
                     return true;
                   } // open
 
                   @Override
                   public void process(Row value) {
                     ++recordcount;
-                    log.println(String.format(" in process %d", partitionId));
-                    log.println("  " + value.mkString(":").substring(0, 30));
+                    logger.log(Level.DEBUG,String.format(" in process %d", partitionId));
+                    logger.log(Level.DEBUG,"  " + value.mkString(":").substring(0, 50));
                     String line = value.getString(0);
-                    log.println("  line is " + line.substring(0, 30));
+                    logger.log(Level.DEBUG,"  line is " + line.substring(0, 50));
 
                     JSONObject json = new JSONObject(line);
                     String rid = json.getString("RID");
@@ -282,7 +293,7 @@ public final class BLAST_DRIVER {
                     // String query_seq=json.getString("query_seq");
                     // String hsp_blob=json.getString("hsp_blob");
 
-                    log.println(String.format(" max_score is %d", max_score));
+                    logger.log(Level.DEBUG,String.format(" max_score is %d", max_score));
 
                     if (!score_map.containsKey(rid)) {
                       TreeMap<Integer, ArrayList<String>> tm =
@@ -306,29 +317,30 @@ public final class BLAST_DRIVER {
 
                   @Override
                   public void close(Throwable errorOrNull) {
-                    log.println("close results:");
-                    log.println("---------------");
-                    log.println(String.format(" saw %d records", recordcount));
-                    log.println(String.format(" hashmap has %d", score_map.size()));
+                    logger.log(Level.DEBUG,"close results:");
+                    logger.log(Level.DEBUG,"---------------");
+                    logger.log(Level.DEBUG,String.format(" saw %d records", recordcount));
+                    logger.log(Level.DEBUG,String.format(" hashmap has %d", score_map.size()));
 
                     for (String rid : score_map.keySet()) {
                       TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
-                      StringBuilder output = new StringBuilder(tm.size() * 100); // Fix: Tune
+                      StringBuilder output = new StringBuilder(tm.size() * 1000);
                       int i = 0;
                       for (Integer score : tm.keySet()) {
                         if (i < top_n) {
                           ArrayList<String> al = tm.get(score);
                           for (String line : al) {
-                            log.println(
+                            logger.log(Level.DEBUG,
                                 String.format(
                                     "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
                                     rid, score, i, line.substring(0, 60)));
                             output.append(line);
-                            log.println(String.format("length of line is %d", line.length()));
+                            logger.log(Level.DEBUG,String.format("length of line is %d", line.length()));
+                            logger.log(Level.DEBUG,String.format("line is %s." , line));
                             output.append('\n');
                           }
                         } else {
-                          log.println(" Skipping rest");
+                          logger.log(Level.DEBUG," Skipping rest");
                           break;
                         }
                         ++i;
@@ -336,12 +348,11 @@ public final class BLAST_DRIVER {
                       write_to_hdfs(rid, output.toString());
                     }
 
-                    log.println(String.format("close %d", partitionId));
-                    log.flush();
+                    logger.log(Level.DEBUG,String.format("close %d", partitionId));
                     try {
                       fs.close();
                     } catch (IOException ioe) {
-                      log.println("Couldn't close HDFS filesystem");
+                      logger.log(Level.DEBUG,"Couldn't close HDFS filesystem");
                     }
 
                     return;
@@ -362,19 +373,19 @@ public final class BLAST_DRIVER {
 
                       Path newFolderPath = new Path(hsp_result_dir);
                       if (!fs.exists(newFolderPath)) {
-                        log.println("Creating HDFS dir " + hsp_result_dir);
+                        logger.log(Level.DEBUG,"Creating HDFS dir " + hsp_result_dir);
                         fs.mkdirs(newFolderPath);
                       }
                       String outfile = String.format("%s/%s.txt", hsp_result_dir, rid);
                       fs.delete(new Path(outfile), false);
                       // Rename in HDFS is supposed to be atomic
                       fs.rename(new Path(tmpfile), new Path(outfile));
-                      log.println(
+                      logger.log(Level.DEBUG,
                           String.format("Wrote %d bytes to HDFS %s", output.length(), outfile));
 
                     } catch (IOException ioe) {
-                      log.println("Couldn't write to HDFS");
-                      log.println(ioe.toString());
+                      logger.log(Level.DEBUG,"Couldn't write to HDFS");
+                      logger.log(Level.DEBUG,ioe.toString());
                     }
                   } // write_to_hdfs
                 } // ForeachWriter
