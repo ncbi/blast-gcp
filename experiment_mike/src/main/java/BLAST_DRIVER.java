@@ -381,6 +381,7 @@ public final class BLAST_DRIVER {
                 ) // foreach
             .outputMode("Append");
 
+    System.out.println("made  prelim_stream");
     return topn_dsw;
   }
 
