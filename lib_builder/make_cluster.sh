@@ -77,8 +77,6 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 #  spark.driver.maxResultSize=3840m
 #  spark.yarn.am.memory=640m
 
-# turn off dynamic allocation?
-#  /etc/spark/conf/spark-defaults.conf: spark.dynamicAllocation.enabled true
 # check Spark Web UI
 
 # ~$15/hour for 56 node cluster
@@ -89,10 +87,10 @@ gcloud beta dataproc --region us-east4 \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
-        --worker-boot-disk-size 250 \
-    --worker-machine-type n1-standard-64 \
-    --num-preemptible-workers 4 \
-        --preemptible-worker-boot-disk-size 250 \
+        --worker-boot-disk-size 100 \
+    --worker-machine-type n1-standard-8 \
+    --num-preemptible-workers 12 \
+        --preemptible-worker-boot-disk-size 100 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
     --labels owner=$USER \
