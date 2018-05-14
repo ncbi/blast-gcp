@@ -29,8 +29,8 @@ import java.io.Serializable;
 
 class BLAST_HSP_LIST implements Serializable
 {
-    public BLAST_PARTITION part;
-    public BLAST_REQUEST req;
+    //public BLAST_DATABASE_PART part;
+    //public BLAST_REQUEST req;
     public int oid;
     public int max_score;
     public byte[] hsp_blob;
@@ -48,6 +48,7 @@ class BLAST_HSP_LIST implements Serializable
         return (hsp_blob.length == 0);
     }
 
+    /*
     @Override public String toString()
     {
         String res = "";
@@ -66,5 +67,6 @@ class BLAST_HSP_LIST implements Serializable
         res += "\n";
         return res;
     }
+    */
 }
 

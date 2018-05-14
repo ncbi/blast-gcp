@@ -26,8 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-//import java.util.List;
-//import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -59,36 +57,53 @@ public final class BLAST_MAIN
                 for ( String fn : settings.transfer_files )
                     sc.addFile( fn );
 
-                ConcurrentLinkedQueue< BLAST_REQUEST > requests = new ConcurrentLinkedQueue<>();
+                BLAST_STATUS status = new BLAST_STATUS();
+                ConcurrentLinkedQueue< BLAST_REQUEST > request_q = new ConcurrentLinkedQueue<>();
+                ConcurrentLinkedQueue< String > cmd_q = new ConcurrentLinkedQueue<>();
                 AtomicBoolean running = new AtomicBoolean( false );
-                BLAST_CONSOLE cons = new BLAST_CONSOLE( requests, running, 200, settings.top_n );
+                BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
+
+                BLAST_CONSOLE cons = new BLAST_CONSOLE( request_q, cmd_q, status, running, settings, 200 );
                 cons.start();
 
+                BLAST_COMM comm = new BLAST_COMM( request_q, cmd_q, status, running, settings );
+                comm.start();
+
+                Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
                 try
                 {
-                    BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
+                    BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, SETTINGS, sc, nodes );
 
-                    Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
-                    BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes );
-                    System.out.println( "driver started..." );
+                    BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db_map, request_q, status );
 
-                    BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db, requests );
+                    System.out.println( "spark-blast started..." );
 
                     while( running.get() )
                     {
                         try
                         {
-                            Thread.sleep( 500 );
+                            if ( cmd_q.isEmpty() )
+                                Thread.sleep( 250 );
+                            else
+                            {
+                                String cmd = cmd_q.poll();
+                                if ( cmd != null )
+                                {
+                                    if ( cmd.startsWith( "J" ) )
+                                        jobs.set( cmd.substring( 1 ) );
+                                }
+                            }
                         }
                         catch ( InterruptedException e )
                         {
                         }
                     }
 
-                    jobs.stop();
+                    jobs.stop_all_jobs();
+                    comm.join();
                     cons.join();
 
-                    System.out.println( "driver done..." );
+                    System.out.println( "spark-blast done..." );
                 }
                 catch( Exception e )
                 {

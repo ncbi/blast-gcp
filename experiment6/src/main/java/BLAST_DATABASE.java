@@ -43,13 +43,15 @@ import org.apache.spark.rdd.RDD;
 
 class BLAST_DATABASE
 {
-    public JavaRDD< BLAST_PARTITION > DB_SECS;
+    public JavaRDD< BLAST_DATABASE_PART > DB_SECS;
     public Long total_size;
+    public String selector;
 
     BLAST_DATABASE( final BLAST_SETTINGS settings,
                     final Broadcast< BLAST_SETTINGS > SETTINGS,
                     final JavaSparkContext sc,
-                    final BLAST_YARN_NODES nodes )
+                    final BLAST_YARN_NODES nodes,
+                    final String a_selector )
     {
         if ( settings.with_locality )
             DB_SECS = make_db_partitions_2( settings, SETTINGS, sc, nodes );
@@ -58,8 +60,9 @@ class BLAST_DATABASE
 
         final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
         total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
+        selector = a_selector;
 
-        System.out.println( String.format( "total database size: %,d bytes", total_size ) );
+        System.out.println( String.format( "[ %s ] total database size: %,d bytes", selector, total_size ) );
     }
 
     private Integer node_count( final BLAST_SETTINGS settings, final BLAST_YARN_NODES nodes )
@@ -73,15 +76,15 @@ class BLAST_DATABASE
     /* ===========================================================================================
             create database-partitions
        =========================================================================================== */
-    private JavaRDD< BLAST_PARTITION > make_db_partitions_1(
+    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_1(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_SETTINGS > SETTINGS,
                                 final JavaSparkContext sc )
     {
-        final List< Tuple2< Integer, BLAST_PARTITION > > db_list = new ArrayList<>();
+        final List< Tuple2< Integer, BLAST_DATABASE_PART > > db_list = new ArrayList<>();
         for ( int i = 0; i < settings.num_db_partitions; i++ )
         {
-            BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( settings.db_location, settings.db_pattern,
                 i, settings.flat_db_layout );
             db_list.add( new Tuple2<>( i, part ) );
         }
@@ -89,7 +92,7 @@ class BLAST_DATABASE
         BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( settings.num_db_partitions );
         return sc.parallelizePairs( db_list, settings.num_db_partitions ).partitionBy( p ).map( item ->
         {
-            BLAST_PARTITION part = item._2();
+            BLAST_DATABASE_PART part = item._2();
 
             BLAST_SETTINGS bls = SETTINGS.getValue();
             if ( bls.log_part_prep )
@@ -99,18 +102,18 @@ class BLAST_DATABASE
         } ).cache();
     }
 
-    private JavaRDD< BLAST_PARTITION > make_db_partitions_2(
+    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_2(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_SETTINGS > SETTINGS,
                                 final JavaSparkContext sc,
                                 final BLAST_YARN_NODES nodes )
     {
-        final List< Tuple2< BLAST_PARTITION, Seq< String > > > part_list = new ArrayList<>();
+        final List< Tuple2< BLAST_DATABASE_PART, Seq< String > > > part_list = new ArrayList<>();
         BLAST_YARN_NODE_ITER node_iter = new BLAST_YARN_NODE_ITER( nodes );
 
         for ( int i = 0; i < settings.num_db_partitions; i++ )
         {
-            BLAST_PARTITION part = new BLAST_PARTITION( settings.db_location, settings.db_pattern,
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( settings.db_location, settings.db_pattern,
                 i, settings.flat_db_layout );
 
             String host = node_iter.get();
@@ -127,13 +130,13 @@ class BLAST_DATABASE
         }
 
         // we transform thes list into a Seq
-        final Seq< Tuple2< BLAST_PARTITION, Seq< String > > > temp1 = JavaConversions.asScalaBuffer( part_list ).toSeq();
+        final Seq< Tuple2< BLAST_DATABASE_PART, Seq< String > > > temp1 = JavaConversions.asScalaBuffer( part_list ).toSeq();
 
         // we need the class-tag for twice for conversions
-        ClassTag< BLAST_PARTITION > tag = scala.reflect.ClassTag$.MODULE$.apply( BLAST_PARTITION.class );
+        ClassTag< BLAST_DATABASE_PART > tag = scala.reflect.ClassTag$.MODULE$.apply( BLAST_DATABASE_PART.class );
 
         // this will distribute the partitions to different worker-nodes
-        final RDD< BLAST_PARTITION > temp2 = sc.toSparkContext( sc ).makeRDD( temp1, tag );
+        final RDD< BLAST_DATABASE_PART > temp2 = sc.toSparkContext( sc ).makeRDD( temp1, tag );
 
         // now we transform it into a JavaRDD and perform a mapping-op to eventuall load the
         // database onto the worker-node ( if it is not already there )
@@ -149,3 +152,4 @@ class BLAST_DATABASE
     }
 
 }
+

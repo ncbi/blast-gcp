@@ -26,12 +26,12 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Console;
-import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-public final class BLAST_CONSOLE  extends Thread
+class BLAST_COMM extends Thread
 {
     private final ConcurrentLinkedQueue< BLAST_REQUEST > request_q;
     private final ConcurrentLinkedQueue< String > cmd_q;
@@ -39,53 +39,46 @@ public final class BLAST_CONSOLE  extends Thread
     private final AtomicBoolean running;
     private final BLAST_SETTINGS settings;
 
-    private final Integer sleep_time;
-
-    public BLAST_CONSOLE( final ConcurrentLinkedQueue< BLAST_REQUEST > a_request_q,
-                          final ConcurrentLinkedQueue< String > a_cmd_q,
-                          final BLAST_STATUS a_status,
-                          final AtomicBoolean a_running,
-                          final BLAST_SETTINGS a_settings,
-                          final Integer a_sleep_time )
+    public BLAST_COMM( ConcurrentLinkedQueue< BLAST_REQUEST > a_request_q,
+                       ConcurrentLinkedQueue< String > a_cmd_q,
+                       BLAST_STATUS a_status,
+                       AtomicBoolean a_running,
+                       BLAST_SETTINGS a_settings )
     {
         this.request_q = a_request_q;
         this.cmd_q = a_cmd_q;
         this.status = a_status;
         this.running = a_running;
         this.settings = a_settings;
-        this.sleep_time = a_sleep_time;
     }
 
     @Override public void run()
     {
-        Console cons = System.console();
-
-        running.set( true );
-        while( running.get() && cons != null )
+        try
         {
-            String line = cons.readLine().trim();
-            if ( !line.isEmpty() )
-            {
-                if ( line.startsWith( "R" ) )
-                    request_q.offer( BLAST_REQUEST_READER.parse( line.substring( 1 ), settings.top_n ) );
-                else if ( line.equals( "exit" ) )
-                    running.set( false );
-                else if ( line.equals( "status" ) )
-                    System.out.println( String.format( "%s, q=%d\n", status, request_q.size() ) );
-                else
-                    cmd_q.offer( line );
-            }
-            else if ( running.get() )
+            ServerSocket ss = new ServerSocket( settings.comm_port );
+
+            while( running.get() )
             {
                 try
                 {
-                    Thread.sleep( sleep_time );
+                    ss.setSoTimeout( 500 );
+                    Socket client_socket = ss.accept();
+                    BLAST_COMM_CLIENT client =
+                        new BLAST_COMM_CLIENT( request_q, cmd_q, status, running, settings, client_socket );
+                    client.start();
                 }
-                catch ( InterruptedException e )
+                catch ( Exception e )
                 {
+                    // do nothing if the loop times out...
                 }
             }
+
+            ss.close();
+        }
+        catch ( Exception e )
+        {
+            System.out.println( String.format( "BLAST_COMM: %s", e ) );
         }
     }
 }
-

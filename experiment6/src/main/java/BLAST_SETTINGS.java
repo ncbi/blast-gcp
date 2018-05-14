@@ -80,6 +80,7 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean shuffle_reduceLocality_enabled;
     public Boolean scheduler_fair;
     public Integer parallel_jobs;
+    public Integer comm_port;
 
     /* LOG */
     public String log_host;
@@ -205,6 +206,7 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\treduce_loc_enabled . %s\n", Boolean.toString( shuffle_reduceLocality_enabled ) );
         S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
+        S = S + String.format( "\tcommunication port . %d\n", comm_port );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
 

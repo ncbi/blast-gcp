@@ -26,66 +26,70 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Console;
-import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.net.Socket;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 
-public final class BLAST_CONSOLE  extends Thread
+class BLAST_COMM_CLIENT extends Thread
 {
     private final ConcurrentLinkedQueue< BLAST_REQUEST > request_q;
     private final ConcurrentLinkedQueue< String > cmd_q;
     private final BLAST_STATUS status;
     private final AtomicBoolean running;
     private final BLAST_SETTINGS settings;
+    private final Socket socket;
 
-    private final Integer sleep_time;
-
-    public BLAST_CONSOLE( final ConcurrentLinkedQueue< BLAST_REQUEST > a_request_q,
-                          final ConcurrentLinkedQueue< String > a_cmd_q,
-                          final BLAST_STATUS a_status,
-                          final AtomicBoolean a_running,
-                          final BLAST_SETTINGS a_settings,
-                          final Integer a_sleep_time )
+    public BLAST_COMM_CLIENT( ConcurrentLinkedQueue< BLAST_REQUEST > a_request_q,
+                              ConcurrentLinkedQueue< String > a_cmd_q,
+                              BLAST_STATUS a_status,
+                              AtomicBoolean a_running,
+                              BLAST_SETTINGS a_settings,
+                              Socket a_socket )
     {
         this.request_q = a_request_q;
         this.cmd_q = a_cmd_q;
         this.status = a_status;
         this.running = a_running;
         this.settings = a_settings;
-        this.sleep_time = a_sleep_time;
+        this.socket = a_socket;
     }
-
+    
     @Override public void run()
     {
-        Console cons = System.console();
-
-        running.set( true );
-        while( running.get() && cons != null )
+        try
         {
-            String line = cons.readLine().trim();
-            if ( !line.isEmpty() )
+            socket.setTcpNoDelay( true );
+            PrintStream ps = new PrintStream( socket.getOutputStream() );
+            BufferedReader in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
+            String input;
+
+            ps.printf( "spark-blast$" );
+            while( running.get() && ( ( input = in.readLine() ) != null ) ) 
             {
-                if ( line.startsWith( "R" ) )
-                    request_q.offer( BLAST_REQUEST_READER.parse( line.substring( 1 ), settings.top_n ) );
-                else if ( line.equals( "exit" ) )
-                    running.set( false );
-                else if ( line.equals( "status" ) )
-                    System.out.println( String.format( "%s, q=%d\n", status, request_q.size() ) );
+                String trimmed = input.trim();
+                if ( trimmed.equals( "bye" ) )
+                    break;
+                else if ( trimmed.equals( "status" ) )
+                    ps.printf( "%s, q=%d\n", status, request_q.size() );
+                else if ( trimmed.equals( "backlog" ) )
+                    ps.printf( "%d\n", request_q.size() );
+                else if ( trimmed.startsWith( "R" ) )
+                    request_q.offer( BLAST_REQUEST_READER.parse( trimmed.substring( 1 ), settings.top_n ) );
                 else
-                    cmd_q.offer( line );
+                    cmd_q.offer( trimmed );
+                ps.printf( "spark-blast$" );
             }
-            else if ( running.get() )
-            {
-                try
-                {
-                    Thread.sleep( sleep_time );
-                }
-                catch ( InterruptedException e )
-                {
-                }
-            }
+            socket.close();
         }
+        catch ( Exception e )
+        {
+            System.out.println( String.format( "BLAST_COMM_CLIENT: %s", e ) );
+        }
+
     }
 }
 

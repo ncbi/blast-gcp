@@ -449,6 +449,7 @@ class SPARK_SETTINGS_READER
     public static final String key_shuffle_reduceLocality_enabled = "shuffle_reduceLocality_enabled";
     public static final String key_scheduler_fair = "scheduler_fair";
     public static final String key_parallel_jobs = "parallel_jobs";
+    public static final String key_comm_port = "comm_port";
 
     public static final String  dflt_transfer_file = "libblastjni.so";
     public static final String  dflt_spark_log_level = "ERROR";
@@ -461,6 +462,7 @@ class SPARK_SETTINGS_READER
     public static final Boolean dflt_shuffle_reduceLocality_enabled = false;
     public static final Boolean dflt_scheduler_fair = false;
     public static final Integer dflt_parallel_jobs = 3;
+    public static final Integer dflt_comm_port = 10013;
 
     public static void defaults( BLAST_SETTINGS settings )
     {
@@ -477,6 +479,7 @@ class SPARK_SETTINGS_READER
         settings.shuffle_reduceLocality_enabled = dflt_shuffle_reduceLocality_enabled;
         settings.scheduler_fair     = dflt_scheduler_fair;
         settings.parallel_jobs      = dflt_parallel_jobs;
+        settings.comm_port          = dflt_comm_port;
     }
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
@@ -497,6 +500,7 @@ class SPARK_SETTINGS_READER
                                                                            dflt_shuffle_reduceLocality_enabled );
             settings.scheduler_fair     = UTILS.get_json_bool( obj, key_scheduler_fair, dflt_scheduler_fair );
             settings.parallel_jobs      = UTILS.get_json_int( obj, key_parallel_jobs, dflt_parallel_jobs );
+            settings.comm_port          = UTILS.get_json_int( obj, key_comm_port, dflt_comm_port );
         }
         else
             settings.transfer_files.add( dflt_transfer_file );

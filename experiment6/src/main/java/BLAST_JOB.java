@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.nio.ByteBuffer;
 
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
 import org.apache.spark.broadcast.Broadcast;
@@ -44,21 +43,24 @@ class BLAST_JOB extends Thread
     private final BLAST_SETTINGS settings;
     private Broadcast< BLAST_SETTINGS > SETTINGS;
     private final JavaSparkContext sc;
-    private BLAST_DATABASE db;
-    private final ConcurrentLinkedQueue< BLAST_REQUEST > requests;
+    private final BLAST_DATABASE_MAP db;
+    private final ConcurrentLinkedQueue< BLAST_REQUEST > requestq;
     private final AtomicBoolean running;
+    private final BLAST_STATUS status;
 
     public BLAST_JOB( final BLAST_SETTINGS settings,
                       Broadcast< BLAST_SETTINGS > SETTINGS,
                       JavaSparkContext sc,
-                      BLAST_DATABASE a_db,
-                      ConcurrentLinkedQueue< BLAST_REQUEST > a_requests )
+                      BLAST_DATABASE_MAP a_db,
+                      ConcurrentLinkedQueue< BLAST_REQUEST > a_requestq,
+                      BLAST_STATUS a_status )
     {
         this.settings = settings;
         this.SETTINGS = SETTINGS;
         this.sc = sc;
         this.db = a_db;
-        this.requests = a_requests;
+        this.requestq = a_requestq;
+        this.status = a_status;
         running = new AtomicBoolean( false );
     }
 
@@ -67,21 +69,15 @@ class BLAST_JOB extends Thread
         running.set( false );
     }
 
-    /* ===========================================================================================
-            perform prelim search and traceback in one step
-
-            IN  :   SRC: JavaPairRDD < BLAST_PARTITION, BLAST_REQUEST >
-            OUT :   JavaPairRDD < REQ.ID, BLAST_TB_LIST >
-       =========================================================================================== */
     private JavaRDD< BLAST_TB_LIST_LIST > prelim_search_and_traceback(
-                    final JavaPairRDD< BLAST_PARTITION, BLAST_REQUEST > SRC, Broadcast< BLAST_SETTINGS > SE )
+                    final JavaRDD< BLAST_DATABASE_PART > SRC, Broadcast< BLAST_SETTINGS > SE, Broadcast< BLAST_REQUEST > REQ )
     {
         return SRC.flatMap( item ->
         {
             ArrayList< BLAST_TB_LIST_LIST > res = new ArrayList<>();
             BLAST_SETTINGS bls = SE.getValue();
-            BLAST_PARTITION part = item._1();
-            BLAST_REQUEST req = item._2();
+            BLAST_DATABASE_PART part = item;
+            BLAST_REQUEST req = REQ.getValue();
 
             // see if we are at a different worker-id now
             if ( bls.log_worker_shift )
@@ -146,9 +142,10 @@ class BLAST_JOB extends Thread
         } );
     }
 
-    private void write_results( final String req_id, final BLAST_TB_LIST_LIST ll, Long started_at )
+    private long write_results( final String req_id, final BLAST_TB_LIST_LIST ll, Long started_at )
     {
         int sum = 0;
+        long elapsed = 0L;
 
         for ( BLAST_TB_LIST e : ll.list )
             sum += e.asn1_blob.length;
@@ -169,61 +166,53 @@ class BLAST_JOB extends Thread
             String path = String.format( "%s/%s", settings.hdfs_result_dir, fn );
             Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
 
+            elapsed = System.currentTimeMillis() - started_at;
             if ( settings.log_final )
-            {
-                Long elapsed = System.currentTimeMillis() - started_at;
                 System.out.println( String.format( "[%s] %d bytes written to hdfs at '%s' (%,d ms)",
                         req_id, uploaded, path, elapsed ) );
-            }
         }
         if ( settings.gs_or_hdfs.contains( "gs" ) )
         {
             String gs_result_key = String.format( settings.gs_result_file, req_id );
             Integer uploaded = BLAST_GS_UPLOADER.upload( settings.gs_result_bucket, gs_result_key, buf );
+            elapsed = System.currentTimeMillis() - started_at;
 
             if ( settings.log_final )
-            {
-                Long elapsed = System.currentTimeMillis() - started_at;
                 System.out.println( String.format( "[%s] %d bytes written to gs '%s':'%s' (%,d ms)",
                         req_id, uploaded, settings.gs_result_bucket, gs_result_key, elapsed ) );
-            }
         }
 
         if ( settings.gs_or_hdfs.contains( "time" ) )
         {
+            elapsed = System.currentTimeMillis() - started_at;
             if ( settings.log_final )
-            {
-                Long elapsed = System.currentTimeMillis() - started_at;
                 System.out.println( String.format( "[%s] %d bytes summed up (%,d ms) n=%,d",
                         req_id, sum, elapsed, ll.list.size() ) );
-            }
         }
+        return elapsed;
     }
 
-    private void handle_request( final BLAST_REQUEST request )
+    private long handle_request( final BLAST_REQUEST request, BLAST_DATABASE blast_db )
     {
-        final List< BLAST_REQUEST > req_list = new ArrayList<>();
-        req_list.add( request );
-
         Long started_at = System.currentTimeMillis();
+        long elapsed = 0L;
 
-        final JavaRDD< BLAST_REQUEST > REQUESTS = sc.parallelize( req_list, settings.num_executors ).cache();
+        final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
 
-        final JavaPairRDD< BLAST_PARTITION, BLAST_REQUEST > JOBS = db.DB_SECS.cartesian( REQUESTS ).cache();
-
-        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( JOBS, SETTINGS );
+        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, SETTINGS, REQ );
 
         BLAST_TB_LIST_LIST the_result = null;
         try
         {
             the_result = reduce_results( RESULTS );
-            write_results( request.id, the_result, started_at );
+            elapsed = write_results( request.id, the_result, started_at );
         }
         catch ( Exception e )
         {
-            Long elapsed = System.currentTimeMillis() - started_at;
+            elapsed = System.currentTimeMillis() - started_at;
             System.out.println( String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
         }
+        return elapsed;
     }
 
     @Override public void run()
@@ -232,9 +221,21 @@ class BLAST_JOB extends Thread
 
         while( running.get() )
         {
-            BLAST_REQUEST request = requests.poll();
+            BLAST_REQUEST request = requestq.poll();
             if ( request != null )
-                handle_request( request );
+            {
+                BLAST_DATABASE blast_db = db.get( request.db );
+                if ( blast_db != null )
+                {
+                    long elapsed = handle_request( request, blast_db );
+                    status.after_request( elapsed );
+                    System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
+                }
+                else
+                {
+                    System.out.println( String.format( "[ %s ] unknown database '%s'", request.id, request.db ) );
+                }
+            }
             else
             {
                 try

@@ -39,41 +39,110 @@ class BLAST_JOBS
     private final BLAST_SETTINGS settings;
     private final Broadcast< BLAST_SETTINGS > SETTINGS;
     private final JavaSparkContext sc;
-    private final BLAST_DATABASE db;
-    private final ConcurrentLinkedQueue< BLAST_REQUEST > requests;
+    private final BLAST_DATABASE_MAP db;
+    private final ConcurrentLinkedQueue< BLAST_REQUEST > request_q;
+    private final BLAST_STATUS status;
 
     public BLAST_JOBS( final BLAST_SETTINGS a_settings,
                        Broadcast< BLAST_SETTINGS > a_SETTINGS,
                        JavaSparkContext a_sc,
-                       BLAST_DATABASE a_db,
-                       ConcurrentLinkedQueue< BLAST_REQUEST > a_requests )
+                       BLAST_DATABASE_MAP a_db,
+                       ConcurrentLinkedQueue< BLAST_REQUEST > a_requestq,
+                       BLAST_STATUS a_status )
     {
         jobs = new ArrayList<>();
         this.settings = a_settings;
         this.SETTINGS = a_SETTINGS;
         this.sc = a_sc;
         this.db = a_db;
-        this.requests = a_requests;
+        this.request_q = a_requestq;
+        this.status = a_status;
 
+        start_jobs();
+    }
+
+    private void start_jobs()
+    {
         for ( int i = 0; i < settings.parallel_jobs; ++i )
-            jobs.add( new BLAST_JOB( settings, SETTINGS, sc, db, requests ) );
+            jobs.add( new BLAST_JOB( settings, SETTINGS, sc, db, request_q, status ) );
         for ( BLAST_JOB j : jobs )
             j.start();
+        status.set_parallel_jobs( jobs.size() );
     }
 
-    public void stop()
+    private void try_join( BLAST_JOB j )
     {
-        for ( BLAST_JOB j : jobs )
-            j.signal_done();
-        for ( BLAST_JOB j : jobs )
+        try
         {
-            try
-            {
-                j.join();
-            }
-            catch( InterruptedException e )
-            {
-            }
+            j.join();
+        }
+        catch( InterruptedException e )
+        {
         }
     }
+
+    private void stop_jobs( List< BLAST_JOB > l )
+    {
+        for ( BLAST_JOB j : l )
+            j.signal_done();
+        for ( BLAST_JOB j : l )
+            try_join( j );
+    }
+
+    public void stop_all_jobs()
+    {
+        stop_jobs( jobs );
+    }
+
+    public void restart_jobs()
+    {
+        stop_jobs( jobs );
+        start_jobs();
+    }
+ 
+    private void reduce_n( Integer N )
+    {
+        System.out.println( String.format( "removing %d jobs", N ) );
+        List< BLAST_JOB > to_stop = new ArrayList<>();
+        for ( int i = 0; i < N; ++i )
+            to_stop.add( jobs.remove( 0 ) );
+        stop_jobs( to_stop );
+        status.set_parallel_jobs( jobs.size() );
+        System.out.println( String.format( "%d jobs removed, now : %d", N, jobs.size() ) );
+    }
+
+    private void add_n( Integer N )
+    {
+        System.out.println( String.format( "adding %d jobs", N ) );        
+        List< BLAST_JOB > to_add = new ArrayList<>();
+        for ( int i = 0; i < N; ++i )
+            to_add.add( new BLAST_JOB( settings, SETTINGS, sc, db, request_q, status ) );
+        for ( BLAST_JOB j : to_add )
+        {
+            j.start();
+            jobs.add( j );
+        }
+        status.set_parallel_jobs( jobs.size() );
+        System.out.println( String.format( "%d jobs added, now : %d", N, jobs.size() ) );
+    }
+
+    public void set( final String cmd )
+    {
+        try
+        {
+            Integer N = Integer.parseInt( cmd );
+            Integer N_diff = N - jobs.size();
+            if ( N_diff < 0 )
+            {
+                if ( N > 0 )
+                    reduce_n( -N_diff );
+            }
+            else if ( N_diff > 0 )
+                add_n( N_diff );
+        }
+        catch( Exception e )
+        {
+        }
+    }
+  
 }

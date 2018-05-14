@@ -58,7 +58,7 @@ class PART_INST
     public Long size;
     public Boolean prepared;
 
-    public PART_INST( final BLAST_PARTITION part )
+    public PART_INST( final BLAST_DATABASE_PART part )
     {
         part_id = part.nr;
         size = 0L;
@@ -80,7 +80,7 @@ class PART_INST
     }
 
 
-    public Boolean prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
+    public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_SETTINGS settings )
     {
         Boolean res = false;
         try
@@ -164,14 +164,14 @@ class BLAST_LIB_SINGLETON
     {
     }
 
-    private static PART_INST getPartInst( final BLAST_PARTITION part )
+    private static PART_INST getPartInst( final BLAST_DATABASE_PART part )
     {
         if ( !parts.containsKey( part.nr ) )
             parts.put( part.nr, new PART_INST( part ) );
         return parts.get( part.nr );
     }
 
-    public static BLAST_PARTITION prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
+    public static BLAST_DATABASE_PART prepare( final BLAST_DATABASE_PART part, final BLAST_SETTINGS settings )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
@@ -179,12 +179,12 @@ class BLAST_LIB_SINGLETON
             if ( !p_inst.prepared )
                 p_inst.prepared = p_inst.prepare( part, settings );
             
-            return part.prepare();
+            return part.enter_worker_name();
         }
         return null;
     }
 
-    public static BLAST_LIB get_lib( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
+    public static BLAST_LIB get_lib( final BLAST_DATABASE_PART part, final BLAST_SETTINGS settings )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
@@ -195,7 +195,7 @@ class BLAST_LIB_SINGLETON
         return blaster;
     }
 
-    public static Long get_size( final BLAST_PARTITION part )
+    public static Long get_size( final BLAST_DATABASE_PART part )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
