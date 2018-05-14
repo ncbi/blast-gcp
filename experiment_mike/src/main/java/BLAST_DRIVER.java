@@ -31,7 +31,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -56,6 +55,7 @@ import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
+import org.json.JSONObject;
 
 public final class BLAST_DRIVER {
   private static BLAST_SETTINGS settings;
@@ -116,6 +116,7 @@ public final class BLAST_DRIVER {
     // send the given files to all nodes
     List<String> files_to_transfer = new ArrayList<>();
     files_to_transfer.add("libblastjni.so");
+    files_to_transfer.add("log4j.properties");
     for (String a_file : files_to_transfer) {
       javasparkcontext.addFile(a_file);
     }
@@ -128,7 +129,7 @@ public final class BLAST_DRIVER {
 
     StructType parts_schema = StructType.fromDDL("db string, partition_num int");
 
-    ArrayList<Row> data = new ArrayList<Row>();
+    ArrayList<Row> data = new ArrayList<Row>(settings.num_db_partitions);
 
     for (int i = 0; i < settings.num_db_partitions; i++) {
       Row r = RowFactory.create("nt", Integer.valueOf(i));
@@ -170,15 +171,14 @@ public final class BLAST_DRIVER {
 
     Integer top_n = settings.top_n;
     String jni_log_level = settings.jni_log_level;
-    String hdfs_result_dir = settings.hdfs_result_dir;
+    String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
 
     Dataset<Row> prelim_search_results =
         joined
-            .flatMap(
+            .flatMap( // FIX: Make a functor
                 (FlatMapFunction<Row, String>)
                     inrow -> {
-                      BLAST_LIB blaster = new BLAST_LIB();
-                      blaster.log("INFO", "SPARK:" + inrow.mkString(":"));
+                      // BLAST_LIB blaster = new BLAST_LIB();
 
                       String rid = inrow.getString(inrow.fieldIndex("RID"));
                       String db = inrow.getString(inrow.fieldIndex("db"));
@@ -194,57 +194,59 @@ public final class BLAST_DRIVER {
                       requestobj.program = "blastn";
                       requestobj.top_n = top_n;
                       BLAST_PARTITION partitionobj =
-                          new BLAST_PARTITION(
-                              "/tmp/blast/db/prefetched", "nt_50M", partition_num, false);
+                          new BLAST_PARTITION("/tmp/blast/db/", "nt_50M", partition_num, false);
 
-                      List<String> hsp_csvs = new ArrayList<>();
+                      BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj, settings);
+                      blaster.log("INFO", "SPARK:" + inrow.mkString(":"));
+
+                      List<String> hsp_json;
                       if (blaster != null) {
                         BLAST_HSP_LIST[] search_res =
                             blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
 
+                        hsp_json = new ArrayList<>(search_res.length);
                         for (BLAST_HSP_LIST S : search_res) {
                           byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
                           String b64blob = new String(encoded, StandardCharsets.UTF_8);
-                          // oid, max_score, blob
-                          String rec =
-                              String.format(
-                                  "%s," + // RID
-                                      "%s," + // DB
-                                      "%02d," + // partition_num
-                                      "%d," + // oid
-                                      "%d," + // max_score
-                                      "%s," + // query_seq
-                                      "%s" + // blob
-                                      "",
-                                  rid, db, partition_num, S.oid, S.max_score, query_seq, b64blob);
+                          JSONObject json = new JSONObject();
+                          json.put("RID", rid);
+                          json.put("db", db);
+                          json.put("partition_num", partition_num);
+                          json.put("oid", S.oid);
+                          json.put("max_score", S.max_score);
+                          json.put("query_seq", query_seq);
+                          json.put("hsp_blob", b64blob);
 
-                          hsp_csvs.add(rec);
+                          hsp_json.add(json.toString());
                         }
 
-                      } else hsp_csvs.add("null blaster ");
-                      return hsp_csvs.iterator();
+                      } else {
+                        hsp_json = new ArrayList<>();
+                        hsp_json.add("null blaster ");
+                      }
+                      return hsp_json.iterator();
                     },
                 Encoders.STRING())
-            .toDF("hsp_csv");
+            .toDF("hsp_json");
     //        prelim_search_results.createOrReplaceTempView("prelim_search_results");
     Dataset<Row> prelim_search_1 = prelim_search_results.repartition(1);
 
     DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
     DataStreamWriter<Row> topn_dsw =
         prelim_dsw
-            .foreach(
+            .foreach( // FIX: Make a separate function
                 new ForeachWriter<Row>() {
                   private long partitionId;
-                  private PrintWriter log;
                   private int recordcount = 0;
                   private FileSystem fs;
+                  private PrintWriter log; // TODO: log4j
 
                   // So we can efficiently compute topN scores by RID
                   HashMap<String, TreeMap<Integer, ArrayList<String>>> score_map;
 
                   @Override
                   public boolean open(long partitionId, long version) {
-                    score_map = new HashMap<String, TreeMap<Integer, ArrayList<String>>>();
+                    score_map = new HashMap<>(); // String, TreeMap<Integer, ArrayList<String>>>();
                     this.partitionId = partitionId;
                     try {
                       Configuration conf = new Configuration();
@@ -267,10 +269,16 @@ public final class BLAST_DRIVER {
                     log.println("  " + value.mkString(":").substring(0, 30));
                     String line = value.getString(0);
                     log.println("  line is " + line.substring(0, 30));
-                    String[] csv = line.split(",", 0);
-                    log.println("  csv has " + csv.length);
-                    String rid = csv[0];
-                    Integer max_score = Integer.parseInt(csv[4]);
+
+                    JSONObject json = new JSONObject(line);
+                    String rid = json.getString("RID");
+                    int max_score = json.getInt("max_score");
+                    // String db=json.getString("db");
+                    // int partition_num=json.getInt("partition_num");
+                    // int oid=json.getInt("oid");
+                    // String query_seq=json.getString("query_seq");
+                    // String hsp_blob=json.getString("hsp_blob");
+
                     log.println(String.format(" max_score is %d", max_score));
 
                     if (!score_map.containsKey(rid)) {
@@ -281,6 +289,7 @@ public final class BLAST_DRIVER {
 
                     TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
 
+                    // TODO optimize: early cutoff if tm.size>topn
                     if (!tm.containsKey(max_score)) {
                       ArrayList<String> al = new ArrayList<String>();
                       tm.put(max_score, al);
@@ -301,7 +310,7 @@ public final class BLAST_DRIVER {
 
                     for (String rid : score_map.keySet()) {
                       TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
-                      String output = "";
+                      StringBuilder output = new StringBuilder(tm.size() * 100); // Fix: Tune
                       int i = 0;
                       for (Integer score : tm.keySet()) {
                         if (i < top_n) {
@@ -311,7 +320,9 @@ public final class BLAST_DRIVER {
                                 String.format(
                                     "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
                                     rid, score, i, line.substring(0, 60)));
-                            output = output + line + "\n";
+                            output.append(line);
+                            log.println(String.format("length of line is %d", line.length()));
+                            output.append('\n');
                           }
                         } else {
                           log.println(" Skipping rest");
@@ -319,7 +330,7 @@ public final class BLAST_DRIVER {
                         }
                         ++i;
                       }
-                      write_to_hdfs(rid, output);
+                      write_to_hdfs(rid, output.toString());
                     }
 
                     log.println(String.format("close %d", partitionId));
@@ -335,22 +346,23 @@ public final class BLAST_DRIVER {
 
                   private void write_to_hdfs(String rid, String output) {
                     try {
+                      /*
                       SecureRandom random = new SecureRandom();
                       byte[] bytes = new byte[10];
                       random.nextBytes(bytes);
                       byte[] encoded = Base64.getEncoder().encode(bytes);
-                      String tmpfile =
-                          String.format("/tmp/%s", new String(encoded, StandardCharsets.UTF_8));
+                      */
+                      String tmpfile = String.format("/tmp/%s_hsp.json", rid);
                       FSDataOutputStream os = fs.create(new Path(tmpfile));
                       os.writeBytes(output);
                       os.close();
 
-                      Path newFolderPath = new Path(hdfs_result_dir);
+                      Path newFolderPath = new Path(hsp_result_dir);
                       if (!fs.exists(newFolderPath)) {
-                        log.println("Creating HDFS dir " + hdfs_result_dir);
+                        log.println("Creating HDFS dir " + hsp_result_dir);
                         fs.mkdirs(newFolderPath);
                       }
-                      String outfile = String.format("%s/%s.txt", hdfs_result_dir, rid);
+                      String outfile = String.format("%s/%s.txt", hsp_result_dir, rid);
                       fs.delete(new Path(outfile), false);
                       // Rename in HDFS is supposed to be atomic
                       fs.rename(new Path(tmpfile), new Path(outfile));
@@ -370,7 +382,7 @@ public final class BLAST_DRIVER {
   }
 
   private static boolean run_streams(DataStreamWriter<Row> prelim_dsw) {
-    System.out.println("starting stream...");
+    System.out.println("starting streams...");
     //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
     try {
       for (int i = 0; i < 10; ++i) {
