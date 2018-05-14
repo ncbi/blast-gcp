@@ -98,9 +98,16 @@ class PART_INST
         try
         {
             List< String > extensions = new LinkedList<>();
+            extensions.add( "nax" );
             extensions.add( "nhr" );
             extensions.add( "nin" );
+            extensions.add( "nnd" );
+            extensions.add( "nni" );
+            extensions.add( "nog" );
+            extensions.add( "nsd" );
+            extensions.add( "nsi" );
             extensions.add( "nsq" );
+
 
             List< String > obj_names = new LinkedList<>();
             for ( String ext : extensions )
@@ -128,7 +135,7 @@ class PART_INST
                         else
                             dst_path = String.format( "%s/%s", settings.db_location, part.name );
                         dst_fn = String.format( "%s/%s", dst_path, obj_name );
-logger.log(Level.INFO, "dst_fn is " + dst_fn);
+                        logger.log(Level.INFO, "dst_fn is " + dst_fn);
 
                         Files.createDirectories( Paths.get( dst_path ) );
 
@@ -198,7 +205,7 @@ class BLAST_LIB_SINGLETON
         {
             if ( !p_inst.prepared )
                 p_inst.prepared = p_inst.prepare( part, settings );
-            
+
             return part.prepare();
         }
         return null;

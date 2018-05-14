@@ -173,6 +173,7 @@ public final class BLAST_DRIVER {
     Integer top_n = settings.top_n;
     String jni_log_level = settings.jni_log_level;
     String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
+    String db_location = settings.db_location;
 
     BLAST_SETTINGS settings_closure = settings;
 
@@ -183,15 +184,12 @@ public final class BLAST_DRIVER {
                     inrow -> {
                       Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
 
-//                        Runtime rt=Runtime.getRuntime();
-//                        Process pr = rt.exec("/bin/rm -rf /tmp/blast/db/");
-
                       String rid = inrow.getString(inrow.fieldIndex("RID"));
                       logger.log(Level.INFO,"Flatmapped RID " + rid);
                       String db = inrow.getString(inrow.fieldIndex("db"));
                       int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                       String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
-                      logger.log(Level.INFO, String.format("in flatmap %d", partition_num));
+                      logger.log(Level.INFO, String.format("in flatmap %d %s", partition_num, db_location));
 
                       BLAST_REQUEST requestobj = new BLAST_REQUEST();
                       requestobj.id = rid;
@@ -202,7 +200,7 @@ public final class BLAST_DRIVER {
                       requestobj.program = "blastn";
                       requestobj.top_n = top_n;
                       BLAST_PARTITION partitionobj =
-                          new BLAST_PARTITION("/tmp/blast/db", "nt_50M", partition_num, true);
+                          new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
 
                       BLAST_LIB blaster =
                           BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);

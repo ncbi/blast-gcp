@@ -25,6 +25,7 @@
         "db" :
         {
             "db_bucket" : "nt_50mb_chunks",
+            "db_location" : "/tmp/blast/db/prefetched",
             "num_db_partitions" : 886
         },
         "jni_log_level": "DEBUG",
