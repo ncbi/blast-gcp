@@ -98,13 +98,13 @@ public final class BLAST_DRIVER {
     conf.set("spark.locality.wait", settings.locality_wait);
     String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
     conf.set("spark.sql.warehouse.dir", warehouseLocation);
-    // conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_executors));
-    // conf.set("spark.default.parallelism", Integer.toString(settings.num_executors));
+    conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_db_partitions));
+    conf.set("spark.default.parallelism", Integer.toString(settings.num_db_partitions));
     conf.set("spark.shuffle.reduceLocality.enabled", "false");
     conf.set("spark.sql.streaming.schemaInference", "true");
     conf.set("spark.locality.wait", "30s"); // FIX: Allow time to load local DBs
     // -> process, node, rack, any
-    conf.set("spark.scheduler.mode", "FAIR"); // FIX
+    conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
 
     builder.config(conf);
     System.out.println("Configuration is");
@@ -333,7 +333,8 @@ public final class BLAST_DRIVER {
 
                     for (String rid : score_map.keySet()) {
                       TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
-                      StringBuilder output = new StringBuilder(tm.size() * 1000);
+                      // JSON records tend to be either ~360 or ~1,200 bytes
+                      StringBuilder output = new StringBuilder(tm.size() * 400);
                       int i = 0;
                       for (Integer score : tm.keySet()) {
                         if (i < top_n) {
@@ -346,7 +347,7 @@ public final class BLAST_DRIVER {
                                     rid, score, i, line.substring(0, 60)));
                             output.append(line);
                             logger.log(
-                                Level.DEBUG, String.format("length of line is %d", line.length()));
+                                Level.INFO, String.format("length of line is %d", line.length()));
                             logger.log(Level.DEBUG, String.format("line is %s.", line));
                             output.append('\n');
                           }
