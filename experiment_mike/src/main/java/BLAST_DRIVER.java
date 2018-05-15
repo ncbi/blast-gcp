@@ -27,9 +27,7 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -100,10 +98,13 @@ public final class BLAST_DRIVER {
     conf.set("spark.locality.wait", settings.locality_wait);
     String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
     conf.set("spark.sql.warehouse.dir", warehouseLocation);
-    conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_executors));
-    conf.set("spark.default.parallelism", Integer.toString(settings.num_executors));
+    // conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_executors));
+    // conf.set("spark.default.parallelism", Integer.toString(settings.num_executors));
     conf.set("spark.shuffle.reduceLocality.enabled", "false");
     conf.set("spark.sql.streaming.schemaInference", "true");
+    conf.set("spark.locality.wait", "30s"); // FIX: Allow time to load local DBs
+    // -> process, node, rack, any
+    conf.set("spark.scheduler.mode", "FAIR"); // FIX
 
     builder.config(conf);
     System.out.println("Configuration is");
@@ -127,9 +128,7 @@ public final class BLAST_DRIVER {
     return true;
   }
 
-  private static DataStreamWriter<Row> make_prelim_stream() {
-    System.out.println("making prelim_stream");
-
+  private static boolean make_partitions() {
     StructType parts_schema = StructType.fromDDL("db string, partition_num int");
 
     ArrayList<Row> data = new ArrayList<Row>(settings.num_db_partitions);
@@ -142,11 +141,18 @@ public final class BLAST_DRIVER {
     Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
     Dataset<Row> blast_partitions =
         parts
-            .repartition(settings.num_executors, parts.col("partition_num"))
+            // .repartition(settings.num_executors, parts.col("partition_num"))
+            .repartition(settings.num_db_partitions, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
     blast_partitions.show();
     blast_partitions.createOrReplaceTempView("blast_partitions");
+
+    return true;
+  }
+
+  private static DataStreamWriter<Row> make_prelim_stream() {
+    System.out.println("making prelim_stream");
 
     DataStreamReader query_stream = sparksession.readStream();
     query_stream.format("json");
@@ -159,15 +165,14 @@ public final class BLAST_DRIVER {
     queries.createOrReplaceTempView("queries");
 
     Dataset<Row> joined =
-        sparksession
-            .sql(
-                "select RID, queries.db, partition_num, "
-                    + "query_seq, timestamp_hdfs "
-                    + "from queries, blast_partitions "
-                    + "where queries.db=blast_partitions.db "
-                    + "distribute by partition_num")
-            .repartition(settings.num_executors);
-    joined.createOrReplaceTempView("joined");
+        sparksession.sql(
+            "select RID, queries.db, partition_num, "
+                + "query_seq, timestamp_hdfs "
+                + "from queries, blast_partitions "
+                + "where queries.db=blast_partitions.db "
+                + "distribute by partition_num");
+    //           .repartition(settings.num_executors);
+    //    joined.createOrReplaceTempView("joined");
     joined.printSchema();
 
     Integer top_n = settings.top_n;
@@ -185,11 +190,13 @@ public final class BLAST_DRIVER {
                       Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
 
                       String rid = inrow.getString(inrow.fieldIndex("RID"));
-                      logger.log(Level.INFO,"Flatmapped RID " + rid);
+                      logger.log(Level.INFO, "Flatmapped RID " + rid);
                       String db = inrow.getString(inrow.fieldIndex("db"));
                       int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                       String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
-                      logger.log(Level.INFO, String.format("in flatmap %d %s", partition_num, db_location));
+                      logger.log(
+                          Level.INFO,
+                          String.format("in flatmap %d %s", partition_num, db_location));
 
                       BLAST_REQUEST requestobj = new BLAST_REQUEST();
                       requestobj.id = rid;
@@ -202,8 +209,8 @@ public final class BLAST_DRIVER {
                       BLAST_PARTITION partitionobj =
                           new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
 
-                      BLAST_LIB blaster =
-                          BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
+                      BLAST_LIB blaster = new BLAST_LIB();
+                      // BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
                       logger.log(Level.INFO, "<row> is :" + inrow.mkString(":"));
 
                       List<String> hsp_json;
@@ -211,7 +218,9 @@ public final class BLAST_DRIVER {
                         BLAST_HSP_LIST[] search_res =
                             blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
 
-                        logger.log(Level.INFO, String.format(" prelim returned %d hsps to Spark", search_res.length));
+                        logger.log(
+                            Level.INFO,
+                            String.format(" prelim returned %d hsps to Spark", search_res.length));
                         hsp_json = new ArrayList<>(search_res.length);
                         for (BLAST_HSP_LIST S : search_res) {
                           byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
@@ -226,9 +235,10 @@ public final class BLAST_DRIVER {
                           json.put("hsp_blob", b64blob);
 
                           hsp_json.add(json.toString());
-                          //logger.log(Level.INFO, "json is " + json.toString());
+                          // logger.log(Level.INFO, "json is " + json.toString());
                         }
-                        logger.log(Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
+                        logger.log(
+                            Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
                       } else {
                         logger.log(Level.ERROR, "NULL blaster library");
                         hsp_json = new ArrayList<>();
@@ -268,19 +278,20 @@ public final class BLAST_DRIVER {
                       return false;
                     }
 
-                    logger.log(Level.DEBUG,String.format("open %d %d", partitionId, version));
+                    logger.log(Level.DEBUG, String.format("open %d %d", partitionId, version));
                     if (partitionId != 0)
-                      logger.log(Level.DEBUG,String.format(" *** not partition 0 %d ??? ", partitionId));
+                      logger.log(
+                          Level.DEBUG, String.format(" *** not partition 0 %d ??? ", partitionId));
                     return true;
                   } // open
 
                   @Override
                   public void process(Row value) {
                     ++recordcount;
-                    logger.log(Level.DEBUG,String.format(" in process %d", partitionId));
-                    logger.log(Level.DEBUG,"  " + value.mkString(":").substring(0, 50));
+                    logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
+                    logger.log(Level.DEBUG, "  " + value.mkString(":").substring(0, 50));
                     String line = value.getString(0);
-                    logger.log(Level.DEBUG,"  line is " + line.substring(0, 50));
+                    logger.log(Level.DEBUG, "  line is " + line.substring(0, 50));
 
                     JSONObject json = new JSONObject(line);
                     String rid = json.getString("RID");
@@ -291,7 +302,7 @@ public final class BLAST_DRIVER {
                     // String query_seq=json.getString("query_seq");
                     // String hsp_blob=json.getString("hsp_blob");
 
-                    logger.log(Level.DEBUG,String.format(" max_score is %d", max_score));
+                    logger.log(Level.DEBUG, String.format(" max_score is %d", max_score));
 
                     if (!score_map.containsKey(rid)) {
                       TreeMap<Integer, ArrayList<String>> tm =
@@ -315,10 +326,10 @@ public final class BLAST_DRIVER {
 
                   @Override
                   public void close(Throwable errorOrNull) {
-                    logger.log(Level.DEBUG,"close results:");
-                    logger.log(Level.DEBUG,"---------------");
-                    logger.log(Level.DEBUG,String.format(" saw %d records", recordcount));
-                    logger.log(Level.DEBUG,String.format(" hashmap has %d", score_map.size()));
+                    logger.log(Level.DEBUG, "close results:");
+                    logger.log(Level.DEBUG, "---------------");
+                    logger.log(Level.DEBUG, String.format(" saw %d records", recordcount));
+                    logger.log(Level.DEBUG, String.format(" hashmap has %d", score_map.size()));
 
                     for (String rid : score_map.keySet()) {
                       TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
@@ -328,17 +339,19 @@ public final class BLAST_DRIVER {
                         if (i < top_n) {
                           ArrayList<String> al = tm.get(score);
                           for (String line : al) {
-                            logger.log(Level.DEBUG,
+                            logger.log(
+                                Level.DEBUG,
                                 String.format(
                                     "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
                                     rid, score, i, line.substring(0, 60)));
                             output.append(line);
-                            logger.log(Level.DEBUG,String.format("length of line is %d", line.length()));
-                            logger.log(Level.DEBUG,String.format("line is %s." , line));
+                            logger.log(
+                                Level.DEBUG, String.format("length of line is %d", line.length()));
+                            logger.log(Level.DEBUG, String.format("line is %s.", line));
                             output.append('\n');
                           }
                         } else {
-                          logger.log(Level.DEBUG," Skipping rest");
+                          logger.log(Level.DEBUG, " Skipping rest");
                           break;
                         }
                         ++i;
@@ -346,11 +359,11 @@ public final class BLAST_DRIVER {
                       write_to_hdfs(rid, output.toString());
                     }
 
-                    logger.log(Level.DEBUG,String.format("close %d", partitionId));
+                    logger.log(Level.DEBUG, String.format("close %d", partitionId));
                     try {
                       fs.close();
                     } catch (IOException ioe) {
-                      logger.log(Level.DEBUG,"Couldn't close HDFS filesystem");
+                      logger.log(Level.DEBUG, "Couldn't close HDFS filesystem");
                     }
 
                     return;
@@ -371,19 +384,20 @@ public final class BLAST_DRIVER {
 
                       Path newFolderPath = new Path(hsp_result_dir);
                       if (!fs.exists(newFolderPath)) {
-                        logger.log(Level.DEBUG,"Creating HDFS dir " + hsp_result_dir);
+                        logger.log(Level.DEBUG, "Creating HDFS dir " + hsp_result_dir);
                         fs.mkdirs(newFolderPath);
                       }
                       String outfile = String.format("%s/%s.txt", hsp_result_dir, rid);
                       fs.delete(new Path(outfile), false);
                       // Rename in HDFS is supposed to be atomic
                       fs.rename(new Path(tmpfile), new Path(outfile));
-                      logger.log(Level.DEBUG,
+                      logger.log(
+                          Level.DEBUG,
                           String.format("Wrote %d bytes to HDFS %s", output.length(), outfile));
 
                     } catch (IOException ioe) {
-                      logger.log(Level.DEBUG,"Couldn't write to HDFS");
-                      logger.log(Level.DEBUG,ioe.toString());
+                      logger.log(Level.DEBUG, "Couldn't write to HDFS");
+                      logger.log(Level.DEBUG, ioe.toString());
                     }
                   } // write_to_hdfs
                 } // ForeachWriter
@@ -424,14 +438,20 @@ public final class BLAST_DRIVER {
     result = init(args);
     if (!result) {
       shutdown();
-      return;
+      System.exit(1);
+      ;
+    }
+
+    if (!make_partitions()) {
+      shutdown();
+      System.exit(2);
     }
 
     DataStreamWriter<Row> prelim_stream = make_prelim_stream();
     result = run_streams(prelim_stream);
     if (!result) {
       shutdown();
-      return;
+      System.exit(3);
     }
   }
 }
