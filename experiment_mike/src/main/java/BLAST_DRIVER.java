@@ -440,101 +440,100 @@ public final class BLAST_DRIVER {
 
         parted.printSchema();
 
-        Dataset<Row> part2 =
+        Dataset<Row> tb_struct =
             sparksession.sql(
                     "select "
-                    + "RID, db, partition_num, query_seq, "
+                    + "RID, db, cast(partition_num as int), query_seq, "
                     + "struct(oid, max_score, hsp_blob) as hsp "
                     + "from parted");
-        part2.printSchema();
-        part2.createOrReplaceTempView("part2");
-        Dataset<Row> part3 =
+        tb_struct.printSchema();
+        tb_struct.createOrReplaceTempView("tb_struct");
+        Dataset<Row> tb_hspl =
             sparksession.sql(
                     "select "
                     + "RID, db, partition_num, query_seq, "
                     + "to_json(collect_list(hsp)) as hspl "
-                    + "from part2 "
+                    + "from tb_struct "
                     + "group by RID, db, partition_num, query_seq "
                     + "distribute by partition_num");
-        part3.printSchema();
+        tb_hspl.printSchema();
 
-        Dataset<Row> traceback_results = part3;
+        //        Dataset<Row> traceback_results = tb_hspl;
 
-        /*
-           Dataset<Row> traceback_results =
-           parted
-           .flatMap( // FIX: Make a functor
-           (FlatMapFunction<Row, String>)
-           inrow -> {
-           Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-           logger.log(Level.INFO, "<row> is :" + inrow.mkString(":"));
+        Dataset<Row> traceback_results =
+            tb_hspl
+            .flatMap( // FIX: Make a functor
+                    (FlatMapFunction<Row, String>)
+                    inrow -> {
+                        Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
+                        logger.log(Level.INFO, "tb <row> is :" + inrow.mkString(":"));
 
-           String rid = inrow.getString(inrow.fieldIndex("RID"));
-           logger.log(Level.INFO, "Tracebacked RID " + rid);
-           String db = inrow.getString(inrow.fieldIndex("db"));
-           int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
-           String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
-           logger.log(
-           Level.INFO,
-           String.format("in tb flatmap %d %s", partition_num, db_location));
+                        String rid = inrow.getString(inrow.fieldIndex("RID"));
+                        logger.log(Level.INFO, "Tracebacked RID " + rid);
+                        String db = inrow.getString(inrow.fieldIndex("db"));
+                        int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
+                        String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
+                        logger.log(
+                                Level.INFO,
+                                String.format("in tb flatmap %d %s", partition_num, db_location));
 
-           BLAST_REQUEST requestobj = new BLAST_REQUEST();
-           requestobj.id = rid;
-           requestobj.query_seq = query_seq;
-           requestobj.query_url = "";
-           requestobj.db = db;
-           requestobj.params = "blastn";
-           requestobj.program = "blastn";
-           requestobj.top_n = top_n;
-           BLAST_PARTITION partitionobj =
-           new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
+                        BLAST_REQUEST requestobj = new BLAST_REQUEST();
+                        requestobj.id = rid;
+                        requestobj.query_seq = query_seq;
+                        requestobj.query_url = "";
+                        requestobj.db = db;
+                        requestobj.params = "blastn";
+                        requestobj.program = "blastn";
+                        requestobj.top_n = top_n;
+                        BLAST_PARTITION partitionobj =
+                            new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
 
-           BLAST_HSP_LIST hspl = new
+                        BLAST_LIB blaster = new BLAST_LIB();
+                        // BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
 
-           BLAST_LIB blaster = new BLAST_LIB();
-        // BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
+                        List<String> asns;
+                        if (blaster != null) {
+                            asns = new ArrayList<>();
+                            asns.add(inrow.mkString());
+                            /*
+                               BLAST_TB_LIST[] tb_res =
+                               blaster.jni_traceback(hspl, partitionobj, requestobj, loglevel);
+                               logger.log(
+                               Level.INFO,
+                               String.format(" traceback returned %d blobs to Spark", tb_res.length));
 
-        List<String> hsp_json;
-        if (blaster != null) {
-        BLAST_TB_LIST[] tb_res =
-        blaster.jni_traceback(hspl, partitionobj, requestobj, loglevel);
 
-        logger.log(
-        Level.INFO,
-        String.format(" traceback returned %d blobs to Spark", tb_res.length));
+                               hsp_json = new ArrayList<>(tb_res.length);
+                               for (BLAST_HSP_LIST S : search_res) {
+                               byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
+                               String b64blob = new String(encoded, StandardCharsets.UTF_8);
+                               JSONObject json = new JSONObject();
+                               json.put("RID", rid);
+                               json.put("db", db);
+                               json.put("partition_num", partition_num);
+                               json.put("oid", S.oid);
+                               json.put("max_score", S.max_score);
+                               json.put("query_seq", query_seq);
+                               json.put("hsp_blob", b64blob);
 
+                               hsp_json.add(json.toString());
+                            // logger.log(Level.INFO, "json is " + json.toString());
+                               }
+                               logger.log(
+                               Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
+                               */
+                        } else {
+                            logger.log(Level.ERROR, "NULL blaster library");
+                            asns = new ArrayList<>();
+                            asns.add("null blaster ");
+                        }
+                        return asns.iterator();
+                    },
+                          Encoders.STRING())
+                              .toDF("asns");
+        //        prelim_search_results.createOrReplaceTempView("prelim_search_results");
 
-        hsp_json = new ArrayList<>(tb_res.length);
-        for (BLAST_HSP_LIST S : search_res) {
-        byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
-        String b64blob = new String(encoded, StandardCharsets.UTF_8);
-        JSONObject json = new JSONObject();
-        json.put("RID", rid);
-        json.put("db", db);
-        json.put("partition_num", partition_num);
-        json.put("oid", S.oid);
-        json.put("max_score", S.max_score);
-        json.put("query_seq", query_seq);
-        json.put("hsp_blob", b64blob);
-
-        hsp_json.add(json.toString());
-        // logger.log(Level.INFO, "json is " + json.toString());
-        }
-        logger.log(
-        Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
-        } else {
-        logger.log(Level.ERROR, "NULL blaster library");
-        hsp_json = new ArrayList<>();
-        hsp_json.add("null blaster ");
-        }
-        return hsp_json.iterator();
-        },
-        Encoders.STRING())
-        .toDF("hsp_json");
-        */
-            //        prelim_search_results.createOrReplaceTempView("prelim_search_results");
-
-            DataStreamWriter<Row> tb_dsw = traceback_results.writeStream();
+        DataStreamWriter<Row> tb_dsw = traceback_results.writeStream();
 
         DataStreamWriter<Row> out_dsw =
             tb_dsw
