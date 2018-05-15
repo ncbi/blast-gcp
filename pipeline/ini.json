@@ -47,6 +47,10 @@
 
     "log" :
     {
-        "log_port" : 10011
+        "log_port" : 10011,
+        "log_worker_shift": true,
+        "log_job_start": true,
+        "log_job_done": true,
+        "log_cutoff": true
     }
 }
