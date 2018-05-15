@@ -35,10 +35,6 @@
         "asn1" :
         {
             "bucket" : "blast-test-USERNAME"
-        },
-        "status" :
-        {
-            "bucket"  : "blast-test-USERNAME"
         }
     },
 

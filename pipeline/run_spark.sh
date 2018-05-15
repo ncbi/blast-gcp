@@ -25,5 +25,8 @@ SPARK_BLAST_INI="ini.json"
 #
 
 #spark-submit --master yarn --jars $PUBSUB_JAR2 --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI
-spark-submit --master yarn --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI
+spark-submit --master yarn \
+    --conf spark.executorEnv[STATUS_TRACKER_CONFIG]=blast-test-${USER} \
+    --class $SPARK_BLAST_CLASS \
+    $SPARK_BLAST_JAR $SPARK_BLAST_INI
 
