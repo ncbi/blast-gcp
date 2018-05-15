@@ -108,6 +108,8 @@ public final class BLAST_DRIVER {
         // These will appear in
         // executor:/var/log/hadoop-yarn/userlogs/applica*/container*/stdout
         conf.set("spark.executor.extraJavaOptions", "-XX:+PrintCompilation -verbose:gc");
+        conf.set("spark.eventLog.enabled", "false");
+        conf.set("spark.ui.enabled", "true");
 
         builder.config(conf);
         System.out.println("Configuration is");
@@ -365,7 +367,7 @@ public final class BLAST_DRIVER {
 
                             logger.log(Level.DEBUG, String.format("close %d", partitionId));
                             try {
-                                fs.close();
+                                if (false) fs.close();
                             } catch (IOException ioe) {
                                 logger.log(Level.DEBUG, "Couldn't close HDFS filesystem");
                             }
@@ -414,10 +416,14 @@ public final class BLAST_DRIVER {
 
     private static DataStreamWriter<Row> make_traceback_stream() {
         System.out.println("making traceback_stream");
+        BLAST_SETTINGS settings_closure = settings;
+        Integer top_n = settings.top_n; // FIX: topn_n for traceback
+        String jni_log_level = settings.jni_log_level;
+        String db_location = settings.db_location;
 
         DataStreamReader hsp_stream = sparksession.readStream();
         hsp_stream.format("json");
-        hsp_stream.option("maxFilesPerTrigger", 5); // FIX: Configureable
+        hsp_stream.option("maxFilesPerTrigger", 2); // FIX: Configurable
         //    hsp_stream.option("multiLine", true);
         hsp_stream.option("includeTimestamp", true);
 
@@ -429,15 +435,31 @@ public final class BLAST_DRIVER {
         hsps.createOrReplaceTempView("hsps");
 
         Dataset<Row> parted =
-            sparksession.sql("select * " + "from hsps " + "distribute by partition_num, RID");
+            sparksession.sql("select * " + "from hsps " + "distribute by partition_num");
+        parted.createOrReplaceTempView("parted");
 
         parted.printSchema();
 
-        Integer top_n = settings.top_n; // FIX: topn_n for traceback
-        String jni_log_level = settings.jni_log_level;
-        String db_location = settings.db_location;
+        Dataset<Row> part2 =
+            sparksession.sql(
+                    "select "
+                    + "RID, db, partition_num, query_seq, "
+                    + "struct(oid, max_score, hsp_blob) as hsp "
+                    + "from parted");
+        part2.printSchema();
+        part2.createOrReplaceTempView("part2");
+        Dataset<Row> part3 =
+            sparksession.sql(
+                    "select "
+                    + "RID, db, partition_num, query_seq, "
+                    + "to_json(collect_list(hsp)) as hspl "
+                    + "from part2 "
+                    + "group by RID, db, partition_num, query_seq "
+                    + "distribute by partition_num");
+        part3.printSchema();
 
-        BLAST_SETTINGS settings_closure = settings;
+        Dataset<Row> traceback_results = part3;
+
         /*
            Dataset<Row> traceback_results =
            parted
@@ -511,205 +533,194 @@ public final class BLAST_DRIVER {
         .toDF("hsp_json");
         */
             //        prelim_search_results.createOrReplaceTempView("prelim_search_results");
-            DataStreamWriter<Row> tb_dsw = parted.writeStream();
-        /*
-           DataStreamWriter<Row> asn_dsw =
-           tb_dsw
-           .foreach( // FIX: Make a separate function
-           new ForeachWriter<Row>() {
-           private long partitionId;
-           private int recordcount = 0;
-           private FileSystem fs;
-           private Logger logger;
 
-        // So we can efficiently compute topN scores by RID
-        HashMap<String, TreeMap<Integer, ArrayList<String>>> score_map;
+            DataStreamWriter<Row> tb_dsw = traceback_results.writeStream();
 
-        @Override
-        public boolean open(long partitionId, long version) {
-        score_map = new HashMap<>(); // String, TreeMap<Integer, ArrayList<String>>>();
-        this.partitionId = partitionId;
-        logger = LogManager.getLogger(BLAST_DRIVER.class);
-        try {
-        Configuration conf = new Configuration();
-        fs = FileSystem.get(conf);
-        } catch (IOException e) {
-        System.err.println(e);
-        return false;
-        }
+        DataStreamWriter<Row> out_dsw =
+            tb_dsw
+            .foreach( // FIX: Make a separate function
+                    new ForeachWriter<Row>() {
+                        private long partitionId;
+                        private FileSystem fs;
+                        private Logger logger;
 
-        logger.log(Level.DEBUG, String.format("open %d %d", partitionId, version));
-        if (partitionId != 0)
-        logger.log(
-        Level.DEBUG, String.format(" *** not partition 0 %d ??? ", partitionId));
-        return true;
-        } // open
+                        @Override
+                        public boolean open(long partitionId, long version) {
+                            this.partitionId = partitionId;
+                            logger = LogManager.getLogger(BLAST_DRIVER.class);
+                            try {
+                                Configuration conf = new Configuration();
+                                fs = FileSystem.get(conf);
+                            } catch (IOException e) {
+                                System.err.println(e);
+                                return false;
+                            }
 
-        @Override
-        public void process(Row value) {
-        ++recordcount;
-        logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
-        logger.log(Level.DEBUG, "  " + value.mkString(":").substring(0, 50));
-        String line = value.getString(0);
-        logger.log(Level.DEBUG, "  line is " + line.substring(0, 50));
+                            logger.log(Level.DEBUG, String.format("open %d %d", partitionId, version));
+                            if (partitionId != 0)
+                                logger.log(
+                                        Level.DEBUG, String.format(" *** not partition 0 %d ??? ", partitionId));
+                            return true;
+                        } // open
 
-        JSONObject json = new JSONObject(line);
-        String rid = json.getString("RID");
-        int max_score = json.getInt("max_score");
-        // String db=json.getString("db");
-        // int partition_num=json.getInt("partition_num");
-        // int oid=json.getInt("oid");
-        // String query_seq=json.getString("query_seq");
-        // String hsp_blob=json.getString("hsp_blob");
+                        @Override
+                        public void process(Row value) {
+                            logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
+                            logger.log(Level.DEBUG, "  " + value.mkString(":").substring(0, 50));
+                            /*
+                               JSONObject json = new JSONObject(line);
+                               String rid = json.getString("RID");
+                               int max_score = json.getInt("max_score");
+                            // String db=json.getString("db");
+                            // int partition_num=json.getInt("partition_num");
+                            // int oid=json.getInt("oid");
+                            // String query_seq=json.getString("query_seq");
+                            // String hsp_blob=json.getString("hsp_blob");
 
-        logger.log(Level.DEBUG, String.format(" max_score is %d", max_score));
+                            logger.log(Level.DEBUG, String.format(" max_score is %d", max_score));
 
-        if (!score_map.containsKey(rid)) {
-        TreeMap<Integer, ArrayList<String>> tm =
-        new TreeMap<Integer, ArrayList<String>>(Collections.reverseOrder());
-        score_map.put(rid, tm);
-        }
+                            if (!score_map.containsKey(rid)) {
+                            TreeMap<Integer, ArrayList<String>> tm =
+                            new TreeMap<Integer, ArrayList<String>>(Collections.reverseOrder());
+                            score_map.put(rid, tm);
+                            }
 
-        TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
+                            TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
 
-        // FIX optimize: early cutoff if tm.size>topn
-        if (!tm.containsKey(max_score)) {
-        ArrayList<String> al = new ArrayList<String>();
-        tm.put(max_score, al);
-        }
-        ArrayList<String> al = tm.get(max_score);
+                            // FIX optimize: early cutoff if tm.size>topn
+                            if (!tm.containsKey(max_score)) {
+                            ArrayList<String> al = new ArrayList<String>();
+                            tm.put(max_score, al);
+                            }
+                            ArrayList<String> al = tm.get(max_score);
 
-        al.add(line);
-        tm.put(max_score, al);
-        score_map.put(rid, tm);
-        }
+                            al.add(line);
+                            tm.put(max_score, al);
+                            score_map.put(rid, tm);
+                            */
+                        }
 
-        @Override
-        public void close(Throwable errorOrNull) {
-            logger.log(Level.DEBUG, "close results:");
-            logger.log(Level.DEBUG, "---------------");
-            logger.log(Level.DEBUG, String.format(" saw %d records", recordcount));
-            logger.log(Level.DEBUG, String.format(" hashmap has %d", score_map.size()));
-
-            for (String rid : score_map.keySet()) {
-                TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
-                // JSON records tend to be either ~360 or ~1,200 bytes
-                StringBuilder output = new StringBuilder(tm.size() * 400);
-                int i = 0;
-                for (Integer score : tm.keySet()) {
-                    if (i < top_n) {
+                        @Override
+                        public void close(Throwable errorOrNull) {
+                            logger.log(Level.DEBUG, "close results:");
+                            logger.log(Level.DEBUG, "---------------");
+                        }
+                        /*
+                           for (String rid : score_map.keySet()) {
+                           TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
+                        // JSON records tend to be either ~360 or ~1,200 bytes
+                        StringBuilder output = new StringBuilder(tm.size() * 400);
+                        int i = 0;
+                        for (Integer score : tm.keySet()) {
+                        if (i < top_n) {
                         ArrayList<String> al = tm.get(score);
                         for (String line : al) {
-                            logger.log(
-                                    Level.DEBUG,
-                                    String.format(
-                                        "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
-                                        rid, score, i, line.substring(0, 60)));
-                            output.append(line);
-                            logger.log(
-                                    Level.INFO, String.format("length of line is %d", line.length()));
-                            logger.log(Level.DEBUG, String.format("line is %s.", line));
-                            output.append('\n');
+                        logger.log(
+                        Level.DEBUG,
+                        String.format(
+                        "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
+                        rid, score, i, line.substring(0, 60)));
+                        output.append(line);
+                        logger.log(
+                        Level.INFO, String.format("length of line is %d", line.length()));
+                        logger.log(Level.DEBUG, String.format("line is %s.", line));
+                        output.append('\n');
                         }
-                    } else {
+                        } else {
                         logger.log(Level.DEBUG, " Skipping rest");
                         break;
-                    }
-                    ++i;
-                }
-                write_to_hdfs(rid, output.toString());
-            }
+                        }
+                        ++i;
+                        }
+                        write_to_hdfs(rid, output.toString());
+                           }
 
-            logger.log(Level.DEBUG, String.format("close %d", partitionId));
-            try {
-                fs.close();
-            } catch (IOException ioe) {
-                logger.log(Level.DEBUG, "Couldn't close HDFS filesystem");
-            }
+                           logger.log(Level.DEBUG, String.format("close %d", partitionId));
 
-            return;
-        } // close
+                           return;
+                    } // close
 
-        private void write_to_hdfs(String rid, String output) {
-            try {
-                String tmpfile = String.format("/tmp/%s_hsp.json", rid);
-                FSDataOutputStream os = fs.create(new Path(tmpfile));
-                os.writeBytes(output);
-                os.close();
+                    private void write_to_hdfs(String rid, String output) {
+                    try {
+                    String tmpfile = String.format("/tmp/%s_hsp.json", rid);
+                    FSDataOutputStream os = fs.create(new Path(tmpfile));
+                    os.writeBytes(output);
+                    os.close();
 
-                Path newFolderPath = new Path(hsp_result_dir);
-                if (!fs.exists(newFolderPath)) {
+                    Path newFolderPath = new Path(hsp_result_dir);
+                    if (!fs.exists(newFolderPath)) {
                     logger.log(Level.DEBUG, "Creating HDFS dir " + hsp_result_dir);
                     fs.mkdirs(newFolderPath);
-                }
-                String outfile = String.format("%s/%s.txt", hsp_result_dir, rid);
-                fs.delete(new Path(outfile), false);
-                // Rename in HDFS is supposed to be atomic
-                fs.rename(new Path(tmpfile), new Path(outfile));
-                logger.log(
+                    }
+                    String outfile = String.format("%s/%s.txt", hsp_result_dir, rid);
+                    fs.delete(new Path(outfile), false);
+                        // Rename in HDFS is supposed to be atomic
+                        fs.rename(new Path(tmpfile), new Path(outfile));
+                        logger.log(
                         Level.DEBUG,
                         String.format("Wrote %d bytes to HDFS %s", output.length(), outfile));
 
-            } catch (IOException ioe) {
-                logger.log(Level.DEBUG, "Couldn't write to HDFS");
-                logger.log(Level.DEBUG, ioe.toString());
-            }
-        } // write_to_hdfs
-           } // ForeachWriter
+                        } catch (IOException ioe) {
+                        logger.log(Level.DEBUG, "Couldn't write to HDFS");
+                        logger.log(Level.DEBUG, ioe.toString());
+                        }
+                    } // write_to_hdfs
+                    */
+    } // ForeachWriter
     ) // foreach
-        .outputMode("Append");
-    */
-        System.out.println("made  traceback_stream");
-    return tb_dsw;
+        .outputMode("Complete");
+
+    System.out.println("made  traceback_stream");
+    return out_dsw;
+}
+
+private static boolean run_streams(
+        DataStreamWriter<Row> prelim_dsw, DataStreamWriter traceback_dsw) {
+    System.out.println("starting streams...");
+    //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
+    try {
+        StreamingQuery results = prelim_dsw.start();
+        traceback_dsw.format("console").start();
+        for (int i = 0; i < 10; ++i) {
+            System.out.println("stream running...");
+            Thread.sleep(30000);
+            System.out.println(results.lastProgress());
+            System.out.println(results.status());
+        }
+    } catch (Exception e) {
+        System.out.println("Spark exception: " + e);
+        return false;
+    }
+    System.out.println("That is enough for now");
+
+    return true;
+        }
+
+private static void shutdown() {
+    javasparkcontext.stop();
+    sparksession.stop();
+}
+
+public static void main(String[] args) throws Exception {
+    boolean result;
+    result = init(args);
+    if (!result) {
+        shutdown();
+        System.exit(1);
+        ;
     }
 
-    private static boolean run_streams(
-            DataStreamWriter<Row> prelim_dsw, DataStreamWriter traceback_dsw) {
-        System.out.println("starting streams...");
-        //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
-        try {
-            StreamingQuery results = prelim_dsw.start();
-            traceback_dsw.format("console").start();
-            for (int i = 0; i < 10; ++i) {
-                System.out.println("stream running...");
-                Thread.sleep(30000);
-                System.out.println(results.lastProgress());
-                System.out.println(results.status());
-            }
-        } catch (Exception e) {
-            System.out.println("Spark exception: " + e);
-            return false;
-        }
-        System.out.println("That is enough for now");
-
-        return true;
-            }
-
-    private static void shutdown() {
-        javasparkcontext.stop();
-        sparksession.stop();
+    if (!make_partitions()) {
+        shutdown();
+        System.exit(2);
     }
 
-    public static void main(String[] args) throws Exception {
-        boolean result;
-        result = init(args);
-        if (!result) {
-            shutdown();
-            System.exit(1);
-            ;
-        }
-
-        if (!make_partitions()) {
-            shutdown();
-            System.exit(2);
-        }
-
-        DataStreamWriter<Row> prelim_stream = make_prelim_stream();
-        DataStreamWriter<Row> traceback_stream = make_traceback_stream();
-        result = run_streams(prelim_stream, traceback_stream);
-        if (!result) {
-            shutdown();
-            System.exit(3);
-        }
+    DataStreamWriter<Row> prelim_stream = make_prelim_stream();
+    DataStreamWriter<Row> traceback_stream = make_traceback_stream();
+    result = run_streams(prelim_stream, traceback_stream);
+    if (!result) {
+        shutdown();
+        System.exit(3);
     }
+}
 }
