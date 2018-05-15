@@ -39,6 +39,7 @@ public class BLAST_DB_SETTING implements Serializable
     public Boolean flat_layout;
     public Integer num_partitions;
     public List< String > extensions;
+    public Integer num_locations;
 
     public BLAST_DB_SETTING()
     {
@@ -70,6 +71,7 @@ public class BLAST_DB_SETTING implements Serializable
         S =  S  +  String.format( "\t(%s).flat layout ..... %s\n", selector, Boolean.toString( flat_layout ) );
         S =  S  +  String.format( "\t(%s).num_partitions .. %d\n", selector, num_partitions );
         S =  S  +  String.format( "\t(%s).extensions ...... %s\n", selector, extensions );
+        S =  S  +  String.format( "\t(%s).num_locations ... %d\n", selector, num_locations );
         return S;
     }
 }

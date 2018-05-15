@@ -37,6 +37,7 @@ public class BLAST_DB_SETTING_READER
     public static final String key_flat_layout = "flat_layout";
     public static final String key_num_partitions = "num_partitions";
     public static final String key_extensions = "extensions";
+    public static final String key_num_locations = "num_locations";
 
     public static final String  dflt_selector = "nt";
     public static final String  dflt_location = "/tmp/blast/db";
@@ -44,6 +45,7 @@ public class BLAST_DB_SETTING_READER
     public static final String  dflt_bucket = ""; // "nt_50mb_chunks";
     public static final Boolean dflt_flat_layout = false;
     public static final Integer dflt_num_partitions = 0;
+    public static final Integer dflt_num_locations = 1;
 
     public static void defaults( BLAST_DB_SETTING setting )
     {
@@ -53,6 +55,7 @@ public class BLAST_DB_SETTING_READER
         setting.bucket   = dflt_bucket;
         setting.flat_layout     = dflt_flat_layout;
         setting.num_partitions  = dflt_num_partitions;
+        setting.num_locations   = dflt_num_locations;
     }
 
     public static void from_json( JsonObject obj, BLAST_DB_SETTING setting )
@@ -66,6 +69,7 @@ public class BLAST_DB_SETTING_READER
             setting.flat_layout    = SE_UTILS.get_json_bool( obj, key_flat_layout, dflt_flat_layout );
             setting.num_partitions = SE_UTILS.get_json_int( obj, key_num_partitions, dflt_num_partitions );
             SE_UTILS.get_string_list( obj, key_extensions, null, setting.extensions );
+            setting.num_locations  = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
         }
     }
 

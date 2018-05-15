@@ -118,13 +118,15 @@ class BLAST_DATABASE
 
             List< String > prefered_loc = new ArrayList<>();
 
-            String host = node_iter.get();
-            if ( settings.log.pref_loc )
-                System.out.println( String.format( "adding %s for %s", host, part ) );
-            prefered_loc.add( host );
+            for ( int j = 0; j < db.num_locations; ++j )
+            {
+                String host = node_iter.get();
+                if ( settings.log.pref_loc )
+                    System.out.println( String.format( "adding %s for %s", host, part ) );
+                prefered_loc.add( host );
+            }
 
             Seq< String > prefered_loc_seq = JavaConversions.asScalaBuffer( prefered_loc ).toSeq();
-
             part_list.add( new Tuple2<>( part, prefered_loc_seq ) );
         }
 

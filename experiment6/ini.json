@@ -28,14 +28,16 @@
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
                 "extensions" : [ "nhr", "nin", "nsq" ],
-                "num_partitions" : 160
+                "num_partitions" : 160,
+                "num_locations" : 2
             },
             {
                 "selector" : "nr",
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
                 "extensions" : [ "phr", "pin", "psq" ],
-                "num_partitions" : 160
+                "num_partitions" : 160,
+                "num_locations" : 1
             }
         ],
         "top_n" : 100
