@@ -85,7 +85,7 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # ~$21/hour for 16 X 64
 #    --worker-machine-type custom-64-71680 \
 gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER \
+    clusters create blast-dataproc-"$USER" \
     --master-machine-type n1-standard-8 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
@@ -95,7 +95,7 @@ gcloud beta dataproc --region us-east4 \
         --preemptible-worker-boot-disk-size 100 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
-    --labels owner=$USER \
+    --labels owner="$USER" \
     --region us-east4 \
     --zone   us-east4-b \
     --max-age=8h \
@@ -103,7 +103,7 @@ gcloud beta dataproc --region us-east4 \
     --initialization-action-timeout 30m \
     --initialization-actions \
     "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
-    --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
+    --tags blast-dataproc-"$USER"-"$(date +%Y%m%d-%H%M%S)" \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 
 # dataproc-3bd9289a... has 15 day deletion lifecycle

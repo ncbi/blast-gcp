@@ -9,6 +9,15 @@
 # Copy this script to GS bucket with:
 # gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
 
+# Flattened:
+# $ find /tmp/blast/ | head
+# /tmp/blast/
+# /tmp/blast/db
+# /tmp/blast/db/prefetched
+# /tmp/blast/db/prefetched/nt_50M.403
+# /tmp/blast/db/prefetched/nt_50M.403/nt_50M.403.nax
+# /tmp/blast/db/prefetched/nt_50M.403/nt_50M.403.nin
+
 cd /tmp
 
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
