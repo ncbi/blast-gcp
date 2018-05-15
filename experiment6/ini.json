@@ -22,10 +22,22 @@
     "blastjni" :
     {
         "db" :
-        {
-            "db_bucket" : "nt_50mb_chunks",
-            "num_db_partitions" : 160
-        },
+        [
+            {
+                "selector" : "nt",
+                "bucket"   : "nt_50mb_chunks",
+                "pattern"  : "nt_50M",
+                "extensions" : [ "nhr", "nin", "nsq" ],
+                "num_partitions" : 160
+            },
+            {
+                "selector" : "nr",
+                "bucket"   : "nr_50mb_chunks",
+                "pattern"  : "nr_50M",
+                "extensions" : [ "phr", "pin", "psq" ],
+                "num_partitions" : 160
+            }
+        ],
         "top_n" : 100
     },
 
@@ -55,7 +67,8 @@
 
     "log" :
     {
-        "log_port" : 10011,
-        "log_pref_loc" : "false"
+        "port" : 10011,
+        "pref_loc" : "false",
+        "part_prep" : "true"
     }
 }

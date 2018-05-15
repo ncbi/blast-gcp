@@ -26,32 +26,56 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.api.java.JavaSparkContext;
-
-class BLAST_DATABASE_MAP
+public class BLAST_DB_SETTINGS implements Serializable
 {
-    private final HashMap< String, BLAST_DATABASE > databases;
+    private HashMap< String, BLAST_DB_SETTING > dbs;
 
-    public BLAST_DATABASE_MAP( final BLAST_SETTINGS settings,
-                               final Broadcast< BLAST_SETTINGS > SETTINGS,
-                               final JavaSparkContext sc,
-                               final BLAST_YARN_NODES nodes )
+    public BLAST_DB_SETTINGS()
     {
-
-        databases = new HashMap<>();
-        for ( BLAST_DB_SETTING db_setting : settings.db_list.list() )
-        {
-            BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes, db_setting );
-            databases.put( db.selector, db );
-        }
+        dbs = new HashMap<>();
     }
 
-    public BLAST_DATABASE get( final String db_selector )
+    public void put( final BLAST_DB_SETTING obj )
     {
-        BLAST_DATABASE res = databases.get( db_selector );
+        dbs.put( obj.selector, obj );
+    }
+
+    public Collection< BLAST_DB_SETTING > list()
+    {
+        return dbs.values();
+    }
+
+    public BLAST_DB_SETTING get( final String selector )
+    {
+        return dbs.get( selector );
+    }
+
+    public Boolean valid()
+    {
+        Boolean res = true;
+        for ( BLAST_DB_SETTING e : dbs.values() )
+            if ( !e.valid() ) res = false;
         return res;
     }
+
+    public String missing()
+    {
+        String S = "";
+        for ( BLAST_DB_SETTING e : dbs.values() )
+            S = S + e.missing();
+        return S;
+    }
+
+    @Override public String toString()
+    {
+        String S = "";
+        for ( BLAST_DB_SETTING e : dbs.values() )
+            S = S + e.toString();
+        return S;
+    }
 }
+

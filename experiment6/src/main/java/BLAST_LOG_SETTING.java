@@ -26,32 +26,37 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.HashMap;
+import java.io.Serializable;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.api.java.JavaSparkContext;
-
-class BLAST_DATABASE_MAP
+public class BLAST_LOG_SETTING implements Serializable
 {
-    private final HashMap< String, BLAST_DATABASE > databases;
+    public String host;
+    public Integer port;
+    public Boolean request;
+    public Boolean job_start;
+    public Boolean job_done;
+    public Boolean cutoff;
+    public Boolean log_final;
+    public Boolean part_prep;
+    public Boolean worker_shift;
+    public Boolean pref_loc;
+    public Boolean db_copy;
 
-    public BLAST_DATABASE_MAP( final BLAST_SETTINGS settings,
-                               final Broadcast< BLAST_SETTINGS > SETTINGS,
-                               final JavaSparkContext sc,
-                               final BLAST_YARN_NODES nodes )
+    @Override public String toString()
     {
+        String S = "\nLOG:\n";
+        S = S + String.format( "\tlog_host ........... %s:%d\n", host, port );
+        String S_log = "";
+        if ( request )   S_log = S_log + "request ";
+        if ( job_start ) S_log = S_log + "job_start ";
+        if ( job_done )  S_log = S_log + "job_done ";
+        if ( cutoff )    S_log = S_log + "cutoff ";
+        if ( log_final )     S_log = S_log + "final ";
+        if ( part_prep )     S_log = S_log + "part-prep ";
+        if ( worker_shift )  S_log = S_log + "worker-shift ";
+        if ( pref_loc )  S_log = S_log + "pref_log ";
+        if ( db_copy )   S_log = S_log + "db-copy ";
 
-        databases = new HashMap<>();
-        for ( BLAST_DB_SETTING db_setting : settings.db_list.list() )
-        {
-            BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes, db_setting );
-            databases.put( db.selector, db );
-        }
-    }
-
-    public BLAST_DATABASE get( final String db_selector )
-    {
-        BLAST_DATABASE res = databases.get( db_selector );
-        return res;
+        return S + String.format( "\tlog ................ %s\n", S_log );
     }
 }

@@ -31,6 +31,7 @@ import java.net.InetAddress;
 class BLAST_DATABASE_PART implements Serializable
 {
     public final Integer nr;
+    public final String db_key;
     public final String db_spec;
     public final String name;
     public String worker_name;
@@ -38,6 +39,7 @@ class BLAST_DATABASE_PART implements Serializable
     public BLAST_DATABASE_PART( final BLAST_DATABASE_PART other )
     {
         this.nr         = other.nr;
+        this.db_key     = other.db_key;
         this.db_spec    = other.db_spec;
         this.name       = other.name;
         this.worker_name= other.worker_name;
@@ -47,9 +49,10 @@ class BLAST_DATABASE_PART implements Serializable
     // db_pat    : 'nt_50M'
     // nr        : 102
     // db_spec --> '/tmp/blast/db/nt_50M.102/nt_50M.102'
-    public BLAST_DATABASE_PART( final String location, final String db_pat, final Integer nr, final Boolean flat )
+    public BLAST_DATABASE_PART( final String location, final String db_pat, final Integer nr, final Boolean flat, final String key )
     {
         this.nr = nr;
+        this.db_key = key;
 
         if ( nr < 100 )
             name = String.format( "%s.%02d", db_pat, nr  );
@@ -79,7 +82,7 @@ class BLAST_DATABASE_PART implements Serializable
 
     @Override public String toString()
     {
-        return String.format( "part( %d: '%s' )", this.nr, this.name );
+        return String.format( "part( %s.%d: '%s' )", this.db_key, this.nr, this.name );
     }
 
     public Integer getPartition( Integer num_partitions )

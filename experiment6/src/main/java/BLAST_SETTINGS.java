@@ -45,11 +45,7 @@ public class BLAST_SETTINGS implements Serializable
     public Integer receiver_max_rate;
 
     /* DB */
-    public String db_location;
-    public String db_pattern;
-    public String db_bucket;
-    public Boolean flat_db_layout;
-    public Integer num_db_partitions;
+    BLAST_DB_SETTINGS db_list;
 
     /* BLASTJNI */
     public Integer top_n;
@@ -83,17 +79,13 @@ public class BLAST_SETTINGS implements Serializable
     public Integer comm_port;
 
     /* LOG */
-    public String log_host;
-    public Integer log_port;
-    public Boolean log_request;
-    public Boolean log_job_start;
-    public Boolean log_job_done;
-    public Boolean log_cutoff;
-    public Boolean log_final;
-    public Boolean log_part_prep;
-    public Boolean log_worker_shift;
-    public Boolean log_pref_loc;
-    public Boolean log_db_copy;
+    BLAST_LOG_SETTING log;
+
+    public BLAST_SETTINGS()
+    {
+        db_list = new BLAST_DB_SETTINGS();
+        log = new BLAST_LOG_SETTING();
+    }
 
     public Boolean src_pubsub_valid()
     {
@@ -123,8 +115,7 @@ public class BLAST_SETTINGS implements Serializable
 
     public Boolean valid()
     {
-        if ( db_bucket.isEmpty() ) return false;
-        if ( num_db_partitions == 0 ) return false;
+        if ( !db_list.valid() ) return false;
         if ( top_n == 0 ) return false;
 
         if ( !src_valid() ) return false;
@@ -136,9 +127,7 @@ public class BLAST_SETTINGS implements Serializable
 
     public String missing()
     {
-        String S = "";
-        if ( db_bucket.isEmpty() ) S = S + "db_bucket is missing\n";
-        if ( num_db_partitions == 0 ) S = S + "num_db_partitions is 0\n";
+        String S = db_list.missing();
         if ( top_n == 0 ) S = S + "top_n is 0\n";
 
         if ( !use_pubsub_source && !use_socket_source && !use_hdfs_source )
@@ -177,12 +166,7 @@ public class BLAST_SETTINGS implements Serializable
             S = S + String.format( "\tHDFS-dir ........... '%s'\n", hdfs_source_dir );
         S = S + String.format( "\trec. max. rate ..... %d per second\n", receiver_max_rate );
 
-        S = S + "\nDB:\n";
-        S = S + String.format( "\tdb_location ........ '%s'\n", db_location );
-        S = S + String.format( "\tdb_pattern ......... '%s'\n", db_pattern );
-        S = S + String.format( "\tdb_bucket .......... '%s'\n", db_bucket );
-        S = S + String.format( "\tflat db layout...... %s\n", Boolean.toString( flat_db_layout ) );
-        S = S + String.format( "\tnum_db_partitions .. %d\n", num_db_partitions );
+        S = S + "\nDB:\n" + db_list.toString();
 
         S = S + "\nBLASTJNI:\n";
         S = S + String.format( "\tdflt top_n ......... %d\n", top_n );
@@ -210,20 +194,7 @@ public class BLAST_SETTINGS implements Serializable
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
 
-        S = S + "\nLOG:\n";
-        S = S + String.format( "\tlog_host ........... %s:%d\n", log_host, log_port );
-        String S_log = "";
-        if ( log_request )   S_log = S_log + "request ";
-        if ( log_job_start ) S_log = S_log + "job_start ";
-        if ( log_job_done )  S_log = S_log + "job_done ";
-        if ( log_cutoff )    S_log = S_log + "cutoff ";
-        if ( log_final )     S_log = S_log + "final ";
-        if ( log_part_prep )     S_log = S_log + "part-prep ";
-        if ( log_worker_shift )  S_log = S_log + "worker-shift ";
-        if ( log_pref_loc )  S_log = S_log + "pref_log ";
-        if ( log_db_copy )   S_log = S_log + "db-copy ";
-
-        S = S + String.format( "\tlog ................ %s\n", S_log );
+        S = S + log.toString();
         return S;
     }
  

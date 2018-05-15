@@ -80,17 +80,18 @@ class BLAST_JOB extends Thread
             BLAST_REQUEST req = REQ.getValue();
 
             // see if we are at a different worker-id now
-            if ( bls.log_worker_shift )
+            if ( bls.log.worker_shift )
             {
                 String curr_worker_name = java.net.InetAddress.getLocalHost().getHostName();
                 if ( !curr_worker_name.equals( part.worker_name ) )
                 {
-                    BLAST_SEND.send( bls,
+                    BLAST_SEND.send( bls.log,
                                      String.format( "pre worker-shift for %d: %s -> %s", part.nr, part.worker_name, curr_worker_name ) );
                 }
             }
 
-            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, bls );
+            BLAST_DB_SETTING db_setting = bls.db_list.get( req.db );
+            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, db_setting, bls.log );
             if ( blaster != null )
             {
                 try
@@ -109,14 +110,14 @@ class BLAST_JOB extends Thread
                         }
                         catch ( Exception e )
                         {
-                            BLAST_SEND.send( bls,
+                            BLAST_SEND.send( bls.log,
                                              String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                         }
                     }
                 }
                 catch ( Exception e )
                 {
-                    BLAST_SEND.send( bls,
+                    BLAST_SEND.send( bls.log,
                                      String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                 }
             }
@@ -167,7 +168,7 @@ class BLAST_JOB extends Thread
             Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
 
             elapsed = System.currentTimeMillis() - started_at;
-            if ( settings.log_final )
+            if ( settings.log.log_final )
                 System.out.println( String.format( "[%s] %d bytes written to hdfs at '%s' (%,d ms)",
                         req_id, uploaded, path, elapsed ) );
         }
@@ -177,7 +178,7 @@ class BLAST_JOB extends Thread
             Integer uploaded = BLAST_GS_UPLOADER.upload( settings.gs_result_bucket, gs_result_key, buf );
             elapsed = System.currentTimeMillis() - started_at;
 
-            if ( settings.log_final )
+            if ( settings.log.log_final )
                 System.out.println( String.format( "[%s] %d bytes written to gs '%s':'%s' (%,d ms)",
                         req_id, uploaded, settings.gs_result_bucket, gs_result_key, elapsed ) );
         }
@@ -185,7 +186,7 @@ class BLAST_JOB extends Thread
         if ( settings.gs_or_hdfs.contains( "time" ) )
         {
             elapsed = System.currentTimeMillis() - started_at;
-            if ( settings.log_final )
+            if ( settings.log.log_final )
                 System.out.println( String.format( "[%s] %d bytes summed up (%,d ms) n=%,d",
                         req_id, sum, elapsed, ll.list.size() ) );
         }

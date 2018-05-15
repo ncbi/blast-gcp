@@ -51,16 +51,16 @@ class BLAST_DATABASE
                     final Broadcast< BLAST_SETTINGS > SETTINGS,
                     final JavaSparkContext sc,
                     final BLAST_YARN_NODES nodes,
-                    final String a_selector )
+                    final BLAST_DB_SETTING a_db_setting )
     {
         if ( settings.with_locality )
-            DB_SECS = make_db_partitions_2( settings, SETTINGS, sc, nodes );
+            DB_SECS = make_db_partitions_2( settings, SETTINGS, sc, nodes, a_db_setting );
         else
-            DB_SECS = make_db_partitions_1( settings, SETTINGS, sc );
+            DB_SECS = make_db_partitions_1( settings, SETTINGS, sc, a_db_setting );
 
         final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
         total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
-        selector = a_selector;
+        selector = a_db_setting.selector;
 
         System.out.println( String.format( "[ %s ] total database size: %,d bytes", selector, total_size ) );
     }
@@ -79,26 +79,26 @@ class BLAST_DATABASE
     private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_1(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_SETTINGS > SETTINGS,
-                                final JavaSparkContext sc )
+                                final JavaSparkContext sc,
+                                final BLAST_DB_SETTING db )
     {
         final List< Tuple2< Integer, BLAST_DATABASE_PART > > db_list = new ArrayList<>();
-        for ( int i = 0; i < settings.num_db_partitions; i++ )
+        for ( int i = 0; i < db.num_partitions; i++ )
         {
-            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( settings.db_location, settings.db_pattern,
-                i, settings.flat_db_layout );
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( db.location, db.pattern, i, db.flat_layout, db.selector );
             db_list.add( new Tuple2<>( i, part ) );
         }
 
-        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( settings.num_db_partitions );
-        return sc.parallelizePairs( db_list, settings.num_db_partitions ).partitionBy( p ).map( item ->
+        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( db.num_partitions );
+        return sc.parallelizePairs( db_list, db.num_partitions ).partitionBy( p ).map( item ->
         {
             BLAST_DATABASE_PART part = item._2();
 
             BLAST_SETTINGS bls = SETTINGS.getValue();
-            if ( bls.log_part_prep )
-                BLAST_SEND.send( bls, String.format( "preparing %s", part ) );
+            if ( bls.log.part_prep )
+                BLAST_SEND.send( bls.log, String.format( "preparing %s", part ) );
 
-            return BLAST_LIB_SINGLETON.prepare( part, bls );
+            return BLAST_LIB_SINGLETON.prepare( part, db, bls.log );
         } ).cache();
     }
 
@@ -106,22 +106,21 @@ class BLAST_DATABASE
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_SETTINGS > SETTINGS,
                                 final JavaSparkContext sc,
-                                final BLAST_YARN_NODES nodes )
+                                final BLAST_YARN_NODES nodes,
+                                final BLAST_DB_SETTING db )
     {
         final List< Tuple2< BLAST_DATABASE_PART, Seq< String > > > part_list = new ArrayList<>();
         BLAST_YARN_NODE_ITER node_iter = new BLAST_YARN_NODE_ITER( nodes );
 
-        for ( int i = 0; i < settings.num_db_partitions; i++ )
+        for ( int i = 0; i < db.num_partitions; i++ )
         {
-            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( settings.db_location, settings.db_pattern,
-                i, settings.flat_db_layout );
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( db.location, db.pattern, i, db.flat_layout, db.selector );
+
+            List< String > prefered_loc = new ArrayList<>();
 
             String host = node_iter.get();
-
-            if ( settings.log_pref_loc )
+            if ( settings.log.pref_loc )
                 System.out.println( String.format( "adding %s for %s", host, part ) );
-
-            List< String > prefered_loc = new ArrayList<>();            
             prefered_loc.add( host );
 
             Seq< String > prefered_loc_seq = JavaConversions.asScalaBuffer( prefered_loc ).toSeq();
@@ -144,10 +143,10 @@ class BLAST_DATABASE
         {
             BLAST_SETTINGS bls = SETTINGS.getValue();
 
-            if ( bls.log_part_prep )
-                BLAST_SEND.send( bls, String.format( "preparing %s", item ) );
+            if ( bls.log.part_prep )
+                BLAST_SEND.send( bls.log, String.format( "preparing %s", item ) );
 
-            return BLAST_LIB_SINGLETON.prepare( item, bls );
+            return BLAST_LIB_SINGLETON.prepare( item, db, bls.log );
         } ).cache();
     }
 

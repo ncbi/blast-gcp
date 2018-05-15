@@ -82,9 +82,9 @@ public class BLAST_SEND
             inst.send_msg( msg );
     }
 
-    public static void send( final BLAST_SETTINGS bls, final String msg )
+    public static void send( final BLAST_LOG_SETTING log, final String msg )
     {
-        send( bls.log_host, bls.log_port, msg );
+        send( log.host, log.port, msg );
     }
 
     public static String resolve( final String hostname )
