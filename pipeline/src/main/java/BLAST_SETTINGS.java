@@ -155,7 +155,6 @@ public class BLAST_SETTINGS implements Serializable
         }
 
         if ( gs_result_bucket.isEmpty() ) S = S + "gs_result_bucket is missing\n";
-        if ( gs_status_bucket.isEmpty() ) S = S + "gs_status_bucket is missing\n";
         return S;
     }
 
