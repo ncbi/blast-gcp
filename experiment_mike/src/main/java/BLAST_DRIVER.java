@@ -595,7 +595,6 @@ public final class BLAST_DRIVER implements Serializable {
             .foreach( // FIX: Make a separate function
                     new ForeachWriter<Row>() {
                         private long partitionId;
-                        private FileSystem fs;
                         private Logger logger;
                         HashMap<String, TreeMap<Double, ArrayList<String>>> score_map;
 
@@ -605,14 +604,6 @@ public final class BLAST_DRIVER implements Serializable {
 
                             this.partitionId = partitionId;
                             logger = LogManager.getLogger(BLAST_DRIVER.class);
-                            try {
-                                Configuration conf = new Configuration();
-                                fs = FileSystem.get(conf);
-                            } catch (IOException e) {
-                                System.err.println(e);
-                                return false;
-                            }
-
                             logger.log(Level.DEBUG, String.format("tb open %d %d", partitionId, version));
                             if (partitionId != 0)
                                 logger.log(
@@ -694,11 +685,6 @@ public final class BLAST_DRIVER implements Serializable {
                             }
 
                             logger.log(Level.DEBUG, String.format("close %d", partitionId));
-                            try {
-                                if (false) fs.close();
-                            } catch (IOException ioe) {
-                                logger.log(Level.DEBUG, "Couldn't close HDFS filesystem");
-                            }
 
                             return;
                         } // close
@@ -706,8 +692,11 @@ public final class BLAST_DRIVER implements Serializable {
                         private void tb_write_to_hdfs(String rid, byte[] output) {
                             try {
                                 String outfile = "gs://" + gs_result_bucket + "/output/" + rid + ".asn1";
+                                Configuration conf = new Configuration();
+                                Path path = new Path(outfile);
+                                FileSystem fs = FileSystem.get(path.toUri(), conf);
 
-                                FSDataOutputStream os = fs.create(new Path(outfile));
+                                FSDataOutputStream os = fs.create(path);
                                 os.write(output, 0, output.length);
                                 os.close();
                                 logger.log(
