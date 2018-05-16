@@ -243,6 +243,7 @@ public final class BLAST_DRIVER {
                             logger.log(
                                     Level.INFO,
                                     String.format(" prelim returned %d hsps to Spark", search_res.length));
+
                             hsp_json = new ArrayList<>(search_res.length);
                             for (BLAST_HSP_LIST S : search_res) {
                                 byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
@@ -484,7 +485,7 @@ public final class BLAST_DRIVER {
                     "select "
                     + "RID, db, partition_num, query_seq, "
                     // + "to_json(collect_list(hsp)) as hspl "
-                    + "collect_list(hsp) as hspl "
+                    + "collect_list(hsp) as hsp_collected "
                     + "from tb_struct "
                     + "group by RID, db, partition_num, query_seq "
                     + "distribute by partition_num");
@@ -516,9 +517,11 @@ public final class BLAST_DRIVER {
                                     "in tb flatmap rid=%s part=%d settings.db_location=%s",
                                     rid, partition_num, db_location));
 
-                        List<Row> alhspl = inrow.getList(inrow.fieldIndex("hspl"));
-                        logger.log(Level.INFO, "alhspl is " + alhspl.toString());
-                        for (Row hsp : alhspl) {
+                        List<Row> hsplist = inrow.getList(inrow.fieldIndex("hsp_collected"));
+                        // logger.log(Level.INFO, "alhspl is " + alhspl.toString());
+                        ArrayList<BLAST_HSP_LIST> hspal = new ArrayList<>(hsplist.size());
+
+                        for (Row hsp : hsplist) {
                             logger.log(Level.INFO, "alhspl # " + hsp.mkString(":"));
                             StructType sc = hsp.schema();
                             logger.log(Level.INFO, "alhspl schema:" + sc.toString());
@@ -530,6 +533,10 @@ public final class BLAST_DRIVER {
                                     String.format(
                                         "alhspl oid=%d max_score=%d blob=%d bytes",
                                         oid, max_score, hsp_blob.length()));
+                            byte[] blob = Base64.getDecoder().decode(hsp_blob);
+
+                            BLAST_HSP_LIST hspl = new BLAST_HSP_LIST(oid, max_score, blob);
+                            hspal.add(hspl);
                         }
 
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
@@ -549,34 +556,26 @@ public final class BLAST_DRIVER {
                         List<String> asns;
                         if (blaster != null) {
                             asns = new ArrayList<>();
-                            asns.add(inrow.mkString(":"));
-                            /*
-                               BLAST_TB_LIST[] tb_res =
-                               blaster.jni_traceback(hspl, partitionobj, requestobj, loglevel);
-                               logger.log(
-                               Level.INFO,
-                               String.format(" traceback returned %d blobs to Spark", tb_res.length));
 
+                            BLAST_HSP_LIST[] hsparray = hspal.toArray(new BLAST_HSP_LIST[hspal.size()]);
+                            BLAST_TB_LIST[] tb_res =
+                                blaster.jni_traceback(
+                                        hsparray, partitionobj, requestobj, jni_log_level);
+                            logger.log(
+                                    Level.INFO,
+                                    String.format(" traceback returned %d blobs to Spark", tb_res.length));
 
-                               hsp_json = new ArrayList<>(tb_res.length);
-                               for (BLAST_HSP_LIST S : search_res) {
-                               byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
-                               String b64blob = new String(encoded, StandardCharsets.UTF_8);
-                               JSONObject json = new JSONObject();
-                               json.put("RID", rid);
-                               json.put("db", db);
-                               json.put("partition_num", partition_num);
-                               json.put("oid", S.oid);
-                               json.put("max_score", S.max_score);
-                               json.put("query_seq", query_seq);
-                               json.put("hsp_blob", b64blob);
+                            for (BLAST_TB_LIST tb : tb_res) {
+                                JSONObject json = new JSONObject();
+                                json.put("RID", rid);
+                                json.put("oid", tb.oid);
+                                json.put("evalue", tb.evalue);
+                                byte[] encoded = Base64.getEncoder().encode(tb.asn1_blob);
+                                String b64blob = new String(encoded, StandardCharsets.UTF_8);
 
-                               hsp_json.add(json.toString());
-                            // logger.log(Level.INFO, "json is " + json.toString());
-                               }
-                               logger.log(
-                               Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
-                               */
+                                json.put("asn1_blob", b64blob);
+                                asns.add(json.toString());
+                            }
                         } else {
                             logger.log(Level.ERROR, "NULL blaster library");
                             asns = new ArrayList<>();
@@ -586,7 +585,8 @@ public final class BLAST_DRIVER {
                     },
                           Encoders.STRING())
                               .toDF("asns");
-        //        prelim_search_results.createOrReplaceTempView("prelim_search_results");
+
+        traceback_results.explain();
 
         DataStreamWriter<Row> tb_dsw = traceback_results.writeStream();
 
@@ -735,6 +735,7 @@ private static boolean run_streams(
     try {
         StreamingQuery results = prelim_dsw.start();
         traceback_dsw.format("console").option("truncate", false).start();
+
         for (int i = 0; i < 10; ++i) {
             System.out.println("stream running...");
             Thread.sleep(30000);
