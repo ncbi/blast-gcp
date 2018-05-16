@@ -1,6 +1,7 @@
-VERSION := 0.0.1
+SETUP_PY := python/setup.py
+VERSION := $(shell grep version $(SETUP_PY) | cut -d= -f 2 | tr -d \',)
 PACKAGE := blastspecs
-PYTHON_PACKAGE := $(PACKAGE)-python-$(VERSION).zip
+PYTHON_PACKAGE := $(PACKAGE)-python-$(VERSION).tar.gz
 CPP_PACKAGE := $(PACKAGE)-cpp-$(VERSION).zip
 JAVA_PACKAGE := $(PACKAGE)-java-$(VERSION).zip
 
