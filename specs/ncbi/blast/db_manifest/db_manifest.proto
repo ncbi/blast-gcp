@@ -28,7 +28,7 @@ message DbManifest {
 }
 
 message Volume {
-  repeated VolumeFile files;
+  repeated VolumeFile files = 1;
 }
 
 message VolumeFile {
