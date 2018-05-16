@@ -454,6 +454,7 @@ public final class BLAST_DRIVER implements Serializable {
 
         String hdfs_result_dir = settings.hdfs_result_dir;
         String hsp_result_dir = hdfs_result_dir + "/hsps";
+        String gs_result_bucket = settings.gs_result_bucket;
 
         Dataset<Row> hsps = hsp_stream.json(hsp_result_dir);
         System.out.print("hsps schema is:");
@@ -704,23 +705,14 @@ public final class BLAST_DRIVER implements Serializable {
 
                         private void tb_write_to_hdfs(String rid, byte[] output) {
                             try {
-                                String tmpfile = String.format("/tmp/%s.asn1", rid);
-                                FSDataOutputStream os = fs.create(new Path(tmpfile));
+                                String outfile = "gs://" + gs_result_bucket + "/output/" + rid + ".asn1";
+
+                                FSDataOutputStream os = fs.create(new Path(outfile));
                                 os.write(output, 0, output.length);
                                 os.close();
-
-                                Path newFolderPath = new Path(hdfs_result_dir);
-                                if (!fs.exists(newFolderPath)) {
-                                    logger.log(Level.DEBUG, "Creating HDFS dir " + hdfs_result_dir);
-                                    fs.mkdirs(newFolderPath);
-                                }
-                                String outfile = String.format("%s/%s.asn1", hdfs_result_dir, rid);
-                                fs.delete(new Path(outfile), false);
-                                // Rename in HDFS is supposed to be atomic
-                                fs.rename(new Path(tmpfile), new Path(outfile));
                                 logger.log(
                                         Level.INFO,
-                                        String.format("Wrote %d bytes to HDFS %s", output.length, outfile));
+                                        String.format("Wrote %d bytes to %s", output.length, outfile));
 
                             } catch (IOException ioe) {
                                 logger.log(Level.DEBUG, "Couldn't write to HDFS");

@@ -143,7 +143,7 @@ def get_tests():
 
         j = json.loads(read_data)
         j['pubsub_submit_time'] = "TBD"
-        j['RID'] = TEST_ID + '-' + j['RID']
+        j['RID'] = j['RID']
         j['blast_params']['task']=j['blast_params']['program']
         j['blast_params']['dbpath']=""
         j['result_bucket_name']=BUCKET_NAME
@@ -277,16 +277,15 @@ def submit_thread():
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:3]:
+        for test in tests[0:8]:
             # Emulate 1..10 submissions a second with jitter
             time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
             progress(submit="  Submitted " + TESTS[test]['RID'])
-            time.sleep(random.randrange(5, 10)/10)
         progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(60)
+        time.sleep(10)
 
 
 def results_thread():
