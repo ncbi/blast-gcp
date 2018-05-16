@@ -90,7 +90,7 @@ public final class BLAST_DRIVER implements Serializable {
         conf.setAppName(settings.appName);
 
         // GCP NIC has 2 gbit/sec/vCPU, 16 gbit max, ~8 gbit for single stream
-        // LZ4 typically saturates at 500MB/sec
+        // LZ4 typically saturates at 800MB/sec
         conf.set("spark.broadcast.compress", "false");
         // GCP non-ssd persistent disk is <= 120MB/sec
         conf.set("spark.shuffle.compress", "true");
@@ -214,12 +214,12 @@ public final class BLAST_DRIVER implements Serializable {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
 
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
-                        logger.log(Level.INFO, "Flatmapped RID " + rid);
+                        logger.log(Level.DEBUG, "Flatmapped RID " + rid);
                         String db = inrow.getString(inrow.fieldIndex("db"));
                         int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                         String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
                         logger.log(
-                                Level.INFO,
+                                Level.DEBUG,
                                 String.format("in flatmap %d %s", partition_num, db_location));
 
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
@@ -235,7 +235,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                         BLAST_LIB blaster = new BLAST_LIB();
                         // BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
-                        logger.log(Level.INFO, "<row> is :" + inrow.mkString(":"));
+                        logger.log(Level.DEBUG, "<row> is :" + inrow.mkString(":"));
 
                         List<String> hsp_json;
                         if (blaster != null) {
@@ -320,7 +320,7 @@ public final class BLAST_DRIVER implements Serializable {
                             logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
                             logger.log(Level.DEBUG, "  " + value.mkString(":").substring(0, 50));
                             String line = value.getString(0);
-                            logger.log(Level.INFO, "  line is " + line);
+                            logger.log(Level.DEBUG, "  line is " + line);
 
                             JSONObject json = new JSONObject(line);
                             String rid = json.getString("RID");
@@ -370,14 +370,14 @@ public final class BLAST_DRIVER implements Serializable {
                                         ArrayList<String> al = tm.get(score);
                                         for (String line : al) {
                                             logger.log(
-                                                    Level.INFO,
+                                                    Level.DEBUG,
                                                     String.format(
                                                         "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
                                                         rid, score, i, line.substring(0, 60)));
                                             output.append(line);
                                             logger.log(
-                                                    Level.INFO, String.format("length of line is %d", line.length()));
-                                            logger.log(Level.INFO, String.format("line is %s.", line));
+                                                    Level.DEBUG, String.format("length of line is %d", line.length()));
+                                            logger.log(Level.DEBUG, String.format("line is %s.", line));
                                             output.append('\n');
                                         }
                                     } else {
@@ -502,12 +502,12 @@ public final class BLAST_DRIVER implements Serializable {
                         logger.log(Level.INFO, "tb <row> is :" + inrow.mkString(":"));
 
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
-                        logger.log(Level.INFO, "Tracebacked RID " + rid);
+                        logger.log(Level.DEBUG, "Tracebacked RID " + rid);
                         String db = inrow.getString(inrow.fieldIndex("db"));
                         int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                         String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
                         logger.log(
-                                Level.INFO,
+                                Level.DEBUG,
                                 String.format(
                                     "in tb flatmap rid=%s part=%d settings.db_location=%s",
                                     rid, partition_num, db_location));
@@ -517,14 +517,14 @@ public final class BLAST_DRIVER implements Serializable {
                         ArrayList<BLAST_HSP_LIST> hspal = new ArrayList<>(hsplist.size());
 
                         for (Row hsp : hsplist) {
-                            logger.log(Level.INFO, "alhspl # " + hsp.mkString(":"));
+                            logger.log(Level.DEBUG, "alhspl # " + hsp.mkString(":"));
                             StructType sc = hsp.schema();
-                            logger.log(Level.INFO, "alhspl schema:" + sc.toString());
+                            logger.log(Level.DEBUG, "alhspl schema:" + sc.toString());
                             int oid = hsp.getInt(hsp.fieldIndex("oid"));
                             int max_score = hsp.getInt(hsp.fieldIndex("max_score"));
                             String hsp_blob = hsp.getString(hsp.fieldIndex("hsp_blob"));
                             logger.log(
-                                    Level.INFO,
+                                    Level.DEBUG,
                                     String.format(
                                         "alhspl oid=%d max_score=%d blob=%d bytes",
                                         oid, max_score, hsp_blob.length()));
@@ -612,7 +612,7 @@ public final class BLAST_DRIVER implements Serializable {
                                 return false;
                             }
 
-                            logger.log(Level.INFO, String.format("tb open %d %d", partitionId, version));
+                            logger.log(Level.DEBUG, String.format("tb open %d %d", partitionId, version));
                             if (partitionId != 0)
                                 logger.log(
                                         Level.DEBUG, String.format(" *** not partition 0 %d ??? ", partitionId));
@@ -621,8 +621,8 @@ public final class BLAST_DRIVER implements Serializable {
 
                         @Override
                         public void process(Row value) {
-                            logger.log(Level.INFO, String.format(" in tb process %d", partitionId));
-                            logger.log(Level.INFO, " tb process " + value.mkString(":"));
+                            logger.log(Level.DEBUG, String.format(" in tb process %d", partitionId));
+                            logger.log(Level.DEBUG, " tb process " + value.mkString(":"));
                             String line = value.getString(0);
                             JSONObject json = new JSONObject(line);
                             String rid = json.getString("RID");
