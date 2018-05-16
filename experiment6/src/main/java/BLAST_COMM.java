@@ -26,29 +26,18 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 class BLAST_COMM extends Thread
 {
-    private final ConcurrentLinkedQueue< BLAST_REQUEST > request_q;
-    private final ConcurrentLinkedQueue< String > cmd_q;
     private final BLAST_STATUS status;
-    private final AtomicBoolean running;
     private final BLAST_SETTINGS settings;
 
-    public BLAST_COMM( ConcurrentLinkedQueue< BLAST_REQUEST > a_request_q,
-                       ConcurrentLinkedQueue< String > a_cmd_q,
-                       BLAST_STATUS a_status,
-                       AtomicBoolean a_running,
+    public BLAST_COMM( BLAST_STATUS a_status,
                        BLAST_SETTINGS a_settings )
     {
-        this.request_q = a_request_q;
-        this.cmd_q = a_cmd_q;
         this.status = a_status;
-        this.running = a_running;
         this.settings = a_settings;
     }
 
@@ -58,14 +47,13 @@ class BLAST_COMM extends Thread
         {
             ServerSocket ss = new ServerSocket( settings.comm_port );
 
-            while( running.get() )
+            while( status.is_running() )
             {
                 try
                 {
                     ss.setSoTimeout( 500 );
                     Socket client_socket = ss.accept();
-                    BLAST_COMM_CLIENT client =
-                        new BLAST_COMM_CLIENT( request_q, cmd_q, status, running, settings, client_socket );
+                    BLAST_COMM_CLIENT client = new BLAST_COMM_CLIENT( status, settings, client_socket );
                     client.start();
                 }
                 catch ( Exception e )

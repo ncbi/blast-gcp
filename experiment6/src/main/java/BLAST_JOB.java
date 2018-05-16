@@ -44,7 +44,6 @@ class BLAST_JOB extends Thread
     private Broadcast< BLAST_SETTINGS > SETTINGS;
     private final JavaSparkContext sc;
     private final BLAST_DATABASE_MAP db;
-    private final ConcurrentLinkedQueue< BLAST_REQUEST > requestq;
     private final AtomicBoolean running;
     private final BLAST_STATUS status;
 
@@ -52,14 +51,12 @@ class BLAST_JOB extends Thread
                       Broadcast< BLAST_SETTINGS > SETTINGS,
                       JavaSparkContext sc,
                       BLAST_DATABASE_MAP a_db,
-                      ConcurrentLinkedQueue< BLAST_REQUEST > a_requestq,
                       BLAST_STATUS a_status )
     {
         this.settings = settings;
         this.SETTINGS = SETTINGS;
         this.sc = sc;
         this.db = a_db;
-        this.requestq = a_requestq;
         this.status = a_status;
         running = new AtomicBoolean( false );
     }
@@ -198,6 +195,8 @@ class BLAST_JOB extends Thread
         Long started_at = System.currentTimeMillis();
         long elapsed = 0L;
 
+        status.inc_running_jobs( request.id );
+
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
 
         final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, SETTINGS, REQ );
@@ -213,7 +212,19 @@ class BLAST_JOB extends Thread
             elapsed = System.currentTimeMillis() - started_at;
             System.out.println( String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
         }
+        status.dec_running_jobs( request.id );
         return elapsed;
+    }
+
+    private void do_sleep()
+    {
+        try
+        {
+            Thread.sleep( 10 );
+        }
+        catch ( InterruptedException e )
+        {
+        }
     }
 
     @Override public void run()
@@ -222,31 +233,25 @@ class BLAST_JOB extends Thread
 
         while( running.get() )
         {
-            BLAST_REQUEST request = requestq.poll();
-            if ( request != null )
+            REQUESTQ_ENTRY entry = status.get_request();
+            if ( entry != null )
             {
-                BLAST_DATABASE blast_db = db.get( request.db );
+                BLAST_DATABASE blast_db = db.get( entry.request.db );
                 if ( blast_db != null )
                 {
-                    long elapsed = handle_request( request, blast_db );
+                    long elapsed = handle_request( entry.request, blast_db );
                     status.after_request( elapsed );
                     System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
+                    if ( entry.ack_id != null )
+                        status.add_ack( entry.ack_id );
                 }
                 else
                 {
-                    System.out.println( String.format( "[ %s ] unknown database '%s'", request.id, request.db ) );
+                    System.out.println( String.format( "[ %s ] unknown database '%s'", entry.request.id, entry.request.db ) );
                 }
             }
             else
-            {
-                try
-                {
-                    Thread.sleep( 10 );
-                }
-                catch ( InterruptedException e )
-                {
-                }
-            }
+                do_sleep();
         }
     }
 }

@@ -26,8 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -36,24 +34,15 @@ import java.io.PrintStream;
 
 class BLAST_COMM_CLIENT extends Thread
 {
-    private final ConcurrentLinkedQueue< BLAST_REQUEST > request_q;
-    private final ConcurrentLinkedQueue< String > cmd_q;
     private final BLAST_STATUS status;
-    private final AtomicBoolean running;
     private final BLAST_SETTINGS settings;
     private final Socket socket;
 
-    public BLAST_COMM_CLIENT( ConcurrentLinkedQueue< BLAST_REQUEST > a_request_q,
-                              ConcurrentLinkedQueue< String > a_cmd_q,
-                              BLAST_STATUS a_status,
-                              AtomicBoolean a_running,
+    public BLAST_COMM_CLIENT( BLAST_STATUS a_status,
                               BLAST_SETTINGS a_settings,
                               Socket a_socket )
     {
-        this.request_q = a_request_q;
-        this.cmd_q = a_cmd_q;
         this.status = a_status;
-        this.running = a_running;
         this.settings = a_settings;
         this.socket = a_socket;
     }
@@ -67,21 +56,17 @@ class BLAST_COMM_CLIENT extends Thread
             BufferedReader in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
             String input;
 
-            ps.printf( "spark-blast$" );
-            while( running.get() && ( ( input = in.readLine() ) != null ) ) 
+            while( status.is_running() && ( ( input = in.readLine() ) != null ) ) 
             {
                 String trimmed = input.trim();
                 if ( trimmed.equals( "bye" ) )
                     break;
                 else if ( trimmed.equals( "status" ) )
-                    ps.printf( "%s, q=%d\n", status, request_q.size() );
+                    ps.printf( "%s\n", status );
                 else if ( trimmed.equals( "backlog" ) )
-                    ps.printf( "%d\n", request_q.size() );
-                else if ( trimmed.startsWith( "R" ) )
-                    request_q.offer( BLAST_REQUEST_READER.parse( trimmed.substring( 1 ), settings.top_n ) );
+                    ps.printf( "%d\n", status.get_backlog() );
                 else
-                    cmd_q.offer( trimmed );
-                ps.printf( "spark-blast$" );
+                    status.add_cmd( trimmed );
             }
             socket.close();
         }
@@ -89,7 +74,6 @@ class BLAST_COMM_CLIENT extends Thread
         {
             System.out.println( String.format( "BLAST_COMM_CLIENT: %s", e ) );
         }
-
     }
 }
 
