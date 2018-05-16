@@ -726,8 +726,8 @@ public final class BLAST_DRIVER implements Serializable {
             StreamingQuery tresults = traceback_dsw.start();
 
             for (int i = 0; i < 10; ++i) {
+                System.out.println("\nstreams running...\n");
                 Thread.sleep(30000);
-                System.out.println("streams running...");
                 System.out.println(presults.lastProgress());
                 System.out.println(presults.status());
                 System.out.println(tresults.lastProgress());

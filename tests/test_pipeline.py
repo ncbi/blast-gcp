@@ -274,16 +274,21 @@ def submit_application(config):
 def submit_thread():
     global TESTS
     progress(submit=("Submit thread started: " + str(len(TESTS)) + " tests"))
+    first=True
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:8]:
+        for test in tests[0:2]:
             # Emulate 1..10 submissions a second with jitter
             time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
             progress(submit="  Submitted " + TESTS[test]['RID'])
+            if first:
+                progress(submit="  Warming...")
+                first=False
+                time.sleep(20)
         progress(submit="Enough tests submitted, taking a break.")
         time.sleep(10)
 
@@ -301,13 +306,18 @@ def results_thread():
             if parts[0] == 'status':
                 # TODO: Check Job Orchestration status
                 continue
-            # progress(results=str(parts))
-            rid = parts[1]
+            #progress(results=str(parts))
+            rid = parts[1].replace(".asn1","")
+
+            if rid not in TESTS:
+                continue
 
             result = TESTS[rid]
             rid = result['RID']
             os.makedirs(name='results', exist_ok=True)
-            fname = "results/" + rid + "." + parts[2]
+            fname = "results/" + rid + ".asn1"
+            txtname = "results/" + rid + ".txt"
+            expected= "expected/" + rid + ".txt"
 
             blob.download_to_filename(fname)
             dtend = blob.time_created
@@ -322,20 +332,22 @@ def results_thread():
 
             cmd = [
                 "./asntool", "-m", "asn.all", "-t",
-                "Seq-annot", "-d", fname, "-p", fname + ".txt"
+                "Seq-annot", "-d", fname, "-p", txtname
             ]
             #print (cmd)
             subprocess.check_output(cmd)
 
-            with open(fname + ".txt") as fnew:
+            with open(txtname) as fnew:
                 fnewlines=fnew.readlines()
-            with open("expected/" + rid + "." + parts[2] + ".txt") as fexpected:
-                fexpectedlines=fexpected.readlines()
 
-            if fnewlines!=fexpectedlines:
-                print("Files differ for " + rid)
-                #diff=difflib.ndiff(fnewlines, fexpectedlines)
-                #print(diff)
+            if os.path.exists(expected):
+                with open(expected) as fexpected:
+                    fexpectedlines=fexpected.readlines()
+
+                if fnewlines!=fexpectedlines:
+                    print("Files differ for " + rid)
+                    #diff=difflib.ndiff(fnewlines, fexpectedlines)
+                    #print(diff)
 
         if not anything:
             progress(results="No objects in bucket")

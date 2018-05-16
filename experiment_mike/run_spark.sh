@@ -21,6 +21,13 @@ SPARK_BLAST_INI="ini.json"
 #   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
 #
 
+hadoop fs -rm -f \
+    /user/"$USER"/requests/*json \
+    /user/"$USER"/results/hsps/* \
+    /user/"$USER"/results/*
+hadoop fs -mkdir -p /user/"$USER"/requests/
+hadoop fs -mkdir -p /user/"$USER"/results/hsps
+
 spark-submit --master yarn --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI
 
 
