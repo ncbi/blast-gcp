@@ -714,7 +714,7 @@ public final class BLAST_DRIVER implements Serializable {
                                     logger.log(Level.DEBUG, "Creating HDFS dir " + hdfs_result_dir);
                                     fs.mkdirs(newFolderPath);
                                 }
-                                String outfile = String.format("%s/%s.txt", hdfs_result_dir, rid);
+                                String outfile = String.format("%s/%s.asn1", hdfs_result_dir, rid);
                                 fs.delete(new Path(outfile), false);
                                 // Rename in HDFS is supposed to be atomic
                                 fs.rename(new Path(tmpfile), new Path(outfile));

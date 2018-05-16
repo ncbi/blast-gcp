@@ -1,6 +1,8 @@
 #!/bin/bash
-hadoop fs -rm -f /user/"$USER"/requests/*json \
-    /user/"$USER"/results/hsps/*.txt
+hadoop fs -rm -f \
+    /user/"$USER"/requests/*json \
+    /user/"$USER"/results/hsps/* \
+    /user/"$USER"/results/*
 hadoop fs -mkdir -p /user/"$USER"/requests/
 hadoop fs -mkdir -p /user/"$USER"/results/hsps
 hadoop fs -ls /user/"$USER"/requests/
