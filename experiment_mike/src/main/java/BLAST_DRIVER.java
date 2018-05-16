@@ -179,10 +179,12 @@ public final class BLAST_DRIVER {
         query_stream.format("json");
         query_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
         query_stream.option("multiLine", true);
+        query_stream.option("mode", "FAILFAST");
         query_stream.option("includeTimestamp", true);
         query_stream.schema(queries_schema);
 
         Dataset<Row> queries = query_stream.json(settings.hdfs_source_dir);
+        System.out.print("queries schema is ");
         queries.printSchema();
         queries.createOrReplaceTempView("queries");
 
@@ -194,6 +196,7 @@ public final class BLAST_DRIVER {
                     + "where queries.db=blast_partitions.db "
                     + "distribute by partition_num");
         joined.createOrReplaceTempView("joined");
+        System.out.print("joined schema is ");
         joined.printSchema();
 
         Integer top_n = settings.top_n;
@@ -314,7 +317,7 @@ public final class BLAST_DRIVER {
                             logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
                             logger.log(Level.DEBUG, "  " + value.mkString(":").substring(0, 50));
                             String line = value.getString(0);
-                            logger.log(Level.DEBUG, "  line is " + line.substring(0, 50));
+                            logger.log(Level.INFO, "  line is " + line);
 
                             JSONObject json = new JSONObject(line);
                             String rid = json.getString("RID");
@@ -364,14 +367,14 @@ public final class BLAST_DRIVER {
                                         ArrayList<String> al = tm.get(score);
                                         for (String line : al) {
                                             logger.log(
-                                                    Level.DEBUG,
+                                                    Level.INFO,
                                                     String.format(
                                                         "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
                                                         rid, score, i, line.substring(0, 60)));
                                             output.append(line);
                                             logger.log(
                                                     Level.INFO, String.format("length of line is %d", line.length()));
-                                            logger.log(Level.DEBUG, String.format("line is %s.", line));
+                                            logger.log(Level.INFO, String.format("line is %s.", line));
                                             output.append('\n');
                                         }
                                     } else {
@@ -416,7 +419,7 @@ public final class BLAST_DRIVER {
                                 // Rename in HDFS is supposed to be atomic
                                 fs.rename(new Path(tmpfile), new Path(outfile));
                                 logger.log(
-                                        Level.DEBUG,
+                                        Level.INFO,
                                         String.format("Wrote %d bytes to HDFS %s", output.length(), outfile));
 
                             } catch (IOException ioe) {
@@ -441,18 +444,21 @@ public final class BLAST_DRIVER {
 
         StructType hsp_schema =
             StructType.fromDDL(
-                    "max_score int, hsp_blob string, query_seq string, oid string, rid string, db string, partition_num int");
+                    "max_score int, hsp_blob string, query_seq string, "
+                    + "oid int, RID string, db string, partition_num int");
 
         DataStreamReader hsp_stream = sparksession.readStream();
         hsp_stream.format("json");
         hsp_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
-        //    hsp_stream.option("multiLine", true);
+        // hsp_stream.option("multiLine", true);
+        hsp_stream.option("mode", "FAILFAST");
         hsp_stream.option("includeTimestamp", true);
         hsp_stream.schema(hsp_schema);
 
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
 
         Dataset<Row> hsps = hsp_stream.json(hsp_result_dir);
+        System.out.print("hsps schema is:");
         hsps.printSchema();
         // max_score, hsp_blob, query_seq, oid, RID, db, partition_num
         hsps.createOrReplaceTempView("hsps");
@@ -461,6 +467,7 @@ public final class BLAST_DRIVER {
             sparksession.sql("select * " + "from hsps " + "distribute by partition_num");
         parted.createOrReplaceTempView("parted");
 
+        System.out.print("parted schema is ");
         parted.printSchema();
 
         Dataset<Row> tb_struct =
@@ -469,21 +476,26 @@ public final class BLAST_DRIVER {
                     + "RID, db, cast(partition_num as int), query_seq, "
                     + "struct(oid, max_score, hsp_blob) as hsp "
                     + "from parted");
+        System.out.print("tb_struct schema is ");
         tb_struct.printSchema();
         tb_struct.createOrReplaceTempView("tb_struct");
         Dataset<Row> tb_hspl =
             sparksession.sql(
                     "select "
                     + "RID, db, partition_num, query_seq, "
-                    + "to_json(collect_list(hsp)) as hspl "
+                    // + "to_json(collect_list(hsp)) as hspl "
+                    + "collect_list(hsp) as hspl "
                     + "from tb_struct "
                     + "group by RID, db, partition_num, query_seq "
                     + "distribute by partition_num");
+        System.out.print("tb_hspl schema is ");
         tb_hspl.printSchema();
 
         //        Dataset<Row> traceback_results = tb_hspl;
-        System.out.println("tb_hspl is" + Arrays.toString(tb_hspl.columns()));
+        System.out.println("tb_hspl is: " + Arrays.toString(tb_hspl.columns()));
         // tb_hspl.explain(true);
+
+        // if (true) return hsps.writeStream().outputMode("append");
 
         Dataset<Row> traceback_results =
             tb_hspl
@@ -500,7 +512,25 @@ public final class BLAST_DRIVER {
                         String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
                         logger.log(
                                 Level.INFO,
-                                String.format("in tb flatmap %d %s", partition_num, db_location));
+                                String.format(
+                                    "in tb flatmap rid=%s part=%d settings.db_location=%s",
+                                    rid, partition_num, db_location));
+
+                        List<Row> alhspl = inrow.getList(inrow.fieldIndex("hspl"));
+                        logger.log(Level.INFO, "alhspl is " + alhspl.toString());
+                        for (Row hsp : alhspl) {
+                            logger.log(Level.INFO, "alhspl # " + hsp.mkString(":"));
+                            StructType sc = hsp.schema();
+                            logger.log(Level.INFO, "alhspl schema:" + sc.toString());
+                            int oid = hsp.getInt(hsp.fieldIndex("oid"));
+                            int max_score = hsp.getInt(hsp.fieldIndex("max_score"));
+                            String hsp_blob = hsp.getString(hsp.fieldIndex("hsp_blob"));
+                            logger.log(
+                                    Level.INFO,
+                                    String.format(
+                                        "alhspl oid=%d max_score=%d blob=%d bytes",
+                                        oid, max_score, hsp_blob.length()));
+                        }
 
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = rid;
@@ -519,7 +549,7 @@ public final class BLAST_DRIVER {
                         List<String> asns;
                         if (blaster != null) {
                             asns = new ArrayList<>();
-                            asns.add(inrow.mkString());
+                            asns.add(inrow.mkString(":"));
                             /*
                                BLAST_TB_LIST[] tb_res =
                                blaster.jni_traceback(hspl, partitionobj, requestobj, loglevel);
@@ -704,7 +734,7 @@ private static boolean run_streams(
     //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
     try {
         StreamingQuery results = prelim_dsw.start();
-        traceback_dsw.format("console").start();
+        traceback_dsw.format("console").option("truncate", false).start();
         for (int i = 0; i < 10; ++i) {
             System.out.println("stream running...");
             Thread.sleep(30000);
