@@ -8,6 +8,12 @@ option java_outer_classname = "DbManifestProto";
 option optimize_for = SPEED;
 
 
+enum FileType {
+  NIN = 0;
+  NSQ = 1;
+  NHR = 2;
+}
+
 message DbManifest {
   enum MolType {
     MIXED_DNA = 0;
@@ -32,7 +38,8 @@ message Volume {
 }
 
 message VolumeFile {
-  string name = 1;
-  string md5_hash = 2;
+  FileType type = 1;
+  string name = 2;
+  string md5_hash = 3;
 }
 
