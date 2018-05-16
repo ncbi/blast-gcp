@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -92,7 +93,7 @@ public final class BLAST_DRIVER {
         // GCP non-ssd persistent disk is <= 120MB/sec
         conf.set("spark.shuffle.compress", "true");
 
-        conf.set("spark.default.parallelism", Integer.toString(settings.num_executors));
+        conf.set("spark.default.parallelism", Integer.toString(settings.num_db_partitions));
         conf.set("spark.dynamicAllocation.enabled", Boolean.toString(settings.with_dyn_alloc));
         conf.set("spark.eventLog.enabled", "false");
 
@@ -100,6 +101,7 @@ public final class BLAST_DRIVER {
             conf.set("spark.executor.cores", String.format("%d", settings.num_executor_cores));
         // These will appear in
         // executor:/var/log/hadoop-yarn/userlogs/applica*/container*/stdout
+        // FIX: +UseParallelGC ? Increase G1GC latency?
         conf.set("spark.executor.extraJavaOptions", "-XX:+PrintCompilation -verbose:gc");
         if (settings.num_executors > 0)
             conf.set("spark.executor.instances", String.format("%d", settings.num_executors));
@@ -112,8 +114,8 @@ public final class BLAST_DRIVER {
         conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
         conf.set("spark.shuffle.reduceLocality.enabled", "false");
 
-        conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_executors));
-        conf.set("spark.sql.streaming.schemaInference", "true");
+        conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_db_partitions));
+        // conf.set("spark.sql.streaming.schemaInference", "true");
         String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
         conf.set("spark.sql.warehouse.dir", warehouseLocation);
 
@@ -157,11 +159,12 @@ public final class BLAST_DRIVER {
         Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
         Dataset<Row> blast_partitions =
             parts
-            .repartition(settings.num_executors, parts.col("partition_num"))
+            .repartition(settings.num_db_partitions, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
         blast_partitions.show();
         blast_partitions.createOrReplaceTempView("blast_partitions");
+        System.out.println("blast_partitions is: " + Arrays.toString(blast_partitions.inputFiles()));
 
         return true;
     }
@@ -169,11 +172,15 @@ public final class BLAST_DRIVER {
     private static DataStreamWriter<Row> make_prelim_stream() {
         System.out.println("making prelim_stream");
 
+        StructType queries_schema =
+            StructType.fromDDL("RID string, db string, query_seq string, timestamp_hdfs string");
+
         DataStreamReader query_stream = sparksession.readStream();
         query_stream.format("json");
         query_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
         query_stream.option("multiLine", true);
         query_stream.option("includeTimestamp", true);
+        query_stream.schema(queries_schema);
 
         Dataset<Row> queries = query_stream.json(settings.hdfs_source_dir);
         queries.printSchema();
@@ -181,19 +188,18 @@ public final class BLAST_DRIVER {
 
         Dataset<Row> joined =
             sparksession.sql(
-                    "select RID, queries.db, partition_num, "
+                    "select RID, queries.db as db, partition_num, "
                     + "query_seq, timestamp_hdfs "
                     + "from queries, blast_partitions "
                     + "where queries.db=blast_partitions.db "
                     + "distribute by partition_num");
+        joined.createOrReplaceTempView("joined");
         joined.printSchema();
 
         Integer top_n = settings.top_n;
         String jni_log_level = settings.jni_log_level;
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
         String db_location = settings.db_location;
-
-        // BLAST_SETTINGS settings_closure = settings;
 
         Dataset<Row> prelim_search_results =
             joined
@@ -262,8 +268,10 @@ public final class BLAST_DRIVER {
                           Encoders.STRING())
                               .toDF("hsp_json");
 
+        prelim_search_results.explain(true);
         // prelim_search_results.createOrReplaceTempView("prelim_search_results");
-        Dataset<Row> prelim_search_1 = prelim_search_results.coalesce(1);
+        // Don't use coalesce here, it'll group previous work onto one worker
+        Dataset<Row> prelim_search_1 = prelim_search_results.repartition(1);
         // FIX: Partition by RID, which is in JSON string at the moment
 
         DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
@@ -420,7 +428,7 @@ public final class BLAST_DRIVER {
         ) // foreach
             .outputMode("Append");
 
-        System.out.println("made  prelim_stream");
+        System.out.println("made  prelim_stream\n");
         return topn_dsw;
     }
 
@@ -431,11 +439,16 @@ public final class BLAST_DRIVER {
         String jni_log_level = settings.jni_log_level;
         String db_location = settings.db_location;
 
+        StructType hsp_schema =
+            StructType.fromDDL(
+                    "max_score int, hsp_blob string, query_seq string, oid string, rid string, db string, partition_num int");
+
         DataStreamReader hsp_stream = sparksession.readStream();
         hsp_stream.format("json");
         hsp_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
         //    hsp_stream.option("multiLine", true);
         hsp_stream.option("includeTimestamp", true);
+        hsp_stream.schema(hsp_schema);
 
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
 
@@ -469,6 +482,8 @@ public final class BLAST_DRIVER {
         tb_hspl.printSchema();
 
         //        Dataset<Row> traceback_results = tb_hspl;
+        System.out.println("tb_hspl is" + Arrays.toString(tb_hspl.columns()));
+        // tb_hspl.explain(true);
 
         Dataset<Row> traceback_results =
             tb_hspl
@@ -679,7 +694,7 @@ public final class BLAST_DRIVER {
     ) // foreach
         .outputMode("complete"); // Must be complete or update for aggregations
 
-    System.out.println("made  traceback_stream");
+    System.out.println("made  traceback_stream\n");
     return out_dsw;
 }
 

@@ -1,7 +1,9 @@
 #!/bin/bash
-hadoop fs -rm -f /user/vartanianmh/requests/*json
-hadoop fs -mkdir -p /user/vartanianmh/requests/
-hadoop fs -ls /user/vartanianmh/requests/
+hadoop fs -rm -f /user/"$USER"/requests/*json \
+    /user/"$USER"/results/hsps/*
+hadoop fs -mkdir -p /user/"$USER"/requests/
+hadoop fs -mkdir -p /user/"$USER"/results/hsps
+hadoop fs -ls /user/"$USER"/requests/
 
 for I in $(seq 100); do
     x="test$RANDOM"
@@ -15,8 +17,8 @@ for I in $(seq 100); do
     echo "\"query_seq\": $query }" >> $x.json
     cat $x.json
 done
-hadoop fs -copyFromLocal -f test*.json /user/vartanianmh/requests/
+hadoop fs -copyFromLocal -f test*.json /user/"$USER"/requests/
 rm -f test*.json
 
-hadoop fs -ls /user/vartanianmh/requests/
+hadoop fs -ls /user/"$USER"/requests/
 
