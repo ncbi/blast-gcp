@@ -42,16 +42,19 @@ class SE_UTILS
     public static String get_json_string( JsonObject root, final String key, final String dflt )
     {
         String res = dflt;
-        JsonElement elem = root.get( key );
-        if ( elem != null )
+        if ( root != null )
         {
-            try
+            JsonElement elem = root.get( key );
+            if ( elem != null )
             {
-                res = elem.getAsString();
-            }
-            catch( Exception e )
-            {
-                System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                try
+                {
+                    res = elem.getAsString();
+                }
+                catch( Exception e )
+                {
+                    System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                }
             }
         }
         return res;
@@ -60,16 +63,19 @@ class SE_UTILS
     public static Integer get_json_int( JsonObject root, final String key, final Integer dflt )
     {
         Integer res = dflt;
-        JsonElement elem = root.get( key );
-        if ( elem != null )
+        if ( root != null )
         {
-            try
+            JsonElement elem = root.get( key );
+            if ( elem != null )
             {
-                res = elem.getAsInt();
-            }
-            catch( Exception e )
-            {
-                System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                try
+                {
+                    res = elem.getAsInt();
+                }
+                catch( Exception e )
+                {
+                    System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                }
             }
         }
         return res;
@@ -78,16 +84,19 @@ class SE_UTILS
     public static Boolean get_json_bool( JsonObject root, final String key, final Boolean dflt )
     {
         Boolean res = dflt;
-        JsonElement elem = root.get( key );
-        if ( elem != null )
+        if ( root != null )
         {
-            try
+            JsonElement elem = root.get( key );
+            if ( elem != null )
             {
-                res = elem.getAsBoolean();
-            }
-            catch( Exception e )
-            {
-                System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                try
+                {
+                    res = elem.getAsBoolean();
+                }
+                catch( Exception e )
+                {
+                    System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                }
             }
         }
         return res;
@@ -95,11 +104,14 @@ class SE_UTILS
 
     public static JsonObject get_sub( JsonObject root, final String key )
     {
-        JsonElement e = root.get( key );
-        if ( e != null )
+        if ( root != null )
         {
-            if ( e.isJsonObject() )
-                return e.getAsJsonObject();
+            JsonElement e = root.get( key );
+            if ( e != null )
+            {
+                if ( e.isJsonObject() )
+                    return e.getAsJsonObject();
+            }
         }
         return null;
     }
@@ -141,19 +153,24 @@ class SE_UTILS
     {
         try
         {
-            JsonArray a = root.getAsJsonArray( key );
-            Gson googleJson = new Gson();
-            ArrayList l = googleJson.fromJson( a, ArrayList.class );
-            if ( l.isEmpty() )
+            if ( root != null )
             {
-                if ( dflt != null )
-                    lst.add( dflt );
+                JsonArray a = root.getAsJsonArray( key );
+                Gson googleJson = new Gson();
+                ArrayList l = googleJson.fromJson( a, ArrayList.class );
+                if ( l.isEmpty() )
+                {
+                    if ( dflt != null )
+                        lst.add( dflt );
+                }
+                else
+                {
+                    for ( int i = 0; i < l.size(); ++i )
+                        lst.add( l.get( i ).toString() );
+                }
             }
-            else
-            {
-                for ( int i = 0; i < l.size(); ++i )
-                    lst.add( l.get( i ).toString() );
-            }
+            else if ( dflt != null )
+                lst.add( dflt );
         }
         catch ( Exception e )
         {

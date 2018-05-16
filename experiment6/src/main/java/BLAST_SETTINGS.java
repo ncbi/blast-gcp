@@ -37,12 +37,9 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean use_pubsub_source;
     public String project_id;
     public String subscript_id;
-    public Boolean use_socket_source;
-    public String trigger_host;
-    public Integer trigger_port;
     public Boolean use_hdfs_source;    
     public String hdfs_source_dir;
-    public Integer receiver_max_rate;
+    public Integer max_backlog;
 
     /* DB */
     BLAST_DB_SETTINGS db_list;
@@ -94,13 +91,6 @@ public class BLAST_SETTINGS implements Serializable
         return false;
     }
 
-    public Boolean src_socket_valid()
-    {
-        if ( use_socket_source )
-            return !trigger_host.isEmpty() && trigger_port > 0;
-        return false;
-    }
-
     public Boolean src_hdfs_valid()
     {
         if ( use_hdfs_source )
@@ -110,7 +100,7 @@ public class BLAST_SETTINGS implements Serializable
 
     public Boolean src_valid()
     {
-        return src_pubsub_valid() || src_socket_valid() || src_hdfs_valid();
+        return src_pubsub_valid() || src_hdfs_valid();
     }
 
     public Boolean valid()
@@ -130,7 +120,7 @@ public class BLAST_SETTINGS implements Serializable
         String S = db_list.missing();
         if ( top_n == 0 ) S = S + "top_n is 0\n";
 
-        if ( !use_pubsub_source && !use_socket_source && !use_hdfs_source )
+        if ( !use_pubsub_source && !use_hdfs_source )
             S = S + "no source is defined";
         else
         {
@@ -138,11 +128,6 @@ public class BLAST_SETTINGS implements Serializable
             {
                 if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
                 if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
-            }
-            if ( use_socket_source && !src_socket_valid() ) 
-            {
-                if ( trigger_host.isEmpty() ) S = S + "trigger-host is missing\n";
-                if ( trigger_port < 1 ) S = S + "trigger-port is invalid\n";
             }
             if ( use_hdfs_source && !src_hdfs_valid() ) 
             {
@@ -160,11 +145,9 @@ public class BLAST_SETTINGS implements Serializable
         String S = "SOURCE:\n";
         if ( use_pubsub_source )
             S = S + String.format( "\tpubsub-subscript ... '%s' : '%s'\n", project_id, subscript_id );
-        if ( use_socket_source )
-            S = S + String.format( "\ttrigger_host ....... %s:%d\n", trigger_host, trigger_port );
         if ( use_hdfs_source )
             S = S + String.format( "\tHDFS-dir ........... '%s'\n", hdfs_source_dir );
-        S = S + String.format( "\trec. max. rate ..... %d per second\n", receiver_max_rate );
+        S = S + String.format( "\tmax. backlog ........... %d requests\n", max_backlog );
 
         S = S + "\nDB:\n" + db_list.toString();
 

@@ -26,9 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
@@ -41,58 +38,77 @@ public final class BLAST_MAIN
             System.out.println( "settings json-file missing" );
         else
         {
-            final String appName = BLAST_MAIN.class.getSimpleName();
             String ini_path = args[ 0 ];
+            final String appName = BLAST_MAIN.class.getSimpleName();
             BLAST_SETTINGS settings = BLAST_SETTINGS_READER.read_from_json( ini_path, appName );
+
             System.out.println( String.format( "settings read from '%s'", ini_path ) );
             if ( !settings.valid() )
                 System.out.println( settings.missing() );
             else
             {
+                // print the settings before initializing everything
                 System.out.println( settings.toString() );
+
+                // let the BLAST_SETTINGS_READER create the spark-configuration based on the settings
                 SparkConf conf = BLAST_SETTINGS_READER.configure( settings );
 
+                // create the spark-context and adjust some properties
                 JavaSparkContext sc = new JavaSparkContext( conf );
                 sc.setLogLevel( settings.spark_log_level );
                 for ( String fn : settings.transfer_files )
                     sc.addFile( fn );
 
+                // create the global status to track REQUESTS and timing
                 BLAST_STATUS status = new BLAST_STATUS();
-                ConcurrentLinkedQueue< BLAST_REQUEST > request_q = new ConcurrentLinkedQueue<>();
-                ConcurrentLinkedQueue< String > cmd_q = new ConcurrentLinkedQueue<>();
-                AtomicBoolean running = new AtomicBoolean( false );
+
                 BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
 
-                BLAST_CONSOLE cons = new BLAST_CONSOLE( request_q, cmd_q, status, running, settings, 200 );
+                // reader thread for console commands
+                BLAST_CONSOLE cons = new BLAST_CONSOLE( status, settings, 200 );
                 cons.start();
 
-                BLAST_COMM comm = new BLAST_COMM( request_q, cmd_q, status, running, settings );
+                // reader-writer thread for communication-port
+                BLAST_COMM comm = new BLAST_COMM( status, settings );
                 comm.start();
+
+                // reader for pubsub
+                BLAST_PUBSUB pubsub = null;
+                if ( settings.use_pubsub_source )
+                {
+                    pubsub = new BLAST_PUBSUB( status, settings, 200 );
+                    pubsub.start();
+                }
 
                 Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
                 try
                 {
                     BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, SETTINGS, sc, nodes );
 
-                    BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db_map, request_q, status );
+                    BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db_map, status );
 
                     System.out.println( "spark-blast started..." );
 
-                    while( running.get() )
+                    while( status.is_running() )
                     {
                         try
                         {
-                            if ( cmd_q.isEmpty() )
-                                Thread.sleep( 250 );
-                            else
+                            String cmd = status.get_cmd();
+                            if ( cmd != null )
                             {
-                                String cmd = cmd_q.poll();
-                                if ( cmd != null )
+                                if ( cmd.startsWith( "J" ) )
+                                    jobs.set( cmd.substring( 1 ) );
+                                else if ( cmd.equals( "exit" ) )
+                                    status.stop();
+                                else if ( cmd.startsWith( "R" ) )
                                 {
-                                    if ( cmd.startsWith( "J" ) )
-                                        jobs.set( cmd.substring( 1 ) );
+                                    int can_take = ( settings.max_backlog - status.get_backlog() );
+                                    if ( can_take > 0 )
+                                        status.add_request( new REQUESTQ_ENTRY( cmd.substring( 1 ), settings.top_n ) );
                                 }
                             }
+                            else
+                                Thread.sleep( 250 );
                         }
                         catch ( InterruptedException e )
                         {
@@ -102,6 +118,9 @@ public final class BLAST_MAIN
                     jobs.stop_all_jobs();
                     comm.join();
                     cons.join();
+
+                    if ( settings.use_pubsub_source && pubsub != null )
+                        pubsub.join();
 
                     System.out.println( "spark-blast done..." );
                 }

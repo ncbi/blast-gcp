@@ -5,7 +5,7 @@
         {
             "project_id" : "ncbi-sandbox-blast",
             "subscript_id" : "spark-test-subscript",
-            "use" : "false"
+            "use" : "true"
         },
         "socket" :
         {
