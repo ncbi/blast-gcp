@@ -86,29 +86,40 @@ public final class BLAST_DRIVER {
         SparkConf conf = new SparkConf();
         conf.setAppName(settings.appName);
 
+        // GCP NIC has 2 gbit/sec/vCPU, 16 gbit max, ~8 gbit for single stream
+        // LZ4 typically saturates at 500MB/sec
+        conf.set("spark.broadcast.compress", "false");
+        // GCP non-ssd persistent disk is <= 120MB/sec
+        conf.set("spark.shuffle.compress", "true");
+
+        conf.set("spark.default.parallelism", Integer.toString(settings.num_executors));
         conf.set("spark.dynamicAllocation.enabled", Boolean.toString(settings.with_dyn_alloc));
-        conf.set("spark.streaming.stopGracefullyOnShutdown", "true");
-        conf.set("spark.streaming.receiver.maxRate", String.format("%d", settings.receiver_max_rate));
-        if (settings.num_executors > 0)
-            conf.set("spark.executor.instances", String.format("%d", settings.num_executors));
+        conf.set("spark.eventLog.enabled", "false");
+
         if (settings.num_executor_cores > 0)
             conf.set("spark.executor.cores", String.format("%d", settings.num_executor_cores));
-        if (!settings.executor_memory.isEmpty())
-            conf.set("spark.executor.memory", settings.executor_memory);
-        conf.set("spark.locality.wait", settings.locality_wait);
-        String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
-        conf.set("spark.sql.warehouse.dir", warehouseLocation);
-        conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_db_partitions));
-        conf.set("spark.default.parallelism", Integer.toString(settings.num_db_partitions));
-        conf.set("spark.shuffle.reduceLocality.enabled", "false");
-        conf.set("spark.sql.streaming.schemaInference", "true");
-        conf.set("spark.locality.wait", "30s"); // FIX: Allow time to load local DBs
-        // -> process, node, rack, any
-        conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
         // These will appear in
         // executor:/var/log/hadoop-yarn/userlogs/applica*/container*/stdout
         conf.set("spark.executor.extraJavaOptions", "-XX:+PrintCompilation -verbose:gc");
-        conf.set("spark.eventLog.enabled", "false");
+        if (settings.num_executors > 0)
+            conf.set("spark.executor.instances", String.format("%d", settings.num_executors));
+        if (!settings.executor_memory.isEmpty())
+            conf.set("spark.executor.memory", settings.executor_memory);
+
+        conf.set("spark.locality.wait", settings.locality_wait);
+
+        // -> process, node, rack, any
+        conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
+        conf.set("spark.shuffle.reduceLocality.enabled", "false");
+
+        conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_executors));
+        conf.set("spark.sql.streaming.schemaInference", "true");
+        String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
+        conf.set("spark.sql.warehouse.dir", warehouseLocation);
+
+        conf.set("spark.streaming.stopGracefullyOnShutdown", "true");
+        conf.set("spark.streaming.receiver.maxRate", String.format("%d", settings.receiver_max_rate));
+
         conf.set("spark.ui.enabled", "true");
 
         builder.config(conf);
@@ -146,8 +157,7 @@ public final class BLAST_DRIVER {
         Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
         Dataset<Row> blast_partitions =
             parts
-            // .repartition(settings.num_executors, parts.col("partition_num"))
-            .repartition(settings.num_db_partitions, parts.col("partition_num"))
+            .repartition(settings.num_executors, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
         blast_partitions.show();
@@ -161,7 +171,7 @@ public final class BLAST_DRIVER {
 
         DataStreamReader query_stream = sparksession.readStream();
         query_stream.format("json");
-        query_stream.option("maxFilesPerTrigger", 5); // FIX: Configureable
+        query_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
         query_stream.option("multiLine", true);
         query_stream.option("includeTimestamp", true);
 
@@ -176,8 +186,6 @@ public final class BLAST_DRIVER {
                     + "from queries, blast_partitions "
                     + "where queries.db=blast_partitions.db "
                     + "distribute by partition_num");
-        //           .repartition(settings.num_executors);
-        //    joined.createOrReplaceTempView("joined");
         joined.printSchema();
 
         Integer top_n = settings.top_n;
@@ -185,7 +193,7 @@ public final class BLAST_DRIVER {
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
         String db_location = settings.db_location;
 
-        BLAST_SETTINGS settings_closure = settings;
+        // BLAST_SETTINGS settings_closure = settings;
 
         Dataset<Row> prelim_search_results =
             joined
@@ -253,8 +261,10 @@ public final class BLAST_DRIVER {
                     },
                           Encoders.STRING())
                               .toDF("hsp_json");
-        //        prelim_search_results.createOrReplaceTempView("prelim_search_results");
-        Dataset<Row> prelim_search_1 = prelim_search_results.repartition(1);
+
+        // prelim_search_results.createOrReplaceTempView("prelim_search_results");
+        Dataset<Row> prelim_search_1 = prelim_search_results.coalesce(1);
+        // FIX: Partition by RID, which is in JSON string at the moment
 
         DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
 
@@ -416,14 +426,14 @@ public final class BLAST_DRIVER {
 
     private static DataStreamWriter<Row> make_traceback_stream() {
         System.out.println("making traceback_stream");
-        BLAST_SETTINGS settings_closure = settings;
+        // BLAST_SETTINGS settings_closure = settings;
         Integer top_n = settings.top_n; // FIX: topn_n for traceback
         String jni_log_level = settings.jni_log_level;
         String db_location = settings.db_location;
 
         DataStreamReader hsp_stream = sparksession.readStream();
         hsp_stream.format("json");
-        hsp_stream.option("maxFilesPerTrigger", 2); // FIX: Configurable
+        hsp_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
         //    hsp_stream.option("multiLine", true);
         hsp_stream.option("includeTimestamp", true);
 
@@ -667,7 +677,7 @@ public final class BLAST_DRIVER {
                     */
     } // ForeachWriter
     ) // foreach
-        .outputMode("Complete");
+        .outputMode("complete"); // Must be complete or update for aggregations
 
     System.out.println("made  traceback_stream");
     return out_dsw;
@@ -706,7 +716,6 @@ public static void main(String[] args) throws Exception {
     if (!result) {
         shutdown();
         System.exit(1);
-        ;
     }
 
     if (!make_partitions()) {
