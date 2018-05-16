@@ -274,23 +274,22 @@ def submit_application(config):
 def submit_thread():
     global TESTS
     progress(submit=("Submit thread started: " + str(len(TESTS)) + " tests"))
-    first=True
+    ramp=40.0
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:2]:
+        for test in tests[0:1]:
             # Emulate 1..10 submissions a second with jitter
             time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
             progress(submit="  Submitted " + TESTS[test]['RID'])
-            if first:
-                progress(submit="  Warming...")
-                first=False
-                time.sleep(20)
-        progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(10)
+        progress(submit="Waiting %f" % ramp)
+        time.sleep(ramp)
+        ramp=ramp * 0.8
+        if ramp < 2:
+            ramp=2
 
 
 def results_thread():
