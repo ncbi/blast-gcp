@@ -176,7 +176,20 @@ public final class BLAST_DRIVER implements Serializable {
         System.out.println("making prelim_stream");
 
         StructType queries_schema =
-            StructType.fromDDL("RID string, db string, query_seq string, timestamp_hdfs string");
+            // StructType.fromDDL("RID string, db string, query_seq string, timestamp_hdfs string");
+            StructType.fromDDL(
+                    "protocol string, "
+                    + "RID string, "
+                    + "db_tag string, "
+                    + // nt_50M.20180502_1
+                    // volumes // optional for filtering by tax-id
+                    "top_N_prelim int, "
+                    + "top_N_traceback int, "
+                    + "query_seq string, "
+                    + "query_url string, "
+                    + "program string, "
+                    + "blast_params string, "
+                    + "StartTime timestamp");
 
         DataStreamReader query_stream = sparksession.readStream();
         query_stream.format("json");
