@@ -1,4 +1,7 @@
 #!/bin/bash
+
+PIPELINEBUCKET="gs://blastgcp-pipeline-test"
+
 # Copy this script to GS bucket with:
 # gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
 
@@ -13,7 +16,7 @@ curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
 sudo bash install-monitoring-agent.sh | tee -a stackdriver-install.log 2>&1
 
 curl -sSO https://dl.google.com/cloudagents/install-logging-agent.sh
-sudo bash install-logging-agent.sh | tee -a stackdriver-install.log 2>&1
+sudo bash install-logging-agent.sh --structured | tee -a stackdriver-install.log 2>&1
 
 #cd /tmp
 #cat << DONE > libblast-log.conf
