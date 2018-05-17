@@ -5,11 +5,11 @@ RUN echo "deb http://http.debian.net/debian jessie-backports main" | tee --appen
 
 RUN apt-get update -y && apt-get -y install
 
-RUN apt-get install -t jessie-backports openjdk-8-jdk
+RUN apt-get install -y -t jessie-backports openjdk-8-jdk
 
 RUN update-java-alternatives -s java-1.8.0-openjdk-amd64
 
-RUN apt-get install maven
+RUN apt-get install -y maven
 
 COPY ./ ./
 
