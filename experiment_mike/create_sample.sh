@@ -5,7 +5,7 @@ hadoop fs -rm -f \
     /user/"$USER"/results/*
 hadoop fs -mkdir -p /user/"$USER"/requests/
 hadoop fs -mkdir -p /user/"$USER"/results/hsps
-hadoop fs -ls /user/"$USER"/requests/
+hadoop fs -ls -R /user/"$USER"
 
 for I in $(seq 100); do
     x="test$RANDOM"

@@ -142,16 +142,15 @@ def get_tests():
             read_data = fin.read()
 
         j = json.loads(read_data)
-        j['orig_RID'] = j['RID']
         j['pubsub_submit_time'] = "TBD"
-        j['RID'] = TEST_ID + '-' + j['RID']
-        j['query_url']=''
+        j['RID'] = j['RID']
         j['blast_params']['task']=j['blast_params']['program']
         j['blast_params']['dbpath']=""
         j['result_bucket_name']=BUCKET_NAME
+        j['query_url']=''
         del j['query_url']
         # Randomly put 1% of queries in gs bucket instead
-        if random.randrange(0, 100) < 50:
+        if random.randrange(0, 100) < 0:
             print("Using out of band query")
 
             #objname = j['RID'] + "-" + str(uuid.uuid4())
@@ -168,7 +167,13 @@ def get_tests():
             j['query_url'] = url
             #print(json.dumps(j, indent=4, sort_keys=True))
 
-        TESTS[j['RID']] = j
+        k={}
+        k['RID']=j['RID']
+        k['db']=j['blast_params']['db']
+        k['query_seq']=j['blast_params']['queries'][0]
+        k['timestamp_hdfs']='2018-05-16T16:45:47.142233882'
+
+        TESTS[j['RID']] = k
     print("Loaded " + str(len(TESTS)) + " tests")
 
 
@@ -269,19 +274,22 @@ def submit_application(config):
 def submit_thread():
     global TESTS
     progress(submit=("Submit thread started: " + str(len(TESTS)) + " tests"))
+    ramp=40.0
     while True:
         tests = list(TESTS.keys())
         random.shuffle(tests)
-        for test in tests[0:3]:
+        for test in tests[0:1]:
             # Emulate 1..10 submissions a second with jitter
             time.sleep(random.randrange(0, 100) / 1000)
             TESTS[test]['pubsub_submit_time'] = time.time()
             #            TESTS[test]['pubsub_submit_time'] = datetime.datetime.now().isoformat()
             publish(TESTS[test])
-            progress(submit="  Submitted " + TESTS[test]['orig_RID'])
-            time.sleep(random.randrange(5, 10)/10)
-        progress(submit="Enough tests submitted, taking a break.")
-        time.sleep(60)
+            progress(submit="  Submitted " + TESTS[test]['RID'])
+        progress(submit="Waiting %f" % ramp)
+        time.sleep(ramp)
+        ramp=ramp * 0.8
+        if ramp < 2:
+            ramp=2
 
 
 def results_thread():
@@ -297,13 +305,18 @@ def results_thread():
             if parts[0] == 'status':
                 # TODO: Check Job Orchestration status
                 continue
-            # progress(results=str(parts))
-            rid = parts[1]
+            #progress(results=str(parts))
+            rid = parts[1].replace(".asn1","")
+
+            if rid not in TESTS:
+                continue
 
             result = TESTS[rid]
-            origrid = result['orig_RID']
+            rid = result['RID']
             os.makedirs(name='results', exist_ok=True)
-            fname = "results/" + origrid + "." + parts[2]
+            fname = "results/" + rid + ".asn1"
+            txtname = "results/" + rid + ".txt"
+            expected= "expected/" + rid + ".txt"
 
             blob.download_to_filename(fname)
             dtend = blob.time_created
@@ -314,24 +327,26 @@ def results_thread():
                 result['pubsub_submit_time'])
             elapsed = dtend - dtstart
             progress(results="%s took %6.2f seconds" % (
-                origrid, elapsed.total_seconds()))
+                rid, elapsed.total_seconds()))
 
             cmd = [
                 "./asntool", "-m", "asn.all", "-t",
-                "Seq-annot", "-d", fname, "-p", fname + ".txt"
+                "Seq-annot", "-d", fname, "-p", txtname
             ]
             #print (cmd)
             subprocess.check_output(cmd)
 
-            with open(fname + ".txt") as fnew:
+            with open(txtname) as fnew:
                 fnewlines=fnew.readlines()
-            with open("expected/" + origrid + "." + parts[2] + ".txt") as fexpected:
-                fexpectedlines=fexpected.readlines()
 
-            if fnewlines!=fexpectedlines:
-                print("Files differ for " + origrid)
-                #diff=difflib.ndiff(fnewlines, fexpectedlines)
-                #print(diff)
+            if os.path.exists(expected):
+                with open(expected) as fexpected:
+                    fexpectedlines=fexpected.readlines()
+
+                if fnewlines!=fexpectedlines:
+                    print("Files differ for " + rid)
+                    #diff=difflib.ndiff(fnewlines, fexpectedlines)
+                    #print(diff)
 
         if not anything:
             progress(results="No objects in bucket")
