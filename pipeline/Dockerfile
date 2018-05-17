@@ -13,6 +13,9 @@ FROM debian:8
 ##################################
 
 COPY ./ ./
+#COPY libblastjni.so libblastjni.so
+#COPY sparkblast-1-jar-with-dependencies.jar \
+#        sparkblast-1-jar-with-dependencies.jar
 
 ENTRYPOINT [ "gcloud", "dataproc", "jobs", "submit", "spark", \
       "--cluster", "$CLUSTER_GOES_HERE", \
