@@ -91,7 +91,8 @@ public final class BLAST_DRIVER implements Serializable {
 
         // GCP NIC has 2 gbit/sec/vCPU, 16 gbit max, ~8 gbit for single stream
         // LZ4 typically saturates at 800MB/sec
-        conf.set("spark.broadcast.compress", "false");
+        // I'm only seeing ~2.4 gbit/core, so LZ4 a win
+        conf.set("spark.broadcast.compress", "true");
         // GCP non-ssd persistent disk is <= 120MB/sec
         conf.set("spark.shuffle.compress", "true");
 
