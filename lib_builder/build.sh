@@ -228,6 +228,9 @@ if [ "$BUILDENV" = "google" ]; then
     gsutil cp \
         cluster_initialize.sh \
         "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
+    gsutil cp libblastjni.so gs://ncbi-build-artifacts
+    gsutil cp target/sparkblast-1-jar-with-dependencies.jar \
+        gs://ncbi-build-artifacts
 fi
 
 echo "Build Complete"
