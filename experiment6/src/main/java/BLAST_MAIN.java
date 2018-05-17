@@ -60,7 +60,7 @@ public final class BLAST_MAIN
                     sc.addFile( fn );
 
                 // create the global status to track REQUESTS and timing
-                BLAST_STATUS status = new BLAST_STATUS();
+                BLAST_STATUS status = new BLAST_STATUS( settings );
 
                 BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
 
@@ -102,9 +102,43 @@ public final class BLAST_MAIN
                                     status.stop();
                                 else if ( cmd.startsWith( "R" ) )
                                 {
-                                    int can_take = ( settings.max_backlog - status.get_backlog() );
-                                    if ( can_take > 0 )
-                                        status.add_request( new REQUESTQ_ENTRY( cmd.substring( 1 ), settings.top_n ) );
+                                    if ( status.can_take() > 0 )
+                                    {
+                                        REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string( cmd.substring( 1 ), settings.top_n );
+                                        if ( re == null )
+                                            System.out.println( "REQUEST invalid" );
+                                        else
+                                        {
+                                            if ( !status.add_request( re ) )
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
+                                            }
+                                            else
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
+                                            }
+                                        }
+                                    }
+                                }
+                                else if ( cmd.startsWith( "F" ) )
+                                {
+                                    if ( status.can_take() > 0 )
+                                    {
+                                        REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_file( cmd.substring( 1 ), settings.top_n );
+                                        if ( re == null )
+                                            System.out.println( "REQUEST invalid" );
+                                        else
+                                        {
+                                            if ( !status.add_request( re ) )
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
+                                            }
+                                            else
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             else

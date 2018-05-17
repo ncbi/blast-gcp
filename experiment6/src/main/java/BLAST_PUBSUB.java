@@ -132,7 +132,9 @@ public final class BLAST_PUBSUB  extends Thread
         while( status.is_running() )
         {
             boolean perform_sleep = true;
-            int can_take = ( settings.max_backlog - status.get_backlog() );
+            String ack;
+
+            int can_take = status.can_take();
             if ( can_take > 0 )
             {
                 List< ReceivedMessage > messages = pullMessages( can_take );
@@ -143,16 +145,34 @@ public final class BLAST_PUBSUB  extends Thread
                         String msg_string = decode( msg );
                         if ( msg_string != null )
                         {
-                            REQUESTQ_ENTRY re = new REQUESTQ_ENTRY( msg_string, msg.getAckId(), settings.top_n );
-                            if ( settings.log.request )
-                                System.out.println( String.format( "REQUEST '%s' received", re.request.id ) );
-                            status.add_request( re );
+                            ack = msg.getAckId();
+                            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string_and_ack( msg_string, ack, settings.top_n );
+                            if ( re == null )
+                            {
+                                System.out.println( "REQUEST from PUBSUB invalid" );
+                                ackMessage( ack );
+                            }
+                            else
+                            {
+                                boolean added = status.add_request( re );
+                                if ( settings.log.request )
+                                {
+                                    if ( added )
+                                        System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
+                                    else
+                                    {
+                                        System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
+                                        status.update_ack( re );
+                                    }
+                                }
+                            }
                         }
                         perform_sleep = false;
                     };
                 }
             }
-            String ack = status.get_ack();
+
+            ack = status.get_ack();
             if ( ack != null )
             {
                 ackMessage( ack );

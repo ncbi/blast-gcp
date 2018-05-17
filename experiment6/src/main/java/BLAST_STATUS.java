@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 class BLAST_STATUS
 {
+    private final BLAST_SETTINGS settings;
     private final AtomicLong total_requests;
     private final AtomicLong total_time;
     private final AtomicLong avg_time;
@@ -45,9 +46,11 @@ class BLAST_STATUS
     private final ConcurrentLinkedQueue< REQUESTQ_ENTRY > request_q;
     private final ConcurrentLinkedQueue< String > ack_q;
     private final ConcurrentLinkedQueue< String > cmd_q;
+    private BLAST_JOBS jobs;
 
-    public BLAST_STATUS()
+    public BLAST_STATUS( final BLAST_SETTINGS a_settings )
     {
+        settings = a_settings;
         total_requests = new AtomicLong( 0L );
         total_time = new AtomicLong( 0L );
         avg_time = new AtomicLong( 0L );
@@ -60,7 +63,10 @@ class BLAST_STATUS
         request_q = new ConcurrentLinkedQueue<>();
         ack_q = new ConcurrentLinkedQueue<>();
         cmd_q = new ConcurrentLinkedQueue<>();
+        jobs = null;
     }
+
+    public void set_jobs( BLAST_JOBS a_jobs ) { jobs = a_jobs; }
 
     public boolean is_running() { return running.get(); }
     public void stop() { running.set( false ); }
@@ -88,10 +94,27 @@ class BLAST_STATUS
         return running_jobs.decrementAndGet();
     }
 
-    public void add_request( REQUESTQ_ENTRY re )
+    private boolean is_a_running_id( final String id )
     {
-        inc_backlog();
-        request_q.offer( re );
+        return running_ids.keySet().contains( id );
+    }
+
+    public boolean contains( REQUESTQ_ENTRY re )
+    {
+        boolean res = request_q.contains( re );
+        if ( !res ) res = is_a_running_id( re.request.id );
+        return res;
+    }
+
+    public boolean add_request( REQUESTQ_ENTRY re )
+    {
+        boolean res = !contains( re );
+        if ( res )
+        {
+            inc_backlog();
+            request_q.offer( re );
+        }
+        return res;
     }
 
     public REQUESTQ_ENTRY get_request()
@@ -112,12 +135,36 @@ class BLAST_STATUS
     public int dec_backlog() { return backlog.decrementAndGet(); }
     public int get_backlog() { return backlog.get(); }
 
+    public int can_take() { return ( settings.max_backlog - get_backlog() ); }
+
+    public void update_ack( final REQUESTQ_ENTRY re )
+    {
+        if ( is_a_running_id( re.request.id ) )
+        {
+            if ( jobs != null )
+                update_ack( re );
+        }
+        else if ( request_q.contains( re ) )
+        {
+            REQUESTQ_ENTRY[] waiting = request_q.toArray( new REQUESTQ_ENTRY[ request_q.size() ] );
+            for ( REQUESTQ_ENTRY e : waiting )
+            {
+                if ( e.equals( re ) )
+                    e.ack_id = re.ack_id;
+            }
+        }
+    }
+
     @Override public String toString()
     {
         String S = String.format( "avg=%,d ms, parallel=%d, running=%d, backlog=%d",
             get_avg(), parallel_jobs.get(), running_jobs.get(), backlog.get() );
         for ( String id : running_ids.keySet() )
-            S = S + String.format( "\n%s", id );
+            S = S + String.format( "\nrunning: %s", id );
+        REQUESTQ_ENTRY[] waiting = request_q.toArray( new REQUESTQ_ENTRY[ request_q.size() ] );
+        for ( REQUESTQ_ENTRY e : waiting )
+            S = S + String.format( "\nwaiting: %s", e.request.id );
+
         return S;
     }
 }

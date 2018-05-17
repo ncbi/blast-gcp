@@ -46,6 +46,7 @@ class BLAST_JOB extends Thread
     private final BLAST_DATABASE_MAP db;
     private final AtomicBoolean running;
     private final BLAST_STATUS status;
+    private REQUESTQ_ENTRY entry;
 
     public BLAST_JOB( final BLAST_SETTINGS settings,
                       Broadcast< BLAST_SETTINGS > SETTINGS,
@@ -59,11 +60,26 @@ class BLAST_JOB extends Thread
         this.db = a_db;
         this.status = a_status;
         running = new AtomicBoolean( false );
+        entry = null;
     }
 
     public void signal_done()
     {
         running.set( false );
+    }
+
+    public void update_ack( final REQUESTQ_ENTRY re )
+    {
+        synchronized( entry )
+        {
+            if ( entry != null )
+            {
+                if ( entry.ack_id != null && entry.request.id.equals( re.request.id ) )
+                {
+                    entry.ack_id = re.ack_id;
+                }
+            }
+        }
     }
 
     private JavaRDD< BLAST_TB_LIST_LIST > prelim_search_and_traceback(
@@ -233,8 +249,13 @@ class BLAST_JOB extends Thread
 
         while( running.get() )
         {
-            REQUESTQ_ENTRY entry = status.get_request();
-            if ( entry != null )
+            boolean have_data;
+            synchronized( entry )
+            {
+                entry = status.get_request();
+                have_data = ( entry != null );
+            }
+            if ( have_data )
             {
                 BLAST_DATABASE blast_db = db.get( entry.request.db );
                 if ( blast_db != null )
@@ -242,12 +263,17 @@ class BLAST_JOB extends Thread
                     long elapsed = handle_request( entry.request, blast_db );
                     status.after_request( elapsed );
                     System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
-                    if ( entry.ack_id != null )
-                        status.add_ack( entry.ack_id );
                 }
                 else
                 {
                     System.out.println( String.format( "[ %s ] unknown database '%s'", entry.request.id, entry.request.db ) );
+
+                }
+                synchronized( entry )
+                {
+                    if ( entry.ack_id != null )
+                        status.add_ack( entry.ack_id );
+                    entry = null;
                 }
             }
             else

@@ -54,6 +54,7 @@ class BLAST_JOBS
         this.sc = a_sc;
         this.db = a_db;
         this.status = a_status;
+        a_status.set_jobs( this );
 
         start_jobs();
     }
@@ -97,6 +98,12 @@ class BLAST_JOBS
         start_jobs();
     }
  
+    public void update_ack( final REQUESTQ_ENTRY re )
+    {
+        for ( BLAST_JOB j : jobs )
+            j.update_ack( re );
+    }
+
     private void reduce_n( Integer N )
     {
         System.out.println( String.format( "removing %d jobs", N ) );

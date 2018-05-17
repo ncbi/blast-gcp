@@ -27,19 +27,28 @@ package gov.nih.nlm.ncbi.blastjni;
 
 class REQUESTQ_ENTRY
 {
-    public BLAST_REQUEST request;
+    public final BLAST_REQUEST request;
     public String ack_id;
 
-    public REQUESTQ_ENTRY( String req_string, Integer top_n )
+    public REQUESTQ_ENTRY( final BLAST_REQUEST a_request )
     {
-        request = BLAST_REQUEST_READER.parse( req_string, top_n );
-        ack_id = null;
+        this.request = a_request;
+        this.ack_id = null;
     }
 
-    public REQUESTQ_ENTRY( String req_string, String ack_id, Integer top_n )
+    public REQUESTQ_ENTRY( final BLAST_REQUEST a_request, final String a_ack_id )
     {
-        request = BLAST_REQUEST_READER.parse( req_string, top_n );
-        this.ack_id = ack_id;
+        this.request = a_request;
+        this.ack_id = a_ack_id;
+    }
+
+    @Override public boolean equals( Object other )
+    {
+        if ( other == null ) return false;
+        if ( !REQUESTQ_ENTRY.class.isAssignableFrom( other.getClass() ) ) return false;
+        final REQUESTQ_ENTRY other_entry = ( REQUESTQ_ENTRY ) other;
+        if ( other_entry.request == null ) return false;
+        return this.request.id.equals( other_entry.request.id );
     }
 }
 
