@@ -1,8 +1,7 @@
 #!/bin/bash
 
-PIPELINEBUCKET="gs://blastgcp-pipeline-test"
-
 # Copy this script to GS bucket with:
+# PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # gsutil cp  cluster_initialize.sh "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
 
 cd /tmp

@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
 import atexit
-from datetime import date
 import datetime
 import getpass
 import json
-import difflib
+#import difflib
 import os
 import random
 import subprocess
-import sys
+#import sys
 import threading
 import time
-import uuid
+#import uuid
 
 # gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS
 
@@ -87,7 +86,7 @@ def make_pubsub():
         topic=TEST_ID)
 
     # Create the topic.
-    topic = PUBSUB_CLIENT.create_topic(TOPIC_NAME)
+    PUBSUB_CLIENT.create_topic(TOPIC_NAME)
     print('  Topic created: ' + TOPIC_NAME)
 
     #    print('  Topic created: {}'.format(topic))
@@ -227,7 +226,7 @@ def submit_thread():
         for test in tests[0:1]:
             # Emulate 1..10 submissions a second with jitter
             time.sleep(random.randrange(0, 100) / 1000)
-            now= datetime.datetime.utcnow()
+            now = datetime.datetime.utcnow()
             TESTS[test]['StartTime'] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
             print(TESTS[test])
             publish(TESTS[test])
