@@ -89,12 +89,12 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 #    --worker-machine-type custom-64-71680 \
 gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-"$USER" \
-    --master-machine-type n1-standard-8 \
+    --master-machine-type n1-standard-4 \
         --master-boot-disk-size 100 \
     --num-workers 2 \
         --worker-boot-disk-size 100 \
     --worker-machine-type n1-standard-32 \
-    --num-preemptible-workers 4 \
+    --num-preemptible-workers 14 \
         --preemptible-worker-boot-disk-size 100 \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
