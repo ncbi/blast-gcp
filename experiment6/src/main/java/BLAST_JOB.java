@@ -250,12 +250,9 @@ class BLAST_JOB extends Thread
         while( running.get() )
         {
             boolean have_data;
-            synchronized( entry )
-            {
-                entry = status.get_request();
-                have_data = ( entry != null );
-            }
-            if ( have_data )
+            
+            entry = status.get_request();
+            if ( entry != null )
             {
                 BLAST_DATABASE blast_db = db.get( entry.request.db );
                 if ( blast_db != null )
