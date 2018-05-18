@@ -105,6 +105,7 @@ public final class BLAST_DRIVER implements Serializable {
         for (BLAST_DB_SETTING db_set : ldb_set)
             max_partitions = Math.max(max_partitions, db_set.num_partitions);
 
+        System.out.println(String.format("max_partitions is %d", max_partitions));
         // selector, location, pattern, bucket, flat_layout, num_partitions,
         // extensions, num_locations
         BLAST_DB_SETTING nt = dbsettings.get("nt");
