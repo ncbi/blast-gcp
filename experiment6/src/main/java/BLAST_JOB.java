@@ -260,9 +260,16 @@ class BLAST_JOB extends Thread
                 BLAST_DATABASE blast_db = db.get( entry.request.db );
                 if ( blast_db != null )
                 {
+                    String gs_status_key = String.format( settings.gs_status_file, entry.request.id );
+                    BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_running );
+
                     long elapsed = handle_request( entry.request, blast_db );
                     status.after_request( elapsed );
                     System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
+
+                    gs_status_key = String.format( settings.gs_status_file, entry.request.id );
+                    BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_done );
+
                 }
                 else
                 {

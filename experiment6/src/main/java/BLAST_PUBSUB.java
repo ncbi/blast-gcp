@@ -151,6 +151,9 @@ public final class BLAST_PUBSUB  extends Thread
                             {
                                 System.out.println( "REQUEST from PUBSUB invalid" );
                                 ackMessage( ack );
+
+                                String gs_status_key = String.format( settings.gs_status_file, re.request.id );
+                                BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_error );
                             }
                             else
                             {
@@ -158,7 +161,9 @@ public final class BLAST_PUBSUB  extends Thread
                                 if ( settings.log.request )
                                 {
                                     if ( added )
+                                    {
                                         System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
+                                    }
                                     else
                                     {
                                         System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
