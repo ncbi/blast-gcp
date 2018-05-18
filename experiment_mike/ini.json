@@ -23,11 +23,24 @@
     "blastjni" :
     {
         "db" :
-        {
-            "db_bucket" : "nt_50mb_chunks",
-            "db_location" : "/tmp/blast/db/prefetched",
-            "num_db_partitions" : 886
-        },
+        [
+            {
+                "selector" : "nt",
+                "bucket"   : "nt_50mb_chunks",
+                "pattern"  : "nt_50M",
+                "extensions" : [ "nhr", "nin", "nsq" ],
+                "num_partitions" : 887,
+                "num_locations" : 2
+            },
+            {
+                "selector" : "nr",
+                "bucket"   : "nr_50mb_chunks",
+                "pattern"  : "nr_50M",
+                "extensions" : [ "phr", "pin", "psq" ],
+                "num_partitions" : 1086,
+                "num_locations" : 1
+            }
+        ],
         "jni_log_level": "DEBUG",
         "top_n" : 100
     },
@@ -46,6 +59,9 @@
 
     "spark" :
     {
+        "transfer_files" : [ "libblastjni.so" ],
+        "shuffle_reduceLocality_enabled" : "false",
+        "scheduler_fair" : "false",
         "with_locality" : "true",
         "num_executors" : 400,
         "num_executor_cores" : 1,
@@ -55,6 +71,9 @@
 
     "log" :
     {
-        "log_port" : 10011
+        "log_port" : 10011,
+        "pref_loc" : "false",
+        "part_prep" : "true"
     }
 }
+

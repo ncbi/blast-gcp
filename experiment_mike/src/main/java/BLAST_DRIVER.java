@@ -96,7 +96,8 @@ public final class BLAST_DRIVER implements Serializable {
         // GCP non-ssd persistent disk is <= 120MB/sec
         conf.set("spark.shuffle.compress", "true");
 
-        conf.set("spark.default.parallelism", Integer.toString(settings.num_db_partitions));
+        int num_db_partitions = 1234;
+        conf.set("spark.default.parallelism", Integer.toString(num_db_partitions));
         conf.set("spark.dynamicAllocation.enabled", Boolean.toString(settings.with_dyn_alloc));
         conf.set("spark.eventLog.enabled", "false");
 
@@ -114,16 +115,17 @@ public final class BLAST_DRIVER implements Serializable {
         conf.set("spark.locality.wait", settings.locality_wait);
 
         // -> process, node, rack, any
-        conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
+        if (settings.scheduler_fair)
+            conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
         conf.set("spark.shuffle.reduceLocality.enabled", "false");
 
-        conf.set("spark.sql.shuffle.partitions", Integer.toString(settings.num_db_partitions));
+        conf.set("spark.sql.shuffle.partitions", Integer.toString(num_db_partitions));
         // conf.set("spark.sql.streaming.schemaInference", "true");
         String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
         conf.set("spark.sql.warehouse.dir", warehouseLocation);
 
         conf.set("spark.streaming.stopGracefullyOnShutdown", "true");
-        conf.set("spark.streaming.receiver.maxRate", String.format("%d", settings.receiver_max_rate));
+        conf.set("spark.streaming.receiver.maxRate", String.format("%d", settings.max_backlog));
 
         conf.set("spark.ui.enabled", "true");
 
@@ -152,9 +154,11 @@ public final class BLAST_DRIVER implements Serializable {
     private static boolean make_partitions() {
         StructType parts_schema = StructType.fromDDL("db string, partition_num int");
 
-        ArrayList<Row> data = new ArrayList<Row>(settings.num_db_partitions);
+        int num_db_partitions = 1234;
 
-        for (int i = 0; i < settings.num_db_partitions; i++) {
+        ArrayList<Row> data = new ArrayList<Row>(num_db_partitions);
+
+        for (int i = 0; i < num_db_partitions; i++) {
             Row r = RowFactory.create("nt", Integer.valueOf(i));
             data.add(r);
         }
@@ -162,7 +166,7 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
         Dataset<Row> blast_partitions =
             parts
-            .repartition(settings.num_db_partitions, parts.col("partition_num"))
+            .repartition(num_db_partitions, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
         blast_partitions.show();
@@ -193,7 +197,7 @@ public final class BLAST_DRIVER implements Serializable {
 
         DataStreamReader query_stream = sparksession.readStream();
         query_stream.format("json");
-        query_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
+        query_stream.option("maxFilesPerTrigger", settings.max_backlog);
         query_stream.option("multiLine", true);
         query_stream.option("mode", "FAILFAST");
         query_stream.option("includeTimestamp", true);
@@ -218,7 +222,7 @@ public final class BLAST_DRIVER implements Serializable {
         Integer top_n = settings.top_n;
         String jni_log_level = settings.jni_log_level;
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
-        String db_location = settings.db_location;
+        String db_location = "/tmp/blast/db"; // settings.db_location;
 
         Dataset<Row> prelim_search_results =
             joined
@@ -451,7 +455,7 @@ public final class BLAST_DRIVER implements Serializable {
         // BLAST_SETTINGS settings_closure = settings;
         Integer top_n = settings.top_n; // FIX: topn_n for traceback
         String jni_log_level = settings.jni_log_level;
-        String db_location = settings.db_location;
+        String db_location = "/tmp/blast/db"; // settings.db_location;
 
         StructType hsp_schema =
             StructType.fromDDL(
@@ -460,7 +464,7 @@ public final class BLAST_DRIVER implements Serializable {
 
         DataStreamReader hsp_stream = sparksession.readStream();
         hsp_stream.format("json");
-        hsp_stream.option("maxFilesPerTrigger", settings.receiver_max_rate);
+        hsp_stream.option("maxFilesPerTrigger", settings.max_backlog);
         // hsp_stream.option("multiLine", true);
         hsp_stream.option("mode", "FAILFAST");
         hsp_stream.option("includeTimestamp", true);
