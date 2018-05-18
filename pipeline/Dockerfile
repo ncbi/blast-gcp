@@ -1,6 +1,6 @@
-FROM debian:8
-#FROM gcr.io/ncbi-prodnot/gcp-deployer:gcp-deployer-0.1
-
+#FROM debian:8
+#FROM us.gcr.io/ncbi-prodnot/gcp-deployer:gcp-deployer-0.1
+FROM us.gcr.io/ncbi-sandbox-blast/gcp-deployer:0.1
 
 ##################################
 # Below needed for building JARs, not running them on Dataproc:
