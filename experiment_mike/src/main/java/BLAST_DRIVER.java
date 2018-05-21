@@ -254,7 +254,7 @@ public final class BLAST_DRIVER implements Serializable {
                                         blast_params_str,
                                         ts);
 
-                            logger.log(Level.INFO, "outrow is\n  " + outrow.mkString("\n  "));
+                            logger.log(Level.INFO, "queries outrow is\n  " + outrow.mkString("\n  "));
 
                             return outrow;
                         } else {
@@ -441,7 +441,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                                 hsp_rows.add(outrow);
 
-                                logger.log(Level.INFO, "outrow is\n  " + outrow.mkString("\n  "));
+                                logger.log(Level.INFO, "hsp outrow is\n  " + outrow.mkString("\n  "));
 
                                 // logger.log(Level.INFO, "json is " + json.toString());
                             }
@@ -457,8 +457,10 @@ public final class BLAST_DRIVER implements Serializable {
                     },
                           encoder); // flastmap
 
-        prelim_search_results.explain(true);
+        //prelim_search_results.explain(true);
         prelim_search_results.createOrReplaceTempView("prelim_search_results");
+        System.out.print("prelim_search_results schema is ");
+        prelim_search_results.printSchema();
 
         return prelim_search_results;
     }
@@ -796,7 +798,7 @@ public final class BLAST_DRIVER implements Serializable {
                               .toDF("asns")
                               .repartition(1); // FIX
 
-        traceback_results.explain();
+        //traceback_results.explain();
 
         DataStreamWriter<Row> tb_dsw = traceback_results.writeStream();
 
