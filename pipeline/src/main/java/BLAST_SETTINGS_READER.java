@@ -365,6 +365,7 @@ class STATUS_SETTINGS_READER
         if ( obj != null )
         {
             settings.gs_status_bucket  = UTILS.get_json_string( obj, key_gs_bucket, dflt_gs_bucket );
+            gov.nih.nlm.ncbi.blast.RID.SetBucketName( settings.gs_result_bucket );
         }
     }
 }
