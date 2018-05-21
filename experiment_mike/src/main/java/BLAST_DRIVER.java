@@ -66,16 +66,18 @@ import org.apache.spark.storage.StorageLevel;
 import org.json.JSONObject;
 
 public final class BLAST_DRIVER implements Serializable {
-    private static BLAST_SETTINGS settings;
+    private BLAST_SETTINGS settings;
     private static SparkSession sparksession;
     // Only one spark context allowed per JVM
     private static JavaSparkContext javasparkcontext;
 
-    private static int max_partitions = 0;
-    private static BLAST_DB_SETTINGS dbsettings;
-    private static final String db_location = "/tmp/blast/db";
+    private int max_partitions = 0;
+    private BLAST_DB_SETTINGS dbsettings;
+    private final String db_location = "/tmp/blast/db";
 
-    public static boolean init(final String[] args) {
+    public void BLAST_DRIVER() {}
+
+    public boolean init(final String[] args) {
         if (args.length != 1) {
             System.out.println("settings json-file missing");
             return false;
@@ -110,10 +112,6 @@ public final class BLAST_DRIVER implements Serializable {
             max_partitions = Math.max(max_partitions, db_set.num_partitions);
 
         System.out.println(String.format("max_partitions is %d", max_partitions));
-        // selector, location, pattern, bucket, flat_layout, num_partitions,
-        // extensions, num_locations
-        BLAST_DB_SETTING nt = dbsettings.get("nt");
-        BLAST_DB_SETTING nr = dbsettings.get("nr");
 
         conf.set("spark.default.parallelism", Integer.toString(max_partitions));
         conf.set("spark.dynamicAllocation.enabled", Boolean.toString(settings.with_dyn_alloc));
@@ -169,10 +167,8 @@ public final class BLAST_DRIVER implements Serializable {
         return true;
     }
 
-    private static boolean make_partitions() {
+    private boolean make_partitions() {
         StructType parts_schema = StructType.fromDDL("db string, partition_num int");
-        // selector, location, pattern, bucket, flat_layout, num_partitions,
-        // extensions, num_locations
 
         ArrayList<Row> data = new ArrayList<Row>();
 
@@ -201,7 +197,7 @@ public final class BLAST_DRIVER implements Serializable {
         return true;
     }
 
-    private static Dataset<Row> prelim_parsed(Dataset<Row> queries) {
+    private Dataset<Row> prelim_parsed(Dataset<Row> queries) {
         System.out.print("queries schema is ");
         queries.printSchema();
 
@@ -275,7 +271,7 @@ public final class BLAST_DRIVER implements Serializable {
         return parsed;
     }
 
-    private static Dataset<Row> prelim_joined(Dataset<Row> parsed) {
+    private Dataset<Row> prelim_joined(Dataset<Row> parsed) {
         Dataset<Row> joined =
             sparksession.sql(
                     "select * "
@@ -288,9 +284,11 @@ public final class BLAST_DRIVER implements Serializable {
         return joined;
     }
 
-    private static void preload(String db_tag, int partition_num) {
+    private void preload(String db_tag, int partition_num) {
         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
         String selector = db_tag.substring(0, 2);
+        logger.log(Level.INFO, "selector is " + selector);
+        logger.log(Level.INFO, "dbsettings is " + dbsettings.toString());
 
         BLAST_DB_SETTING dbs = dbsettings.get(selector);
         String bucket = "gs://" + dbs.bucket;
@@ -339,7 +337,7 @@ public final class BLAST_DRIVER implements Serializable {
         }
     }
 
-    private static Dataset<Row> prelim_results(Dataset<Row> joined) {
+    private Dataset<Row> prelim_results(Dataset<Row> joined) {
         StructType results_schema =
             StructType.fromDDL(
                     "protocol string, "
@@ -457,7 +455,7 @@ public final class BLAST_DRIVER implements Serializable {
         return prelim_search_results;
     }
 
-    private static DataStreamWriter<Row> topn_dsw(DataStreamWriter<Row> prelim_dsw) {
+    private DataStreamWriter<Row> topn_dsw(DataStreamWriter<Row> prelim_dsw) {
         int top_n = 100; // FIX
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
         DataStreamWriter<Row> topn_dsw =
@@ -609,7 +607,7 @@ public final class BLAST_DRIVER implements Serializable {
         return topn_dsw;
     }
 
-    private static DataStreamWriter<Row> make_prelim_stream() {
+    private DataStreamWriter<Row> make_prelim_stream() {
         System.out.println("making prelim_stream");
 
         DataStreamReader query_stream = sparksession.readStream();
@@ -638,9 +636,8 @@ public final class BLAST_DRIVER implements Serializable {
         return topn_dsw;
     }
 
-    private static DataStreamWriter<Row> make_traceback_stream() {
+    private DataStreamWriter<Row> make_traceback_stream() {
         System.out.println("making traceback_stream");
-        // BLAST_SETTINGS settings_closure = settings;
         Integer top_n = settings.top_n; // FIX: topn_n for traceback
         String jni_log_level = settings.jni_log_level;
 
@@ -921,8 +918,7 @@ public final class BLAST_DRIVER implements Serializable {
         return out_dsw;
     }
 
-    private static boolean run_streams(
-            DataStreamWriter<Row> prelim_dsw, DataStreamWriter traceback_dsw) {
+    private boolean run_streams(DataStreamWriter<Row> prelim_dsw, DataStreamWriter traceback_dsw) {
         System.out.println("starting streams...");
         //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
         try {
@@ -945,31 +941,34 @@ public final class BLAST_DRIVER implements Serializable {
         System.out.println("That is enough for now");
 
         return true;
-            }
+    }
 
-    private static void shutdown() {
+    private void shutdown() {
         javasparkcontext.stop();
         sparksession.stop();
     }
 
     public static void main(String[] args) throws Exception {
         boolean result;
-        result = init(args);
+
+        BLAST_DRIVER driver = new BLAST_DRIVER();
+
+        result = driver.init(args);
         if (!result) {
-            shutdown();
+            driver.shutdown();
             System.exit(1);
         }
 
-        if (!make_partitions()) {
-            shutdown();
+        if (!driver.make_partitions()) {
+            driver.shutdown();
             System.exit(2);
         }
 
-        DataStreamWriter<Row> prelim_stream = make_prelim_stream();
-        DataStreamWriter<Row> traceback_stream = make_traceback_stream();
-        result = run_streams(prelim_stream, traceback_stream);
+        DataStreamWriter<Row> prelim_stream = driver.make_prelim_stream();
+        DataStreamWriter<Row> traceback_stream = driver.make_traceback_stream();
+        result = driver.run_streams(prelim_stream, traceback_stream);
         if (!result) {
-            shutdown();
+            driver.shutdown();
             System.exit(3);
         }
     }
