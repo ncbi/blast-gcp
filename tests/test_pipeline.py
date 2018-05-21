@@ -134,6 +134,7 @@ def get_tests():
 
     test_bucket = storage.Client().bucket(TEST_DATA_BUCKET)
 
+    # FIX: Paged
     test_blobs = test_bucket.list_blobs()
     #random.shuffle(test_blobs)
 
@@ -163,6 +164,9 @@ def get_tests():
             #print(json.dumps(j, indent=4, sort_keys=True))
 
         TESTS[j['RID']] = j
+        fout=open(j['RID']+".json","w")
+        fout.write(json.dumps(j))
+        print(j)
     print("Loaded " + str(len(TESTS)) + " tests")
 
 
@@ -171,49 +175,6 @@ def publish(jdict):
     msg = json.dumps(jdict, indent=4, sort_keys=True).encode()
     PUBSUB_CLIENT.publish(TOPIC_NAME, msg)
 
-
-def submit_application(config):
-    global CLUSTER_ID, TEST_ID, JOB_ID, CONFIG_JSON, PROJECT
-    CONFIG_JSON = TEST_ID + ".json"
-    fout = open(CONFIG_JSON, "w")
-    fout.write(config)
-    fout.close()
-
-    # spark-submit --master yarn
-    # --jars /home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar
-    # --class gov.nih.nlm.ncbi.blastjni.BLAST_MAIN
-    # ./target/sparkblast-1-jar-with-dependencies.jar
-    # foo.json
-
-    cmd = []
-    cmd.append("gcloud")
-    cmd.append("dataproc")
-    cmd.append("jobs")
-    cmd.append("submit")
-    cmd.append("spark")
-    cmd.append("--cluster")
-    cmd.append(CLUSTER_ID)
-    cmd.append("--class")
-    cmd.append("gov.nih.nlm.ncbi.blastjni.BLAST_MAIN")
-    cmd.append("--jars")
-    # TODO: magic pubsub jar should be in git or make_jars.sh
-    cmd.append(
-        "/home/vartanianmh/bigdata-interop/pubsub/target/spark-pubsub-0.1.0-SNAPSHOT-shaded.jar"
-        + "," + "../pipeline/target/sparkblast-1-jar-with-dependencies.jar")
-    cmd.append("--project")
-    cmd.append(PROJECT)
-    cmd.append("--files")
-    cmd.append("../pipeline/libblastjni.so," + CONFIG_JSON)
-    cmd.append("--region")
-    cmd.append("us-east4")
-    cmd.append("--max-failures-per-hour")
-    cmd.append("1")
-    cmd.append("--")
-    cmd.append(CONFIG_JSON)
-    print("  cmd is : " + ' '.join(cmd))
-    #JOB_ID = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()
-    #JOB_ID = JOB_ID.replace("\n", "\n        ")
-    #print("JOB_ID is    " + JOB_ID)
 
 
 def submit_thread():
@@ -354,8 +315,6 @@ def main():
     print()
     print("PubSub subscriptions created")
     print("Cloud Storage bucket created")
-    print()
-    #submit_application(config)
     print()
     input(" " * 10 +
           "*** Start Spark Streaming Job now, press Enter when ready ***")

@@ -201,10 +201,11 @@ public final class BLAST_DRIVER implements Serializable {
     }
 
     private static Dataset<Row> prelim_parsed(Dataset<Row> queries) {
+        System.out.print("queries schema is ");
         queries.printSchema();
 
         StructType parsed_schema = new StructType();
-        parsed_schema = parsed_schema.add("protocol", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("protocol", "string", false);
         parsed_schema = parsed_schema.add("RID", DataTypes.StringType, false);
         parsed_schema = parsed_schema.add("db_tag", DataTypes.StringType, false);
         parsed_schema = parsed_schema.add("top_N_prelim", DataTypes.IntegerType, false);
@@ -216,7 +217,7 @@ public final class BLAST_DRIVER implements Serializable {
         parsed_schema = parsed_schema.add("StartTime", DataTypes.TimestampType, false);
         /*
            StructType parsed_schema=StructType.fromDDL(
-           "protocol string not null, "
+           "protocol string, "
            + "RID string, "
            + "db_tag string, "
            + // nt_50M.20180502_1
@@ -257,7 +258,9 @@ public final class BLAST_DRIVER implements Serializable {
                     },
                           encoder);
 
+        System.out.print("parsed schema is ");
         parsed.printSchema();
+        parsed.createOrReplaceTempView("parsed");
         return parsed;
     }
 
@@ -265,9 +268,9 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> joined =
             sparksession.sql(
                     "select RID, db_tag, partition_num, "
-                    + "query_seq, timestamp_hdfs "
+                    + "query_seq, StartTime"
                     + "from parsed, blast_partitions "
-                    + "where queries.db_tag=blast_partitions.db "
+                    + "where parsed.db_tag=blast_partitions.db "
                     + "distribute by partition_num");
         joined.createOrReplaceTempView("joined");
         System.out.print("joined schema is ");
