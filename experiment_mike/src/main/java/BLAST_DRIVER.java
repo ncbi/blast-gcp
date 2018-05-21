@@ -333,9 +333,7 @@ public final class BLAST_DRIVER implements Serializable {
                 }
 
                 if (++loops == 50) {
-                    logger.log(Level.WARN, 
-                            String.format("%s taking too long (%d)",
-                                dest, loops));
+                    logger.log(Level.WARN, String.format("%s taking too long (%d)", dest, loops));
                     return;
                 }
             }
@@ -356,7 +354,7 @@ public final class BLAST_DRIVER implements Serializable {
                     + "blast_params string, "
                     + "StartTime timestamp, "
                     + "db string, "
-                    + "partition_num string, "
+                    + "partition_num int, "
                     + "oid int, "
                     + "max_score int, "
                     + "hsp_blob string");
