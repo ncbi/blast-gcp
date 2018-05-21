@@ -2,6 +2,7 @@
     "appName" : "experiment_mike",
     "source" :
     {
+        "max_backlog" : 5,
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",

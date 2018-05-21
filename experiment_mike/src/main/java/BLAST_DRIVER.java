@@ -73,7 +73,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db2";
+    private final String db_location = "/tmp/blast/db4";
 
     public void BLAST_DRIVER() {}
 
@@ -310,6 +310,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                     logger.log(Level.INFO, "Preloading " + src + " -> " + dest);
                     try {
+                        Thread.sleep(100); // Prevent DOS?
                         Configuration conf = new Configuration();
                         Path srcpath = new Path(src);
                         FileSystem fs = FileSystem.get(srcpath.toUri(), conf);
@@ -330,9 +331,11 @@ public final class BLAST_DRIVER implements Serializable {
                     } catch (Exception e) {
                     }
                 }
-                ++loops;
-                if (loops > 20) {
-                    logger.log(Level.ERROR, "Taking too long");
+
+                if (++loops == 50) {
+                    logger.log(Level.WARN, 
+                            String.format("%s taking too long (%d)",
+                                dest, loops));
                     return;
                 }
             }
@@ -394,9 +397,10 @@ public final class BLAST_DRIVER implements Serializable {
                         requestobj.query_seq = query_seq;
                         requestobj.query_url = query_url;
                         requestobj.db = db_tag;
-                        requestobj.params = blast_params;
-                        requestobj.params = "blastn"; // FIX
                         requestobj.program = program;
+                        requestobj.params = blast_params;
+                        // FIX VVV
+                        requestobj.params = program;
                         requestobj.top_n = top_N_prelim;
                         BLAST_PARTITION partitionobj =
                             new BLAST_PARTITION(db_location, pattern, partition_num, true);

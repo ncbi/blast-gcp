@@ -138,7 +138,7 @@ public class BLAST_LIB {
 
             long finishtime = System.currentTimeMillis();
             long totaltime = finishtime - starttime;
-            if (totaltime > 100) log("WARN", "jni_prelim_search slow, returned in " + totaltime + " ms.");
+            if (totaltime > 1000) log("WARN", "jni_prelim_search slow, returned in " + totaltime + " ms.");
             log("INFO", "jni_prelim_search returned in " + totaltime + " ms.");
             log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
             int hspcnt = 0;
