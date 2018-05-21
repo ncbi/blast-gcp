@@ -20,7 +20,7 @@
  *
  *  Please cite the author in any work or product based on this material.
  *
- * ===========================================================================
+ *===========================================================================
  *
  */
 
@@ -55,9 +55,12 @@ import org.apache.spark.sql.ForeachWriter;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
+import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 import org.json.JSONObject;
@@ -197,48 +200,120 @@ public final class BLAST_DRIVER implements Serializable {
         return true;
     }
 
-    private static DataStreamWriter<Row> make_prelim_stream() {
-        System.out.println("making prelim_stream");
-
-        StructType queries_schema =
-            // StructType.fromDDL("RID string, db string, query_seq string, timestamp_hdfs string");
-            StructType.fromDDL(
-                    "protocol string, "
-                    + "RID string, "
-                    + "db_tag string, "
-                    + // nt_50M.20180502_1
-                    // volumes // optional for filtering by tax-id
-                    "top_N_prelim int, "
-                    + "top_N_traceback int, "
-                    + "query_seq string, "
-                    + "query_url string, "
-                    + "program string, "
-                    + "blast_params string, "
-                    + "StartTime timestamp");
-
-        DataStreamReader query_stream = sparksession.readStream();
-        query_stream.format("json");
-        query_stream.option("maxFilesPerTrigger", settings.max_backlog);
-        query_stream.option("multiLine", true);
-        query_stream.option("mode", "FAILFAST");
-        query_stream.option("includeTimestamp", true);
-        query_stream.schema(queries_schema);
-
-        Dataset<Row> queries = query_stream.json(settings.hdfs_source_dir);
-        System.out.print("queries schema is ");
+    private static Dataset<Row> prelim_parsed(Dataset<Row> queries) {
         queries.printSchema();
-        queries.createOrReplaceTempView("queries");
 
+        StructType parsed_schema = new StructType();
+        parsed_schema = parsed_schema.add("protocol", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("RID", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("db_tag", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("top_N_prelim", DataTypes.IntegerType, false);
+        parsed_schema = parsed_schema.add("top_N_traceback", DataTypes.IntegerType, false);
+        parsed_schema = parsed_schema.add("query_seq", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("query_url", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("program", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("blast_params", DataTypes.StringType, false);
+        parsed_schema = parsed_schema.add("StartTime", DataTypes.TimestampType, false);
+        /*
+           StructType parsed_schema=StructType.fromDDL(
+           "protocol string not null, "
+           + "RID string, "
+           + "db_tag string, "
+           + // nt_50M.20180502_1
+        // volumes // optional for filtering by tax-id
+        "top_N_prelim int, "
+        + "top_N_traceback int, "
+        + "query_seq string, "
+        + "query_url string, "
+        + "program string, "
+        + "blast_params string, "
+        + "StartTime timestamp");
+        */
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(parsed_schema);
+
+        Dataset<Row> parsed =
+            queries.map(
+                    inrow -> {
+                        Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
+
+                        // single column of "value"
+                        String value = inrow.getString(inrow.fieldIndex("value"));
+                        logger.log(Level.INFO, "value is " + value);
+
+                        Row outrow =
+                            RowFactory.create(
+                                    "protocol",
+                                    "RID",
+                                    "db_tag",
+                                    new Integer(3),
+                                    new Integer(4),
+                                    "query_seq",
+                                    "query_url",
+                                    "program",
+                                    "blast_params",
+                                    "timest");
+
+                        return outrow;
+                    },
+                          encoder);
+
+        parsed.printSchema();
+        return parsed;
+    }
+
+    private static Dataset<Row> prelim_joined(Dataset<Row> parsed) {
         Dataset<Row> joined =
             sparksession.sql(
                     "select RID, db_tag, partition_num, "
                     + "query_seq, timestamp_hdfs "
-                    + "from queries, blast_partitions "
+                    + "from parsed, blast_partitions "
                     + "where queries.db_tag=blast_partitions.db "
                     + "distribute by partition_num");
         joined.createOrReplaceTempView("joined");
         System.out.print("joined schema is ");
         joined.printSchema();
+        return joined;
+    }
+
+    private static DataStreamWriter<Row> make_prelim_stream() {
+        System.out.println("making prelim_stream");
+
+        DataStreamReader query_stream = sparksession.readStream();
+        /*
+           StructType queries_schema =
+        // StructType.fromDDL("RID string, db string, query_seq string, timestamp_hdfs string");
+        StructType.fromDDL(
+        "protocol string, "
+        + "RID string, "
+        + "db_tag string, "
+        + // nt_50M.20180502_1
+        // volumes // optional for filtering by tax-id
+        "top_N_prelim int, "
+        + "top_N_traceback int, "
+        + "query_seq string, "
+        + "query_url string, "
+        + "program string, "
+        + "blast_params string, "
+        + "StartTime timestamp");
+
+        query_stream.format("json");
+        query_stream.format("textfile");
+        query_stream.option("maxFilesPerTrigger", settings.max_backlog);
+        query_stream.option("multiLine", true);
+        query_stream.option("mode", "FAILFAST");
+        query_stream.option("includeTimestamp", true);
+        query_stream.schema(queries_schema);
+        Dataset<Row> queries = query_stream.json(settings.hdfs_source_dir);
+        */
+        query_stream.option("includeTimestamp", true);
+        Dataset<Row> queries = query_stream.text(settings.hdfs_source_dir);
+
+        System.out.print("queries schema is ");
+        queries.printSchema();
+        queries.createOrReplaceTempView("queries");
+
+        Dataset<Row> parsed = prelim_parsed(queries);
+        Dataset<Row> joined = prelim_joined(parsed);
 
         Integer top_n = settings.top_n;
         String jni_log_level = settings.jni_log_level;

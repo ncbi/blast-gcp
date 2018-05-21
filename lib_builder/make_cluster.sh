@@ -5,7 +5,7 @@ set -o errexit
 
 # Tunables
 NUM_CORES=32
-CORES_PER_WORKER=8 # max bandwidth @ >=8
+CORES_PER_WORKER=4 # max bandwidth @ >=8
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 # FIX: Solve for cheapest within constraints (in Bash?)
