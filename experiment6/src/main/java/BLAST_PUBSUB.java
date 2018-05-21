@@ -38,6 +38,8 @@ import com.google.api.services.pubsub.model.PullResponse;
 import com.google.api.services.pubsub.model.ReceivedMessage;
 import com.google.common.collect.Lists;
 
+import gov.nih.nlm.ncbi.blast.RID;
+
 public final class BLAST_PUBSUB  extends Thread
 {
     private final BLAST_STATUS status;
@@ -57,6 +59,7 @@ public final class BLAST_PUBSUB  extends Thread
         this.subscriptionName = PubSubUtils.getFullyQualifiedResourceName(
             PubSubUtils.ResourceType.SUBSCRIPTION, settings.project_id, settings.subscript_id );
 
+        RID.SetBucketName( settings.gs_status_bucket );
     }
 
     private Pubsub getClient()
@@ -152,8 +155,8 @@ public final class BLAST_PUBSUB  extends Thread
                                 System.out.println( "REQUEST from PUBSUB invalid" );
                                 ackMessage( ack );
 
-                                String gs_status_key = String.format( settings.gs_status_file, re.request.id );
-                                BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_error );
+                                RID rid = new RID( re.request.id );
+                                rid.SetStatus( gov.nih.nlm.ncbi.blast.Status.ERROR );
                             }
                             else
                             {

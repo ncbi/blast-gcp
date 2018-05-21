@@ -38,6 +38,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.rdd.RDD;
 
+import gov.nih.nlm.ncbi.blast.RID;
+
 class BLAST_JOB extends Thread
 {
     private final BLAST_SETTINGS settings;
@@ -61,6 +63,7 @@ class BLAST_JOB extends Thread
         this.status = a_status;
         running = new AtomicBoolean( false );
         entry = null;
+        RID.SetBucketName( settings.gs_status_bucket );
     }
 
     public void signal_done()
@@ -257,15 +260,14 @@ class BLAST_JOB extends Thread
                 BLAST_DATABASE blast_db = db.get( entry.request.db );
                 if ( blast_db != null )
                 {
-                    String gs_status_key = String.format( settings.gs_status_file, entry.request.id );
-                    BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_running );
+                    RID rid = new RID( entry.request.id );
+                    rid.SetStatus( gov.nih.nlm.ncbi.blast.Status.RUNNING );
 
                     long elapsed = handle_request( entry.request, blast_db );
                     status.after_request( elapsed );
                     System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
 
-                    gs_status_key = String.format( settings.gs_status_file, entry.request.id );
-                    BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_done );
+                    rid.SetStatus( gov.nih.nlm.ncbi.blast.Status.DONE );
 
                 }
                 else

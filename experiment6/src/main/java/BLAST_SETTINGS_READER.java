@@ -158,25 +158,13 @@ class STATUS_SETTINGS_READER
 {
     public static final String key = "status";
     public static final String key_gs_bucket = "bucket";
-    public static final String key_gs_file = "file";
-    public static final String key_gs_running = "running";
-    public static final String key_gs_done = "done";
-    public static final String key_gs_error = "error";
 
     public static final String  dflt_gs_bucket = "";
-    public static final String  dflt_gs_status_file = "status/%s/status.txt";
-    public static final String  dflt_gs_running = "RUNNING";
-    public static final String  dflt_gs_done = "DONE";
-    public static final String  dflt_gs_error = "ERROR";
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
         JsonObject obj = SE_UTILS.get_sub( root, key );
         settings.gs_status_bucket  = SE_UTILS.get_json_string( obj, key_gs_bucket, dflt_gs_bucket );
-        settings.gs_status_file    = SE_UTILS.get_json_string( obj, key_gs_file, dflt_gs_status_file );
-        settings.gs_status_running = SE_UTILS.get_json_string( obj, key_gs_running, dflt_gs_running );
-        settings.gs_status_done    = SE_UTILS.get_json_string( obj, key_gs_done, dflt_gs_done );
-        settings.gs_status_error   = SE_UTILS.get_json_string( obj, key_gs_error, dflt_gs_error );
     }
 }
 
