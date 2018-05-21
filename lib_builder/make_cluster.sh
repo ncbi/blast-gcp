@@ -3,15 +3,87 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+# Tunables
+NUM_CORES=32
+CORES_PER_WORKER=8 # max bandwidth @ >=8
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
-# Note: 100GB enough for NT
+# FIX: Solve for cheapest within constraints (in Bash?)
+
+NUM_WORKERS=$(((NUM_CORES - 1 + CORES_PER_WORKER) / CORES_PER_WORKER))
+# NT takes about 49GB, NR 116GB
+DB_SPACE=166
+DB_SPACE_PER_WORKER=$((DB_SPACE / NUM_WORKERS))
+
+# DataProc around 10GB?
+DISK_PER_WORKER=$((DB_SPACE_PER_WORKER+10))
+# FIX: Until we can guarantee DB pinning or implement LRU:
+DISK_PER_WORKER=$((DB_SPACE+10))
+
+# JVMS ~ 1GB per executor
+RAM_PER_WORKER=$(( (CORES_PER_WORKER+DB_SPACE_PER_WORKER)*1024 ))
+
+MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
+MAX_RAM=$((CORES_PER_WORKER * 6656)) # 1024 * 6.5
+
+if [[ "$RAM_PER_WORKER" -lt "$MIN_RAM" ]]; then
+    echo "RAM $RAM_PER_WORKER must be >= $MIN_RAM"
+    RAM_PER_WORKER=$MIN_RAM
+fi
+
+if [[ "$RAM_PER_WORKER" -gt "$MAX_RAM" ]]; then
+    echo "RAM $RAM_PER_WORKER must be <= $MAX_RAM"
+    RAM_PER_WORKER=$MAX_RAM
+fi
+
+WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
+
+PREEMPT_WORKERS=$((NUM_WORKERS - 2))
+
+echo "Requesting $NUM_WORKERS workers ($PREEMPT_WORKERS pre-emptible)"
+echo "  Each has $CORES_PER_WORKER cores"
+echo "  Each has $RAM_PER_WORKER MB RAM"
+echo "  Each has $DISK_PER_WORKER GB Persistent disk"
+
+gcloud beta dataproc --region us-east4 \
+    clusters create blast-dataproc-"$USER" \
+    --master-machine-type n1-standard-4 \
+        --master-boot-disk-size "$DISK_PER_WORKER" \
+    --num-workers 2 \
+        --worker-boot-disk-size "$DISK_PER_WORKER" \
+    --worker-machine-type "$WORKER" \
+    --num-preemptible-workers "$PREEMPT_WORKERS" \
+        --preemptible-worker-boot-disk-size "$DISK_PER_WORKER" \
+    --scopes cloud-platform \
+    --project ncbi-sandbox-blast \
+    --labels owner="$USER" \
+    --region us-east4 \
+    --zone   us-east4-b \
+    --max-age=8h \
+    --image-version 1.2 \
+    --initialization-action-timeout 30m \
+    --initialization-actions \
+    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
+    --tags blast-dataproc-"$USER-$(date +%Y%m%d-%H%M%S)" \
+    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
+
+exit 0
+
+
+
+# dataproc-3bd9289a... has 15 day deletion lifecycle
+
+# TODO: Scopes: storage-rw, pubsub, bigtable.admin.table, bigtabl.data,
+# devstorage.full_control,
+# gcloud dataproc clusters diagnose cluster-name
+#--single-node
+
+# Sizing and Pricing Notes
+# ------------------------
 # Larger nodes have faster network, and faster startup
 # Takes an n1-standard-32 about 11 minutes to copy 50GB NT
 # in parallel. No improvement seen by tar'ing them all up into one object to
 # download.
-#
-# FIX: nr is 196GB+
 #
 # IFF blast is memory bandwidth bound, n1-standard-8 appears to have similar
 # single core memory bandwidth as n1-standard-32. Will need to benchmark
@@ -87,33 +159,4 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # ~$15/hour for 56 node cluster
 # ~$21/hour for 16 X 64
 #    --worker-machine-type custom-64-71680 \
-gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-"$USER" \
-    --master-machine-type n1-standard-8 \
-        --master-boot-disk-size 100 \
-    --num-workers 2 \
-        --worker-boot-disk-size 100 \
-    --worker-machine-type n1-standard-32 \
-    --num-preemptible-workers 0 \
-        --preemptible-worker-boot-disk-size 100 \
-    --scopes cloud-platform \
-    --project ncbi-sandbox-blast \
-    --labels owner="$USER" \
-    --region us-east4 \
-    --zone   us-east4-b \
-    --max-age=8h \
-    --image-version 1.2 \
-    --initialization-action-timeout 30m \
-    --initialization-actions \
-    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
-    --tags blast-dataproc-"$USER-$(date +%Y%m%d-%H%M%S)" \
-    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
-
-# dataproc-3bd9289a... has 15 day deletion lifecycle
-
-# TODO: Scopes: storage-rw, pubsub, bigtable.admin.table, bigtabl.data,
-# devstorage.full_control,
-exit 0
-# gcloud dataproc clusters diagnose cluster-name
-#--single-node
 
