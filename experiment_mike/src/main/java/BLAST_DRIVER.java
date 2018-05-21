@@ -287,57 +287,68 @@ public final class BLAST_DRIVER implements Serializable {
         return joined;
     }
 
-    private static DataStreamWriter<Row> make_prelim_stream() {
-        System.out.println("making prelim_stream");
+    private static Dataset<Row> prelim_results(Dataset<Row> joined) {
+        StructType results_schema =
+            StructType.fromDDL(
+                    "protocol string, "
+                    + "RID string, "
+                    + "db_tag string, "
+                    + "top_N_prelim int, "
+                    + "top_N_traceback int, "
+                    + "query_seq string, "
+                    + "query_url string, "
+                    + "program string, "
+                    + "blast_params string, "
+                    + "StartTime timestamp, "
+                    + "db string, "
+                    + "partition_num string, "
+                    + "oid int, "
+                    + "max_score int, "
+                    + "hsp_blob string");
 
-        DataStreamReader query_stream = sparksession.readStream();
-        // Note: each line in text file becomes separate row in DataFrame
-        query_stream.option("maxFilesPerTrigger", settings.max_backlog);
-        Dataset<Row> queries = query_stream.text(settings.hdfs_source_dir);
-
-        System.out.print("queries schema is ");
-        queries.printSchema();
-        queries.createOrReplaceTempView("queries");
-
-        Dataset<Row> parsed = prelim_parsed(queries);
-        Dataset<Row> joined = prelim_joined(parsed);
+        ExpressionEncoder<Row> encoder = RowEncoder.apply(results_schema);
 
         String jni_log_level = settings.jni_log_level;
-        String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
-        String db_location = "/tmp/blast/db"; // settings.db_location;
-
+        String db_location = "/tmp/blast/db";
         Dataset<Row> prelim_search_results =
-            joined
-            .flatMap( // FIX: Make a functor
-                    (FlatMapFunction<Row, String>)
+            joined.flatMap( // FIX: Make a functor
+                    (FlatMapFunction<Row, Row>)
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
+                        logger.log(Level.DEBUG, "<row> is :" + inrow.mkString(":"));
 
+                        String protocol = inrow.getString(inrow.fieldIndex("protocol"));
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
                         logger.log(Level.DEBUG, "Flatmapped RID " + rid);
-                        String db = inrow.getString(inrow.fieldIndex("db"));
-                        int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
+                        String db_tag = inrow.getString(inrow.fieldIndex("db_tag"));
+                        int top_N_prelim = inrow.getInt(inrow.fieldIndex("top_N_prelim"));
+                        int top_N_traceback = inrow.getInt(inrow.fieldIndex("top_N_traceback"));
                         String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
-                        logger.log(
-                                Level.DEBUG,
-                                String.format("in flatmap %d %s", partition_num, db_location));
+                        String query_url = inrow.getString(inrow.fieldIndex("query_url"));
+                        String program = inrow.getString(inrow.fieldIndex("program"));
+                        String blast_params = inrow.getString(inrow.fieldIndex("blast_params"));
+                        Timestamp starttime = inrow.getTimestamp(inrow.fieldIndex("StartTime"));
+                        String db = inrow.getString(inrow.fieldIndex("db"));
 
+                        int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
+
+                        logger.log(Level.INFO, String.format("in flatmap %d", partition_num));
+
+                        // FIX: Preload here
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = rid;
                         requestobj.query_seq = query_seq;
                         requestobj.query_url = "";
-                        requestobj.db = db;
-                        requestobj.params = "blastn";
-                        requestobj.program = "blastn";
-                        requestobj.top_n = top_n;
+                        requestobj.db = db_tag;
+                        requestobj.params = blast_params;
+                        requestobj.program = program;
+                        requestobj.top_n = top_N_prelim;
                         BLAST_PARTITION partitionobj =
-                            new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
+                            new BLAST_PARTITION(db_location, db, partition_num, false);
 
                         BLAST_LIB blaster = new BLAST_LIB();
-                        // BLAST_LIB_SINGLETON.get_lib(partitionobj, settings_closure);
-                        logger.log(Level.DEBUG, "<row> is :" + inrow.mkString(":"));
 
-                        List<String> hsp_json;
+                        List<Row> hsp_rows;
                         if (blaster != null) {
                             BLAST_HSP_LIST[] search_res =
                                 blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
@@ -346,42 +357,55 @@ public final class BLAST_DRIVER implements Serializable {
                                     Level.INFO,
                                     String.format(" prelim returned %d hsps to Spark", search_res.length));
 
-                            hsp_json = new ArrayList<>(search_res.length);
+                            hsp_rows = new ArrayList<>(search_res.length);
                             for (BLAST_HSP_LIST S : search_res) {
                                 byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
                                 String b64blob = new String(encoded, StandardCharsets.UTF_8);
-                                JSONObject json = new JSONObject();
-                                json.put("RID", rid);
-                                json.put("db", db);
-                                json.put("partition_num", partition_num);
-                                json.put("oid", S.oid);
-                                json.put("max_score", S.max_score);
-                                json.put("query_seq", query_seq);
-                                json.put("hsp_blob", b64blob);
 
-                                hsp_json.add(json.toString());
+                                Row outrow =
+                                    RowFactory.create(
+                                            protocol,
+                                            rid,
+                                            db_tag,
+                                            top_N_prelim,
+                                            top_N_traceback,
+                                            query_seq,
+                                            query_url,
+                                            program,
+                                            blast_params,
+                                            starttime,
+                                            partition_num,
+                                            S.oid,
+                                            S.max_score,
+                                            b64blob);
+
+                                hsp_rows.add(outrow);
+
+                                logger.log(Level.INFO, "outrow is " + outrow.mkString(":"));
+
                                 // logger.log(Level.INFO, "json is " + json.toString());
                             }
                             logger.log(
-                                    Level.INFO, String.format("hsp_json has %d entries", hsp_json.size()));
+                                    Level.INFO, String.format("hsp_rows has %d entries", hsp_rows.size()));
                         } else {
                             logger.log(Level.ERROR, "NULL blaster library");
-                            hsp_json = new ArrayList<>();
-                            hsp_json.add("null blaster ");
+                            hsp_rows = new ArrayList<>();
+                            Row outrow = RowFactory.create("null blaster", "null blaster");
+                            hsp_rows.add(outrow);
                         }
-                        return hsp_json.iterator();
+                        return hsp_rows.iterator();
                     },
-                          Encoders.STRING())
-                              .toDF("hsp_json");
+                          encoder); // flastmap
 
         prelim_search_results.explain(true);
-        // prelim_search_results.createOrReplaceTempView("prelim_search_results");
-        // Don't use coalesce here, it'll group previous work onto one worker
-        Dataset<Row> prelim_search_1 = prelim_search_results.repartition(1);
-        // FIX: Partition by RID, which is in JSON string at the moment
+        prelim_search_results.createOrReplaceTempView("prelim_search_results");
 
-        DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
+        return prelim_search_results;
+    }
 
+    private static DataStreamWriter<Row> topn_dsw(DataStreamWriter<Row> prelim_dsw) {
+        int top_n = 100; // FIX
+        String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
         DataStreamWriter<Row> topn_dsw =
             prelim_dsw
             .foreach( // FIX: Make a separate function
@@ -528,7 +552,35 @@ public final class BLAST_DRIVER implements Serializable {
         ) // foreach
             .outputMode("update");
 
+        return topn_dsw;
+    }
+
+    private static DataStreamWriter<Row> make_prelim_stream() {
+        System.out.println("making prelim_stream");
+
+        DataStreamReader query_stream = sparksession.readStream();
+        // Note: each line in text file becomes separate row in DataFrame
+        query_stream.option("maxFilesPerTrigger", settings.max_backlog);
+        Dataset<Row> queries = query_stream.text(settings.hdfs_source_dir);
+
+        System.out.print("queries schema is ");
+        queries.printSchema();
+        queries.createOrReplaceTempView("queries");
+
+        Dataset<Row> parsed = prelim_parsed(queries);
+        Dataset<Row> joined = prelim_joined(parsed);
+        Dataset<Row> results = prelim_results(joined);
+
+        // Don't use coalesce here, it'll group previous work onto one worker
+        Dataset<Row> prelim_search_1 = results.repartition(1);
+        // FIX: Partition by RID, which is in JSON string at the moment
+
+        DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
+
+        DataStreamWriter<Row> topn_dsw = topn_dsw(prelim_dsw);
+
         System.out.println("made  prelim_stream\n");
+
         return topn_dsw;
     }
 
