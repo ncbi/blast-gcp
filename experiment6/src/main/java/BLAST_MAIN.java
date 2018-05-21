@@ -26,69 +26,141 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Console;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 
 public final class BLAST_MAIN
 {
-    private static void read_console( Integer sleeptime_ms, BLAST_DRIVER driver )
+    public static void main( String[] args ) throws Exception
     {
-        Console cons = System.console();
-        boolean running = true;
-
-        while( running && cons != null )
-        {
-            String line = cons.readLine().trim();
-            if ( !line.isEmpty() )
-                running = driver.handle_line( line );
-            else if ( running )
-            {
-                try
-                {
-                    Thread.sleep( sleeptime_ms );
-                }
-                catch ( InterruptedException e )
-                {
-                }
-            }
-        }
-    }
-
-   public static void main( String[] args ) throws Exception
-   {
         if ( args.length < 1 )
             System.out.println( "settings json-file missing" );
         else
         {
-            final String appName = BLAST_MAIN.class.getSimpleName();
             String ini_path = args[ 0 ];
+            final String appName = BLAST_MAIN.class.getSimpleName();
             BLAST_SETTINGS settings = BLAST_SETTINGS_READER.read_from_json( ini_path, appName );
+
             System.out.println( String.format( "settings read from '%s'", ini_path ) );
             if ( !settings.valid() )
                 System.out.println( settings.missing() );
             else
             {
+                // print the settings before initializing everything
                 System.out.println( settings.toString() );
 
-                List< String > files_to_transfer = new ArrayList<>();
-                files_to_transfer.add( "libblastjni.so" );
-                
-                BLAST_DRIVER driver = new BLAST_DRIVER( settings, files_to_transfer );
-                driver.start();
+                // let the BLAST_SETTINGS_READER create the spark-configuration based on the settings
+                SparkConf conf = BLAST_SETTINGS_READER.configure( settings );
+
+                // create the spark-context and adjust some properties
+                JavaSparkContext sc = new JavaSparkContext( conf );
+                sc.setLogLevel( settings.spark_log_level );
+                for ( String fn : settings.transfer_files )
+                    sc.addFile( fn );
+
+                // create the global status to track REQUESTS and timing
+                BLAST_STATUS status = new BLAST_STATUS( settings );
+
+                BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
+
+                // reader thread for console commands
+                BLAST_CONSOLE cons = new BLAST_CONSOLE( status, settings, 200 );
+                cons.start();
+
+                // reader-writer thread for communication-port
+                BLAST_COMM comm = new BLAST_COMM( status, settings );
+                comm.start();
+
+                // reader for pubsub
+                BLAST_PUBSUB pubsub = null;
+                if ( settings.use_pubsub_source )
+                {
+                    pubsub = new BLAST_PUBSUB( status, settings, 200 );
+                    pubsub.start();
+                }
+
+                Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
                 try
                 {
-                    read_console( 100, driver );
-                    driver.join();
+                    BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, SETTINGS, sc, nodes );
+
+                    BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db_map, status );
+
+                    System.out.println( "spark-blast started..." );
+
+                    while( status.is_running() )
+                    {
+                        try
+                        {
+                            String cmd = status.get_cmd();
+                            if ( cmd != null )
+                            {
+                                if ( cmd.startsWith( "J" ) )
+                                    jobs.set( cmd.substring( 1 ) );
+                                else if ( cmd.equals( "exit" ) )
+                                    status.stop();
+                                else if ( cmd.startsWith( "R" ) )
+                                {
+                                    if ( status.can_take() > 0 )
+                                    {
+                                        REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string( cmd.substring( 1 ), settings.top_n );
+                                        if ( re == null )
+                                            System.out.println( "REQUEST invalid" );
+                                        else
+                                        {
+                                            if ( !status.add_request( re ) )
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
+                                            }
+                                            else
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
+                                            }
+                                        }
+                                    }
+                                }
+                                else if ( cmd.startsWith( "F" ) )
+                                {
+                                    if ( status.can_take() > 0 )
+                                    {
+                                        REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_file( cmd.substring( 1 ), settings.top_n );
+                                        if ( re == null )
+                                            System.out.println( "REQUEST invalid" );
+                                        else
+                                        {
+                                            if ( !status.add_request( re ) )
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
+                                            }
+                                            else
+                                            {
+                                                System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                                Thread.sleep( 250 );
+                        }
+                        catch ( InterruptedException e )
+                        {
+                        }
+                    }
+
+                    jobs.stop_all_jobs();
+                    comm.join();
+                    cons.join();
+
+                    if ( settings.use_pubsub_source && pubsub != null )
+                        pubsub.join();
+
+                    System.out.println( "spark-blast done..." );
                 }
-                catch ( InterruptedException e1 )
+                catch( Exception e )
                 {
-                    System.out.println( String.format( "driver interrupted: %s", e1 ) );
-                }
-                catch( Exception e2 )
-                {
-                    System.out.println( String.format( "stopping driver: %s", e2 ) );
+                    System.out.println( String.format( "BLAST_MAIN : %s", e ) );
                 }
             }
         }

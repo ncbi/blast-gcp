@@ -27,6 +27,7 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class BLAST_SETTINGS implements Serializable
 {
@@ -36,19 +37,12 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean use_pubsub_source;
     public String project_id;
     public String subscript_id;
-    public Boolean use_socket_source;
-    public String trigger_host;
-    public Integer trigger_port;
     public Boolean use_hdfs_source;    
     public String hdfs_source_dir;
-    public Integer receiver_max_rate;
+    public Integer max_backlog;
 
     /* DB */
-    public String db_location;
-    public String db_pattern;
-    public String db_bucket;
-    public Boolean flat_db_layout;
-    public Integer num_db_partitions;
+    BLAST_DB_SETTINGS db_list;
 
     /* BLASTJNI */
     public Integer top_n;
@@ -68,8 +62,8 @@ public class BLAST_SETTINGS implements Serializable
     public String gs_status_error;
 
     /* SPARK */
+    public List< String > transfer_files;
     public String  spark_log_level;
-    public Integer batch_duration;
     public String  locality_wait;
     public Boolean with_locality;
     public Boolean with_dyn_alloc;
@@ -78,31 +72,22 @@ public class BLAST_SETTINGS implements Serializable
     public String  executor_memory;
     public Boolean shuffle_reduceLocality_enabled;
     public Boolean scheduler_fair;
+    public Integer parallel_jobs;
+    public Integer comm_port;
 
     /* LOG */
-    public String log_host;
-    public Integer log_port;
-    public Boolean log_request;
-    public Boolean log_job_start;
-    public Boolean log_job_done;
-    public Boolean log_cutoff;
-    public Boolean log_final;
-    public Boolean log_part_prep;
-    public Boolean log_worker_shift;
-    public Boolean log_pref_loc;
-    public Boolean log_db_copy;
+    BLAST_LOG_SETTING log;
+
+    public BLAST_SETTINGS()
+    {
+        db_list = new BLAST_DB_SETTINGS();
+        log = new BLAST_LOG_SETTING();
+    }
 
     public Boolean src_pubsub_valid()
     {
         if ( use_pubsub_source )
             return !project_id.isEmpty() &&  !subscript_id.isEmpty();
-        return false;
-    }
-
-    public Boolean src_socket_valid()
-    {
-        if ( use_socket_source )
-            return !trigger_host.isEmpty() && trigger_port > 0;
         return false;
     }
 
@@ -115,13 +100,12 @@ public class BLAST_SETTINGS implements Serializable
 
     public Boolean src_valid()
     {
-        return src_pubsub_valid() || src_socket_valid() || src_hdfs_valid();
+        return src_pubsub_valid() || src_hdfs_valid();
     }
 
     public Boolean valid()
     {
-        if ( db_bucket.isEmpty() ) return false;
-        if ( num_db_partitions == 0 ) return false;
+        if ( !db_list.valid() ) return false;
         if ( top_n == 0 ) return false;
 
         if ( !src_valid() ) return false;
@@ -133,12 +117,10 @@ public class BLAST_SETTINGS implements Serializable
 
     public String missing()
     {
-        String S = "";
-        if ( db_bucket.isEmpty() ) S = S + "db_bucket is missing\n";
-        if ( num_db_partitions == 0 ) S = S + "num_db_partitions is 0\n";
+        String S = db_list.missing();
         if ( top_n == 0 ) S = S + "top_n is 0\n";
 
-        if ( !use_pubsub_source && !use_socket_source && !use_hdfs_source )
+        if ( !use_pubsub_source && !use_hdfs_source )
             S = S + "no source is defined";
         else
         {
@@ -146,11 +128,6 @@ public class BLAST_SETTINGS implements Serializable
             {
                 if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
                 if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
-            }
-            if ( use_socket_source && !src_socket_valid() ) 
-            {
-                if ( trigger_host.isEmpty() ) S = S + "trigger-host is missing\n";
-                if ( trigger_port < 1 ) S = S + "trigger-port is invalid\n";
             }
             if ( use_hdfs_source && !src_hdfs_valid() ) 
             {
@@ -168,18 +145,11 @@ public class BLAST_SETTINGS implements Serializable
         String S = "SOURCE:\n";
         if ( use_pubsub_source )
             S = S + String.format( "\tpubsub-subscript ... '%s' : '%s'\n", project_id, subscript_id );
-        if ( use_socket_source )
-            S = S + String.format( "\ttrigger_host ....... %s:%d\n", trigger_host, trigger_port );
         if ( use_hdfs_source )
             S = S + String.format( "\tHDFS-dir ........... '%s'\n", hdfs_source_dir );
-        S = S + String.format( "\trec. max. rate ..... %d per second\n", receiver_max_rate );
+        S = S + String.format( "\tmax. backlog ........... %d requests\n", max_backlog );
 
-        S = S + "\nDB:\n";
-        S = S + String.format( "\tdb_location ........ '%s'\n", db_location );
-        S = S + String.format( "\tdb_pattern ......... '%s'\n", db_pattern );
-        S = S + String.format( "\tdb_bucket .......... '%s'\n", db_bucket );
-        S = S + String.format( "\tflat db layout...... %s\n", Boolean.toString( flat_db_layout ) );
-        S = S + String.format( "\tnum_db_partitions .. %d\n", num_db_partitions );
+        S = S + "\nDB:\n" + db_list.toString();
 
         S = S + "\nBLASTJNI:\n";
         S = S + String.format( "\tdflt top_n ......... %d\n", top_n );
@@ -194,31 +164,20 @@ public class BLAST_SETTINGS implements Serializable
 
         S = S + "\nSPARK:\n";
         S = S + String.format( "\tappName ............ '%s'\n", appName );
+        S = S + String.format( "\ttransfer files ..... %s\n", transfer_files );
         S = S + String.format( "\tspark log level .... '%s'\n", spark_log_level );
-        S = S + String.format( "\tbatch_duration ..... %d seconds\n", batch_duration );
         S = S + String.format( "\tlocality.wait ...... %s\n", locality_wait );
         S = S + String.format( "\twith_locality ...... %s\n", Boolean.toString( with_locality ) );
         S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
         S = S + String.format( "\texecutors .......... %d ( %d cores )\n", num_executors, num_executor_cores );
         S = S + String.format( "\treduce_loc_enabled . %s\n", Boolean.toString( shuffle_reduceLocality_enabled ) );
         S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
+        S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
+        S = S + String.format( "\tcommunication port . %d\n", comm_port );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
 
-        S = S + "\nLOG:\n";
-        S = S + String.format( "\tlog_host ........... %s:%d\n", log_host, log_port );
-        String S_log = "";
-        if ( log_request )   S_log = S_log + "request ";
-        if ( log_job_start ) S_log = S_log + "job_start ";
-        if ( log_job_done )  S_log = S_log + "job_done ";
-        if ( log_cutoff )    S_log = S_log + "cutoff ";
-        if ( log_final )     S_log = S_log + "final ";
-        if ( log_part_prep )     S_log = S_log + "part-prep ";
-        if ( log_worker_shift )  S_log = S_log + "worker-shift ";
-        if ( log_pref_loc )  S_log = S_log + "pref_log ";
-        if ( log_db_copy )   S_log = S_log + "db-copy ";
-
-        S = S + String.format( "\tlog ................ %s\n", S_log );
+        S = S + log.toString();
         return S;
     }
  

@@ -1,24 +1,26 @@
-echo ' { "RID": "sample", "db": "nt", "query": "ATAGGAAGTTATATTAAGGGTTCCGGATCTGGATC" } ' > sample.json
-hadoop fs -copyFromLocal -f sample.json /user/vartanianmh/sample.json
-echo ' { "RID": "AJH8UEM5014", "db": "nt", "query": "ATAGGAAGTTATATTAAGGGTTCCGGATCTGGATC" } ' > sample.json
+#!/bin/bash
+hadoop fs -rm -f \
+    /user/"$USER"/requests/*json \
+    /user/"$USER"/results/hsps/* \
+    /user/"$USER"/results/*
+hadoop fs -mkdir -p /user/"$USER"/requests/
+hadoop fs -mkdir -p /user/"$USER"/results/hsps
+hadoop fs -ls -R /user/"$USER"
 
-hadoop fs -rm -f -R /user/vartanianmh/requests/
-#hadoop fs -rmdir /user/vartanianmh/requests/
-hadoop fs -mkdir -p /user/vartanianmh/requests/
-
-for x in "test1" "test2" "test3" "test4" "test5"; do
-    echo ' { "RID":  "' $x '", "db": "nt", "query": "ATAGGAAGTTATATTAAGGGTTCCGGATCTGGATC" } ' > test$x.json
-    hadoop fs -copyFromLocal -f test$x.json /user/vartanianmh/requests/
-    rm -f test$x.json
+for I in $(seq 100); do
+    x="test$RANDOM"
+    echo "Test is $x"
+    TS=$(date +%Y-%m-%dT%H:%M:%S.%N)
+    query=$(grep  -h "TA[ACG]" ../tests/queries/* |sort -R | head -1)
+    echo -n "{ " > $x.json
+    echo -n "\"timestamp_hdfs\":\"$TS\", " >> $x.json
+    echo -n "\"RID\":\"$x\", " >> $x.json
+    echo -n "\"db\":\"nt\", " >> $x.json
+    echo "\"query_seq\": $query }" >> $x.json
+    cat $x.json
 done
+hadoop fs -copyFromLocal -f test*.json /user/"$USER"/requests/
+rm -f test*.json
 
-hadoop fs -ls /user/vartanianmh/requests/
+hadoop fs -ls /user/"$USER"/requests/
 
-rm -f parts.json
-for x in $(seq 1 886); do
-    num=`printf "%02d" $x`
-    part=`printf "nt_50M.%02d" $x`
-    echo '{ "db" : "nt", "num" : "' $num '", "part": "' $part '" }' >> parts.json
-done
-
-hadoop fs -copyFromLocal -f parts.json /user/vartanianmh/parts.json

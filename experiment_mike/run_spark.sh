@@ -11,7 +11,7 @@
 # on the master-node: 'hadoop fs -ls results' to see produced rdd's
 #
 
-SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
+SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_DRIVER"
 SPARK_BLAST_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 SPARK_BLAST_INI="ini.json"
 
@@ -20,6 +20,13 @@ SPARK_BLAST_INI="ini.json"
 #   --num-executers X   : X should match the number or worker-nodes
 #   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
 #
+
+hadoop fs -rm -f \
+    /user/"$USER"/requests/*json \
+    /user/"$USER"/results/hsps/* \
+    /user/"$USER"/results/*
+hadoop fs -mkdir -p /user/"$USER"/requests/
+hadoop fs -mkdir -p /user/"$USER"/results/hsps
 
 spark-submit --master yarn --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI
 

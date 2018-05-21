@@ -53,7 +53,7 @@ class BLAST_TB_LIST_LIST implements Serializable
     {
         ArrayList< BLAST_TB_LIST > res = new ArrayList<>();
 
-        int top_n = list1.get( 0 ).req.top_n;
+        int top_n = list1.get( 0 ).top_n;
 
         int s1 = list1.size();
         int s2 = list2.size();
