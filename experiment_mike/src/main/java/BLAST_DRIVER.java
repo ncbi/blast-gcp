@@ -73,7 +73,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db";
+    private final String db_location = "/tmp/blast/db2";
 
     public void BLAST_DRIVER() {}
 
@@ -288,7 +288,7 @@ public final class BLAST_DRIVER implements Serializable {
         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
         String selector = db_tag.substring(0, 2);
         logger.log(Level.INFO, "selector is " + selector);
-        logger.log(Level.INFO, "dbsettings is " + dbsettings.toString());
+        // logger.log(Level.INFO, "dbsettings is " + dbsettings.toString());
 
         BLAST_DB_SETTING dbs = dbsettings.get(selector);
         String bucket = "gs://" + dbs.bucket;
@@ -299,6 +299,8 @@ public final class BLAST_DRIVER implements Serializable {
             File donefile = new File(dest + ".done");
             int loops = 0;
             while (!donefile.exists()) {
+                new File(db_location).mkdirs(); // In case first time
+
                 File lockdir = new File(dest + ".lockdir");
                 if (lockdir.mkdir()) // Try to lock
                 {
@@ -383,6 +385,10 @@ public final class BLAST_DRIVER implements Serializable {
 
                         logger.log(Level.INFO, String.format("in flatmap %d", partition_num));
 
+                        String selector = db_tag.substring(0, 2);
+                        BLAST_DB_SETTING dbs = dbsettings.get(selector);
+                        String pattern = dbs.pattern; // nt_50M
+
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = rid;
                         requestobj.query_seq = query_seq;
@@ -393,9 +399,9 @@ public final class BLAST_DRIVER implements Serializable {
                         requestobj.program = program;
                         requestobj.top_n = top_N_prelim;
                         BLAST_PARTITION partitionobj =
-                            new BLAST_PARTITION(db_location, db, partition_num, true);
+                            new BLAST_PARTITION(db_location, pattern, partition_num, true);
                         logger.log(Level.INFO, "PARTOBJ is " + partitionobj.toString());
-                        // FIX: Preload here
+
                         preload(db_tag, partition_num);
 
                         BLAST_LIB blaster = new BLAST_LIB();
