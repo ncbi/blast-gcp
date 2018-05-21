@@ -195,7 +195,7 @@ public final class BLAST_DRIVER implements Serializable {
 
         blast_partitions.show();
         blast_partitions.createOrReplaceTempView("blast_partitions");
-        System.out.println("blast_partitions is: " + Arrays.toString(blast_partitions.inputFiles()));
+        //System.out.println("blast_partitions is: " + Arrays.toString(blast_partitions.inputFiles()));
 
         return true;
     }
@@ -267,10 +267,10 @@ public final class BLAST_DRIVER implements Serializable {
     private static Dataset<Row> prelim_joined(Dataset<Row> parsed) {
         Dataset<Row> joined =
             sparksession.sql(
-                    "select RID, db_tag, partition_num, "
+                    "select RID, " //parsed.db_tag, partition_num, "
                     + "query_seq, StartTime"
                     + "from parsed, blast_partitions "
-                    + "where parsed.db_tag=blast_partitions.db "
+                    + "where substr(parsed.db_tag,0,2)=blast_partitions.db "
                     + "distribute by partition_num");
         joined.createOrReplaceTempView("joined");
         System.out.print("joined schema is ");
@@ -308,7 +308,6 @@ public final class BLAST_DRIVER implements Serializable {
         query_stream.schema(queries_schema);
         Dataset<Row> queries = query_stream.json(settings.hdfs_source_dir);
         */
-        query_stream.option("includeTimestamp", true);
         Dataset<Row> queries = query_stream.text(settings.hdfs_source_dir);
 
         System.out.print("queries schema is ");

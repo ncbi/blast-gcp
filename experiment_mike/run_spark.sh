@@ -21,8 +21,8 @@ SPARK_BLAST_INI="ini.json"
 #   --executor-cores Y  : Y should match the number of vCPU's per worker-node 
 #
 
+#    /user/"$USER"/requests/*json \
 hadoop fs -rm -f \
-    /user/"$USER"/requests/*json \
     /user/"$USER"/results/hsps/* \
     /user/"$USER"/results/*
 hadoop fs -mkdir -p /user/"$USER"/requests/
