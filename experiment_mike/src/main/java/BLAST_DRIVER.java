@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -60,7 +61,6 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
-import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 import org.json.JSONObject;
@@ -195,7 +195,7 @@ public final class BLAST_DRIVER implements Serializable {
 
         blast_partitions.show();
         blast_partitions.createOrReplaceTempView("blast_partitions");
-        //System.out.println("blast_partitions is: " + Arrays.toString(blast_partitions.inputFiles()));
+        // System.out.println("blast_partitions is: " + Arrays.toString(blast_partitions.inputFiles()));
 
         return true;
     }
@@ -204,59 +204,69 @@ public final class BLAST_DRIVER implements Serializable {
         System.out.print("queries schema is ");
         queries.printSchema();
 
-        StructType parsed_schema = new StructType();
-        parsed_schema = parsed_schema.add("protocol", "string", false);
-        parsed_schema = parsed_schema.add("RID", DataTypes.StringType, false);
-        parsed_schema = parsed_schema.add("db_tag", DataTypes.StringType, false);
-        parsed_schema = parsed_schema.add("top_N_prelim", DataTypes.IntegerType, false);
-        parsed_schema = parsed_schema.add("top_N_traceback", DataTypes.IntegerType, false);
-        parsed_schema = parsed_schema.add("query_seq", DataTypes.StringType, false);
-        parsed_schema = parsed_schema.add("query_url", DataTypes.StringType, false);
-        parsed_schema = parsed_schema.add("program", DataTypes.StringType, false);
-        parsed_schema = parsed_schema.add("blast_params", DataTypes.StringType, false);
-        parsed_schema = parsed_schema.add("StartTime", DataTypes.TimestampType, false);
-        /*
-           StructType parsed_schema=StructType.fromDDL(
-           "protocol string, "
-           + "RID string, "
-           + "db_tag string, "
-           + // nt_50M.20180502_1
-        // volumes // optional for filtering by tax-id
-        "top_N_prelim int, "
-        + "top_N_traceback int, "
-        + "query_seq string, "
-        + "query_url string, "
-        + "program string, "
-        + "blast_params string, "
-        + "StartTime timestamp");
-        */
+        StructType parsed_schema =
+            StructType.fromDDL(
+                    "protocol string, "
+                    + "RID string, "
+                    + "db_tag string, "
+                    + "top_N_prelim int, "
+                    + "top_N_traceback int, "
+                    + "query_seq string, "
+                    + "query_url string, "
+                    + "program string, "
+                    + "blast_params string, "
+                    + "StartTime timestamp");
+
         ExpressionEncoder<Row> encoder = RowEncoder.apply(parsed_schema);
 
         Dataset<Row> parsed =
             queries.map(
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-
                         // single column of "value"
                         String value = inrow.getString(inrow.fieldIndex("value"));
                         logger.log(Level.INFO, "value is " + value);
 
-                        Row outrow =
-                            RowFactory.create(
-                                    "protocol",
-                                    "RID",
-                                    "db_tag",
-                                    new Integer(3),
-                                    new Integer(4),
-                                    "query_seq",
-                                    "query_url",
-                                    "program",
-                                    "blast_params",
-                                    "timest");
+                        JSONObject json = new JSONObject(value);
+                        logger.log(Level.INFO, "JSON was " + json.toString(2));
+                        String protocol = json.getString("protocol");
+                        if (protocol.equals("1.0")) {
+                            String rid = json.getString("RID");
+                            String db_tag = json.getString("db_tag");
+                            Integer top_N_prelim = json.getInt("top_N_prelim");
+                            Integer top_N_traceback = json.getInt("top_N_traceback");
+                            String query_seq = json.getString("query_seq");
+                            String query_url = json.getString("query_url");
+                            String program = json.getString("program");
+                            JSONObject blast_params = json.getJSONObject("blast_params");
+                            String blast_params_str = blast_params.toString();
 
-                        return outrow;
-                    },
-                          encoder);
+                            String starttime = json.getString("StartTime");
+                            Timestamp ts = new Timestamp(System.currentTimeMillis());
+
+                            Row outrow =
+                                RowFactory.create(
+                                        protocol,
+                                        rid,
+                                        db_tag,
+                                        top_N_prelim,
+                                        top_N_traceback,
+                                        query_seq,
+                                        query_url,
+                                        program,
+                                        blast_params_str,
+                                        ts);
+
+                            logger.log(Level.INFO, "outrow is " + outrow.mkString(":"));
+
+                            return outrow;
+                        } else {
+                            logger.log(Level.ERROR, "Unknown protocol:" + protocol);
+                            Row outrow = RowFactory.create(protocol, "ERROR");
+                            return outrow;
+                        }
+                    }, // mapfunc
+                          encoder); // map
 
         System.out.print("parsed schema is ");
         parsed.printSchema();
@@ -267,8 +277,7 @@ public final class BLAST_DRIVER implements Serializable {
     private static Dataset<Row> prelim_joined(Dataset<Row> parsed) {
         Dataset<Row> joined =
             sparksession.sql(
-                    "select RID, " //parsed.db_tag, partition_num, "
-                    + "query_seq, StartTime"
+                    "select * "
                     + "from parsed, blast_partitions "
                     + "where substr(parsed.db_tag,0,2)=blast_partitions.db "
                     + "distribute by partition_num");
@@ -282,32 +291,8 @@ public final class BLAST_DRIVER implements Serializable {
         System.out.println("making prelim_stream");
 
         DataStreamReader query_stream = sparksession.readStream();
-        /*
-           StructType queries_schema =
-        // StructType.fromDDL("RID string, db string, query_seq string, timestamp_hdfs string");
-        StructType.fromDDL(
-        "protocol string, "
-        + "RID string, "
-        + "db_tag string, "
-        + // nt_50M.20180502_1
-        // volumes // optional for filtering by tax-id
-        "top_N_prelim int, "
-        + "top_N_traceback int, "
-        + "query_seq string, "
-        + "query_url string, "
-        + "program string, "
-        + "blast_params string, "
-        + "StartTime timestamp");
-
-        query_stream.format("json");
-        query_stream.format("textfile");
+        // Note: each line in text file becomes separate row in DataFrame
         query_stream.option("maxFilesPerTrigger", settings.max_backlog);
-        query_stream.option("multiLine", true);
-        query_stream.option("mode", "FAILFAST");
-        query_stream.option("includeTimestamp", true);
-        query_stream.schema(queries_schema);
-        Dataset<Row> queries = query_stream.json(settings.hdfs_source_dir);
-        */
         Dataset<Row> queries = query_stream.text(settings.hdfs_source_dir);
 
         System.out.print("queries schema is ");
@@ -317,7 +302,6 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> parsed = prelim_parsed(queries);
         Dataset<Row> joined = prelim_joined(parsed);
 
-        Integer top_n = settings.top_n;
         String jni_log_level = settings.jni_log_level;
         String hsp_result_dir = settings.hdfs_result_dir + "/hsps";
         String db_location = "/tmp/blast/db"; // settings.db_location;

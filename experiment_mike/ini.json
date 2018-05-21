@@ -41,8 +41,7 @@
                 "num_locations" : 1
             }
         ],
-        "jni_log_level": "DEBUG",
-        "top_n" : 100
+        "jni_log_level": "DEBUG"
     },
 
     "result" :

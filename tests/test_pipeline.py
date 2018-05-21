@@ -161,7 +161,6 @@ def get_tests():
 
             j['query_seq'] = ''
             j['query_url'] = url
-            #print(json.dumps(j, indent=4, sort_keys=True))
 
         TESTS[j['RID']] = j
     print("Loaded " + str(len(TESTS)) + " tests")
@@ -188,7 +187,7 @@ def submit_thread():
             print(TESTS[test])
             publish(TESTS[test])
             fout=open(TESTS[test]['RID']+".json","w")
-            fout.write(json.dumps(TESTS[test], indent=4, sort_keys=True))
+            fout.write(json.dumps(TESTS[test], sort_keys=True))
             fout.close()
             progress(submit="  Submitted " + TESTS[test]['RID'])
         progress(submit="Waiting %f" % ramp)
