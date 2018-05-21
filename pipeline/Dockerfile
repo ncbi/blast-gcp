@@ -28,8 +28,15 @@ COPY ./ ./
 #COPY sparkblast-1-jar-with-dependencies.jar \
 #        sparkblast-1-jar-with-dependencies.jar
 
-ENTRYPOINT [ "gcloud", "dataproc", "jobs", "submit", "spark", \
-      "--cluster", "$CLUSTER_GOES_HERE", \
-      "--jar", "sparkblast-1-jar-with-dependencies.jar", \
-      "ini.json" ]
 
+# --project
+# --pubsub subcriuption
+# --asn_bucket
+# --status bucket
+#ENTRYPOINT [ "gcloud", "dataproc", "jobs", "submit", "spark", \
+#      "--cluster", "$CLUSTER_GOES_HERE", \
+#      "--jar", "sparkblast-1-jar-with-dependencies.jar", \
+#      "ini.json" ]
+
+# Args are: PROJECT PUBSUB ASNBUCKET RESULTBUCKET CLUSTER
+ENTRYPOINT [ "run_spark_docker.sh" ]
