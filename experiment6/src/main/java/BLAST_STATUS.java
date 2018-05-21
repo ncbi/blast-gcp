@@ -142,7 +142,7 @@ class BLAST_STATUS
         if ( is_a_running_id( re.request.id ) )
         {
             if ( jobs != null )
-                update_ack( re );
+                jobs.update_ack( re );
         }
         else if ( request_q.contains( re ) )
         {
