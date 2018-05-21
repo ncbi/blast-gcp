@@ -25,8 +25,6 @@
  */
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.util.Map;
 import java.util.List;
 import java.util.LinkedList;
@@ -37,6 +35,8 @@ import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
+
+import com.google.cloud.storage.Bucket;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -52,21 +52,17 @@ import java.security.GeneralSecurityException;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.spark.SparkFiles;
-
-
 class PART_INST
 {
-    public Integer part_id;
+    public Integer part_nr;
+    public String db_key;
     public Long size;
     public Boolean prepared;
 
-    public PART_INST( final BLAST_PARTITION part )
+    public PART_INST( final BLAST_DATABASE_PART part )
     {
-        part_id = part.nr;
+        part_nr = part.nr;
+        db_key = part.db_key;
         size = 0L;
         prepared = false;
     }
@@ -82,65 +78,48 @@ class PART_INST
             Collection<String> scopes = StorageScopes.all();
             credential = credential.createScoped( scopes );
         }
-        return new Storage.Builder( transport, jsonFactory, credential )
-            .setApplicationName("BLASTJNI")
-            .build();
+        return new Storage.Builder( transport, jsonFactory, credential ).build();
     }
 
 
-    public Boolean prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
-
+    public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
     {
-        Logger logger = LogManager.getLogger(BLAST_LIB_SINGLETON.class);
-        logger.log(Level.INFO, "in prepare");
-
+/*
         Boolean res = false;
         try
         {
-            List< String > extensions = new LinkedList<>();
-            extensions.add( "nax" );
-            extensions.add( "nhr" );
-            extensions.add( "nin" );
-            extensions.add( "nnd" );
-            extensions.add( "nni" );
-            extensions.add( "nog" );
-            extensions.add( "nsd" );
-            extensions.add( "nsi" );
-            extensions.add( "nsq" );
-
-
             List< String > obj_names = new LinkedList<>();
-            for ( String ext : extensions )
+            for ( String ext : db_setting.extensions )
             {
                 String fn = String.format( "%s.%s", part.db_spec, ext );
                 File f = new File( fn );
-                if ( !f.exists() || ( f.length() == 0 ) )
+                if ( ( !f.exists() ) || ( f.length() == 0 ) )
                     obj_names.add( String.format( "%s.%s", part.name, ext ) );
             }
             if ( !obj_names.isEmpty() )
             {
                 Storage storage = buildStorageService();
-                if (storage == null) logger.log(Level.ERROR,"null storage");
                 for ( String obj_name : obj_names )
                 {
-                    Storage.Objects.Get obj = storage.objects().get( settings.db_bucket, obj_name );
+                    Storage.Objects.Get obj = storage.objects().get( db_setting.bucket, obj_name );
                     if ( obj != null )
                     {
                         obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
                         String dst_path, dst_fn;
 
-                        if ( settings.flat_db_layout )
-                            dst_path = settings.db_location;
+                        if ( db_setting.flat_layout )
+                            dst_path = db_setting.location;
                         else
-                            dst_path = String.format( "%s/%s", settings.db_location, part.name );
+                            dst_path = String.format( "%s/%s", db_setting.location, part.name );
+
                         dst_fn = String.format( "%s/%s", dst_path, obj_name );
-                        logger.log(Level.INFO, "dst_fn is " + dst_fn);
 
                         Files.createDirectories( Paths.get( dst_path ) );
 
-                        System.err.println(String.format( "'%s:%s' --> '%s'", settings.db_bucket, obj_name, dst_fn ) );
-
+                        if ( log.db_copy )
+                            BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", db_setting.bucket, obj_name, dst_fn ) );
+                        
                         File f = new File( dst_fn );
                         FileOutputStream f_out = new FileOutputStream( f );
 
@@ -156,7 +135,7 @@ class PART_INST
                 res = true;
             if ( size == 0L )
             {
-                for ( String ext : extensions )
+                for ( String ext : db_setting.extensions )
                 {
                     String fn = String.format( "%s.%s", part.db_spec, ext );
                     File f = new File( fn );
@@ -166,24 +145,23 @@ class PART_INST
         }
         catch( Exception e )
         {
-            System.err.println(String.format( "EXCEPTION gs: %s", e ) );
-            StringWriter writer = new StringWriter();
-            PrintWriter printWriter = new PrintWriter( writer );
-            e.printStackTrace( printWriter );
-            printWriter.flush();
-
-            String stackTrace = writer.toString();
-            logger.log(Level.ERROR,stackTrace);
-            logger.log(Level.INFO, String.format( "EXCEPTION gs: %s", e ) );
+            BLAST_SEND.send( log, String.format( "gs: %s", e ) );
         }
         return res;
+        */
+        return true;
     }
+}
+
+class PART_MAP
+{
+    public static Map< Integer, PART_INST > map = new ConcurrentHashMap<>();
 }
 
 class BLAST_LIB_SINGLETON
 {
     // let us have a map of PARTITION-ID to BLAST_LIB
-    private static Map< Integer, PART_INST > parts = new ConcurrentHashMap<>();
+    private static Map< String, PART_MAP > map = new ConcurrentHashMap<>();
     private static BLAST_LIB blaster = new BLAST_LIB();
 
     /* this ensures that nobody can make an instance of this class, but the class itself */
@@ -191,39 +169,55 @@ class BLAST_LIB_SINGLETON
     {
     }
 
-    private static PART_INST getPartInst( final BLAST_PARTITION part )
+    private static PART_INST getPartInst( final BLAST_DATABASE_PART part )
     {
-        if ( !parts.containsKey( part.nr ) )
-            parts.put( part.nr, new PART_INST( part ) );
-        return parts.get( part.nr );
+        PART_INST res;
+        if ( map.containsKey( part.db_key ) )
+        {
+            PART_MAP m = map.get( part.db_key );
+            if ( m.map.containsKey( part.nr ) )
+                res = m.map.get( part.nr );
+            else
+            {
+                res = new PART_INST( part );
+                m.map.put( part.nr, res );
+            }
+        }
+        else
+        {
+            res = new PART_INST( part );
+            PART_MAP m = new PART_MAP();
+            m.map.put( part.nr, res );
+            map.put( part.db_key, m );            
+        }
+        return res;
     }
 
-    public static BLAST_PARTITION prepare( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
+    public static BLAST_DATABASE_PART prepare( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
         {
             if ( !p_inst.prepared )
-                p_inst.prepared = p_inst.prepare( part, settings );
-
-            return part.prepare();
+                p_inst.prepared = p_inst.prepare( part, db_setting, log );
+            
+            return part.enter_worker_name();
         }
         return null;
     }
 
-    public static BLAST_LIB get_lib( final BLAST_PARTITION part, final BLAST_SETTINGS settings )
+    public static BLAST_LIB get_lib( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
         {
             if ( !p_inst.prepared )
-                p_inst.prepared = p_inst.prepare( part, settings );
-            return blaster;
+                p_inst.prepared = p_inst.prepare( part, db_setting, log );
         }
-        return null;
+        return blaster;
     }
 
-    public static Long get_size( final BLAST_PARTITION part )
+    public static Long get_size( final BLAST_DATABASE_PART part )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
