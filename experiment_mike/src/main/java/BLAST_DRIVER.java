@@ -73,6 +73,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private static int max_partitions = 0;
     private static BLAST_DB_SETTINGS dbsettings;
+    private static final String db_location = "/tmp/blast/db";
 
     public static boolean init(final String[] args) {
         if (args.length != 1) {
@@ -228,7 +229,7 @@ public final class BLAST_DRIVER implements Serializable {
                         logger.log(Level.INFO, "value is " + value);
 
                         JSONObject json = new JSONObject(value);
-                        logger.log(Level.INFO, "JSON was " + json.toString(2));
+                        logger.log(Level.DEBUG, "JSON was " + json.toString(2));
                         String protocol = json.getString("protocol");
                         if (protocol.equals("1.0")) {
                             String rid = json.getString("RID");
@@ -257,7 +258,7 @@ public final class BLAST_DRIVER implements Serializable {
                                         blast_params_str,
                                         ts);
 
-                            logger.log(Level.INFO, "outrow is " + outrow.mkString(":"));
+                            logger.log(Level.INFO, "outrow is\n  " + outrow.mkString("\n  "));
 
                             return outrow;
                         } else {
@@ -287,6 +288,57 @@ public final class BLAST_DRIVER implements Serializable {
         return joined;
     }
 
+    private static void preload(String db_tag, int partition_num) {
+        Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
+        String selector = db_tag.substring(0, 2);
+
+        BLAST_DB_SETTING dbs = dbsettings.get(selector);
+        String bucket = "gs://" + dbs.bucket;
+        String pattern = dbs.pattern; // nt_50M
+
+        for (String ext : dbs.extensions) {
+            String dest = String.format("%s/%s.%02d.%s", db_location, pattern, partition_num, ext);
+            File donefile = new File(dest + ".done");
+            int loops = 0;
+            while (!donefile.exists()) {
+                File lockdir = new File(dest + ".lockdir");
+                if (lockdir.mkdir()) // Try to lock
+                {
+                    // Lock succeeded, this thread must download
+
+                    String src = String.format("%s/%s.%02d.%s", bucket, pattern, partition_num, ext);
+
+                    logger.log(Level.INFO, "Preloading " + src + " -> " + dest);
+                    try {
+                        Configuration conf = new Configuration();
+                        Path srcpath = new Path(src);
+                        FileSystem fs = FileSystem.get(srcpath.toUri(), conf);
+                        Path dstpath = new Path(dest);
+                        fs.copyToLocalFile(false, srcpath, dstpath);
+
+                        if (!donefile.createNewFile()) {
+                            logger.log(Level.WARN, "Another created donefile?");
+                        }
+                    } catch (Exception e) {
+                        logger.log(Level.ERROR, "Couldn't load from GS/HDFS: " + src + " : " + e.toString());
+                    }
+
+                } else // Another process is downloading
+                {
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                    }
+                }
+                ++loops;
+                if (loops > 20) {
+                    logger.log(Level.ERROR, "Taking too long");
+                    return;
+                }
+            }
+        }
+    }
+
     private static Dataset<Row> prelim_results(Dataset<Row> joined) {
         StructType results_schema =
             StructType.fromDDL(
@@ -309,13 +361,12 @@ public final class BLAST_DRIVER implements Serializable {
         ExpressionEncoder<Row> encoder = RowEncoder.apply(results_schema);
 
         String jni_log_level = settings.jni_log_level;
-        String db_location = "/tmp/blast/db";
         Dataset<Row> prelim_search_results =
             joined.flatMap( // FIX: Make a functor
                     (FlatMapFunction<Row, Row>)
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-                        logger.log(Level.DEBUG, "<row> is :" + inrow.mkString(":"));
+                        logger.log(Level.INFO, "<inrow> is :\n  " + inrow.mkString("\n  "));
 
                         String protocol = inrow.getString(inrow.fieldIndex("protocol"));
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
@@ -334,17 +385,20 @@ public final class BLAST_DRIVER implements Serializable {
 
                         logger.log(Level.INFO, String.format("in flatmap %d", partition_num));
 
-                        // FIX: Preload here
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = rid;
                         requestobj.query_seq = query_seq;
-                        requestobj.query_url = "";
+                        requestobj.query_url = query_url;
                         requestobj.db = db_tag;
                         requestobj.params = blast_params;
+                        requestobj.params = "blastn"; // FIX
                         requestobj.program = program;
                         requestobj.top_n = top_N_prelim;
                         BLAST_PARTITION partitionobj =
-                            new BLAST_PARTITION(db_location, db, partition_num, false);
+                            new BLAST_PARTITION(db_location, db, partition_num, true);
+                        logger.log(Level.INFO, "PARTOBJ is " + partitionobj.toString());
+                        // FIX: Preload here
+                        preload(db_tag, partition_num);
 
                         BLAST_LIB blaster = new BLAST_LIB();
 
@@ -381,7 +435,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                                 hsp_rows.add(outrow);
 
-                                logger.log(Level.INFO, "outrow is " + outrow.mkString(":"));
+                                logger.log(Level.INFO, "outrow is\n  " + outrow.mkString("\n  "));
 
                                 // logger.log(Level.INFO, "json is " + json.toString());
                             }
@@ -442,7 +496,7 @@ public final class BLAST_DRIVER implements Serializable {
                         public void process(Row value) {
                             ++recordcount;
                             logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
-                            logger.log(Level.DEBUG, "  " + value.mkString(":").substring(0, 50));
+                            logger.log(Level.DEBUG, "  " + value.mkString("\n  ").substring(0, 50));
                             String line = value.getString(0);
                             logger.log(Level.DEBUG, "  line is " + line);
 
@@ -589,7 +643,6 @@ public final class BLAST_DRIVER implements Serializable {
         // BLAST_SETTINGS settings_closure = settings;
         Integer top_n = settings.top_n; // FIX: topn_n for traceback
         String jni_log_level = settings.jni_log_level;
-        String db_location = "/tmp/blast/db"; // settings.db_location;
 
         StructType hsp_schema =
             StructType.fromDDL(
@@ -652,7 +705,7 @@ public final class BLAST_DRIVER implements Serializable {
                     (FlatMapFunction<Row, String>)
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-                        logger.log(Level.INFO, "tb <row> is :" + inrow.mkString(":"));
+                        logger.log(Level.INFO, "tb <row> is :\n  " + inrow.mkString("\n  "));
 
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
                         logger.log(Level.DEBUG, "Tracebacked RID " + rid);
@@ -662,7 +715,7 @@ public final class BLAST_DRIVER implements Serializable {
                         logger.log(
                                 Level.DEBUG,
                                 String.format(
-                                    "in tb flatmap rid=%s part=%d settings.db_location=%s",
+                                    "in tb flatmap rid=%s part=%d db_location=%s",
                                     rid, partition_num, db_location));
 
                         List<Row> hsplist = inrow.getList(inrow.fieldIndex("hsp_collected"));
@@ -766,7 +819,7 @@ public final class BLAST_DRIVER implements Serializable {
                         @Override
                         public void process(Row value) {
                             logger.log(Level.DEBUG, String.format(" in tb process %d", partitionId));
-                            logger.log(Level.DEBUG, " tb process " + value.mkString(":"));
+                            logger.log(Level.DEBUG, " tb process " + value.mkString("\n  "));
                             String line = value.getString(0);
                             JSONObject json = new JSONObject(line);
                             String rid = json.getString("RID");
