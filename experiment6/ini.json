@@ -4,7 +4,7 @@
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
-            "subscript_id" : "spark-test-subscript",
+            "subscript_id" : "integration-queue-dataproc-subscription-sprint6",
             "use" : "true"
         },
         "socket" :
@@ -47,12 +47,12 @@
     {
         "asn1" :
         {
-            "bucket" : "blastgcp-pipeline-test",
+            "bucket" : "blast-results",
             "gs_or_hdfs" : "time"
         },
         "status" :
         {
-            "bucket"  : "blastgcp-pipeline-test"
+            "bucket"  : "blast-results"
         }
     },
 
@@ -71,6 +71,10 @@
     {
         "port" : 10011,
         "pref_loc" : "false",
-        "part_prep" : "true"
+        "part_prep" : "true",
+        "log_worker_shift": true,
+        "log_job_start": true,
+        "log_job_done": true,
+        "log_cutoff": true
     }
 }
