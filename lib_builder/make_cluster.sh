@@ -12,6 +12,9 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 function config()
 {
     NUM_WORKERS=$(((NUM_CORES - 1 + CORES_PER_WORKER) / CORES_PER_WORKER))
+    if [[ "$NUM_WORKERS" -lt 2 ]]; then
+        NUM_WORKERS=2
+    fi
 
     # NT takes about 49GB, NR 116GB
     DB_SPACE=166
@@ -54,36 +57,32 @@ function config()
 
     # DataProc costs 1c/vCPU
     COST=0
-    COST=$(( COST + NUM_CORES + CORES_PER_MASTER ))
-
+    COST=$(bc -l <<< "$COST + ($CORES_PER_WORKER * $NUM_WORKERS + $CORES_PER_MASTER)/100" )
     # Custom vCPU is $0.037 in Nova, $0.007469 preempt
     # Assume sustained use
-    COST=$(bc -l <<< "$COST + $CORES_PER_MASTER * 0.037364*0.6" )
+    COST=$(bc -l <<< "$COST + $CORES_PER_MASTER * 0.037364*0.7" )
     # RAM is $.005/GB hour, $.001 prempt
-    COST=$(bc -l <<< "$COST + $RAM_PER_MASTER * 0.005008*0.6" )
+    COST=$(bc -l <<< "$COST + ($RAM_PER_MASTER/1024) * 0.005008*0.7" )
 
     # 2 normal workers for HDFS replication
     COST=$(bc -l <<< "$COST + 2 * 0.037364*.6" )
-    COST=$(bc -l <<< "$COST + 2 * $RAM_PER_WORKER * .005008*0.6" )
+    COST=$(bc -l <<< "$COST + 2 * ($RAM_PER_WORKER/1024) * .005008*0.7" )
 
     # Preemptive workers
-    COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * 0.007469" )
-    COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * $RAM_PER_WORKER * 0.001006" )
+    COST=$(bc -l <<< "$COST + $CORES_PER_WORKER * $PREEMPT_WORKERS * 0.007469" )
+    COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * ($RAM_PER_WORKER/1024) * 0.001006" )
 
     # Persisent disks: Standrd provisioned is $.044/GB month
-    COST=$(bc -l <<< "$COST + $DISK_PER_MASTER * .044 *0.6 / 720" )
-    COST=$(bc -l <<< "$COST + $NUM_WORKERS * $DISK_PER_WORKER * 0.044 * 0.6 /720" )
+    COST=$(bc -l <<< "$COST + $DISK_PER_MASTER * .044 / 720" )
+    COST=$(bc -l <<< "$COST + $NUM_WORKERS * $DISK_PER_WORKER * 0.044 /720" )
 
     # Convert from pennies to dollars
     echo "  $NUM_WORKERS workers ($PREEMPT_WORKERS pre-emptible)"
     echo "    Each has $CORES_PER_WORKER cores"
     echo "    Each has $RAM_PER_WORKER MB RAM"
     echo "    Each has $DISK_PER_WORKER GB Persistent disk"
-#    echo $COST
-    PERHOUR=$(bc -l <<< "$COST / 100")
-    printf "    Cost will be $%0.2f/hour" "$PERHOUR"
+    printf "    Cost will be $%0.2f/hour" "$COST"
     echo
-#    COST=$(printf %.0f $COST)
 }
 
 if [[ $# -ne 1 ]]; then
@@ -106,8 +105,12 @@ do
 
     # We lose ~1 core per worker to Spark/YARN/Hadoop/...
     EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
-    PER_EXECUTOR=$(bc -l <<< "100 * $COST / $EXECUTORS" )
-    PER_EXECUTOR=$(printf %.0f "$PER_EXECUTOR")
+#    EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 0)" )
+    PER_EXECUTOR=$(bc -l <<< "$COST / $EXECUTORS" )
+    printf "    $%0.4f per executor for %s\n" "$PER_EXECUTOR" "$EXECUTORS"
+    PER_EXECUTOR=$(bc -l <<< "10000 * $PER_EXECUTOR" )
+    PER_EXECUTOR=$(printf "%0.f" "$PER_EXECUTOR" )
+#    echo "   Per Executor: $PER_EXECUTOR millicents"
 
     if [[ "$PER_EXECUTOR" -lt "$LOWEST" ]]; then
         LOWEST=$PER_EXECUTOR
@@ -145,12 +148,12 @@ CMD="gcloud beta dataproc --region us-east4 \
 
 echo "Command is: $CMD"
 echo
+EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
+echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
+echo
 read -p "Press enter to start this cluster"
 
 $CMD
-
-EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
-echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
 
 exit 0
 
