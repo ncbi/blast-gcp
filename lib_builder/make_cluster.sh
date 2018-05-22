@@ -99,7 +99,7 @@ fi
 
 echo "Solving for lowest price..."
 LOWEST=9999999
-for CORES_PER_WORKER in $(seq 2 2 32);
+for CORES_PER_WORKER in $(seq 2 2 64);
 do
     config
 
