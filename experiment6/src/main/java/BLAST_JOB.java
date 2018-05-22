@@ -103,36 +103,44 @@ class BLAST_JOB extends Thread
                 }
             }
 
-            BLAST_DB_SETTING db_setting = bls.db_list.get( req.db );
-            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, db_setting, bls.log );
-            if ( blaster != null )
+            BLAST_DB_SETTING db_setting = bls.dbs.get( req.db );
+            if ( db_setting != null )
             {
-                try
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, db_setting, bls.log );
+                if ( blaster != null )
                 {
-                    BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
-                    if ( search_res != null )
+                    try
                     {
-                        try
+                        BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
+                        if ( search_res != null )
                         {
-                            BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
-                            if ( tb_results != null )
+                            try
                             {
-                                for ( BLAST_TB_LIST tbl : tb_results )
-                                    res.add( new BLAST_TB_LIST_LIST( tbl ) );
+                                BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
+                                if ( tb_results != null )
+                                {
+                                    for ( BLAST_TB_LIST tbl : tb_results )
+                                        res.add( new BLAST_TB_LIST_LIST( tbl ) );
+                                }
+                            }
+                            catch ( Exception e )
+                            {
+                                BLAST_SEND.send( bls.log,
+                                                 String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                             }
                         }
-                        catch ( Exception e )
-                        {
-                            BLAST_SEND.send( bls.log,
-                                             String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
-                        }
+                    }
+                    catch ( Exception e )
+                    {
+                        BLAST_SEND.send( bls.log,
+                                         String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                     }
                 }
-                catch ( Exception e )
-                {
-                    BLAST_SEND.send( bls.log,
-                                     String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
-                }
+            }
+            else
+            {
+                BLAST_SEND.send( bls.log,
+                                 String.format( "prelim-search: no database found for selector: '%s'", req.db ) );
             }
             return res.iterator();
         } ).cache();

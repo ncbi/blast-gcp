@@ -98,33 +98,48 @@ class BLASTJNI_SETTINGS_READER
     public static final String key_db = "db";
     public static final String key_top_n = "top_n";
     public static final String key_jni_log_level = "jni_log_level";
+    public static final String key_manifest_root = "manifest_root";
 
     public static final Integer dflt_top_n = 10;
     public static final String  dflt_jni_log_level = "INFO";
+
+    public static void db_list_from_json( JsonObject obj, BLAST_SETTINGS settings )
+    {
+        JsonArray db_list_array = SE_UTILS.get_sub_array( obj, key_db );
+        if ( db_list_array != null )
+        {
+            for ( JsonElement e : db_list_array ) 
+            {
+                if ( e.isJsonObject() )
+                {
+                    JsonObject o = e.getAsJsonObject();
+                    BLAST_DB_SETTING db_setting = BLAST_DB_SETTING_READER.from_json( o ); // SETTING_READER not SETTINGS_READER!
+                    settings.dbs.put( db_setting.selector, db_setting );
+                }
+            }
+        }
+    }
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
         JsonObject obj = SE_UTILS.get_sub( root, key );
         if ( obj != null )
         {
-            /* read the settings for each different database-type */
-            JsonArray db_list = SE_UTILS.get_sub_array( obj, key_db );
-            if ( db_list != null )
+            settings.top_n         = SE_UTILS.get_json_int( obj, key_top_n, dflt_top_n );
+            settings.jni_log_level = SE_UTILS.get_json_string( obj, key_jni_log_level, dflt_jni_log_level );
+            settings.manifest_root = SE_UTILS.get_json_string( obj, key_manifest_root, "" );
+
+            if ( settings.manifest_root.isEmpty() )
             {
-                for ( JsonElement e : db_list ) 
-                {
-                    if ( e.isJsonObject() )
-                    {
-                        JsonObject o = e.getAsJsonObject();
-                        BLAST_DB_SETTING db_setting = new BLAST_DB_SETTING();
-                        BLAST_DB_SETTING_READER.from_json( o, db_setting ); // SETTING_READER not SETTINGS_READER!
-                        settings.db_list.put( db_setting );
-                    }
-                }
+                /* we DO NOT have a manifest, the db-files are located as range... */
+                db_list_from_json( obj, settings );
+            }
+            else
+            {
+                /* we DO have a manifest, the db-files are defined by the manifest... */
+
             }
         }
-        settings.top_n         = SE_UTILS.get_json_int( obj, key_top_n, dflt_top_n );
-        settings.jni_log_level = SE_UTILS.get_json_string( obj, key_jni_log_level, dflt_jni_log_level );
     }
 }
 

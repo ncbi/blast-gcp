@@ -27,54 +27,46 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
-public class BLAST_DB_SETTINGS implements Serializable
+public class CONF implements Serializable
 {
-    private HashMap< String, BLAST_DB_SETTING > dbs;
+    public List< CONF_DATABASE > dbs;
 
-    public BLAST_DB_SETTINGS()
+    public CONF()
     {
-        dbs = new HashMap<>();
-    }
-
-    public void put( final BLAST_DB_SETTING obj )
-    {
-        dbs.put( obj.selector, obj );
-    }
-
-    public Collection< BLAST_DB_SETTING > list()
-    {
-        return dbs.values();
-    }
-
-    public BLAST_DB_SETTING get( final String selector )
-    {
-        return dbs.get( selector );
+        dbs = new ArrayList<>();
     }
 
     public Boolean valid()
     {
         Boolean res = true;
-        for ( BLAST_DB_SETTING e : dbs.values() )
-            if ( !e.valid() ) res = false;
+        for ( CONF_DATABASE db : dbs )
+        {
+            if ( res )
+                res = db.valid();
+        }
         return res;
     }
 
     public String missing()
     {
         String S = "";
-        for ( BLAST_DB_SETTING e : dbs.values() )
-            S = S + e.missing();
+        for ( CONF_DATABASE db : dbs )
+        {
+            S = S + db.missing();
+        }        
         return S;
     }
 
     @Override public String toString()
     {
         String S = "";
-        for ( BLAST_DB_SETTING e : dbs.values() )
-            S = S + e.toString();
+        for ( CONF_DATABASE db : dbs )
+        {
+            S = S + db.toString();
+        }        
         return S;
     }
 }

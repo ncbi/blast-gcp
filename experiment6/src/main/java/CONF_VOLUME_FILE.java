@@ -26,36 +26,34 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.HashMap;
-import java.util.Collection;
+import java.io.Serializable;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.api.java.JavaSparkContext;
-
-class BLAST_DATABASE_MAP
+public class CONF_VOLUME_FILE implements Serializable
 {
-    private final HashMap< String, BLAST_DATABASE > databases;
+    public String f_type;
+    public String f_name;
+    public String f_md5;
 
-    public BLAST_DATABASE_MAP( final BLAST_SETTINGS settings,
-                               final Broadcast< BLAST_SETTINGS > SETTINGS,
-                               final JavaSparkContext sc )
+    public Boolean valid()
     {
-
-        databases = new HashMap<>();
-
-        BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
-
-        Collection< BLAST_DB_SETTING > col = settings.dbs.values();
-        for ( BLAST_DB_SETTING db_setting : col )
-        {
-            BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes, db_setting );
-            databases.put( db.selector, db );
-        }
+        if ( f_type.isEmpty() ) return false;
+        if ( f_name.isEmpty() ) return false;
+        if ( f_md5.isEmpty() ) return false;
+        return true;
     }
 
-    public BLAST_DATABASE get( final String db_selector )
+    public String missing()
     {
-        BLAST_DATABASE res = databases.get( db_selector );
-        return res;
+        String S = "";
+        if ( f_type.isEmpty() ) S = S + "manifest.json : volume.files.type missing\n";
+        if ( f_name.isEmpty() ) S = S + "manifest.json : volume.files.name missing\n";
+        if ( f_md5.isEmpty() ) S = S + "manifest.json : volume.files.md5 missing\n";
+        return S;
+    }
+
+    @Override public String toString()
+    {
+        return String.format( "\t\t\t[ type:'%s', name:'%s', md5:'%s'\n", f_type, f_name, f_md5 );
     }
 }
+
