@@ -4,6 +4,12 @@
   <groupId>gov.nih.nlm.ncbi.sparkblast</groupId>
   <artifactId>sparkblast</artifactId>
   <version>1</version>
+  <repositories>
+    <repository>
+      <id>local-maven-repo</id>
+      <url>file:${project.basedir}/.local-maven-repo</url>
+    </repository>
+  </repositories>
 
   <dependencies>
 
