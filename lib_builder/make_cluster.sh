@@ -56,12 +56,12 @@ function config()
     fi
 
     # DataProc costs 1c/vCPU
-    COST=0
+    COST=0 # Units are cents/hour
     COST=$(bc -l <<< "$COST + ($CORES_PER_WORKER * $NUM_WORKERS + $CORES_PER_MASTER)/100" )
     # Custom vCPU is $0.037 in Nova, $0.007469 preempt
     # Assume sustained use
     COST=$(bc -l <<< "$COST + $CORES_PER_MASTER * 0.037364*0.7" )
-    # RAM is $.005/GB hour, $.001 prempt
+    # RAM is $.005/GB hour, $.001 preempt
     COST=$(bc -l <<< "$COST + ($RAM_PER_MASTER/1024) * 0.005008*0.7" )
 
     # 2 normal workers for HDFS replication
@@ -72,7 +72,7 @@ function config()
     COST=$(bc -l <<< "$COST + $CORES_PER_WORKER * $PREEMPT_WORKERS * 0.007469" )
     COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * ($RAM_PER_WORKER/1024) * 0.001006" )
 
-    # Persisent disks: Standrd provisioned is $.044/GB month
+    # Persistent disks: Standard provisioned is $.044/GB month
     COST=$(bc -l <<< "$COST + $DISK_PER_MASTER * .044 / 720" )
     COST=$(bc -l <<< "$COST + $NUM_WORKERS * $DISK_PER_WORKER * 0.044 /720" )
 
@@ -98,31 +98,44 @@ if [[ "$NUM_CORES" -lt 32 ]]; then
 fi
 
 echo "Solving for lowest price..."
-LOWEST=9999999
+LOWEST_PRICE=9999999
+BEST_PRICE=""
+HIGHEST_VALUE=9999999
+BEST_VALUE=""
 for CORES_PER_WORKER in $(seq 2 2 64);
 do
     config
 
+    CENTS=$(bc -l <<< "$COST * 100")
+    CENTS=$(printf "%0.f" "$CENTS")
     # We lose ~1 core per worker to Spark/YARN/Hadoop/...
     EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
-#    EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 0)" )
-    PER_EXECUTOR=$(bc -l <<< "$COST / $EXECUTORS" )
-    printf "    $%0.4f per executor for %s\n" "$PER_EXECUTOR" "$EXECUTORS"
-    PER_EXECUTOR=$(bc -l <<< "10000 * $PER_EXECUTOR" )
-    PER_EXECUTOR=$(printf "%0.f" "$PER_EXECUTOR" )
-    echo
-#    echo "   Per Executor: $PER_EXECUTOR millicents"
+    PER_EXECUTOR=$(bc -l <<< "100 * $CENTS / $EXECUTORS" )
+    PER_EXECUTOR=$(printf "%0.f" "$PER_EXECUTOR")
 
-    if [[ "$PER_EXECUTOR" -lt "$LOWEST" ]]; then
-        LOWEST=$PER_EXECUTOR
-        BEST=$CORES_PER_WORKER
+    if [[ "$PER_EXECUTOR" -lt "$HIGHEST_VALUE" ]]; then
+        HIGHEST_VALUE=$PER_EXECUTOR
+        BEST_VALUE=$CORES_PER_WORKER
     fi
+
+    if [[ "$CENTS" -lt "$LOWEST_PRICE" ]]; then
+        LOWEST_PRICE=$CENTS
+        BEST_PRICE=$CORES_PER_WORKER
+    fi
+
+    PER_CENT=$(bc -l <<< "$PER_EXECUTOR / 10000 " )
+    printf "    $%0.4f per executor for %s executors\n" "$PER_CENT" "$EXECUTORS"
+    echo
+
 done
 
 echo
-echo "Best value is: $BEST cores/worker"
+LOWEST_PRICE=$(bc -l <<< "$LOWEST_PRICE / 100")
+printf "Best cost is : $%0.2f/hour at %d cores/worker\n" "$LOWEST_PRICE" "$BEST_PRICE"
+HIGHEST_VALUE=$(bc -l <<< "$HIGHEST_VALUE / 10000")
+printf "Best value is: $%0.4f/core hour at %d cores/worker\n" "$HIGHEST_VALUE" "$BEST_VALUE"
 
-CORES_PER_WORKER=$BEST
+CORES_PER_WORKER=$BEST_VALUE
 config
 
 CMD="gcloud beta dataproc --region us-east4 \
