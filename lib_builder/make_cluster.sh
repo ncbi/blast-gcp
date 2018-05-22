@@ -6,7 +6,7 @@ set -o errexit
 # Tunables
 NUM_CORES=32
 CORES_PER_WORKER=8 # max bandwidth @ >=8
-PIPELINEBUCKET="gs://blastgcp-pipeline-test"
+PIPELINEBUCKET=${1:-"gs://blastgcp-pipeline-test/scripts"}
 
 # FIX: Solve for cheapest within constraints (in Bash?)
 
@@ -63,7 +63,7 @@ gcloud beta dataproc --region us-east4 \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
+    "$PIPELINEBUCKET/cluster_initialize.sh" \
     --tags blast-dataproc-"$USER-$(date +%Y%m%d-%H%M%S)" \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
 
