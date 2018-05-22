@@ -73,7 +73,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db4";
+    private final String db_location = "/tmp/blast/db1";
 
     public void BLAST_DRIVER() {}
 
@@ -254,7 +254,7 @@ public final class BLAST_DRIVER implements Serializable {
                                         blast_params_str,
                                         ts);
 
-                            logger.log(Level.INFO, "queries outrow is\n  " + outrow.mkString("\n  "));
+                            logger.log(Level.INFO, "queries outrow is  " + outrow.mkString(" : "));
 
                             return outrow;
                         } else {
@@ -298,6 +298,11 @@ public final class BLAST_DRIVER implements Serializable {
             String dest = String.format("%s/%s.%02d.%s", db_location, pattern, partition_num, ext);
             File donefile = new File(dest + ".done");
             int loops = 0;
+            if (donefile.exists()) {
+                logger.log(Level.INFO, "Preloaded already: " + dest);
+                continue;
+            }
+
             while (!donefile.exists()) {
                 new File(db_location).mkdirs(); // In case first time
 
@@ -308,37 +313,47 @@ public final class BLAST_DRIVER implements Serializable {
 
                     String src = String.format("%s/%s.%02d.%s", bucket, pattern, partition_num, ext);
 
-                    logger.log(Level.INFO, "Preloading " + src + " -> " + dest);
-                    try {
-                        Thread.sleep(100); // Prevent DOS?
-                        Configuration conf = new Configuration();
-                        Path srcpath = new Path(src);
-                        FileSystem fs = FileSystem.get(srcpath.toUri(), conf);
-                        Path dstpath = new Path(dest);
-                        fs.copyToLocalFile(false, srcpath, dstpath);
-
-                        if (!donefile.createNewFile()) {
-                            logger.log(Level.WARN, "Another created donefile?");
+                    for (int retry = 0; retry != 5; ++retry) {
+                        try {
+                            Thread.sleep(500); // Prevent DOS?
+                            logger.log(
+                                    Level.INFO, String.format("Preloading (attempt #%d) %s -> %s", retry, src, dest));
+                            Configuration conf = new Configuration();
+                            Path srcpath = new Path(src);
+                            FileSystem fs = FileSystem.get(srcpath.toUri(), conf);
+                            Path dstpath = new Path(dest);
+                            fs.copyToLocalFile(false, srcpath, dstpath, true);
+                            fs.close();
+                            if (new File(dest).length() != 0) {
+                                if (!donefile.createNewFile()) {
+                                    logger.log(Level.ERROR, "Another created donefile?" + dest);
+                                }
+                                logger.log(Level.INFO, "Preloaded " + src + " -> " + dest);
+                                break;
+                            } else {
+                                logger.log(Level.ERROR, "Empty file " + dest);
+                                lockdir.delete();
+                            }
+                        } catch (Exception e) {
+                            logger.log(Level.ERROR, "Couldn't load from GS/HDFS: " + src + " : " + e.toString());
                         }
-                    } catch (Exception e) {
-                        logger.log(Level.ERROR, "Couldn't load from GS/HDFS: " + src + " : " + e.toString());
                     }
-
                 } else // Another process is downloading
                 {
                     try {
-                        Thread.sleep(100);
+                        logger.log(Level.INFO, "Waiting on " + dest);
+                        Thread.sleep(500);
                     } catch (Exception e) {
                     }
                 }
 
-                if (++loops == 50) {
-                    logger.log(Level.WARN, String.format("%s taking too long (%d)", dest, loops));
-                    return;
+                if (++loops == 10) {
+                    logger.log(Level.ERROR, String.format("%s taking too long (%d)", dest, loops));
+                    break;
                 }
-            }
-        }
-    }
+            } // !donefile.exists
+        } // extensions
+    } // preload
 
     private Dataset<Row> prelim_results(Dataset<Row> joined) {
         StructType results_schema =
@@ -368,6 +383,7 @@ public final class BLAST_DRIVER implements Serializable {
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
                         logger.log(Level.INFO, "<inrow> is :\n  " + inrow.mkString("\n  "));
+                        if (inrow.anyNull()) logger.log(Level.ERROR, " inrow has NULLS");
 
                         String protocol = inrow.getString(inrow.fieldIndex("protocol"));
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
@@ -457,7 +473,7 @@ public final class BLAST_DRIVER implements Serializable {
                     },
                           encoder); // flastmap
 
-        //prelim_search_results.explain(true);
+        // prelim_search_results.explain(true);
         prelim_search_results.createOrReplaceTempView("prelim_search_results");
         System.out.print("prelim_search_results schema is ");
         prelim_search_results.printSchema();
@@ -489,6 +505,7 @@ public final class BLAST_DRIVER implements Serializable {
                                 Configuration conf = new Configuration();
                                 fs = FileSystem.get(conf);
                             } catch (IOException e) {
+                                logger.log(Level.ERROR, e.toString());
                                 System.err.println(e);
                                 return false;
                             }
@@ -579,7 +596,7 @@ public final class BLAST_DRIVER implements Serializable {
                             try {
                                 if (false) fs.close();
                             } catch (IOException ioe) {
-                                logger.log(Level.DEBUG, "Couldn't close HDFS filesystem");
+                                logger.log(Level.ERROR, "Couldn't close HDFS filesystem");
                             }
 
                             return;
@@ -606,8 +623,8 @@ public final class BLAST_DRIVER implements Serializable {
                                         String.format("Wrote %d bytes to HDFS %s", output.length(), outfile));
 
                             } catch (IOException ioe) {
-                                logger.log(Level.DEBUG, "Couldn't write to HDFS");
-                                logger.log(Level.DEBUG, ioe.toString());
+                                logger.log(Level.ERROR, "Couldn't write to HDFS");
+                                logger.log(Level.ERROR, ioe.toString());
                             }
                         } // ps_write_to_hdfs
                     } // ForeachWriter
@@ -713,6 +730,7 @@ public final class BLAST_DRIVER implements Serializable {
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
                         logger.log(Level.INFO, "tb <row> is :\n  " + inrow.mkString("\n  "));
+                        if (inrow.anyNull()) logger.log(Level.ERROR, " tb inrow has NULLS");
 
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
                         logger.log(Level.DEBUG, "Tracebacked RID " + rid);
@@ -798,7 +816,7 @@ public final class BLAST_DRIVER implements Serializable {
                               .toDF("asns")
                               .repartition(1); // FIX
 
-        //traceback_results.explain();
+        // traceback_results.explain();
 
         DataStreamWriter<Row> tb_dsw = traceback_results.writeStream();
 
@@ -916,8 +934,8 @@ public final class BLAST_DRIVER implements Serializable {
                                         String.format("Wrote %d bytes to %s", output.length, outfile));
 
                             } catch (IOException ioe) {
-                                logger.log(Level.DEBUG, "Couldn't write to HDFS");
-                                logger.log(Level.DEBUG, ioe.toString());
+                                logger.log(Level.ERROR, "Couldn't write to HDFS");
+                                logger.log(Level.ERROR, ioe.toString());
                             }
                         } // tb_write_to_hdfs
                     } // ForeachWriter
@@ -945,7 +963,7 @@ public final class BLAST_DRIVER implements Serializable {
                 System.out.println(tresults.status());
             }
         } catch (Exception e) {
-            System.out.println("Spark exception: " + e);
+            System.err.println("Spark exception: " + e);
             return false;
         }
         System.out.println("That is enough for now");
