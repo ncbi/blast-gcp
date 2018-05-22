@@ -31,26 +31,10 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 
-import com.google.cloud.storage.Bucket;
-
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.StorageScopes;
-import com.google.api.services.storage.model.StorageObject;
-
-import java.security.GeneralSecurityException;
-import java.io.IOException;
-import java.util.Collection;
 
 class PART_INST
 {
@@ -67,21 +51,6 @@ class PART_INST
         prepared = false;
     }
 
-    private static Storage buildStorageService() throws GeneralSecurityException, IOException
-    {
-        HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-        JsonFactory jsonFactory = new JacksonFactory();
-        GoogleCredential credential = GoogleCredential.getApplicationDefault( transport, jsonFactory );
-
-        if ( credential.createScopedRequired() )
-        {
-            Collection<String> scopes = StorageScopes.all();
-            credential = credential.createScoped( scopes );
-        }
-        return new Storage.Builder( transport, jsonFactory, credential ).build();
-    }
-
-
     public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
     {
         Boolean res = false;
@@ -97,41 +66,32 @@ class PART_INST
             }
             if ( !obj_names.isEmpty() )
             {
-                Storage storage = buildStorageService();
+                int copied = 0;
+                Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
                 for ( String obj_name : obj_names )
                 {
-                    Storage.Objects.Get obj = storage.objects().get( db_setting.bucket, obj_name );
-                    if ( obj != null )
-                    {
-                        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+                    String dst_path, dst_fn;
 
-                        String dst_path, dst_fn;
+                    if ( db_setting.flat_layout )
+                        dst_path = db_setting.location;
+                    else
+                        dst_path = String.format( "%s/%s", db_setting.location, part.name );
 
-                        if ( db_setting.flat_layout )
-                            dst_path = db_setting.location;
-                        else
-                            dst_path = String.format( "%s/%s", db_setting.location, part.name );
+                    dst_fn = String.format( "%s/%s", dst_path, obj_name );
 
-                        dst_fn = String.format( "%s/%s", dst_path, obj_name );
+                    Files.createDirectories( Paths.get( dst_path ) );
 
-                        Files.createDirectories( Paths.get( dst_path ) );
+                    if ( log.db_copy )
+                        BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", db_setting.bucket, obj_name, dst_fn ) );
 
-                        if ( log.db_copy )
-                            BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", db_setting.bucket, obj_name, dst_fn ) );
-                        
-                        File f = new File( dst_fn );
-                        FileOutputStream f_out = new FileOutputStream( f );
-
-                        obj.executeMediaAndDownloadTo( f_out );
-
-                        f_out.flush();
-                        f_out.close();
-                    }
+                    if ( BLAST_GS_DOWNLOADER.download( storage, db_setting.bucket, obj_name, dst_fn ) )
+                        copied++;
                 }
-                res = true;
+                res = ( copied == obj_names.size() );
             }
             else
                 res = true;
+
             if ( size == 0L )
             {
                 for ( String ext : db_setting.extensions )

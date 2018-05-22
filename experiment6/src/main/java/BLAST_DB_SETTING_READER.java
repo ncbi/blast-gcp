@@ -58,19 +58,21 @@ public class BLAST_DB_SETTING_READER
         setting.num_locations   = dflt_num_locations;
     }
 
-    public static void from_json( JsonObject obj, BLAST_DB_SETTING setting )
+    public static BLAST_DB_SETTING from_json( JsonObject obj )
     {
+        BLAST_DB_SETTING res = new BLAST_DB_SETTING();
         if ( obj != null )
         {
-            setting.selector = SE_UTILS.get_json_string( obj, key_selector, dflt_selector );
-            setting.location = SE_UTILS.get_json_string( obj, key_location, dflt_location );
-            setting.pattern  = SE_UTILS.get_json_string( obj, key_pattern, dflt_pattern );
-            setting.bucket   = SE_UTILS.get_json_string( obj, key_bucket, dflt_bucket );
-            setting.flat_layout    = SE_UTILS.get_json_bool( obj, key_flat_layout, dflt_flat_layout );
-            setting.num_partitions = SE_UTILS.get_json_int( obj, key_num_partitions, dflt_num_partitions );
-            SE_UTILS.get_string_list( obj, key_extensions, null, setting.extensions );
-            setting.num_locations  = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
+            res.selector = SE_UTILS.get_json_string( obj, key_selector, dflt_selector );
+            res.location = SE_UTILS.get_json_string( obj, key_location, dflt_location );
+            res.pattern  = SE_UTILS.get_json_string( obj, key_pattern, dflt_pattern );
+            res.bucket   = SE_UTILS.get_json_string( obj, key_bucket, dflt_bucket );
+            res.flat_layout    = SE_UTILS.get_json_bool( obj, key_flat_layout, dflt_flat_layout );
+            res.num_partitions = SE_UTILS.get_json_int( obj, key_num_partitions, dflt_num_partitions );
+            SE_UTILS.get_string_list( obj, key_extensions, null, res.extensions );
+            res.num_locations  = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
         }
+        return res;
     }
 
 }

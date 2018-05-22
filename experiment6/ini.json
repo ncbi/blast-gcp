@@ -48,7 +48,7 @@
         "asn1" :
         {
             "bucket" : "blastgcp-pipeline-test",
-            "gs_or_hdfs" : "time"
+            "gs_or_hdfs" : "gs"
         },
         "status" :
         {

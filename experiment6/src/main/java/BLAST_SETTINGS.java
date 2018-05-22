@@ -28,6 +28,7 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.HashMap;
 
 public class BLAST_SETTINGS implements Serializable
 {
@@ -42,11 +43,15 @@ public class BLAST_SETTINGS implements Serializable
     public Integer max_backlog;
 
     /* DB */
-    BLAST_DB_SETTINGS db_list;
+    HashMap< String, BLAST_DB_SETTING > dbs; // configured via ini.json section
+    //BLAST_DB_SETTINGS db_list;  // configured via ini.json section
+    CONF db_conf;               // configured via manifest-files in gs-bucket's
 
     /* BLASTJNI */
     public Integer top_n;
     public String  jni_log_level;
+    public String  manifest_root;
+
 
     /* RESULTS */
     public String gs_result_bucket;
@@ -80,8 +85,9 @@ public class BLAST_SETTINGS implements Serializable
 
     public BLAST_SETTINGS()
     {
-        db_list = new BLAST_DB_SETTINGS();
+        //db_list = new BLAST_DB_SETTINGS();
         log = new BLAST_LOG_SETTING();
+        dbs = new HashMap<>();
     }
 
     public Boolean src_pubsub_valid()
@@ -103,9 +109,17 @@ public class BLAST_SETTINGS implements Serializable
         return src_pubsub_valid() || src_hdfs_valid();
     }
 
+    public Boolean dbs_valid()
+    {
+        Boolean res = true;
+        for ( BLAST_DB_SETTING e : dbs.values() )
+            if ( !e.valid() ) res = false;
+        return res;
+    }
+
     public Boolean valid()
     {
-        if ( !db_list.valid() ) return false;
+        if ( !dbs_valid() ) return false;
         if ( top_n == 0 ) return false;
 
         if ( !src_valid() ) return false;
@@ -115,9 +129,17 @@ public class BLAST_SETTINGS implements Serializable
         return true;
     }
 
+    public String dbs_missing()
+    {
+        String S = "";
+        for ( BLAST_DB_SETTING e : dbs.values() )
+            S = S + e.missing();
+        return S;
+    }
+
     public String missing()
     {
-        String S = db_list.missing();
+        String S = dbs_missing();
         if ( top_n == 0 ) S = S + "top_n is 0\n";
 
         if ( !use_pubsub_source && !use_hdfs_source )
@@ -140,6 +162,14 @@ public class BLAST_SETTINGS implements Serializable
         return S;
     }
 
+    private String dbs_toString()
+    {
+        String S = "";
+        for ( BLAST_DB_SETTING e : dbs.values() )
+            S = S + e.toString();
+        return S;
+    }
+
     @Override public String toString()
     {
         String S = "SOURCE:\n";
@@ -149,11 +179,12 @@ public class BLAST_SETTINGS implements Serializable
             S = S + String.format( "\tHDFS-dir ........... '%s'\n", hdfs_source_dir );
         S = S + String.format( "\tmax. backlog ........... %d requests\n", max_backlog );
 
-        S = S + "\nDB:\n" + db_list.toString();
-
         S = S + "\nBLASTJNI:\n";
         S = S + String.format( "\tdflt top_n ......... %d\n", top_n );
         S = S + String.format( "\tjni-log-level ...... %s\n", jni_log_level );
+        S = S + String.format( "\tmanifest root ...... %s\n", manifest_root );
+
+        S = S + "\nDB:\n" + dbs_toString();
 
         S = S + "\nRESULTS:\n";
         S = S + String.format( "\tGS result .......... '%s' : '%s'\n", gs_result_bucket, gs_result_file );

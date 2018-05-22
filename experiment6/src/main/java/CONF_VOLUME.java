@@ -26,36 +26,50 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.HashMap;
-import java.util.Collection;
+import java.io.Serializable;
+import java.util.List;
+import java.util.ArrayList;
 
-import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.api.java.JavaSparkContext;
-
-class BLAST_DATABASE_MAP
+public class CONF_VOLUME implements Serializable
 {
-    private final HashMap< String, BLAST_DATABASE > databases;
+    public String name;
+    public List< CONF_VOLUME_FILE > files;
 
-    public BLAST_DATABASE_MAP( final BLAST_SETTINGS settings,
-                               final Broadcast< BLAST_SETTINGS > SETTINGS,
-                               final JavaSparkContext sc )
+    public CONF_VOLUME( final String a_name )
     {
+        name = a_name;
+        files = new ArrayList<>();
+    }
 
-        databases = new HashMap<>();
-
-        BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
-
-        Collection< BLAST_DB_SETTING > col = settings.dbs.values();
-        for ( BLAST_DB_SETTING db_setting : col )
+    public Boolean valid()
+    {
+        if ( name.isEmpty() ) return false;
+        if ( files.isEmpty() ) return false;
+        for ( CONF_VOLUME_FILE f : files )
         {
-            BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes, db_setting );
-            databases.put( db.selector, db );
+            if ( !f.valid() ) 
+                return false;
         }
+        return true;
     }
 
-    public BLAST_DATABASE get( final String db_selector )
+    public String missing()
     {
-        BLAST_DATABASE res = databases.get( db_selector );
-        return res;
+        String S = "";
+        if ( name.isEmpty() ) S = S + "manifest.json : volume.name missing\n";
+        if ( files.isEmpty() ) S = S + "manifest.json : volume.files missing\n";
+        for ( CONF_VOLUME_FILE f : files )
+            S = S + f.missing();
+        return S;
     }
+
+    @Override public String toString()
+    {
+        String S = String.format( "\t\tvolume .... '%s'\n", name );
+        for ( CONF_VOLUME_FILE f : files )
+            S = S + f.toString();
+        return S;
+    }
+
 }
+

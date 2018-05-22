@@ -81,6 +81,27 @@ class SE_UTILS
         return res;
     }
 
+    public static Long get_json_long( JsonObject root, final String key, final Long dflt )
+    {
+        Long res = dflt;
+        if ( root != null )
+        {
+            JsonElement elem = root.get( key );
+            if ( elem != null )
+            {
+                try
+                {
+                    res = elem.getAsLong();
+                }
+                catch( Exception e )
+                {
+                    System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                }
+            }
+        }
+        return res;
+    }
+
     public static Boolean get_json_bool( JsonObject root, final String key, final Boolean dflt )
     {
         Boolean res = dflt;
@@ -118,11 +139,14 @@ class SE_UTILS
 
     public static JsonArray get_sub_array( JsonObject root, final String key )
     {
-        JsonElement e = root.get( key );
-        if ( e != null )
+        if ( root != null )
         {
-            if ( e.isJsonArray() )
-                return e.getAsJsonArray();
+            JsonElement e = root.get( key );
+            if ( e != null )
+            {
+                if ( e.isJsonArray() )
+                    return e.getAsJsonArray();
+            }
         }
         return null;
     }
