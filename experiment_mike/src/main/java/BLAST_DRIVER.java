@@ -502,13 +502,12 @@ public final class BLAST_DRIVER implements Serializable {
                         private int recordcount = 0;
                         private FileSystem fs;
                         private Logger logger;
-
-                        // So we can efficiently compute topN scores by RID
-                        HashMap<String, TreeMap<Integer, ArrayList<String>>> score_map;
+                        private BLAST_TOPN topn;
+                        // FIX map of RID->topn_N_prelims
 
                         @Override
                         public boolean open(long partitionId, long version) {
-                            score_map = new HashMap<>();
+                            topn = new BLAST_TOPN();
                             this.partitionId = partitionId;
                             logger = LogManager.getLogger(BLAST_DRIVER.class);
                             try {
@@ -533,29 +532,27 @@ public final class BLAST_DRIVER implements Serializable {
                             ++recordcount;
                             logger.log(Level.INFO, String.format(" topn_dsw in process %d", partitionId));
                             logger.log(Level.INFO, "topn_dsw " + inrow.mkString(" : "));
+                            JSONObject json = new JSONObject();
 
+                            json.put("protocol", inrow.getString(inrow.fieldIndex("protocol")));
                             final String rid = inrow.getString(inrow.fieldIndex("RID"));
+                            json.put("rid", rid);
+                            json.put("db_tag", inrow.getString(inrow.fieldIndex("db_tag")));
+                            final int top_N_prelim = inrow.getInt(inrow.fieldIndex("top_N_prelim"));
+                            json.put("top_N_prelim", top_N_prelim);
+                            json.put("top_N_traceback", inrow.getInt(inrow.fieldIndex("")));
+                            json.put("query_seq", inrow.getString(inrow.fieldIndex("")));
+                            json.put("query_url", inrow.getString(inrow.fieldIndex("")));
+                            json.put("program", inrow.getString(inrow.fieldIndex("")));
+                            json.put("blast_params", inrow.getString(inrow.fieldIndex("")));
+                            json.put("starttime", inrow.getTimestamp(inrow.fieldIndex("")));
+                            json.put("partition_num", inrow.getInt(inrow.fieldIndex("partition_num")));
+                            json.put("oid", inrow.getInt(inrow.fieldIndex("oid")));
                             final int max_score = inrow.getInt(inrow.fieldIndex("max_score"));
-                            logger.log(Level.DEBUG, String.format(" max_score is %d", max_score));
+                            json.put("max_score", max_score);
+                            json.put("hsp_blob", inrow.getString(inrow.fieldIndex("hsp_blob")));
 
-                            if (!score_map.containsKey(rid)) {
-                                TreeMap<Integer, ArrayList<String>> tm =
-                                    new TreeMap<Integer, ArrayList<String>>(Collections.reverseOrder());
-                                score_map.put(rid, tm);
-                            }
-
-                            TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
-
-                            // FIX optimize: early cutoff if tm.size>topn
-                            if (!tm.containsKey(max_score)) {
-                                ArrayList<String> al = new ArrayList<String>();
-                                tm.put(max_score, al);
-                            }
-                            ArrayList<String> al = tm.get(max_score);
-
-                            al.add("TODO");
-                            tm.put(max_score, al);
-                            score_map.put(rid, tm);
+                            topn.add(rid, (double) max_score, json.toString());
                         }
 
                         @Override
@@ -563,44 +560,16 @@ public final class BLAST_DRIVER implements Serializable {
                             logger.log(Level.INFO, "topn_dsw close results:");
                             logger.log(Level.DEBUG, "---------------");
                             logger.log(Level.INFO, String.format(" saw %d records", recordcount));
-                            logger.log(Level.INFO, String.format(" hashmap has %d", score_map.size()));
 
-                            for (String rid : score_map.keySet()) {
-                                TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
-                                // JSON records tend to be either ~360 or ~1,200 bytes
-                                StringBuilder output = new StringBuilder(tm.size() * 400);
-                                int i = 0;
-                                for (Integer score : tm.keySet()) {
-                                    if (i < top_n) {
-                                        ArrayList<String> al = tm.get(score);
-                                        for (String line : al) {
-                                            logger.log(
-                                                    Level.DEBUG,
-                                                    String.format(
-                                                        "  rid=%s, score=%d, i=%d,\n" + "    line=%s",
-                                                        rid, score, i, line.substring(0, 60)));
-                                            output.append(line);
-                                            logger.log(
-                                                    Level.DEBUG, String.format("length of line is %d", line.length()));
-                                            logger.log(Level.DEBUG, String.format("line is %s.", line));
-                                            output.append('\n');
-                                        }
-                                    } else {
-                                        logger.log(Level.DEBUG, " Skipping rest");
-                                        break;
-                                    }
-                                    ++i;
-                                }
-                                ps_write_to_hdfs(rid, output.toString());
-                            }
+                            // FIX: topn
+                            ArrayList<String> results = topn.results(100);
 
                             logger.log(Level.DEBUG, String.format("close %d", partitionId));
-                            try {
-                                if (false) fs.close();
-                            } catch (IOException ioe) {
-                                logger.log(Level.ERROR, "Couldn't close HDFS filesystem");
+                            for (String r : results) {
+                                JSONObject json = new JSONObject(r);
+                                String rid = json.getString("rid");
+                                ps_write_to_hdfs(rid, results.toString());
                             }
-
                             return;
                         } // close
 

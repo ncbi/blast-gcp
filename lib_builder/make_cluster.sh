@@ -149,8 +149,10 @@ read -p "Press enter to start this cluster"
 
 $CMD
 
-exit 0
+EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
+echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
 
+exit 0
 
 
 # dataproc-3bd9289a... has 15 day deletion lifecycle
@@ -192,22 +194,6 @@ exit 0
 #
 # Memory must be 0.9-6.5GB/vCPU
 #
-# If we hypothetically require 1000 vCPUs to meet SLA,
-# cheaper to have 11 96-core machines, with 11 disks?
-#
-# But at least two workers must be non-preemptible (5X $), so need
-# to balance disk costs versus workers.
-#
-# GCP' pricing calculator:
-#  32 standard-32: $17,347/month
-#  16 highcpu-64:  $14,932/month
-#  32 highcpu-32:  $15,113/month
-#  64 highcpu-16:  $14,079/month
-#  64 highcpu-16:  $13,607/month (limited disk)
-# 256 highcpu-4:   $15,581/month
-#  16 highmem-64:  $19,535/month (limited disk, all ramdisk)
-# Ex: $11,666/month (12 std-64)
-#
 # Dataflow pricing is:
 #    $0.07/vCPU hour
 #    $0.003/GB hour (so at least another $0.01/vCPU hour)
@@ -222,18 +208,6 @@ exit 0
 # 0.9GB per CPU, so at least 57.6GB for 64 cores, which is n1-highcpu-64
 
 # NIC gets 2gbit/vCPU, 16gbit max. Single core max ~8.5gbit.
-
-# TODO:
-# YARN, 1 core? Dataproc has /etc/.../spark-defaults.conf set as:
-# # User-supplied properties.
-#  Thu Apr 26 11:46:31 UTC 2018
-#  spark.executor.cores=8
-#  spark.executor.memory=4655m
-#  spark.driver.memory=7680m
-#  spark.driver.maxResultSize=3840m
-#  spark.yarn.am.memory=640m
-
-# check Spark Web UI
 
 # standard-16 and highcpu-64 have >58GB
 # Likely need ~2 GB/vCPU: custom-8-16384?
