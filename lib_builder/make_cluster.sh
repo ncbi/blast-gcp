@@ -110,6 +110,7 @@ do
     printf "    $%0.4f per executor for %s\n" "$PER_EXECUTOR" "$EXECUTORS"
     PER_EXECUTOR=$(bc -l <<< "10000 * $PER_EXECUTOR" )
     PER_EXECUTOR=$(printf "%0.f" "$PER_EXECUTOR" )
+    echo
 #    echo "   Per Executor: $PER_EXECUTOR millicents"
 
     if [[ "$PER_EXECUTOR" -lt "$LOWEST" ]]; then
