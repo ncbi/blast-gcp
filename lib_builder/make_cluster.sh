@@ -5,67 +5,149 @@ set -o errexit
 
 # Tunables
 NUM_CORES=32
-CORES_PER_WORKER=4 # max bandwidth @ >=8
+
+# Where to find startup script
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
-# FIX: Solve for cheapest within constraints (in Bash?)
+function config()
+{
+    NUM_WORKERS=$(((NUM_CORES - 1 + CORES_PER_WORKER) / CORES_PER_WORKER))
 
-NUM_WORKERS=$(((NUM_CORES - 1 + CORES_PER_WORKER) / CORES_PER_WORKER))
-# NT takes about 49GB, NR 116GB
-DB_SPACE=166
-DB_SPACE_PER_WORKER=$((DB_SPACE / NUM_WORKERS))
+    # NT takes about 49GB, NR 116GB
+    DB_SPACE=166
+    DB_SPACE_PER_WORKER=$((DB_SPACE / NUM_WORKERS))
 
-# DataProc install takes around 5GB of disk
-DISK_PER_WORKER=$((DB_SPACE_PER_WORKER+5))
-# FIX: Until we can guarantee DB pinning or implement LRU:
-DISK_PER_WORKER=$((DB_SPACE+10))
+    CORES_PER_MASTER=4
+    RAM_PER_MASTER=$((CORES_PER_MASTER * 4 * 1024))
+    DISK_PER_MASTER=100
+    MASTER=custom-"$CORES_PER_MASTER-$RAM_PER_MASTER"
+    # FIX: Override with standard types
+    MASTER=n1-standard-4
 
-# JVMS ~ 1GB per executor, plus 1GB overhead
-RAM_PER_WORKER=$(( (CORES_PER_WORKER + 1 + DB_SPACE_PER_WORKER)*1024 ))
+    # DataProc install takes around 5GB of disk
+    DISK_PER_WORKER=$((DB_SPACE_PER_WORKER+5))
+    # FIX: Until we can guarantee DB pinning or implement LRU:
+    DISK_PER_WORKER=$((DB_SPACE+10))
 
-MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
-MAX_RAM=$((CORES_PER_WORKER * 6656)) # 1024 * 6.5
+    # JVMS ~ 1GB per executor, plus 1GB overhead
+    RAM_PER_WORKER=$(( (CORES_PER_WORKER + 1 + DB_SPACE_PER_WORKER)*1024 ))
 
-if [[ "$RAM_PER_WORKER" -lt "$MIN_RAM" ]]; then
-    echo "RAM $RAM_PER_WORKER must be >= $MIN_RAM"
-    RAM_PER_WORKER=$MIN_RAM
+    MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
+    MAX_RAM=$((CORES_PER_WORKER * 6656)) # 1024 * 6.5
+
+    if [[ "$RAM_PER_WORKER" -lt "$MIN_RAM" ]]; then
+        echo "RAM $RAM_PER_WORKER must be >= $MIN_RAM"
+        RAM_PER_WORKER=$MIN_RAM
+    fi
+
+    if [[ "$RAM_PER_WORKER" -gt "$MAX_RAM" ]]; then
+        echo "RAM $RAM_PER_WORKER must be <= $MAX_RAM"
+        RAM_PER_WORKER=$MAX_RAM
+    fi
+
+    WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
+
+    PREEMPT_WORKERS=$((NUM_WORKERS - 2))
+    if [[ $PREEMPT_WORKERS -lt 0 ]]; then
+        PREEMPT_WORKERS=0
+    fi
+
+    # DataProc costs 1c/vCPU
+    COST=0
+    COST=$(( COST + NUM_CORES + CORES_PER_MASTER ))
+
+    # Custom vCPU is $0.037 in Nova, $0.007469 preempt
+    # Assume sustained use
+    COST=$(bc -l <<< "$COST + $CORES_PER_MASTER * 0.037364*0.6" )
+    # RAM is $.005/GB hour, $.001 prempt
+    COST=$(bc -l <<< "$COST + $RAM_PER_MASTER * 0.005008*0.6" )
+
+    # 2 normal workers for HDFS replication
+    COST=$(bc -l <<< "$COST + 2 * 0.037364*.6" )
+    COST=$(bc -l <<< "$COST + 2 * $RAM_PER_WORKER * .005008*0.6" )
+
+    # Preemptive workers
+    COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * 0.007469" )
+    COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * $RAM_PER_WORKER * 0.001006" )
+
+    # Persisent disks: Standrd provisioned is $.044/GB month
+    COST=$(bc -l <<< "$COST + $DISK_PER_MASTER * .044 *0.6 / 720" )
+    COST=$(bc -l <<< "$COST + $NUM_WORKERS * $DISK_PER_WORKER * 0.044 * 0.6 /720" )
+
+    # Convert from pennies to dollars
+    echo "  $NUM_WORKERS workers ($PREEMPT_WORKERS pre-emptible)"
+    echo "    Each has $CORES_PER_WORKER cores"
+    echo "    Each has $RAM_PER_WORKER MB RAM"
+    echo "    Each has $DISK_PER_WORKER GB Persistent disk"
+#    echo $COST
+    PERHOUR=$(bc -l <<< "$COST / 100")
+    printf "    Cost will be $%0.2f/hour" "$PERHOUR"
+    echo
+#    COST=$(printf %.0f $COST)
+}
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 number-of-cores"
+    exit 1
 fi
 
-if [[ "$RAM_PER_WORKER" -gt "$MAX_RAM" ]]; then
-    echo "RAM $RAM_PER_WORKER must be <= $MAX_RAM"
-    RAM_PER_WORKER=$MAX_RAM
+NUM_CORES=$1
+
+if [[ "$NUM_CORES" -lt 32 ]]; then
+    echo "Not really a cluster without at least 32 cores"
+    exit 1
 fi
 
-WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
+echo "Solving for lowest price..."
+LOWEST=9999999
+for CORES_PER_WORKER in $(seq 2 2 32);
+do
+    config
 
-PREEMPT_WORKERS=$((NUM_WORKERS - 2))
+    # We lose ~1 core per worker to Spark/YARN/Hadoop/...
+    EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
+    PER_EXECUTOR=$(bc -l <<< "100 * $COST / $EXECUTORS" )
+    PER_EXECUTOR=$(printf %.0f "$PER_EXECUTOR")
 
-echo "Requesting $NUM_WORKERS workers ($PREEMPT_WORKERS pre-emptible)"
-echo "  Each has $CORES_PER_WORKER cores"
-echo "  Each has $RAM_PER_WORKER MB RAM"
-echo "  Each has $DISK_PER_WORKER GB Persistent disk"
+    if [[ "$PER_EXECUTOR" -lt "$LOWEST" ]]; then
+        LOWEST=$PER_EXECUTOR
+        BEST=$CORES_PER_WORKER
+    fi
+done
 
-gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-"$USER" \
-    --master-machine-type n1-standard-4 \
-        --master-boot-disk-size "$DISK_PER_WORKER" \
+echo
+echo "Best value is: $BEST cores/worker"
+
+CORES_PER_WORKER=$BEST
+config
+
+CMD="gcloud beta dataproc --region us-east4 \
+    clusters create blast-dataproc-$USER \
+    --master-machine-type $MASTER \
+        --master-boot-disk-size $DISK_PER_MASTER \
     --num-workers 2 \
-        --worker-boot-disk-size "$DISK_PER_WORKER" \
-    --worker-machine-type "$WORKER" \
-    --num-preemptible-workers "$PREEMPT_WORKERS" \
-        --preemptible-worker-boot-disk-size "$DISK_PER_WORKER" \
+        --worker-boot-disk-size $DISK_PER_WORKER \
+    --worker-machine-type $WORKER \
+    --num-preemptible-workers $PREEMPT_WORKERS \
+        --preemptible-worker-boot-disk-size $DISK_PER_WORKER \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
-    --labels owner="$USER" \
+    --labels owner=$USER \
     --region us-east4 \
     --zone   us-east4-b \
     --max-age=8h \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
-    --tags blast-dataproc-"$USER-$(date +%Y%m%d-%H%M%S)" \
-    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
+    $PIPELINEBUCKET/scripts/cluster_initialize.sh \
+    --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \
+    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4"
+
+echo "Command is: $CMD"
+echo
+read -p "Press enter to start this cluster"
+
+$CMD
 
 exit 0
 
