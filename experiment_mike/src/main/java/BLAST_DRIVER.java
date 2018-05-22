@@ -73,7 +73,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db1";
+    private final String db_location = "/tmp/blast/db3";
 
     public void BLAST_DRIVER() {}
 
@@ -132,7 +132,9 @@ public final class BLAST_DRIVER implements Serializable {
 
         // -> process, node, rack, any
         if (settings.scheduler_fair)
-            conf.set("spark.scheduler.mode", "FAIR"); // FIX, need fairscheduler.xml
+            conf.set(
+                    "spark.scheduler.mode",
+                    "FAIR"); // FIX, need fairscheduler.xml, see /etc/spark/conf.dist/fair_scheduler.xml
         conf.set("spark.shuffle.reduceLocality.enabled", "false");
 
         conf.set("spark.sql.shuffle.partitions", Integer.toString(max_partitions));
@@ -187,12 +189,14 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> parts = sparksession.createDataFrame(data, parts_schema);
         Dataset<Row> blast_partitions =
             parts
-            .repartition(max_partitions, parts.col("partition_num"))
+            .sort("partition_num", "db")
+            .sortWithinPartitions("partition_num", "db")
+            // .repartition(max_partitions, parts.col("partition_num"))
+            .repartition(settings.num_executors, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
         blast_partitions.show();
         blast_partitions.createOrReplaceTempView("blast_partitions");
-        // System.out.println("blast_partitions is: " + Arrays.toString(blast_partitions.inputFiles()));
 
         return true;
     }
@@ -382,7 +386,7 @@ public final class BLAST_DRIVER implements Serializable {
                     (FlatMapFunction<Row, Row>)
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-                        logger.log(Level.INFO, "<inrow> is :\n  " + inrow.mkString("\n  "));
+                        logger.log(Level.INFO, "prelim_results <inrow> is : " + inrow.mkString(" : "));
                         if (inrow.anyNull()) logger.log(Level.ERROR, " inrow has NULLS");
 
                         String protocol = inrow.getString(inrow.fieldIndex("protocol"));
@@ -438,26 +442,31 @@ public final class BLAST_DRIVER implements Serializable {
                                 byte[] encoded = Base64.getEncoder().encode(S.hsp_blob);
                                 String b64blob = new String(encoded, StandardCharsets.UTF_8);
 
-                                Row outrow =
-                                    RowFactory.create(
-                                            protocol,
-                                            rid,
-                                            db_tag,
-                                            top_N_prelim,
-                                            top_N_traceback,
-                                            query_seq,
-                                            query_url,
-                                            program,
-                                            blast_params,
-                                            starttime,
-                                            partition_num,
-                                            S.oid,
-                                            S.max_score,
-                                            b64blob);
+                                logger.log(Level.WARN, "hsp outrow building");
+                                try {
+                                    Row outrow =
+                                        RowFactory.create(
+                                                protocol,
+                                                rid,
+                                                db_tag,
+                                                top_N_prelim,
+                                                top_N_traceback,
+                                                query_seq,
+                                                query_url,
+                                                program,
+                                                blast_params,
+                                                starttime,
+                                                db_tag,
+                                                partition_num,
+                                                S.oid,
+                                                S.max_score,
+                                                b64blob);
 
-                                hsp_rows.add(outrow);
-
-                                logger.log(Level.INFO, "hsp outrow is\n  " + outrow.mkString("\n  "));
+                                    logger.log(Level.WARN, "hsp outrow is " + outrow.mkString(" : "));
+                                    hsp_rows.add(outrow);
+                                } catch (Exception e) {
+                                    logger.log(Level.ERROR, "factory exception");
+                                }
 
                                 // logger.log(Level.INFO, "json is " + json.toString());
                             }
@@ -466,8 +475,9 @@ public final class BLAST_DRIVER implements Serializable {
                         } else {
                             logger.log(Level.ERROR, "NULL blaster library");
                             hsp_rows = new ArrayList<>();
-                            Row outrow = RowFactory.create("null blaster", "null blaster");
-                            hsp_rows.add(outrow);
+                            //                            Row outrow = RowFactory.create("null blaster",
+                            // "null blaster");
+                            //                            hsp_rows.add(outrow);
                         }
                         return hsp_rows.iterator();
                     },
@@ -510,30 +520,22 @@ public final class BLAST_DRIVER implements Serializable {
                                 return false;
                             }
 
-                            logger.log(Level.DEBUG, String.format("ps open %d %d", partitionId, version));
+                            logger.log(
+                                    Level.INFO, String.format("topn_dsw open %d %d", partitionId, version));
                             if (partitionId != 0)
                                 logger.log(
-                                        Level.DEBUG, String.format(" *** not partition 0 %d ??? ", partitionId));
+                                        Level.ERROR, String.format(" *** not partition 0 %d ??? ", partitionId));
                             return true;
                         } // open
 
                         @Override
-                        public void process(Row value) {
+                        public void process(Row inrow) {
                             ++recordcount;
-                            logger.log(Level.DEBUG, String.format(" in process %d", partitionId));
-                            logger.log(Level.DEBUG, "  " + value.mkString("\n  ").substring(0, 50));
-                            String line = value.getString(0);
-                            logger.log(Level.DEBUG, "  line is " + line);
+                            logger.log(Level.INFO, String.format(" topn_dsw in process %d", partitionId));
+                            logger.log(Level.INFO, "topn_dsw " + inrow.mkString(" : "));
 
-                            JSONObject json = new JSONObject(line);
-                            String rid = json.getString("RID");
-                            int max_score = json.getInt("max_score");
-                            // String db=json.getString("db");
-                            // int partition_num=json.getInt("partition_num");
-                            // int oid=json.getInt("oid");
-                            // String query_seq=json.getString("query_seq");
-                            // String hsp_blob=json.getString("hsp_blob");
-
+                            final String rid = inrow.getString(inrow.fieldIndex("RID"));
+                            final int max_score = inrow.getInt(inrow.fieldIndex("max_score"));
                             logger.log(Level.DEBUG, String.format(" max_score is %d", max_score));
 
                             if (!score_map.containsKey(rid)) {
@@ -551,17 +553,17 @@ public final class BLAST_DRIVER implements Serializable {
                             }
                             ArrayList<String> al = tm.get(max_score);
 
-                            al.add(line);
+                            al.add("TODO");
                             tm.put(max_score, al);
                             score_map.put(rid, tm);
                         }
 
                         @Override
                         public void close(Throwable errorOrNull) {
-                            logger.log(Level.DEBUG, "close results:");
+                            logger.log(Level.INFO, "topn_dsw close results:");
                             logger.log(Level.DEBUG, "---------------");
-                            logger.log(Level.DEBUG, String.format(" saw %d records", recordcount));
-                            logger.log(Level.DEBUG, String.format(" hashmap has %d", score_map.size()));
+                            logger.log(Level.INFO, String.format(" saw %d records", recordcount));
+                            logger.log(Level.INFO, String.format(" hashmap has %d", score_map.size()));
 
                             for (String rid : score_map.keySet()) {
                                 TreeMap<Integer, ArrayList<String>> tm = score_map.get(rid);
@@ -651,8 +653,7 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> results = prelim_results(joined);
 
         // Don't use coalesce here, it'll group previous work onto one worker
-        Dataset<Row> prelim_search_1 = results.repartition(1);
-        // FIX: Partition by RID, which is in JSON string at the moment
+        Dataset<Row> prelim_search_1 = results.repartition(100, results.col("RID"));
 
         DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
 
@@ -729,7 +730,7 @@ public final class BLAST_DRIVER implements Serializable {
                     (FlatMapFunction<Row, String>)
                     inrow -> {
                         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-                        logger.log(Level.INFO, "tb <row> is :\n  " + inrow.mkString("\n  "));
+                        logger.log(Level.INFO, "tb <row> is :  " + inrow.mkString(" : "));
                         if (inrow.anyNull()) logger.log(Level.ERROR, " tb inrow has NULLS");
 
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
@@ -844,7 +845,7 @@ public final class BLAST_DRIVER implements Serializable {
                         @Override
                         public void process(Row value) {
                             logger.log(Level.DEBUG, String.format(" in tb process %d", partitionId));
-                            logger.log(Level.DEBUG, " tb process " + value.mkString("\n  "));
+                            logger.log(Level.DEBUG, " tb process " + value.mkString(" : "));
                             String line = value.getString(0);
                             JSONObject json = new JSONObject(line);
                             String rid = json.getString("RID");
