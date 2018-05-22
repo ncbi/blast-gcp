@@ -67,7 +67,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
     echo "master node"
     # Need maven to build jars, virtualenv for installing Google APIs for tests
     apt-get update -y
-    apt-get install -y -u maven python python-dev python3 python3-dev virtualenv
+    apt-get install -y -u maven python python-dev python3 python3-dev virtualenv telnet
     # protobuf-compiler
     # chromium, xterm # for looking at webserver with X11 forwarding?
 else
