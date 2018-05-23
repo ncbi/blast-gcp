@@ -308,6 +308,7 @@ public final class BLAST_DRIVER implements Serializable {
         final String lockname = dest + ".lock";
         File lockfile = new File(lockname);
         FileLock lock = null;
+        FileChannel fileChannel = null;
         while (!donefile.exists()) {
             ++retries;
             try {
@@ -315,7 +316,9 @@ public final class BLAST_DRIVER implements Serializable {
                     if (!lockfile.createNewFile()) logger.log(Level.ERROR, lockname + " already exists?");
 
                 java.nio.file.Path lockpath = Paths.get(lockname);
-                FileChannel fileChannel = FileChannel.open(lockpath, StandardOpenOption.WRITE);
+                fileChannel =
+                    FileChannel.open(
+                            lockpath, StandardOpenOption.WRITE, StandardOpenOption.DELETE_ON_CLOSE);
                 lock = fileChannel.lock();
                 if (donefile.exists()) continue;
 
@@ -341,7 +344,10 @@ public final class BLAST_DRIVER implements Serializable {
                         Level.ERROR,
                         String.format(
                             "Couldn't load (attempt #%d) %s from GS:// : %s", retries, src, e.toString()));
-                // if (lock!=null) lock.release();
+                try {
+                    if (lock != null) lock.release();
+                } catch (Exception e2) {
+                }
             }
             try {
                 Thread.sleep(backoff);
@@ -351,6 +357,7 @@ public final class BLAST_DRIVER implements Serializable {
         } // !donefile.exists
         try {
             if (lock != null) lock.release();
+            if (fileChannel != null) fileChannel.close();
             lockfile.delete();
         } catch (Exception e) {
             logger.log(Level.ERROR, "Couldn't delete/unlock: " + e.toString());
