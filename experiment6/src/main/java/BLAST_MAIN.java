@@ -121,13 +121,13 @@ public final class BLAST_MAIN
             for ( String fn : settings.transfer_files )
                 sc.addFile( fn );
 
-            Broadcast< BLAST_SETTINGS > SETTINGS = sc.broadcast( settings );
+            Broadcast< BLAST_LOG_SETTING > LOG_SETTING = sc.broadcast( settings.log );
 
             try
             {
-                BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, SETTINGS, sc );
+                BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, LOG_SETTING, sc );
 
-                BLAST_JOBS jobs = new BLAST_JOBS( settings, SETTINGS, sc, db_map, status );
+                BLAST_JOBS jobs = new BLAST_JOBS( settings, LOG_SETTING, sc, db_map, status );
 
                 System.out.println( "spark-blast started..." );
 

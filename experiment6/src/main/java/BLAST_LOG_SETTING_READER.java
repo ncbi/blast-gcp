@@ -71,7 +71,7 @@ public class BLAST_LOG_SETTING_READER
         setting.db_copy        = dflt_db_copy;
     }
 
-    public static void from_json( JsonObject obj, BLAST_LOG_SETTING setting )
+    public static void from_json( JsonObject obj, BLAST_LOG_SETTING setting, final String a_jni_log_level )
     {
         if ( obj != null )
         {
@@ -87,6 +87,8 @@ public class BLAST_LOG_SETTING_READER
             setting.worker_shift = SE_UTILS.get_json_bool( obj, key_worker_shift, dflt_worker_shift );
             setting.pref_loc     = SE_UTILS.get_json_bool( obj, key_pref_loc, dflt_pref_loc );
             setting.db_copy      = SE_UTILS.get_json_bool( obj, key_db_copy, dflt_db_copy );
+
+            setting.jni_log_level = a_jni_log_level;
         }
     }
 

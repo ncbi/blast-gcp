@@ -32,46 +32,45 @@ import java.util.ArrayList;
 
 public class BLAST_DB_SETTING implements Serializable
 {
-    public String selector;
-    public String location;
-    public String pattern;
-    public String bucket;
-    public Boolean flat_layout;
-    public Integer num_partitions;
-    public List< String > extensions;
-    public Integer num_locations;
+    public String key;          /* key from request... ( 'nt', 'nr' ) */
+    public String location;     /* where is the location root on the worker? '/tmp/blast/db' */
+    public String bucket;       /* where is the source-bucket 'nt_50mb_chunks' */
+    public Boolean flat_layout;         /* do we use a subdir for each volume under the location on the worker? */
+    public Integer num_locations;       /* how many locations per DATABASE-PART */
+    public Integer volume_count;        /* how many volumes does this database have */
+    public Long seq_count;              /* how many sequences are in this database?, comes from the manifest */
+    public Long seq_lenght;             /* how many elements are in this database?, comes from the manifest */
+
+    public List< CONF_VOLUME > volumes; /* comes either from the manifest, or is created using the ini.json */
 
     public BLAST_DB_SETTING()
     {
-        extensions = new ArrayList<>();
+        volumes = new ArrayList<>();
     }
 
     public Boolean valid()
     {
+        if ( key.isEmpty() ) return false;
+        if ( location.isEmpty() ) return false;
         if ( bucket.isEmpty() ) return false;
-        if ( num_partitions < 1 ) return false;
-        if ( extensions.isEmpty() ) return false;
         return true;
     }
 
     public String missing()
     {
         String S = "";
-        if ( bucket.isEmpty() ) S = S + String.format( "(%s).bucket is missing\n", selector );
-        if ( num_partitions < 1 ) S = S + String.format( "(%s).num_partitions < 1\n", selector );
-        if ( extensions.isEmpty() ) S = S + String.format( "(%s).extensions are missing\n", selector );
+        if ( key.isEmpty() ) S = S + String.format( "key is missing\n" );
+        if ( location.isEmpty() ) S = S + String.format( "(%s).location is missing\n", key );
+        if ( bucket.isEmpty() ) S = S + String.format( "(%s).bucket is missing\n", key );
         return S;
     }
 
     @Override public String toString()
     {
-        String S = String.format( "\t(%s).location ........ '%s'\n", selector, location );
-        S =  S  +  String.format( "\t(%s).pattern ......... '%s'\n", selector, pattern );
-        S =  S  +  String.format( "\t(%s).bucket .......... '%s'\n", selector, bucket );
-        S =  S  +  String.format( "\t(%s).flat layout ..... %s\n", selector, Boolean.toString( flat_layout ) );
-        S =  S  +  String.format( "\t(%s).num_partitions .. %d\n", selector, num_partitions );
-        S =  S  +  String.format( "\t(%s).extensions ...... %s\n", selector, extensions );
-        S =  S  +  String.format( "\t(%s).num_locations ... %d\n", selector, num_locations );
+        String S = String.format( "\t(%s).location ........ '%s'\n", key, location );
+        S =  S  +  String.format( "\t(%s).bucket .......... '%s'\n", key, bucket );
+        S =  S  +  String.format( "\t(%s).flat layout ..... %s\n", key, Boolean.toString( flat_layout ) );
+        S =  S  +  String.format( "\t(%s).num_locations ... %d\n", key, num_locations );
         return S;
     }
 }

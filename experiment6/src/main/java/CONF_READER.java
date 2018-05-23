@@ -50,7 +50,6 @@ public class CONF_READER
     public static final String key_volume_count = "volume_count";
     public static final String key_seq_count = "sequence_count";
     public static final String key_seq_length = "sequence_length";
-    public static final String key_extensions = "pipeline_extensions";
     public static final String key_updated = "update_date";
     public static final String key_bucket = "gs_bucket_name";
     public static final String key_volumes = "volumes";
@@ -99,7 +98,8 @@ public class CONF_READER
                 if ( e.isJsonObject() )
                 {
                     JsonObject vol_obj = e.getAsJsonObject();
-                    CONF_VOLUME vol = new CONF_VOLUME( SE_UTILS.get_json_string( vol_obj, key_vol_name, "" ) );
+                    String vol_name = SE_UTILS.get_json_string( vol_obj, key_vol_name, "" );
+                    CONF_VOLUME vol = new CONF_VOLUME( vol_name, db.db_tag, db.bucket );
                     read_db_manifest_volumes_files( vol, SE_UTILS.get_sub_array( vol_obj, key_vol_files ) );
 
                     db.volumes.add( vol );
@@ -123,7 +123,6 @@ public class CONF_READER
                     db.volume_count = SE_UTILS.get_json_int( root, key_volume_count, 0 );
                     db.seq_count = SE_UTILS.get_json_long( root, key_seq_count, 0L );
                     db.seq_length = SE_UTILS.get_json_long( root, key_seq_length, 0L );
-                    SE_UTILS.get_string_list( root, key_extensions, null, db.extensions );
                     db.updated = SE_UTILS.get_json_string( root, key_updated, "" );
                     db.bucket = SE_UTILS.get_json_string( root, key_bucket, "" );
 

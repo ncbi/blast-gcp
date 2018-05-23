@@ -41,6 +41,7 @@ public class BLAST_LOG_SETTING implements Serializable
     public Boolean worker_shift;
     public Boolean pref_loc;
     public Boolean db_copy;
+    public String jni_log_level;
 
     @Override public String toString()
     {

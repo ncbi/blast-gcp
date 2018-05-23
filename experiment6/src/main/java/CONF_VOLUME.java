@@ -32,35 +32,17 @@ import java.util.ArrayList;
 
 public class CONF_VOLUME implements Serializable
 {
-    public String name;
+    public String name;     /* for example: 'nt_50M.00' */
+    public String key;      /* for example: 'nt' */
+    public String bucket;
     public List< CONF_VOLUME_FILE > files;
 
-    public CONF_VOLUME( final String a_name )
+    public CONF_VOLUME( final String a_name, final String a_key, final String a_bucket )
     {
-        name = a_name;
+        name    = a_name;
+        key     = a_key;
+        bucket  = a_bucket;
         files = new ArrayList<>();
-    }
-
-    public Boolean valid()
-    {
-        if ( name.isEmpty() ) return false;
-        if ( files.isEmpty() ) return false;
-        for ( CONF_VOLUME_FILE f : files )
-        {
-            if ( !f.valid() ) 
-                return false;
-        }
-        return true;
-    }
-
-    public String missing()
-    {
-        String S = "";
-        if ( name.isEmpty() ) S = S + "manifest.json : volume.name missing\n";
-        if ( files.isEmpty() ) S = S + "manifest.json : volume.files missing\n";
-        for ( CONF_VOLUME_FILE f : files )
-            S = S + f.missing();
-        return S;
     }
 
     @Override public String toString()

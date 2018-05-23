@@ -27,20 +27,19 @@
                 "selector" : "nt",
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
-                "extensions" : [ "nhr", "nin", "nsq" ],
-                "num_partitions" : 160,
-                "num_locations" : 2
+                "extensions" : [ "nhr", "nin", "nsq" ]
             },
             {
                 "selector" : "nr",
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
-                "extensions" : [ "phr", "pin", "psq" ],
-                "num_partitions" : 160,
-                "num_locations" : 1
+                "extensions" : [ "phr", "pin", "psq" ]
             }
         ],
-        "top_n" : 100
+        "top_n" : 100,
+        "num_db_limit" : 160,
+        "num_locations" : 2,
+        "manifest_root" : "dbs.json"
     },
 
     "result" :

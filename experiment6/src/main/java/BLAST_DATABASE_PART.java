@@ -31,39 +31,23 @@ import java.net.InetAddress;
 class BLAST_DATABASE_PART implements Serializable
 {
     public final Integer nr;
-    public final String db_key;
     public final String db_spec;
-    public final String name;
     public String worker_name;
+    public final CONF_VOLUME volume;
 
     public BLAST_DATABASE_PART( final BLAST_DATABASE_PART other )
     {
-        this.nr         = other.nr;
-        this.db_key     = other.db_key;
-        this.db_spec    = other.db_spec;
-        this.name       = other.name;
-        this.worker_name= other.worker_name;
+        nr         = other.nr;
+        db_spec    = other.db_spec;
+        volume     = other.volume;
+        worker_name= other.worker_name;
     }
 
-    // location  : '/tmp/blast/db'
-    // db_pat    : 'nt_50M'
-    // nr        : 102
-    // db_spec --> '/tmp/blast/db/nt_50M.102/nt_50M.102'
-    public BLAST_DATABASE_PART( final String location, final String db_pat, final Integer nr, final Boolean flat, final String key )
+    public BLAST_DATABASE_PART( final Integer a_nr, final CONF_VOLUME a_volume, final String location )
     {
-        this.nr = nr;
-        this.db_key = key;
-
-        if ( nr < 100 )
-            name = String.format( "%s.%02d", db_pat, nr  );
-        else
-            name = String.format( "%s.%d", db_pat, nr );
-
-        if ( flat )
-            db_spec = String.format( "%s/%s", location, name );
-        else
-            db_spec = String.format( "%s/%s/%s", location, name, name );
-
+        nr      = a_nr;
+        db_spec = String.format( "%s/%s/%s", location, a_volume.name, a_volume.name );
+        volume  = a_volume;
     }
 
     public BLAST_DATABASE_PART enter_worker_name()
@@ -82,7 +66,7 @@ class BLAST_DATABASE_PART implements Serializable
 
     @Override public String toString()
     {
-        return String.format( "part( %s.%d: '%s' )", this.db_key, this.nr, this.name );
+        return String.format( "part( %s.%d: '%s' )", volume.key, nr, volume.name );
     }
 
     public Integer getPartition( Integer num_partitions )

@@ -27,52 +27,97 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import com.google.gson.JsonObject;
+import java.util.List;
+import java.util.ArrayList;
 
 public class BLAST_DB_SETTING_READER
 {
     public static final String key_selector = "selector";
-    public static final String key_location = "location";
     public static final String key_pattern = "pattern";
     public static final String key_bucket = "bucket";
     public static final String key_flat_layout = "flat_layout";
-    public static final String key_num_partitions = "num_partitions";
     public static final String key_extensions = "extensions";
-    public static final String key_num_locations = "num_locations";
 
     public static final String  dflt_selector = "nt";
-    public static final String  dflt_location = "/tmp/blast/db";
     public static final String  dflt_pattern = "nt_50M";
     public static final String  dflt_bucket = ""; // "nt_50mb_chunks";
     public static final Boolean dflt_flat_layout = false;
-    public static final Integer dflt_num_partitions = 0;
-    public static final Integer dflt_num_locations = 1;
 
-    public static void defaults( BLAST_DB_SETTING setting )
-    {
-        setting.selector = dflt_selector;
-        setting.location = dflt_location;
-        setting.pattern  = dflt_pattern;
-        setting.bucket   = dflt_bucket;
-        setting.flat_layout     = dflt_flat_layout;
-        setting.num_partitions  = dflt_num_partitions;
-        setting.num_locations   = dflt_num_locations;
-    }
-
-    public static BLAST_DB_SETTING from_json( JsonObject obj )
+    public static BLAST_DB_SETTING from_json( JsonObject obj, Integer volume_limit, final String loc, Integer num_locations )
     {
         BLAST_DB_SETTING res = new BLAST_DB_SETTING();
         if ( obj != null )
         {
-            res.selector = SE_UTILS.get_json_string( obj, key_selector, dflt_selector );
-            res.location = SE_UTILS.get_json_string( obj, key_location, dflt_location );
-            res.pattern  = SE_UTILS.get_json_string( obj, key_pattern, dflt_pattern );
-            res.bucket   = SE_UTILS.get_json_string( obj, key_bucket, dflt_bucket );
+            res.key         = SE_UTILS.get_json_string( obj, key_selector, dflt_selector );    /* key from request... */
+            res.location   = loc;    /* where is the location root on the worker? */
+            String pattern = SE_UTILS.get_json_string( obj, key_pattern, dflt_pattern );
+            res.bucket     = SE_UTILS.get_json_string( obj, key_bucket, dflt_bucket );
             res.flat_layout    = SE_UTILS.get_json_bool( obj, key_flat_layout, dflt_flat_layout );
-            res.num_partitions = SE_UTILS.get_json_int( obj, key_num_partitions, dflt_num_partitions );
-            SE_UTILS.get_string_list( obj, key_extensions, null, res.extensions );
-            res.num_locations  = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
+            List< String > extensions = new ArrayList<>();
+            SE_UTILS.get_string_list( obj, key_extensions, null, extensions );
+            res.num_locations  = num_locations;
+            res.volume_count   = 0;
+            res.seq_count      = 0L;
+            res.seq_lenght     = 0L;
+
+            /* now let as create the volumes... */
+            for ( int i = 0; i < volume_limit; ++i )
+            {
+                String name;
+                if ( i < 100 )
+                    name = String.format( "%s.%02d", pattern, i  );
+                else
+                    name = String.format( "%s.%d", pattern, i );
+        
+                CONF_VOLUME vol = new CONF_VOLUME( name, res.key, res.bucket );
+                for ( String s : extensions )
+                {
+                    CONF_VOLUME_FILE vol_f = new CONF_VOLUME_FILE();
+                    vol_f.f_type = s;
+                    vol_f.f_name = String.format( "%s.%s", name, s );
+                    vol_f.f_md5 = "";   // we do not know without manifest-file
+                    vol_f.f_local = String.format( "%s/%s/%s", loc, pattern, vol_f.f_name );
+                    vol.files.add( vol_f );
+                }
+                res.volumes.add( vol );
+            }
         }
         return res;
     }
 
+    public static BLAST_DB_SETTING from_conf( CONF_DATABASE conf, Integer volume_limit, final String loc, Integer num_locations )
+    {
+        BLAST_DB_SETTING res = new BLAST_DB_SETTING();
+        if ( conf != null )
+        {
+            res.key      = conf.db_tag;     /* the tag will be the key the request joins with the database */
+            res.location = loc;
+            res.bucket   = conf.bucket;
+            res.flat_layout   = false; /* we do not use a flat layout in case of manifest */
+            res.num_locations = num_locations;
+            res.volume_count  = conf.volume_count;
+            res.seq_count     = conf.seq_count;
+            res.seq_lenght    = conf.seq_length;
+
+            /* now let as assign the volumes from the manifest ... */
+            int n = conf.volumes.size();
+            if ( volume_limit > 0 && n > volume_limit )
+                n = volume_limit;
+            for ( CONF_VOLUME v : conf.volumes.subList( 0, n ) )
+            {
+                CONF_VOLUME vol = new CONF_VOLUME( v.name, res.key, res.bucket );
+                for ( CONF_VOLUME_FILE f : v.files )
+                {
+                    CONF_VOLUME_FILE f_new = new CONF_VOLUME_FILE();
+                    f_new.f_type = f.f_type;
+                    f_new.f_name = f.f_name;
+                    f_new.f_md5  = f.f_md5;
+                    f_new.f_local = String.format( "%s/%s/%s", loc, v.name, f.f_name );
+                    vol.files.add( f_new );
+                }
+                res.volumes.add( vol );
+            }
+        }
+        return res;
+    }
 }

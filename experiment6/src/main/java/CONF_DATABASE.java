@@ -38,44 +38,13 @@ public class CONF_DATABASE implements Serializable
     public Integer volume_count;
     public Long seq_count;
     public Long seq_length;
-    public List< String > extensions;
     public List< CONF_VOLUME > volumes;
     public String updated;
     public String bucket;
 
     public CONF_DATABASE()
     {
-        extensions = new ArrayList<>();
         volumes = new ArrayList<>();
-    }
-
-    public Boolean valid()
-    {
-        if ( db_type.isEmpty() ) return false;
-        if ( db_manifest_url.isEmpty() ) return false;
-        if ( db_tag.isEmpty() ) return false;
-        if ( volume_count < 1 ) return false;
-        if ( seq_count < 1 ) return false;
-        if ( seq_length < 1 ) return false;
-        if ( extensions.isEmpty() ) return false;
-        if ( bucket.isEmpty() ) return false;
-        if ( volumes.isEmpty() ) return false;
-        return true;
-    }
-
-    public String missing()
-    {
-        String S = "";
-        if ( db_type.isEmpty() ) S = S + "dbs.json : type missing\n";
-        if ( db_manifest_url.isEmpty() ) S = S + "dbs.json : manifest_url missing\n";
-        if ( db_tag.isEmpty() ) S = S + "manifest.json : db_tag missing\n";
-        if ( volume_count < 1 ) S = S + "manifest.json : volume_count invalid\n";
-        if ( seq_count < 1 ) S = S + "manifest.json : sequence_count invalid\n";
-        if ( seq_length < 1 ) S = S + "manifest.json : sequence_length invalid\n";
-        if ( extensions.isEmpty() ) S = S + "manifest.json : extensions missing\n";
-        if ( bucket.isEmpty() ) S = S + "manifest.json : bucket missing\n";
-        if ( volumes.isEmpty() ) S = S + "manifest.json : volumes missing\n";
-        return S;
     }
 
     @Override public String toString()
@@ -86,7 +55,6 @@ public class CONF_DATABASE implements Serializable
         S =  S  +  String.format( "\tvol_count ... %d\n", volume_count );
         S =  S  +  String.format( "\tseq_count ... %,d\n", seq_count );
         S =  S  +  String.format( "\tseq_length .. %,d\n", seq_length );
-        S =  S  +  String.format( "\textensions .. '%s'\n", extensions );
         S =  S  +  String.format( "\tupdated ..... '%s'\n", updated );
         S =  S  +  String.format( "\tbucket ...... '%s'\n", bucket );
         for ( CONF_VOLUME v : volumes.subList( 0, 10 ) )

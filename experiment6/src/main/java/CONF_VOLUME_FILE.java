@@ -30,30 +30,14 @@ import java.io.Serializable;
 
 public class CONF_VOLUME_FILE implements Serializable
 {
-    public String f_type;
-    public String f_name;
-    public String f_md5;
-
-    public Boolean valid()
-    {
-        if ( f_type.isEmpty() ) return false;
-        if ( f_name.isEmpty() ) return false;
-        if ( f_md5.isEmpty() ) return false;
-        return true;
-    }
-
-    public String missing()
-    {
-        String S = "";
-        if ( f_type.isEmpty() ) S = S + "manifest.json : volume.files.type missing\n";
-        if ( f_name.isEmpty() ) S = S + "manifest.json : volume.files.name missing\n";
-        if ( f_md5.isEmpty() ) S = S + "manifest.json : volume.files.md5 missing\n";
-        return S;
-    }
+    public String f_type;   /* for example : 'nhr' */
+    public String f_name;   /* for example : 'nt_50M.00.nhr' */
+    public String f_md5;    /* for exampel : 'DBEis3HM8wceV0Pno3TPlQ==' */
+    public String f_local;  /* for example : 'full local file-path' */
 
     @Override public String toString()
     {
-        return String.format( "\t\t\t[ type:'%s', name:'%s', md5:'%s'\n", f_type, f_name, f_md5 );
+        return String.format( "\t\t\t[ type:'%s', name:'%s', md5:'%s', local:'%s'\n", f_type, f_name, f_md5, f_local );
     }
 }
 

@@ -39,27 +39,6 @@ public class CONF implements Serializable
         dbs = new ArrayList<>();
     }
 
-    public Boolean valid()
-    {
-        Boolean res = true;
-        for ( CONF_DATABASE db : dbs )
-        {
-            if ( res )
-                res = db.valid();
-        }
-        return res;
-    }
-
-    public String missing()
-    {
-        String S = "";
-        for ( CONF_DATABASE db : dbs )
-        {
-            S = S + db.missing();
-        }        
-        return S;
-    }
-
     @Override public String toString()
     {
         String S = "";

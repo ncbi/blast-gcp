@@ -134,11 +134,11 @@ public class BLAST_LIB {
             BLAST_LIB.logLevel = Level.toLevel(pslogLevel);
 
             // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-            log("INFO", "Java jni_prelim_search called with");
-            log("INFO", "  query_seq : " + req.query_seq);
-            log("INFO", "  query_url : " + req.query_url);
-            log("INFO", "  db_spec   : " + part.db_spec);
-            log("INFO", "  program   : " + req.program);
+            log( "INFO", "Java jni_prelim_search called with" );
+            log( "INFO", "  query_seq : " + req.query_seq );
+            log( "INFO", "  query_url : " + req.query_url );
+            log( "INFO", "  db_spec   : " + part.db_spec );
+            log( "INFO", "  program   : " + req.program );
             // FIX - top_n_prelim
             log("INFO", "  topn      : " + req.top_n);
 
@@ -160,7 +160,7 @@ public class BLAST_LIB {
                 query = req.query_seq;
             }
 
-            BLAST_HSP_LIST[] ret = prelim_search(query, part.db_spec, req.program, req.params, req.top_n);
+            BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n );
 
             long finishtime = System.currentTimeMillis();
             log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
@@ -191,11 +191,11 @@ public class BLAST_LIB {
             final String tblogLevel) {
         throwIfBad();
 
-        BLAST_LIB.logLevel = Level.toLevel(tblogLevel);
-        log("INFO", "Java jni_traceback called with");
-        log("INFO", "  query_seq : " + req.query_seq);
-        log("INFO", "  query_url : " + req.query_url);
-        log("INFO", "  db_spec   : " + part.db_spec);
+        BLAST_LIB.logLevel = Level.toLevel( tblogLevel );
+        log( "INFO", "Java jni_traceback called with" );
+        log( "INFO", "  query_seq : " + req.query_seq );
+        log( "INFO", "  query_url : " + req.query_url );
+        log( "INFO", "  db_spec   : " + part.db_spec );
 
         String query;
         long starttime = System.currentTimeMillis();

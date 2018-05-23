@@ -39,65 +39,59 @@ import com.google.api.services.storage.Storage;
 class PART_INST
 {
     public Integer part_nr;
-    public String db_key;
+    public String key;
     public Long size;
     public Boolean prepared;
 
     public PART_INST( final BLAST_DATABASE_PART part )
     {
         part_nr = part.nr;
-        db_key = part.db_key;
+        key = part.volume.key;
         size = 0L;
         prepared = false;
     }
 
-    public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
+    public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         Boolean res = false;
         try
         {
-            List< String > obj_names = new LinkedList<>();
-            for ( String ext : db_setting.extensions )
+            List< CONF_VOLUME_FILE > to_copy = new LinkedList<>();
+
+            for ( CONF_VOLUME_FILE vf : part.volume.files )
             {
-                String fn = String.format( "%s.%s", part.db_spec, ext );
-                File f = new File( fn );
+                File f = new File( vf.f_local );
                 if ( ( !f.exists() ) || ( f.length() == 0 ) )
-                    obj_names.add( String.format( "%s.%s", part.name, ext ) );
+                    to_copy.add( vf );
             }
-            if ( !obj_names.isEmpty() )
+
+            if ( !to_copy.isEmpty() )
             {
                 int copied = 0;
                 Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
-                for ( String obj_name : obj_names )
+
+                for ( CONF_VOLUME_FILE vf : to_copy )
                 {
-                    String dst_path, dst_fn;
+                    String dir = vf.f_local.substring( 0, vf.f_local.lastIndexOf( File.separator) );
+                    Files.createDirectories( Paths.get( dir ) );
 
-                    if ( db_setting.flat_layout )
-                        dst_path = db_setting.location;
-                    else
-                        dst_path = String.format( "%s/%s", db_setting.location, part.name );
-
-                    dst_fn = String.format( "%s/%s", dst_path, obj_name );
-
-                    Files.createDirectories( Paths.get( dst_path ) );
-
+                    String bucket = part.volume.bucket;
                     if ( log.db_copy )
-                        BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", db_setting.bucket, obj_name, dst_fn ) );
+                        BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", bucket, vf.f_name, vf.f_local ) );
 
-                    if ( BLAST_GS_DOWNLOADER.download( storage, db_setting.bucket, obj_name, dst_fn ) )
+                    if ( BLAST_GS_DOWNLOADER.download( storage, bucket, vf.f_name, vf.f_local ) )
                         copied++;
                 }
-                res = ( copied == obj_names.size() );
+                res = ( copied == to_copy.size() );
             }
             else
                 res = true;
 
             if ( size == 0L )
             {
-                for ( String ext : db_setting.extensions )
+                for ( CONF_VOLUME_FILE vf : part.volume.files )
                 {
-                    String fn = String.format( "%s.%s", part.db_spec, ext );
-                    File f = new File( fn );
+                    File f = new File( vf.f_local );
                     size += f.length();
                 }
             }
@@ -129,9 +123,9 @@ class BLAST_LIB_SINGLETON
     private static PART_INST getPartInst( final BLAST_DATABASE_PART part )
     {
         PART_INST res;
-        if ( map.containsKey( part.db_key ) )
+        if ( map.containsKey( part.volume.key ) )
         {
-            PART_MAP m = map.get( part.db_key );
+            PART_MAP m = map.get( part.volume.key );
             if ( m.map.containsKey( part.nr ) )
                 res = m.map.get( part.nr );
             else
@@ -145,31 +139,31 @@ class BLAST_LIB_SINGLETON
             res = new PART_INST( part );
             PART_MAP m = new PART_MAP();
             m.map.put( part.nr, res );
-            map.put( part.db_key, m );            
+            map.put( part.volume.key, m );
         }
         return res;
     }
 
-    public static BLAST_DATABASE_PART prepare( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
+    public static BLAST_DATABASE_PART prepare( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
         {
             if ( !p_inst.prepared )
-                p_inst.prepared = p_inst.prepare( part, db_setting, log );
+                p_inst.prepared = p_inst.prepare( part, log );
             
             return part.enter_worker_name();
         }
         return null;
     }
 
-    public static BLAST_LIB get_lib( final BLAST_DATABASE_PART part, final BLAST_DB_SETTING db_setting, final BLAST_LOG_SETTING log )
+    public static BLAST_LIB get_lib( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
         {
             if ( !p_inst.prepared )
-                p_inst.prepared = p_inst.prepare( part, db_setting, log );
+                p_inst.prepared = p_inst.prepare( part, log );
         }
         return blaster;
     }

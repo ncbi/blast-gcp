@@ -44,14 +44,14 @@ public class BLAST_SETTINGS implements Serializable
 
     /* DB */
     HashMap< String, BLAST_DB_SETTING > dbs; // configured via ini.json section
-    //BLAST_DB_SETTINGS db_list;  // configured via ini.json section
-    CONF db_conf;               // configured via manifest-files in gs-bucket's
 
     /* BLASTJNI */
     public Integer top_n;
+    public Integer num_db_limit;
+    public Integer num_locations;
     public String  jni_log_level;
     public String  manifest_root;
-
+    public String  location;
 
     /* RESULTS */
     public String gs_result_bucket;
@@ -85,7 +85,6 @@ public class BLAST_SETTINGS implements Serializable
 
     public BLAST_SETTINGS()
     {
-        //db_list = new BLAST_DB_SETTINGS();
         log = new BLAST_LOG_SETTING();
         dbs = new HashMap<>();
     }
@@ -181,6 +180,7 @@ public class BLAST_SETTINGS implements Serializable
 
         S = S + "\nBLASTJNI:\n";
         S = S + String.format( "\tdflt top_n ......... %d\n", top_n );
+        S = S + String.format( "\tnum_db_limit ....... %d\n", num_db_limit );
         S = S + String.format( "\tjni-log-level ...... %s\n", jni_log_level );
         S = S + String.format( "\tmanifest root ...... %s\n", manifest_root );
 

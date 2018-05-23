@@ -45,24 +45,24 @@ class BLAST_DATABASE
 {
     public JavaRDD< BLAST_DATABASE_PART > DB_SECS;
     public Long total_size;
-    public String selector;
+    public String key;
 
     BLAST_DATABASE( final BLAST_SETTINGS settings,
-                    final Broadcast< BLAST_SETTINGS > SETTINGS,
+                    final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                     final JavaSparkContext sc,
                     final BLAST_YARN_NODES nodes,
                     final BLAST_DB_SETTING a_db_setting )
     {
         if ( settings.with_locality )
-            DB_SECS = make_db_partitions_2( settings, SETTINGS, sc, nodes, a_db_setting );
+            DB_SECS = make_db_partitions_2( settings, LOG_SETTING, sc, nodes, a_db_setting );
         else
-            DB_SECS = make_db_partitions_1( settings, SETTINGS, sc, a_db_setting );
+            DB_SECS = make_db_partitions_1( settings, LOG_SETTING, sc, a_db_setting );
 
         final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
         total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
-        selector = a_db_setting.selector;
+        key = a_db_setting.key;
 
-        System.out.println( String.format( "[ %s ] total database size: %,d bytes", selector, total_size ) );
+        System.out.println( String.format( "[ %s ] total database size: %,d bytes", key, total_size ) );
     }
 
     private Integer node_count( final BLAST_SETTINGS settings, final BLAST_YARN_NODES nodes )
@@ -78,33 +78,36 @@ class BLAST_DATABASE
        =========================================================================================== */
     private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_1(
                                 final BLAST_SETTINGS settings,
-                                final Broadcast< BLAST_SETTINGS > SETTINGS,
+                                final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,
                                 final BLAST_DB_SETTING db )
     {
         final List< Tuple2< Integer, BLAST_DATABASE_PART > > db_list = new ArrayList<>();
-        for ( int i = 0; i < db.num_partitions; i++ )
+
+        Integer i = 0;
+        for ( CONF_VOLUME volume : db.volumes )
         {
-            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( db.location, db.pattern, i, db.flat_layout, db.selector );
-            db_list.add( new Tuple2<>( i, part ) );
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( i, volume, db.location );
+            db_list.add( new Tuple2<>( i++, part ) );
         }
 
-        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( db.num_partitions );
-        return sc.parallelizePairs( db_list, db.num_partitions ).partitionBy( p ).map( item ->
+        Integer n = db.volumes.size();
+        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( n );
+        return sc.parallelizePairs( db_list, n ).partitionBy( p ).map( item ->
         {
             BLAST_DATABASE_PART part = item._2();
 
-            BLAST_SETTINGS bls = SETTINGS.getValue();
-            if ( bls.log.part_prep )
-                BLAST_SEND.send( bls.log, String.format( "preparing %s", part ) );
+            BLAST_LOG_SETTING log = LOG_SETTING.getValue();
+            if ( log.part_prep )
+                BLAST_SEND.send( log, String.format( "preparing %s", part ) );
 
-            return BLAST_LIB_SINGLETON.prepare( part, db, bls.log );
+            return BLAST_LIB_SINGLETON.prepare( part, log );
         } ).cache();
     }
 
     private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_2(
                                 final BLAST_SETTINGS settings,
-                                final Broadcast< BLAST_SETTINGS > SETTINGS,
+                                final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,
                                 final BLAST_YARN_NODES nodes,
                                 final BLAST_DB_SETTING db )
@@ -112,10 +115,10 @@ class BLAST_DATABASE
         final List< Tuple2< BLAST_DATABASE_PART, Seq< String > > > part_list = new ArrayList<>();
         BLAST_YARN_NODE_ITER node_iter = new BLAST_YARN_NODE_ITER( nodes );
 
-        for ( int i = 0; i < db.num_partitions; i++ )
+        Integer i = 0;
+        for ( CONF_VOLUME volume : db.volumes )
         {
-            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( db.location, db.pattern, i, db.flat_layout, db.selector );
-
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( i++, volume, db.location );
             List< String > prefered_loc = new ArrayList<>();
 
             for ( int j = 0; j < db.num_locations; ++j )
@@ -143,12 +146,12 @@ class BLAST_DATABASE
         // database onto the worker-node ( if it is not already there )
         return JavaRDD.fromRDD( temp2, tag ).map( item ->
         {
-            BLAST_SETTINGS bls = SETTINGS.getValue();
+            BLAST_LOG_SETTING log = LOG_SETTING.getValue();
 
-            if ( bls.log.part_prep )
-                BLAST_SEND.send( bls.log, String.format( "preparing %s", item ) );
+            if ( log.part_prep )
+                BLAST_SEND.send( log, String.format( "preparing %s", item ) );
 
-            return BLAST_LIB_SINGLETON.prepare( item, db, bls.log );
+            return BLAST_LIB_SINGLETON.prepare( item, log );
         } ).cache();
     }
 

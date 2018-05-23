@@ -41,7 +41,7 @@ import org.apache.spark.rdd.RDD;
 class BLAST_JOB extends Thread
 {
     private final BLAST_SETTINGS settings;
-    private Broadcast< BLAST_SETTINGS > SETTINGS;
+    private Broadcast< BLAST_LOG_SETTING > LOG_SETTING;
     private final JavaSparkContext sc;
     private final BLAST_DATABASE_MAP db;
     private final AtomicBoolean running;
@@ -49,13 +49,13 @@ class BLAST_JOB extends Thread
     private REQUESTQ_ENTRY entry;
 
     public BLAST_JOB( final BLAST_SETTINGS settings,
-                      Broadcast< BLAST_SETTINGS > SETTINGS,
+                      Broadcast< BLAST_LOG_SETTING > a_LOG_SETTING,
                       JavaSparkContext sc,
                       BLAST_DATABASE_MAP a_db,
                       BLAST_STATUS a_status )
     {
         this.settings = settings;
-        this.SETTINGS = SETTINGS;
+        this.LOG_SETTING = a_LOG_SETTING;
         this.sc = sc;
         this.db = a_db;
         this.status = a_status;
@@ -83,65 +83,62 @@ class BLAST_JOB extends Thread
     }
 
     private JavaRDD< BLAST_TB_LIST_LIST > prelim_search_and_traceback(
-                    final JavaRDD< BLAST_DATABASE_PART > SRC, Broadcast< BLAST_SETTINGS > SE, Broadcast< BLAST_REQUEST > REQ )
+                    final JavaRDD< BLAST_DATABASE_PART > SRC, Broadcast< BLAST_LOG_SETTING > SE, Broadcast< BLAST_REQUEST > REQ )
     {
         return SRC.flatMap( item ->
         {
             ArrayList< BLAST_TB_LIST_LIST > res = new ArrayList<>();
-            BLAST_SETTINGS bls = SE.getValue();
+            BLAST_LOG_SETTING log = SE.getValue();
             BLAST_DATABASE_PART part = item;
             BLAST_REQUEST req = REQ.getValue();
 
             // see if we are at a different worker-id now
-            if ( bls.log.worker_shift )
+            if ( log.worker_shift )
             {
                 String curr_worker_name = java.net.InetAddress.getLocalHost().getHostName();
                 if ( !curr_worker_name.equals( part.worker_name ) )
                 {
-                    BLAST_SEND.send( bls.log,
+                    BLAST_SEND.send( log,
                                      String.format( "pre worker-shift for %d: %s -> %s", part.nr, part.worker_name, curr_worker_name ) );
                 }
             }
 
-            BLAST_DB_SETTING db_setting = bls.dbs.get( req.db );
-            if ( db_setting != null )
+            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, log );
+            if ( blaster != null )
             {
-                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, db_setting, bls.log );
-                if ( blaster != null )
+                try
                 {
-                    try
+                    BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, log.jni_log_level );
+                    if ( search_res != null )
                     {
-                        BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, bls.jni_log_level );
-                        if ( search_res != null )
+                        try
                         {
-                            try
+                            BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, log.jni_log_level );
+                            if ( tb_results != null )
                             {
-                                BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, bls.jni_log_level );
-                                if ( tb_results != null )
-                                {
-                                    for ( BLAST_TB_LIST tbl : tb_results )
-                                        res.add( new BLAST_TB_LIST_LIST( tbl ) );
-                                }
-                            }
-                            catch ( Exception e )
-                            {
-                                BLAST_SEND.send( bls.log,
-                                                 String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                                for ( BLAST_TB_LIST tbl : tb_results )
+                                    res.add( new BLAST_TB_LIST_LIST( tbl ) );
                             }
                         }
+                        catch ( Exception e )
+                        {
+                            BLAST_SEND.send( log,
+                                             String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                        }
                     }
-                    catch ( Exception e )
-                    {
-                        BLAST_SEND.send( bls.log,
-                                         String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
-                    }
+                }
+                catch ( Exception e )
+                {
+                    BLAST_SEND.send( log,
+                                     String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                 }
             }
             else
             {
-                BLAST_SEND.send( bls.log,
+                BLAST_SEND.send( log,
                                  String.format( "prelim-search: no database found for selector: '%s'", req.db ) );
             }
+
             return res.iterator();
         } ).cache();
     }
@@ -223,7 +220,7 @@ class BLAST_JOB extends Thread
 
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
 
-        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, SETTINGS, REQ );
+        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, REQ );
 
         BLAST_TB_LIST_LIST the_result = null;
         try

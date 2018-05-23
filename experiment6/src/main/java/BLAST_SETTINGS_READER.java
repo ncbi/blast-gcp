@@ -97,13 +97,19 @@ class BLASTJNI_SETTINGS_READER
     public static final String key = "blastjni";
     public static final String key_db = "db";
     public static final String key_top_n = "top_n";
+    public static final String key_num_db_limit = "num_db_limit";
     public static final String key_jni_log_level = "jni_log_level";
     public static final String key_manifest_root = "manifest_root";
+    public static final String key_location = "location";
+    public static final String key_num_locations = "num_locations";
 
     public static final Integer dflt_top_n = 10;
+    public static final Integer dflt_num_db_limit = 0;
     public static final String  dflt_jni_log_level = "INFO";
+    public static final String  dflt_location = "/tmp/blast/db";
+    public static final Integer dflt_num_locations = 1;
 
-    public static void db_list_from_json( JsonObject obj, BLAST_SETTINGS settings )
+    private static void db_list_from_json( JsonObject obj, BLAST_SETTINGS settings )
     {
         JsonArray db_list_array = SE_UTILS.get_sub_array( obj, key_db );
         if ( db_list_array != null )
@@ -113,10 +119,21 @@ class BLASTJNI_SETTINGS_READER
                 if ( e.isJsonObject() )
                 {
                     JsonObject o = e.getAsJsonObject();
-                    BLAST_DB_SETTING db_setting = BLAST_DB_SETTING_READER.from_json( o ); // SETTING_READER not SETTINGS_READER!
-                    settings.dbs.put( db_setting.selector, db_setting );
+                    BLAST_DB_SETTING db_setting = BLAST_DB_SETTING_READER.from_json( o,
+                            settings.num_db_limit, settings.location, settings.num_locations );
+                    settings.dbs.put( db_setting.key, db_setting );
                 }
             }
+        }
+    }
+
+    private static void db_list_from_conf( CONF conf, BLAST_SETTINGS settings )
+    {
+        for ( CONF_DATABASE e : conf.dbs )
+        {
+            BLAST_DB_SETTING db_setting = BLAST_DB_SETTING_READER.from_conf( e,
+                            settings.num_db_limit, settings.location, settings.num_locations );
+            settings.dbs.put( db_setting.key, db_setting );
         }
     }
 
@@ -126,8 +143,11 @@ class BLASTJNI_SETTINGS_READER
         if ( obj != null )
         {
             settings.top_n         = SE_UTILS.get_json_int( obj, key_top_n, dflt_top_n );
+            settings.num_db_limit  = SE_UTILS.get_json_int( obj, key_num_db_limit, dflt_num_db_limit );
+            settings.num_locations = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
             settings.jni_log_level = SE_UTILS.get_json_string( obj, key_jni_log_level, dflt_jni_log_level );
             settings.manifest_root = SE_UTILS.get_json_string( obj, key_manifest_root, "" );
+            settings.location      = SE_UTILS.get_json_string( obj, key_location, dflt_location );
 
             if ( settings.manifest_root.isEmpty() )
             {
@@ -137,7 +157,8 @@ class BLASTJNI_SETTINGS_READER
             else
             {
                 /* we DO have a manifest, the db-files are defined by the manifest... */
-
+                CONF conf = CONF_READER.read_conf( settings.manifest_root );
+                db_list_from_conf( conf, settings );
             }
         }
     }
@@ -279,7 +300,7 @@ public class BLAST_SETTINGS_READER
             BLASTJNI_SETTINGS_READER.from_json( root, res );
             RESULTS_SETTINGS_READER.from_json( root, res );
             SPARK_SETTINGS_READER.from_json( root, res );
-            BLAST_LOG_SETTING_READER.from_json( SE_UTILS.get_sub( root, BLAST_LOG_SETTING_READER.key ), res.log );
+            BLAST_LOG_SETTING_READER.from_json( SE_UTILS.get_sub( root, BLAST_LOG_SETTING_READER.key ), res.log, res.jni_log_level );
         }           
         catch( Exception e )
         {

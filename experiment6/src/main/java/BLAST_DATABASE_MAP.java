@@ -37,7 +37,7 @@ class BLAST_DATABASE_MAP
     private final HashMap< String, BLAST_DATABASE > databases;
 
     public BLAST_DATABASE_MAP( final BLAST_SETTINGS settings,
-                               final Broadcast< BLAST_SETTINGS > SETTINGS,
+                               final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                final JavaSparkContext sc )
     {
 
@@ -48,14 +48,16 @@ class BLAST_DATABASE_MAP
         Collection< BLAST_DB_SETTING > col = settings.dbs.values();
         for ( BLAST_DB_SETTING db_setting : col )
         {
-            BLAST_DATABASE db = new BLAST_DATABASE( settings, SETTINGS, sc, nodes, db_setting );
-            databases.put( db.selector, db );
+            BLAST_DATABASE db = new BLAST_DATABASE( settings, LOG_SETTING, sc, nodes, db_setting );
+            databases.put( db.key, db );
+            /* to make lookup on just the first part possible */
+            databases.put( db.key.substring( 0, 2 ), db );            
         }
     }
 
-    public BLAST_DATABASE get( final String db_selector )
+    public BLAST_DATABASE get( final String key )
     {
-        BLAST_DATABASE res = databases.get( db_selector );
+        BLAST_DATABASE res = databases.get( key );
         return res;
     }
 }
