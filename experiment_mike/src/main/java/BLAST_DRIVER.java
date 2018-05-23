@@ -73,7 +73,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db3";
+    private final String db_location = "/tmp/blast/db";
 
     public void BLAST_DRIVER() {}
 
@@ -540,12 +540,12 @@ public final class BLAST_DRIVER implements Serializable {
                             json.put("db_tag", inrow.getString(inrow.fieldIndex("db_tag")));
                             final int top_N_prelim = inrow.getInt(inrow.fieldIndex("top_N_prelim"));
                             json.put("top_N_prelim", top_N_prelim);
-                            json.put("top_N_traceback", inrow.getInt(inrow.fieldIndex("")));
-                            json.put("query_seq", inrow.getString(inrow.fieldIndex("")));
-                            json.put("query_url", inrow.getString(inrow.fieldIndex("")));
-                            json.put("program", inrow.getString(inrow.fieldIndex("")));
-                            json.put("blast_params", inrow.getString(inrow.fieldIndex("")));
-                            json.put("starttime", inrow.getTimestamp(inrow.fieldIndex("")));
+                            json.put("top_N_traceback", inrow.getInt(inrow.fieldIndex("top_N_prelim")));
+                            json.put("query_seq", inrow.getString(inrow.fieldIndex("query_seq")));
+                            json.put("query_url", inrow.getString(inrow.fieldIndex("query_url")));
+                            json.put("program", inrow.getString(inrow.fieldIndex("program")));
+                            json.put("blast_params", inrow.getString(inrow.fieldIndex("blast_params")));
+                            json.put("starttime", inrow.getTimestamp(inrow.fieldIndex("StartTime")));
                             json.put("partition_num", inrow.getInt(inrow.fieldIndex("partition_num")));
                             json.put("oid", inrow.getInt(inrow.fieldIndex("oid")));
                             final int max_score = inrow.getInt(inrow.fieldIndex("max_score"));
@@ -566,9 +566,11 @@ public final class BLAST_DRIVER implements Serializable {
 
                             logger.log(Level.DEBUG, String.format("close %d", partitionId));
                             for (String r : results) {
+                                logger.log(Level.INFO, "topn_dsw result: " + r);
                                 JSONObject json = new JSONObject(r);
                                 String rid = json.getString("rid");
-                                ps_write_to_hdfs(rid, results.toString());
+
+                                ps_write_to_hdfs(rid, r);
                             }
                             return;
                         } // close
@@ -622,7 +624,7 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> results = prelim_results(joined);
 
         // Don't use coalesce here, it'll group previous work onto one worker
-        Dataset<Row> prelim_search_1 = results.repartition(100, results.col("RID"));
+        Dataset<Row> prelim_search_1 = results.repartition(settings.num_executors, results.col("RID"));
 
         DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
 

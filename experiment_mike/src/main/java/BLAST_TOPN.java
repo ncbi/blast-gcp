@@ -70,9 +70,9 @@ public final class BLAST_TOPN implements Serializable {
   }
 
   public ArrayList<String> results(int topn) {
-    logger.log(Level.INFO, String.format("hashmap has %d", score_map.size()));
+    logger.log(Level.INFO, String.format("topn hashmap has %d", score_map.size()));
     if (score_map.size() > 1)
-      logger.log(Level.WARN, String.format(" hashmap has > 1 RID:%d", score_map.size()));
+      logger.log(Level.WARN, String.format(" topn hashmap has > 1 RID:%d", score_map.size()));
 
     ArrayList<String> results = new ArrayList<String>(score_map.size());
     for (String key : score_map.keySet()) {
