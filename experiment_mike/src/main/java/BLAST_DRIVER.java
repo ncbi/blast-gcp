@@ -31,6 +31,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+//import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +117,7 @@ public final class BLAST_DRIVER implements Serializable {
         for (BLAST_DB_SETTING db_set : ldb_set)
             max_partitions = Math.max(max_partitions, db_set.num_partitions);
 
+        max_partitions=settings.num_executors;
         System.out.println(String.format("max_partitions is %d", max_partitions));
 
         conf.set("spark.default.parallelism", Integer.toString(max_partitions));
@@ -191,8 +198,8 @@ public final class BLAST_DRIVER implements Serializable {
             parts
             .sort("partition_num", "db")
             .sortWithinPartitions("partition_num", "db")
-            // .repartition(max_partitions, parts.col("partition_num"))
-            .repartition(settings.num_executors, parts.col("partition_num"))
+            .repartition(max_partitions, parts.col("partition_num"))
+            //.repartition(settings.num_executors, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
         blast_partitions.show();
@@ -288,74 +295,72 @@ public final class BLAST_DRIVER implements Serializable {
         return joined;
     }
 
+    private boolean copyfile(String src, String dest)
+    {
+        Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
+
+        File donefile = new File(dest + ".done");
+        int loops = 0;
+        if (donefile.exists()) {
+            logger.log(Level.INFO, "Preloaded already: " + dest);
+            return true;
+        }
+
+        int retries=0;
+        int backoff=100;
+        final String lockfile=dest + ".lock";
+        java.nio.file.Path lockpath=Paths.get(lockfile);
+        while (!donefile.exists()) {
+            ++retries;
+            try {
+                FileChannel fileChannel=FileChannel.open(lockpath, StandardOpenOption.CREATE_NEW);
+                FileLock lock=fileChannel.lock();
+                if (donefile.exists()) continue;
+
+                // Lock succeeded, this thread may download
+                logger.log(Level.INFO, String.format("Preloading (attempt #%d) %s -> %s", retries, src, dest));
+                Configuration conf = new Configuration();
+                org.apache.hadoop.fs.Path srcpath = new org.apache.hadoop.fs.Path(src);
+                FileSystem fs = FileSystem.get(srcpath.toUri(), conf);
+                Path dstpath = new org.apache.hadoop.fs.Path(dest);
+                fs.copyToLocalFile(false, srcpath, dstpath, true);
+                fs.close();
+                if (new File(dest).length() != 0) {
+                    if (donefile.createNewFile()) {
+                        logger.log(Level.INFO, "Preloaded " + src + " -> " + dest);
+                        continue;
+                    }
+                } else {
+                    logger.log(Level.ERROR, "Empty file " + dest);
+                }
+            } catch (Exception e) {
+                logger.log(Level.ERROR,
+                        String.format("Couldn't load (attempt #%d) %s from GS:// : %s", retries, src, e.toString()));
+            }
+            try {
+                Thread.sleep(backoff);
+                backoff*=2;
+            } catch (Exception e) {}
+        } // !donefile.exists
+        // FIX : Remove lockfile
+        return true;
+    }
+
     private void preload(String db_tag, int partition_num) {
         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
-        String selector = db_tag.substring(0, 2);
+        final String selector = db_tag.substring(0, 2);
         logger.log(Level.INFO, "selector is " + selector);
         // logger.log(Level.INFO, "dbsettings is " + dbsettings.toString());
 
         BLAST_DB_SETTING dbs = dbsettings.get(selector);
-        String bucket = "gs://" + dbs.bucket;
-        String pattern = dbs.pattern; // nt_50M
+        final String bucket = "gs://" + dbs.bucket;
+        final String pattern = dbs.pattern; // nt_50M
 
         for (String ext : dbs.extensions) {
-            String dest = String.format("%s/%s.%02d.%s", db_location, pattern, partition_num, ext);
-            File donefile = new File(dest + ".done");
-            int loops = 0;
-            if (donefile.exists()) {
-                logger.log(Level.INFO, "Preloaded already: " + dest);
-                continue;
-            }
+            final String src = String.format("%s/%s.%02d.%s", bucket, pattern, partition_num, ext);
+            final String dest = String.format("%s/%s.%02d.%s", db_location, pattern, partition_num, ext);
+            copyfile(src,dest);
 
-            while (!donefile.exists()) {
-                new File(db_location).mkdirs(); // In case first time
-
-                File lockdir = new File(dest + ".lockdir");
-                if (lockdir.mkdir()) // Try to lock
-                {
-                    // Lock succeeded, this thread must download
-
-                    String src = String.format("%s/%s.%02d.%s", bucket, pattern, partition_num, ext);
-
-                    for (int retry = 0; retry != 5; ++retry) {
-                        try {
-                            Thread.sleep(500); // Prevent DOS?
-                            logger.log(
-                                    Level.INFO, String.format("Preloading (attempt #%d) %s -> %s", retry, src, dest));
-                            Configuration conf = new Configuration();
-                            Path srcpath = new Path(src);
-                            FileSystem fs = FileSystem.get(srcpath.toUri(), conf);
-                            Path dstpath = new Path(dest);
-                            fs.copyToLocalFile(false, srcpath, dstpath, true);
-                            fs.close();
-                            if (new File(dest).length() != 0) {
-                                if (!donefile.createNewFile()) {
-                                    logger.log(Level.ERROR, "Another created donefile?" + dest);
-                                }
-                                logger.log(Level.INFO, "Preloaded " + src + " -> " + dest);
-                                break;
-                            } else {
-                                logger.log(Level.ERROR, "Empty file " + dest);
-                                lockdir.delete();
-                            }
-                        } catch (Exception e) {
-                            logger.log(Level.ERROR, "Couldn't load from GS/HDFS: " + src + " : " + e.toString());
-                        }
-                    }
-                } else // Another process is downloading
-                {
-                    try {
-                        logger.log(Level.INFO, "Waiting on " + dest);
-                        Thread.sleep(500);
-                    } catch (Exception e) {
-                    }
-                }
-
-                if (++loops == 10) {
-                    logger.log(Level.ERROR, String.format("%s taking too long (%d)", dest, loops));
-                    break;
-                }
-            } // !donefile.exists
         } // extensions
     } // preload
 
@@ -432,10 +437,10 @@ public final class BLAST_DRIVER implements Serializable {
                         if (blaster != null) {
                             BLAST_HSP_LIST[] search_res =
                                 blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
-
-                            logger.log(
-                                    Level.INFO,
-                                    String.format(" prelim returned %d hsps to Spark", search_res.length));
+                            if (search_res.length>0)
+                                logger.log(
+                                        Level.INFO,
+                                        String.format(" prelim returned %d hsps to Spark", search_res.length));
 
                             hsp_rows = new ArrayList<>(search_res.length);
                             for (BLAST_HSP_LIST S : search_res) {
@@ -559,12 +564,12 @@ public final class BLAST_DRIVER implements Serializable {
                         public void close(Throwable errorOrNull) {
                             logger.log(Level.INFO, "topn_dsw close results:");
                             logger.log(Level.DEBUG, "---------------");
-                            logger.log(Level.INFO, String.format(" saw %d records", recordcount));
+                            logger.log(Level.INFO, String.format(" topn_dsw saw %d records", recordcount));
 
                             // FIX: topn
                             ArrayList<String> results = topn.results(top_n);
 
-                            logger.log(Level.DEBUG, String.format("close %d", partitionId));
+                            logger.log(Level.DEBUG, String.format("topn_dsw close %d", partitionId));
                             for (String r : results) {
                                 logger.log(Level.INFO, "topn_dsw result: " + r);
                                 JSONObject json = new JSONObject(r);
@@ -624,7 +629,10 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> results = prelim_results(joined);
 
         // Don't use coalesce here, it'll group previous work onto one worker
-        Dataset<Row> prelim_search_1 = results.repartition(settings.num_executors, results.col("RID"));
+        //Dataset<Row> prelim_search_1 = results.repartition(settings.num_executors, results.col("RID"));
+        Dataset<Row> prelim_search_1 = results
+            .repartition(max_partitions, results.col("RID"))
+            ; //.sort(results.col("RID"), results.col("max_score").desc());
 
         DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();
 
@@ -642,8 +650,20 @@ public final class BLAST_DRIVER implements Serializable {
 
         StructType hsp_schema =
             StructType.fromDDL(
-                    "max_score int, hsp_blob string, query_seq string, "
-                    + "oid int, RID string, db string, partition_num int");
+                    "top_N_traceback int, " +
+                    "top_N_prelim int, " +
+                    "query_url string, " +
+                    "program string, " +
+                    "starttime timestamp, " +
+                    "oid int, " +
+                    "rid string, " +
+                    "db_tag string, " +
+                    "protocol string, " +
+                    "max_score int, " +
+                    "hsp_blob string, " +
+                    "query_seq string, " +
+                    "blast_params string, " +
+                    "partition_num int ");
 
         DataStreamReader hsp_stream = sparksession.readStream();
         hsp_stream.format("json");
@@ -660,7 +680,6 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> hsps = hsp_stream.json(hsp_result_dir);
         System.out.print("hsps schema is:");
         hsps.printSchema();
-        // max_score, hsp_blob, query_seq, oid, RID, db, partition_num
         hsps.createOrReplaceTempView("hsps");
 
         Dataset<Row> parted =
@@ -673,7 +692,7 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> tb_struct =
             sparksession.sql(
                     "select "
-                    + "RID, db, cast(partition_num as int), query_seq, "
+                    + "RID, db_tag, cast(partition_num as int), query_seq, "
                     + "struct(oid, max_score, hsp_blob) as hsp "
                     + "from parted");
         System.out.print("tb_struct schema is ");
@@ -682,11 +701,11 @@ public final class BLAST_DRIVER implements Serializable {
         Dataset<Row> tb_hspl =
             sparksession.sql(
                     "select "
-                    + "RID, db, partition_num, query_seq, "
+                    + "RID, db_tag, partition_num, query_seq, "
                     // + "to_json(collect_list(hsp)) as hspl "
                     + "collect_list(hsp) as hsp_collected "
                     + "from tb_struct "
-                    + "group by RID, db, partition_num, query_seq "
+                    + "group by RID, db_tag, partition_num, query_seq "
                     + "distribute by partition_num");
         System.out.print("tb_hspl schema is ");
         tb_hspl.printSchema();
@@ -706,7 +725,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                         String rid = inrow.getString(inrow.fieldIndex("RID"));
                         logger.log(Level.DEBUG, "Tracebacked RID " + rid);
-                        String db = inrow.getString(inrow.fieldIndex("db"));
+                        String db_tag = inrow.getString(inrow.fieldIndex("db_tag"));
                         int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                         String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
                         logger.log(
@@ -741,12 +760,13 @@ public final class BLAST_DRIVER implements Serializable {
                         requestobj.id = rid;
                         requestobj.query_seq = query_seq;
                         requestobj.query_url = "";
-                        requestobj.db = db;
+                        requestobj.db = db_tag;
                         requestobj.params = "blastn";
                         requestobj.program = "blastn";
                         requestobj.top_n = top_n;
                         BLAST_PARTITION partitionobj =
                             new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
+                        preload(db_tag, partition_num);
 
                         BLAST_LIB blaster = new BLAST_LIB();
 
