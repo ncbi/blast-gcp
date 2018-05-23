@@ -562,7 +562,7 @@ public final class BLAST_DRIVER implements Serializable {
                             logger.log(Level.INFO, String.format(" saw %d records", recordcount));
 
                             // FIX: topn
-                            ArrayList<String> results = topn.results(100);
+                            ArrayList<String> results = topn.results(top_n);
 
                             logger.log(Level.DEBUG, String.format("close %d", partitionId));
                             for (String r : results) {
@@ -916,7 +916,8 @@ public final class BLAST_DRIVER implements Serializable {
         return out_dsw;
     }
 
-    private boolean run_streams(DataStreamWriter<Row> prelim_dsw, DataStreamWriter traceback_dsw) {
+    private boolean run_streams(
+            DataStreamWriter<Row> prelim_dsw, DataStreamWriter<Row> traceback_dsw) {
         System.out.println("starting streams...");
         //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
         try {
@@ -939,7 +940,7 @@ public final class BLAST_DRIVER implements Serializable {
         System.out.println("That is enough for now");
 
         return true;
-    }
+            }
 
     private void shutdown() {
         javasparkcontext.stop();

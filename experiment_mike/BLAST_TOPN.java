@@ -108,10 +108,10 @@ public final class BLAST_TOPN implements Serializable {
     }
 
     ArrayList<String> results = topn.results(100);
-    int i = 0;
+    int i=0;
     for (String s : results) {
-      System.out.println(String.format("%d: %s", i, s));
-      ++i;
+      System.out.println(String.format("%d: %s", S);
+    ++i;
     }
   }
 }
