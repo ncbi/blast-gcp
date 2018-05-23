@@ -77,7 +77,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db";
+    private final String db_location = "/tmp/blast/db2";
 
     public void BLAST_DRIVER() {}
 
@@ -378,6 +378,9 @@ public final class BLAST_DRIVER implements Serializable {
         for (String ext : dbs.extensions) {
             final String src = String.format("%s/%s.%02d.%s", bucket, pattern, partition_num, ext);
             final String dest = String.format("%s/%s.%02d.%s", db_location, pattern, partition_num, ext);
+
+            File dbdir = new File(db_location);
+            if (!dbdir.exists()) dbdir.mkdirs();
             copyfile(src, dest);
         } // extensions
     } // preload
@@ -584,7 +587,7 @@ public final class BLAST_DRIVER implements Serializable {
                             // FIX: topn
                             ArrayList<String> results = topn.results(top_n);
 
-                            logger.log(Level.DEBUG, String.format("topn_dsw close %d", partitionId));
+                            logger.log(Level.INFO, String.format("topn_dsw close %d", partitionId));
                             for (String r : results) {
                                 logger.log(Level.INFO, "topn_dsw result: " + r);
                                 JSONObject json = new JSONObject(r);
@@ -604,7 +607,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                                 Path newFolderPath = new Path(hsp_result_dir);
                                 if (!fs.exists(newFolderPath)) {
-                                    logger.log(Level.DEBUG, "Creating HDFS dir " + hsp_result_dir);
+                                    logger.log(Level.INFO, "Creating HDFS dir " + hsp_result_dir);
                                     fs.mkdirs(newFolderPath);
                                 }
                                 String outfile = String.format("%s/%s.txt", hsp_result_dir, rid);
