@@ -12,12 +12,12 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.2.4</version>
-  </dependency>
-  <dependency>
-    <groupId>org.json</groupId>
-    <artifactId>json</artifactId>
-    <version>20180130</version>
-  </dependency>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20180130</version>
+    </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
@@ -69,9 +69,9 @@
     </dependency>
     <!-- cloud-storage seems to require this -->
     <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>23.0</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>23.0</version>
     </dependency>
     <!-- FIX: Apache Log4J 1.2 was EOL'ed on 8/2015, but Spark still uses it,
          so shall we. -->
