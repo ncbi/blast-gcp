@@ -27,6 +27,8 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Console;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
 
 public final class BLAST_CONSOLE  extends Thread
@@ -45,32 +47,49 @@ public final class BLAST_CONSOLE  extends Thread
         this.sleep_time = a_sleep_time;
     }
 
+    private void sleep_now()
+    {
+        try
+        {
+            Thread.sleep( sleep_time );
+        }
+        catch ( InterruptedException e )
+        {
+        }
+    }
+
+    private String get_line( BufferedReader br )
+    {
+        try
+        {
+            if ( br.ready() )
+                return br.readLine().trim();
+        }
+        catch ( IOException e )
+        {
+        }
+        return null;
+    }
+
     @Override public void run()
     {
-        Console cons = System.console();
+        BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
 
-        while( status.is_running() && cons != null )
+        while( status.is_running() && br != null )
         {
-            String line = cons.readLine().trim();
-            if ( !line.isEmpty() )
+            boolean do_sleep = true;
+
+            String line = get_line( br );
+            if ( line != null && !line.isEmpty() )
             {
                 if ( line.equals( "status" ) )
-                    System.out.println( String.format( "%s\n", status) );
-                else if ( line.equals( "exit" ) )
-                    status.stop();
+                    System.out.println( String.format( "%s\n", status ) );
                 else
                     status.add_cmd( line );
+                do_sleep = false;
             }
-            else if ( status.is_running() )
-            {
-                try
-                {
-                    Thread.sleep( sleep_time );
-                }
-                catch ( InterruptedException e )
-                {
-                }
-            }
+
+            if ( status.is_running() && do_sleep ) sleep_now();
         }
     }
 }

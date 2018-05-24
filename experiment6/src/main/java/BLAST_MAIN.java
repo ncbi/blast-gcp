@@ -30,6 +30,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 
+
 public final class BLAST_MAIN
 {
 
@@ -50,10 +51,11 @@ public final class BLAST_MAIN
         }
     }
 
-    public static void main_spark_loop( final BLAST_STATUS status,
-                                        final BLAST_JOBS jobs,
-                                        int top_n )
+    public static String main_spark_loop( final BLAST_STATUS status,
+                                          final BLAST_JOBS jobs,
+                                          int top_n )
     {
+        String res = "";
         String cmd;
         while( status.is_running() )
         {
@@ -65,6 +67,11 @@ public final class BLAST_MAIN
                         jobs.set( cmd.substring( 1 ) );
                     else if ( cmd.equals( "exit" ) )
                         status.stop();
+                    else if ( cmd.startsWith( "reset" ) )
+                    {
+                        status.stop();
+                        res = cmd;
+                    }
                     else if ( cmd.startsWith( "R" ) )
                         add_request( BLAST_REQUEST_READER.parse_from_string( cmd.substring( 1 ), top_n ), status );
                     else if ( cmd.startsWith( "F" ) )
@@ -77,14 +84,16 @@ public final class BLAST_MAIN
             {
             }
         }
+        return res;
     }
 
-    public static void main_spark( final String ini_path )
+    public static String main_spark( String ini_file )
     {
+        String res = "";
         final String appName = BLAST_MAIN.class.getSimpleName();
-        BLAST_SETTINGS settings = BLAST_SETTINGS_READER.read_from_json( ini_path, appName );
+        BLAST_SETTINGS settings = BLAST_SETTINGS_READER.read_from_json( ini_file, appName );
 
-        System.out.println( String.format( "settings read from '%s'", ini_path ) );
+        System.out.println( String.format( "settings read from '%s'", ini_file ) );
 
         if ( !settings.valid() )
             System.out.println( settings.missing() );
@@ -131,9 +140,9 @@ public final class BLAST_MAIN
 
                 System.out.println( "spark-blast started..." );
 
-                /* ****************************************** */
-                main_spark_loop( status, jobs, settings.top_n );
-                /* ****************************************** */
+                /* ************************************************ */
+                res = main_spark_loop( status, jobs, settings.top_n );
+                /* ************************************************ */
 
                 jobs.stop_all_jobs();
                 comm.join();
@@ -148,7 +157,10 @@ public final class BLAST_MAIN
             {
                 System.out.println( String.format( "BLAST_MAIN : %s", e ) );
             }
+
+            sc.close();
         }
+        return res;
     }
 
     public static void main( String[] args ) throws Exception
@@ -157,8 +169,11 @@ public final class BLAST_MAIN
             System.out.println( "settings json-file missing" );
         else
         {
-            //System.out.println( CONF_READER.read_conf( "dbs.json" ) );
-            main_spark( args[ 0 ] );
+            String ini = args[ 0 ];
+            while ( !ini.isEmpty() )
+            {
+                ini = main_spark( ini );
+            }
         }
    }
 }
