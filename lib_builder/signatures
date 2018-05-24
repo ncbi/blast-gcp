@@ -18,24 +18,20 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   final java.lang.String get_blob(java.lang.String);
     descriptor: (Ljava/lang/String;)Ljava/lang/String;
 
-  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
-    descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
+  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_DATABASE_PART, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
+    descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_DATABASE_PART;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
-    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
+  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_DATABASE_PART, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
+    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_DATABASE_PART;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 
-  private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int) throws java.lang.Exception;
+  private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int);
     descriptor: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], java.lang.String, java.lang.String, java.lang.String, java.lang.String) throws java.lang.Exception;
+  private native gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], java.lang.String, java.lang.String, java.lang.String, java.lang.String);
     descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 }
 Compiled from "BLAST_HSP_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
-  public gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION part;
-    descriptor: Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;
-  public gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST req;
-    descriptor: Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;
   public int oid;
     descriptor: I
   public int max_score;
@@ -47,37 +43,34 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
 
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;
-
-  public java.lang.String toString();
-    descriptor: ()Ljava/lang/String;
 }
 Compiled from "BLAST_TB_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Serializable, java.lang.Comparable<gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST> {
-  public gov.nih.nlm.ncbi.blastjni.BLAST_PARTITION part;
-    descriptor: Lgov/nih/nlm/ncbi/blastjni/BLAST_PARTITION;
-  public gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST req;
-    descriptor: Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;
+  static double epsilon;
+    descriptor: D
   public int oid;
     descriptor: I
   public double evalue;
     descriptor: D
   public byte[] asn1_blob;
     descriptor: [B
+  public int top_n;
+    descriptor: I
   public gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST(int, double, byte[]);
     descriptor: (ID[B)V
 
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;
 
+  static int FuzzyEvalueComp(double, double);
+    descriptor: (DD)I
+
   public int compareTo(gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST);
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;)I
 
-  public static java.lang.String toHex(byte[]);
-    descriptor: ([B)Ljava/lang/String;
-
-  public java.lang.String toString();
-    descriptor: ()Ljava/lang/String;
-
   public int compareTo(java.lang.Object);
     descriptor: (Ljava/lang/Object;)I
+
+  static {};
+    descriptor: ()V
 }
