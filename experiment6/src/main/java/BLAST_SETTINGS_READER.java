@@ -132,13 +132,11 @@ class ASN1_SETTINGS_READER
 {
     public static final String key = "asn1";
     public static final String key_gs_bucket = "bucket";
-    public static final String key_gs_file = "file";
     public static final String key_hdfs_dir  = "hdfs_dir";
     public static final String key_hdfs_file = "hdfs_file";
     public static final String key_gs_or_hdfs = "gs_or_hdfs";
 
     public static final String  dflt_gs_bucket = "";
-    public static final String  dflt_gs_result_file = "output/%s/seq-annot.asn";
     public static final String  dflt_hdfs_dir = "hdfs:///user/%s/results/";
     public static final String  dflt_hdfs_file = "%s.asn";
     public static final String  dflt_gs_or_hdfs = "gs";
@@ -147,7 +145,6 @@ class ASN1_SETTINGS_READER
     {
         JsonObject obj = SE_UTILS.get_sub( root, key );
         settings.gs_result_bucket = SE_UTILS.get_json_string( obj, key_gs_bucket, dflt_gs_bucket );
-        settings.gs_result_file   = SE_UTILS.get_json_string( obj, key_gs_file, dflt_gs_result_file );
         settings.hdfs_result_dir  = SE_UTILS.get_json_string( obj, key_hdfs_dir, SE_UTILS.insert_username( dflt_hdfs_dir ) );
         settings.hdfs_result_file = SE_UTILS.get_json_string( obj, key_hdfs_file, dflt_hdfs_file );
         settings.gs_or_hdfs       = SE_UTILS.get_json_string( obj, key_gs_or_hdfs, dflt_gs_or_hdfs );
