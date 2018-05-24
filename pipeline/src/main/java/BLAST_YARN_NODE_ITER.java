@@ -23,23 +23,23 @@
 * ===========================================================================
 *
 */
-
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.io.Serializable;
-
-class BLAST_RID_SCORE implements Serializable
+public class BLAST_YARN_NODE_ITER
 {
-    Integer score;
-    Integer top_n;
+    private final BLAST_YARN_NODES nodes;
+    private int idx;
 
-    public BLAST_RID_SCORE( final Integer score, final Integer top_n )
+    BLAST_YARN_NODE_ITER( final BLAST_YARN_NODES a_nodes )
     {
-        this.score = score;
-        this.top_n = top_n;
+        this.nodes = a_nodes;
+        this.idx = 0;
+    }
+
+    public String get()
+    {
+        if ( idx >= nodes.count() )
+            idx = 0;
+        return nodes.getHost( idx++ );
     }
 }
-

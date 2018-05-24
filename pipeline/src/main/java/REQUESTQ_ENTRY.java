@@ -25,30 +25,30 @@
  */
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Serializable;
-
-
-class BLAST_REQUEST implements Serializable
+class REQUESTQ_ENTRY
 {
-    public String id, db, query_seq="", query_url="", program, params;
-    public Integer top_n;
+    public final BLAST_REQUEST request;
+    public String ack_id;
 
-    @Override public String toString()
+    public REQUESTQ_ENTRY( final BLAST_REQUEST a_request )
     {
-        if ( query_url.length() > 0 )
-        {
-            return String.format( "req( rid:'%s' dbsel:'%s' query_url:'%s...' prog:'%s' params:'%s' )",
-                    id, db, query_url, program, params );
-        }
-        else
-        {
-            if ( query_seq.length() > 10 )
-                return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s...' prog:'%s' params:'%s' )",
-                        id, db, query_seq.substring( 0, 10 ), program, params );
-            else
-                return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s' prog:'%s' params:'%s' )",
-                        id, db, query_seq, program, params );
-        }
+        this.request = a_request;
+        this.ack_id = null;
+    }
+
+    public REQUESTQ_ENTRY( final BLAST_REQUEST a_request, final String a_ack_id )
+    {
+        this.request = a_request;
+        this.ack_id = a_ack_id;
+    }
+
+    @Override public boolean equals( Object other )
+    {
+        if ( other == null ) return false;
+        if ( !REQUESTQ_ENTRY.class.isAssignableFrom( other.getClass() ) ) return false;
+        final REQUESTQ_ENTRY other_entry = ( REQUESTQ_ENTRY ) other;
+        if ( other_entry.request == null ) return false;
+        return this.request.id.equals( other_entry.request.id );
     }
 }
 

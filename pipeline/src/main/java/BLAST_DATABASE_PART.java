@@ -28,45 +28,29 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.io.Serializable;
 import java.net.InetAddress;
 
-class BLAST_PARTITION implements Serializable
+class BLAST_DATABASE_PART implements Serializable
 {
     public final Integer nr;
     public final String db_spec;
-    public final String name;
     public String worker_name;
-    //public Integer[] payload;
+    public final CONF_VOLUME volume;
 
-    public BLAST_PARTITION( final BLAST_PARTITION other )
+    public BLAST_DATABASE_PART( final BLAST_DATABASE_PART other )
     {
-        this.nr         = other.nr;
-        this.db_spec    = other.db_spec;
-        this.name       = other.name;
-        this.worker_name= other.worker_name;
-        //this.payload    = other.payload;
+        nr         = other.nr;
+        db_spec    = other.db_spec;
+        volume     = other.volume;
+        worker_name= other.worker_name;
     }
 
-    // location  : '/tmp/blast/db'
-    // db_pat    : 'nt_50M'
-    // nr        : 102
-    // db_spec --> '/tmp/blast/db/nt_50M.102/nt_50M.102'
-    public BLAST_PARTITION( final String location, final String db_pat, final Integer nr, final Boolean flat )
+    public BLAST_DATABASE_PART( final Integer a_nr, final CONF_VOLUME a_volume, final String location )
     {
-        this.nr = nr;
-        //this.payload = new Integer[ 50000 ];
-
-        if ( nr < 100 )
-            name = String.format( "%s.%02d", db_pat, nr  );
-        else
-            name = String.format( "%s.%d", db_pat, nr );
-
-        if ( flat )
-            db_spec = String.format( "%s/%s", location, name );
-        else
-            db_spec = String.format( "%s/%s/%s", location, name, name );
-
+        nr      = a_nr;
+        db_spec = String.format( "%s/%s/%s", location, a_volume.name, a_volume.name );
+        volume  = a_volume;
     }
 
-    public BLAST_PARTITION prepare()
+    public BLAST_DATABASE_PART enter_worker_name()
     {
         try
         {
@@ -77,12 +61,12 @@ class BLAST_PARTITION implements Serializable
             this.worker_name = "unknown";
         }
 
-        return new BLAST_PARTITION( this );
+        return new BLAST_DATABASE_PART( this );
     }
 
     @Override public String toString()
     {
-        return String.format( "part( %d: '%s' )", this.nr, this.name );
+        return String.format( "part( %s.%d: '%s' )", volume.key, nr, volume.name );
     }
 
     public Integer getPartition( Integer num_partitions )

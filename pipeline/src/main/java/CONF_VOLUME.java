@@ -26,22 +26,32 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import org.apache.spark.Partitioner;
-import java.lang.String;
+import java.io.Serializable;
+import java.util.List;
+import java.util.ArrayList;
 
-
-class BLAST_PARTITIONER2 extends BLAST_PARTITIONER
+public class CONF_VOLUME implements Serializable
 {
-	public BLAST_PARTITIONER2( int n )
-    {
-		super( n );
-	}
+    public String name;     /* for example: 'nt_50M.00' */
+    public String key;      /* for example: 'nt' */
+    public String bucket;
+    public List< CONF_VOLUME_FILE > files;
 
-	@Override public int getPartition( Object key )
+    public CONF_VOLUME( final String a_name, final String a_key, final String a_bucket )
     {
-		String pjob=( String )key;
-		Integer pnum = Integer.valueOf( pjob.substring( 0, pjob.indexOf( ' ' ) ) );
-		return pnum % numParts;
+        name    = a_name;
+        key     = a_key;
+        bucket  = a_bucket;
+        files = new ArrayList<>();
     }
+
+    @Override public String toString()
+    {
+        String S = String.format( "\t\tvolume .... '%s'\n", name );
+        for ( CONF_VOLUME_FILE f : files )
+            S = S + f.toString();
+        return S;
+    }
+
 }
 

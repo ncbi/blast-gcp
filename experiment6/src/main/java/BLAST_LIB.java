@@ -49,7 +49,7 @@ public class BLAST_LIB {
                 invalid = new ExceptionInInitializerError(threx2);
             }
         }
-        processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+        processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
         logLevel = Level.INFO;
     }
 

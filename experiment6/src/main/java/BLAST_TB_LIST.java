@@ -76,6 +76,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         -1 ... this > other
         +1 ... this < other
     */
+    @Override
     public int compareTo( BLAST_TB_LIST other )
     {
         // ascending order
