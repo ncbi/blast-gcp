@@ -49,7 +49,7 @@ public class BLAST_LIB {
                 invalid = new ExceptionInInitializerError(threx2);
             }
         }
-        processID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+        processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
         logLevel = Level.INFO;
     }
 
@@ -125,7 +125,7 @@ public class BLAST_LIB {
     }
 
     final BLAST_HSP_LIST[] jni_prelim_search(
-            final BLAST_PARTITION part, final BLAST_REQUEST req, final String pslogLevel)
+            final BLAST_DATABASE_PART part, final BLAST_REQUEST req, final String pslogLevel)
             throws Exception {
 
             // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
@@ -134,11 +134,11 @@ public class BLAST_LIB {
             BLAST_LIB.logLevel = Level.toLevel(pslogLevel);
 
             // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-            log("INFO", "Java jni_prelim_search called with");
-            log("INFO", "  query_seq : " + req.query_seq);
-            log("INFO", "  query_url : " + req.query_url);
-            log("INFO", "  db_spec   : " + part.db_spec);
-            log("INFO", "  program   : " + req.program);
+            log( "INFO", "Java jni_prelim_search called with" );
+            log( "INFO", "  query_seq : " + req.query_seq );
+            log( "INFO", "  query_url : " + req.query_url );
+            log( "INFO", "  db_spec   : " + part.db_spec );
+            log( "INFO", "  program   : " + req.program );
             // FIX - top_n_prelim
             log("INFO", "  topn      : " + req.top_n);
 
@@ -160,21 +160,23 @@ public class BLAST_LIB {
                 query = req.query_seq;
             }
 
-            BLAST_HSP_LIST[] ret = prelim_search(query, part.db_spec, req.program, req.params, req.top_n);
+            BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n );
 
             long finishtime = System.currentTimeMillis();
             log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
             log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
             int hspcnt = 0;
-            for (BLAST_HSP_LIST hspl : ret) {
-                if (hspl == null) {
-                    log("ERROR", "hspl is null");
+            for ( BLAST_HSP_LIST hspl : ret )
+            {
+                if ( hspl == null )
+                {
+                    log( "ERROR", "hspl is null" );
                     throw new Exception("hspl " + hspcnt + " is null");
                     //                continue;
                 }
-                if (part == null) log("ERROR", "part is null");
-                hspl.part = part;
-                hspl.req = req;
+                if ( part == null ) log( "ERROR", "part is null" );
+                //hspl.part = part;
+                //hspl.req = req;
                 log("DEBUG", "#" + hspcnt + ": " + hspl.toString());
                 ++hspcnt;
             }
@@ -184,16 +186,16 @@ public class BLAST_LIB {
 
     final BLAST_TB_LIST[] jni_traceback(
             final BLAST_HSP_LIST[] hspl,
-            final BLAST_PARTITION part,
+            final BLAST_DATABASE_PART part,
             final BLAST_REQUEST req,
             final String tblogLevel) {
         throwIfBad();
 
-        BLAST_LIB.logLevel = Level.toLevel(tblogLevel);
-        log("INFO", "Java jni_traceback called with");
-        log("INFO", "  query_seq : " + req.query_seq);
-        log("INFO", "  query_url : " + req.query_url);
-        log("INFO", "  db_spec   : " + part.db_spec);
+        BLAST_LIB.logLevel = Level.toLevel( tblogLevel );
+        log( "INFO", "Java jni_traceback called with" );
+        log( "INFO", "  query_seq : " + req.query_seq );
+        log( "INFO", "  query_url : " + req.query_url );
+        log( "INFO", "  db_spec   : " + part.db_spec );
 
         String query;
         long starttime = System.currentTimeMillis();
@@ -214,15 +216,13 @@ public class BLAST_LIB {
         log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");
         log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs:");
 
-        int tbcnt = 0;
-        for (BLAST_TB_LIST t : ret) {
-            t.part = part;
-            t.req = req;
-            ++tbcnt;
+        for ( BLAST_TB_LIST t : ret )
+        {
+            t.top_n = req.top_n;
         }
 
         return ret;
-            }
+        }
 
     private native BLAST_HSP_LIST[] prelim_search(
             String query, String dbspec, String program, String params, int topn);

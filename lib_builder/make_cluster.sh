@@ -3,15 +3,192 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+# Tunables
+NUM_CORES=32
+
+# Where to find startup script
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
-# Note: 100GB enough for NT
+function config()
+{
+    NUM_WORKERS=$(((NUM_CORES - 1 + CORES_PER_WORKER) / CORES_PER_WORKER))
+    if [[ "$NUM_WORKERS" -lt 2 ]]; then
+        NUM_WORKERS=2
+    fi
+
+    # NT takes about 49GB, NR 116GB
+    DB_SPACE=166
+    DB_SPACE_PER_WORKER=$((DB_SPACE / NUM_WORKERS))
+
+    CORES_PER_MASTER=4
+    RAM_PER_MASTER=$((CORES_PER_MASTER * 4 * 1024))
+    DISK_PER_MASTER=100
+    MASTER=custom-"$CORES_PER_MASTER-$RAM_PER_MASTER"
+    # FIX: Override with standard types
+    MASTER=n1-standard-4
+
+    # DataProc install takes around 5GB of disk
+    DISK_PER_WORKER=$((DB_SPACE_PER_WORKER+5))
+
+    # FIX: Until we can guarantee DB pinning or implement LRU:
+    DISK_PER_WORKER=$((DB_SPACE+10))
+
+    # JVMS ~ 1GB per executor, plus 1GB overhead
+    # FIX: Need less RAM once pinning guaranteed
+    RAM_PER_WORKER=$(( (CORES_PER_WORKER + 1 + DB_SPACE_PER_WORKER)*1024 ))
+
+    MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
+    MAX_RAM=$((CORES_PER_WORKER * 6656)) # 1024 * 6.5
+
+    if [[ "$RAM_PER_WORKER" -lt "$MIN_RAM" ]]; then
+        echo "RAM $RAM_PER_WORKER must be >= $MIN_RAM"
+        RAM_PER_WORKER=$MIN_RAM
+    fi
+
+    if [[ "$RAM_PER_WORKER" -gt "$MAX_RAM" ]]; then
+        echo "RAM $RAM_PER_WORKER must be <= $MAX_RAM"
+        RAM_PER_WORKER=$MAX_RAM
+    fi
+
+    # FIX: Override with standard types: high-cpu ~3% cheaper than custom
+    WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
+
+    PREEMPT_WORKERS=$((NUM_WORKERS - 2))
+    if [[ $PREEMPT_WORKERS -lt 0 ]]; then
+        PREEMPT_WORKERS=0
+    fi
+
+    # DataProc costs 1c/vCPU
+    COST=0 # Units are cents/hour
+    COST=$(bc -l <<< "$COST + ($CORES_PER_WORKER * $NUM_WORKERS + $CORES_PER_MASTER)/100" )
+    # Custom vCPU is $0.037 in Nova, $0.007469 preempt
+    # Assume sustained use
+    COST=$(bc -l <<< "$COST + $CORES_PER_MASTER * 0.037364*0.7" )
+    # RAM is $.005/GB hour, $.001 preempt
+    COST=$(bc -l <<< "$COST + ($RAM_PER_MASTER/1024) * 0.005008*0.7" )
+
+    # 2 normal workers for HDFS replication
+    COST=$(bc -l <<< "$COST + 2 * 0.037364*.6" )
+    COST=$(bc -l <<< "$COST + 2 * ($RAM_PER_WORKER/1024) * .005008*0.7" )
+
+    # Preemptive workers
+    COST=$(bc -l <<< "$COST + $CORES_PER_WORKER * $PREEMPT_WORKERS * 0.007469" )
+    COST=$(bc -l <<< "$COST + $PREEMPT_WORKERS * ($RAM_PER_WORKER/1024) * 0.001006" )
+
+    # Persistent disks: Standard provisioned is $.044/GB month
+    COST=$(bc -l <<< "$COST + $DISK_PER_MASTER * .044 / 720" )
+    COST=$(bc -l <<< "$COST + $NUM_WORKERS * $DISK_PER_WORKER * 0.044 /720" )
+
+    # Convert from pennies to dollars
+    echo "  $NUM_WORKERS workers ($PREEMPT_WORKERS pre-emptible)"
+    echo "    Each has $CORES_PER_WORKER cores"
+    echo "    Each has $RAM_PER_WORKER MB RAM"
+    echo "    Each has $DISK_PER_WORKER GB Persistent disk"
+    printf "    Cost will be $%0.2f/hour" "$COST"
+    echo
+}
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 number-of-cores"
+    exit 1
+fi
+
+NUM_CORES=$1
+
+if [[ "$NUM_CORES" -lt 32 ]]; then
+    echo "Not really a cluster without at least 32 cores"
+    exit 1
+fi
+
+echo "Solving for lowest price..."
+LOWEST_PRICE=9999999
+BEST_PRICE=""
+HIGHEST_VALUE=9999999
+BEST_VALUE=""
+for CORES_PER_WORKER in $(seq 2 2 64);
+do
+    config
+
+    CENTS=$(bc -l <<< "$COST * 100")
+    CENTS=$(printf "%0.f" "$CENTS")
+    # We lose ~1 core per worker to Spark/YARN/Hadoop/...
+    EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
+    PER_EXECUTOR=$(bc -l <<< "100 * $CENTS / $EXECUTORS" )
+    PER_EXECUTOR=$(printf "%0.f" "$PER_EXECUTOR")
+
+    if [[ "$PER_EXECUTOR" -le "$HIGHEST_VALUE" ]]; then
+        HIGHEST_VALUE=$PER_EXECUTOR
+        BEST_VALUE=$CORES_PER_WORKER
+    fi
+
+    if [[ "$CENTS" -le "$LOWEST_PRICE" ]]; then
+        LOWEST_PRICE=$CENTS
+        BEST_PRICE=$CORES_PER_WORKER
+    fi
+
+    PER_CENT=$(bc -l <<< "$PER_EXECUTOR / 10000 " )
+    printf "    $%0.4f per executor for %s executors\n" "$PER_CENT" "$EXECUTORS"
+    echo
+
+done
+
+echo
+LOWEST_PRICE=$(bc -l <<< "$LOWEST_PRICE / 100")
+printf "Best cost is : $%0.2f/hour at %d cores/worker\n" "$LOWEST_PRICE" "$BEST_PRICE"
+HIGHEST_VALUE=$(bc -l <<< "$HIGHEST_VALUE / 10000")
+printf "Best value is: $%0.4f/core hour at %d cores/worker\n" "$HIGHEST_VALUE" "$BEST_VALUE"
+
+#CORES_PER_WORKER=$BEST_VALUE
+CORES_PER_WORKER=$BEST_PRICE
+config
+
+CMD="gcloud beta dataproc --region us-east4 \
+    clusters create blast-dataproc-$USER-$(date +%Y%m%d-%H) \
+    --master-machine-type $MASTER \
+        --master-boot-disk-size $DISK_PER_MASTER \
+    --num-workers 2 \
+        --worker-boot-disk-size $DISK_PER_WORKER \
+    --worker-machine-type $WORKER \
+    --num-preemptible-workers $PREEMPT_WORKERS \
+        --preemptible-worker-boot-disk-size $DISK_PER_WORKER \
+    --scopes cloud-platform \
+    --project ncbi-sandbox-blast \
+    --labels owner=$USER \
+    --region us-east4 \
+    --zone   us-east4-b \
+    --max-age=8h \
+    --image-version 1.2 \
+    --initialization-action-timeout 30m \
+    --initialization-actions \
+    $PIPELINEBUCKET/scripts/cluster_initialize.sh \
+    --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \
+    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4"
+
+echo "Command is: $CMD"
+echo
+EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
+echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
+echo
+read -p "Press enter to start this cluster"
+
+$CMD
+
+exit 0
+
+
+# dataproc-3bd9289a... has 15 day deletion lifecycle
+
+# TODO: Scopes: storage-rw, pubsub, bigtable.admin.table, bigtabl.data,
+# devstorage.full_control,
+# gcloud dataproc clusters diagnose cluster-name
+#--single-node
+
+# Sizing and Pricing Notes
+# ------------------------
 # Larger nodes have faster network, and faster startup
 # Takes an n1-standard-32 about 11 minutes to copy 50GB NT
 # in parallel. No improvement seen by tar'ing them all up into one object to
 # download.
-#
-# FIX: nr is 196GB+
 #
 # IFF blast is memory bandwidth bound, n1-standard-8 appears to have similar
 # single core memory bandwidth as n1-standard-32. Will need to benchmark
@@ -38,22 +215,6 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 #
 # Memory must be 0.9-6.5GB/vCPU
 #
-# If we hypothetically require 1000 vCPUs to meet SLA,
-# cheaper to have 11 96-core machines, with 11 disks?
-#
-# But at least two workers must be non-preemptible (5X $), so need
-# to balance disk costs versus workers.
-#
-# GCP' pricing calculator:
-#  32 standard-32: $17,347/month
-#  16 highcpu-64:  $14,932/month
-#  32 highcpu-32:  $15,113/month
-#  64 highcpu-16:  $14,079/month
-#  64 highcpu-16:  $13,607/month (limited disk)
-# 256 highcpu-4:   $15,581/month
-#  16 highmem-64:  $19,535/month (limited disk, all ramdisk)
-# Ex: $11,666/month (12 std-64)
-#
 # Dataflow pricing is:
 #    $0.07/vCPU hour
 #    $0.003/GB hour (so at least another $0.01/vCPU hour)
@@ -67,50 +228,12 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # at least 54GB RAM per node. GCE won't allow less than
 # 0.9GB per CPU, so at least 57.6GB for 64 cores, which is n1-highcpu-64
 
-# TODO:
-# YARN, 1 core? Dataproc has /etc/.../spark-defaults.conf set as:
-# # User-supplied properties.
-#  Thu Apr 26 11:46:31 UTC 2018
-#  spark.executor.cores=8
-#  spark.executor.memory=4655m
-#  spark.driver.memory=7680m
-#  spark.driver.maxResultSize=3840m
-#  spark.yarn.am.memory=640m
+# NIC gets 2gbit/vCPU, 16gbit max. Single core max ~8.5gbit.
 
-# turn off dynamic allocation?
-#  /etc/spark/conf/spark-defaults.conf: spark.dynamicAllocation.enabled true
-# check Spark Web UI
+# standard-16 and highcpu-64 have >58GB
+# Likely need ~2 GB/vCPU: custom-8-16384?
 
 # ~$15/hour for 56 node cluster
 # ~$21/hour for 16 X 64
 #    --worker-machine-type custom-64-71680 \
-gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER \
-    --master-machine-type n1-standard-8 \
-        --master-boot-disk-size 100 \
-    --num-workers 2 \
-        --worker-boot-disk-size 250 \
-    --worker-machine-type n1-highcpu-64 \
-    --num-preemptible-workers 4 \
-        --preemptible-worker-boot-disk-size 250 \
-    --scopes cloud-platform \
-    --project ncbi-sandbox-blast \
-    --labels owner=$USER \
-    --region us-east4 \
-    --zone   us-east4-b \
-    --max-age=8h \
-    --image-version 1.2 \
-    --initialization-action-timeout 30m \
-    --initialization-actions \
-    "$PIPELINEBUCKET/scripts/cluster_initialize.sh" \
-    --tags blast-dataproc-${USER}-$(date +%Y%m%d-%H%M%S) \
-    --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4
-
-# dataproc-3bd9289a... has 15 day deletion lifecycle
-
-# TODO: Scopes: storage-rw, pubsub, bigtable.admin.table, bigtabl.data,
-# devstorage.full_control,
-exit 0
-# gcloud dataproc clusters diagnose cluster-name
-#--single-node
 

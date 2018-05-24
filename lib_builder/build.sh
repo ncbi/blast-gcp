@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -o nounset
+set -o nounset # same as -u
+set -o errexit # same as -e
 set -o pipefail
-set -o errexit
+shopt -s nullglob globstar # 
 
 function line() {
     echo "---------------------------------------------"
@@ -10,7 +11,7 @@ function line() {
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 set +errexit
-distro=$(grep Debian /etc/os-release | wc -l)
+distro=$(grep -c Debian /etc/os-release)
 set -o errexit
 export LD_LIBRARY_PATH=".:../pipeline"
 if [ "$distro" -ne 0 ]; then
@@ -37,13 +38,13 @@ JAVA_INC=" -I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
 export CLASSPATH="."
 
 set +errexit
-rm -f *.class
+rm -f ./*.class
 rm -rf gov
-rm -f *test.result
-rm -f *.jar
-rm -f /tmp/blastjni.$USER.log
-rm -f signatures
-rm -f core.* hs_err_* output.*
+rm -f ./*test.result
+rm -f ./*.jar
+rm -f /tmp/blastjni."$USER".log
+rm -f ./signatures
+rm -f ./core.* ./hs_err_* ./output.*
 rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-* > /dev/null 2>&1
 set -o errexit
 
@@ -60,7 +61,7 @@ echo "Compiling Java"
     echo '{ "description": "static_analysis_results", "owner" : "vartanianmh" }' > labels.json
     #gsutil lifecycle set rule.json gs://blast-builds
     #gsutil label set labels.json gs://blast-builds
-TS=`date +"%Y-%m-%d_%H%M%S"`
+    TS=$(date +"%Y-%m-%d_%H%M%S")
 pushd ../pipeline > /dev/null
 
 #../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
@@ -73,34 +74,34 @@ if [ "0" == "1" ]; then
     echo "Running Java linters/static analyzers"
     mvn -q checkstyle:checkstyle > /dev/null 2>&1
     CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
-    gsutil cp target/site/checkstyle.html $CHECKSTYLE
+    gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
     echo "  Output in $CHECKSTYLE"
 
     mvn -q site > /dev/null 2>&1
     PMD="gs://blast-builds/pmd.$TS.html"
-    gsutil cp target/site/pmd.html $PMD
+    gsutil cp target/site/pmd.html "$PMD"
 
     CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
-    gsutil cp target/site/checkstyle.html $CHECKSTYLE
+    gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
     echo "  Output in $CHECKSTYLE"
 fi
 
 popd > /dev/null
 #NOTE: javah deprecated in Java 9, removed in Java 10
-JAVASRCDIR="../pipeline/src/main/java"
+#JAVASRCDIR="../pipeline/src/main/java"
 #    $JAVASRCDIR/BLAST_REQUEST.java \
     #    $JAVASRCDIR/BLAST_PARTITION.java \
     #    $JAVASRCDIR/BLAST_HSP_LIST.java \
     #    $JAVASRCDIR/BLAST_TB_LIST.java \
     #    $JAVASRCDIR/BLAST_LIB.java \
-javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
     ./BLAST_TEST.java
-javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
     ./BLAST_BENCH.java
 
 echo
 echo "Creating JNI header"
-javac -Xlint:all -Xlint:-path -Xlint:-serial -cp $DEPENDS:. -d . -h . \
+javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
     ../pipeline/src/main/java/BLAST_LIB.java
 
 javap -p -s ../pipeline/target/classes/gov/nih/nlm/ncbi/blastjni/BLAST_LIB.class >> signatures
@@ -169,7 +170,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     if [ "0" == "1" ]; then
         echo "Running static analysis on C++ code"
         cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang $GPPCOMMAND
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
         echo "Static analysis on C++ code complete"
     fi
 
@@ -207,7 +208,7 @@ echo "  Testing JNI"
     gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
     > output.$$ 2>&1
 sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
-CMP=$(cmp test.result test.expected)
+cmp test.result test.expected
 if [[ $? -ne 0 ]]; then
     cat -tn output.$$
     #rm -f output.$$
@@ -227,6 +228,9 @@ if [ "$BUILDENV" = "google" ]; then
     gsutil cp \
         cluster_initialize.sh \
         "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
+    gsutil cp libblastjni.so gs://ncbi-build-artifacts
+    gsutil cp target/sparkblast-1-jar-with-dependencies.jar \
+        gs://ncbi-build-artifacts
 fi
 
 echo "Build Complete"

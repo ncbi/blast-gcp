@@ -1,5 +1,7 @@
 # Starting a cluster
 
+[ Also see integration testing ](https://ncbiconfluence.ncbi.nlm.nih.gov/display/BLASTGCP/Demo+system+configuration+for+Sprint+6)
+
 From your google cloud shell (the >_) box in upper right, paste
 (ctrl-shift-v in my browser, very finicky)
 ```shell

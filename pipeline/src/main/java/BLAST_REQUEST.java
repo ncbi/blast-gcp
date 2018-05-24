@@ -35,17 +35,20 @@ class BLAST_REQUEST implements Serializable
 
     @Override public String toString()
     {
-        if (query_url.length() > 0)
+        if ( query_url.length() > 0 )
         {
             return String.format( "req( rid:'%s' dbsel:'%s' query_url:'%s...' prog:'%s' params:'%s' )",
                     id, db, query_url, program, params );
-        } else
-        if ( query_seq.length() > 10 )
-            return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s...' prog:'%s' params:'%s' )",
-                    id, db, query_seq.substring( 0, 10 ), program, params );
+        }
         else
-            return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s' prog:'%s' params:'%s' )",
-                    id, db, query_seq, program, params );
+        {
+            if ( query_seq.length() > 10 )
+                return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s...' prog:'%s' params:'%s' )",
+                        id, db, query_seq.substring( 0, 10 ), program, params );
+            else
+                return String.format( "req( rid:'%s' dbsel:'%s' query_seq:'%s' prog:'%s' params:'%s' )",
+                        id, db, query_seq, program, params );
+        }
     }
 }
 

@@ -25,6 +25,8 @@
  */
 package gov.nih.nlm.ncbi.blastjni;
 
+import java.io.FileReader;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
@@ -108,64 +110,82 @@ class BLAST_REQUEST_READER
         return res;
     }
 
-    private static BLAST_REQUEST parse_json( final String line, final Integer top_n )
+    private static void parse_json_tree( BLAST_REQUEST request, JsonElement tree, final Integer top_n )
     {
-        BLAST_REQUEST res = new BLAST_REQUEST();
-        JsonParser parser = new JsonParser();
-        try
+        if ( tree.isJsonObject() )
         {
-            JsonElement tree = parser.parse( line.trim() );
-            if ( tree.isJsonObject() )
+            JsonObject root = tree.getAsJsonObject();
+
+            request.id = get_json_string( root, "RID", dflt_id );
+            request.query_seq = get_json_string (root, "query_seq",dflt_query );
+            request.query_url = get_json_string (root, "query_url", "");
+            JsonElement blast_params_elem = root.get( "blast_params" );
+            if ( blast_params_elem != null )
             {
-                JsonObject root = tree.getAsJsonObject();
-
-                res.id = get_json_string( root, "RID", dflt_id );
-                res.query_seq = get_json_string (root, "query_seq",dflt_query );
-                res.query_url = get_json_string (root, "query_url", "");
-                JsonElement blast_params_elem = root.get( "blast_params" );
-                if ( blast_params_elem != null )
+                if ( blast_params_elem.isJsonObject() )
                 {
-                    if ( blast_params_elem.isJsonObject() )
+                    JsonObject blast_params = blast_params_elem.getAsJsonObject();
+                    if ( blast_params != null )
                     {
-                        JsonObject blast_params = blast_params_elem.getAsJsonObject();
-                        if ( blast_params != null )
+                        if ( blast_params.isJsonObject() )
                         {
-                            if ( blast_params.isJsonObject() )
-                            {
-                                res.db = get_json_string( blast_params, "db", dflt_db );
-                                res.program = get_json_string( blast_params, "program", dflt_program );
-                                res.params = res.program;
-                                res.top_n = get_json_int( blast_params, "hitlist_size", top_n );
-
-                                /*
-                                   try
-                                   {
-                                   JsonElement queries = blast_params.get( "queries" );
-                                   if ( queries != null )
-                                   {
-                                   JsonArray query_array = queries.getAsJsonArray();
-                                   if ( query_array.size() > 0 )
-                                   {
-                                   JsonElement first_query = query_array.get( 0 );
-                                   res.query = first_query.getAsString();
-                                   }
-                                   }
-                                   }
-                                   catch( Exception e )
-                                   {
-                                   }
-                                   */
-                            }
+                            request.db = get_json_string( blast_params, "db", dflt_db );
+                            request.program = get_json_string( blast_params, "program", dflt_program );
+                            request.params = request.program;
+                            request.top_n = get_json_int( blast_params, "hitlist_size", top_n );
                         }
                     }
                 }
             }
         }
+    }
+
+    private static BLAST_REQUEST parse_json( final String line, final Integer top_n )
+    {
+        BLAST_REQUEST request = new BLAST_REQUEST();
+        JsonParser parser = new JsonParser();
+        try
+        {
+            JsonElement tree = parser.parse( line.trim() );
+            parse_json_tree( request, tree, top_n );
+        }
         catch( Exception e )
         {
-            set_defaults( res, top_n );            
+            set_defaults( request, top_n );            
         }
-        return res;
+        return request;
     }
-}
 
+    public static REQUESTQ_ENTRY parse_from_string( final String line, final Integer top_n )
+    {
+        BLAST_REQUEST request = parse( line, top_n );
+        if ( request != null )
+            return new REQUESTQ_ENTRY( request );
+        return null;
+    }
+
+    public static REQUESTQ_ENTRY parse_from_string_and_ack( final String line, final String ack, final Integer top_n )
+    {
+        BLAST_REQUEST request = parse( line, top_n );
+        if ( request != null )
+            return new REQUESTQ_ENTRY( request, ack );
+        return null;
+    }
+
+    public static REQUESTQ_ENTRY parse_from_file( final String filename, final Integer top_n )
+    {
+        JsonParser parser = new JsonParser();
+        try
+        {
+            BLAST_REQUEST request = new BLAST_REQUEST();
+            JsonElement tree = parser.parse( new FileReader( filename ) );
+            parse_json_tree( request, tree, top_n );
+            return new REQUESTQ_ENTRY( request );
+        }
+        catch( Exception e )
+        {
+        }
+        return null;
+    }
+
+}

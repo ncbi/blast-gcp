@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package ncbi.blast.db_manifest;
+
+option java_package = "gov.nih.nlm.ncbi.blast";
+option java_multiple_files = false;
+option java_outer_classname = "DbManifestProto";
+option optimize_for = SPEED;
+
+
+enum FileType {
+  NIN = 0;
+  NSQ = 1;
+  NHR = 2;
+}
+
+message DbManifest {
+  enum MolType {
+    MIXED_DNA = 0;
+    PROTEIN = 1;
+  }
+
+  string dbname = 1;
+  string title = 2;
+  string description = 3;
+  uint32 volume_count = 4;
+  uint32 sequence_count = 5;
+  uint64 sequence_length = 6;
+  repeated string pipeline_extensions = 7;
+  MolType mol_type = 8;
+  string update_date = 9;
+  string gs_bucket_name = 10;
+  repeated Volume volumes = 11;
+}
+
+message Volume {
+  string volume = 1;
+  repeated VolumeFile files = 2;
+}
+
+message VolumeFile {
+  FileType type = 1;
+  string name = 2;
+  string md5_hash = 3;
+}
+

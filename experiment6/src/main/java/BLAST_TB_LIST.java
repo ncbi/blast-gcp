@@ -33,11 +33,14 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
 {
     static double epsilon = 1.0e-6;
 
-    public BLAST_PARTITION part;
+    /*
+    public BLAST_DATABASE_PART part;
     public BLAST_REQUEST req;
+    */
     public int oid;
     public double evalue;
     public byte[] asn1_blob;
+    public int top_n;
 
     public BLAST_TB_LIST( int oid, double evalue, byte[] asn1_blob )
     {
@@ -73,6 +76,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         -1 ... this > other
         +1 ... this < other
     */
+    @Override
     public int compareTo( BLAST_TB_LIST other )
     {
         // ascending order
@@ -93,6 +97,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
             return -1;
     }
 
+    /*
     public static String toHex(byte[] blob)
     {
         String res = "";
@@ -117,5 +122,6 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         if ( asn1_blob != null ) res += toHex( asn1_blob );
         return res;
     }
+    */
 }
 
