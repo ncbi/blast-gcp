@@ -77,7 +77,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db2";
+    private final String db_location = "/tmp/blast/db";
 
     public void BLAST_DRIVER() {}
 
@@ -127,7 +127,7 @@ public final class BLAST_DRIVER implements Serializable {
         // These will appear in
         // executor:/var/log/hadoop-yarn/userlogs/applica*/container*/stdout
         // FIX: +UseParallelGC ? Increase G1GC latency?
-        //        conf.set("spark.executor.extraJavaOptions", "-XX:+PrintCompilation -verbose:gc");
+        conf.set("spark.executor.extraJavaOptions", "-XX:+PrintCompilation -verbose:gc");
         if (settings.num_executors > 0)
             conf.set("spark.executor.instances", String.format("%d", settings.num_executors));
         if (!settings.executor_memory.isEmpty())
@@ -296,7 +296,7 @@ public final class BLAST_DRIVER implements Serializable {
     private boolean copyfile(String src, String dest) {
         Logger logger = LogManager.getLogger(BLAST_DRIVER.class);
 
-        File donefile = new File(dest + ".done");
+        final File donefile = new File(dest + ".done");
         int loops = 0;
         if (donefile.exists()) {
             logger.log(Level.INFO, "Preloaded already: " + dest);
@@ -581,13 +581,16 @@ public final class BLAST_DRIVER implements Serializable {
                         @Override
                         public void close(Throwable errorOrNull) {
                             logger.log(Level.INFO, "topn_dsw close results:");
-                            logger.log(Level.DEBUG, "---------------");
+                            logger.log(Level.INFO, "---------------");
                             logger.log(Level.INFO, String.format(" topn_dsw saw %d records", recordcount));
 
                             // FIX: topn
                             ArrayList<String> results = topn.results(top_n);
 
-                            logger.log(Level.INFO, String.format("topn_dsw close %d", partitionId));
+                            logger.log(
+                                    Level.INFO,
+                                    String.format(
+                                        "topn_dsw close partition %d had %d", partitionId, results.size()));
                             for (String r : results) {
                                 logger.log(Level.INFO, "topn_dsw result: " + r);
                                 JSONObject json = new JSONObject(r);
@@ -713,6 +716,7 @@ public final class BLAST_DRIVER implements Serializable {
             sparksession.sql(
                     "select "
                     + "RID, db_tag, cast(partition_num as int), query_seq, "
+                    + "top_N_traceback, program, blast_params, "
                     + "struct(oid, max_score, hsp_blob) as hsp "
                     + "from parted");
         System.out.print("tb_struct schema is ");
@@ -722,10 +726,10 @@ public final class BLAST_DRIVER implements Serializable {
             sparksession.sql(
                     "select "
                     + "RID, db_tag, partition_num, query_seq, "
-                    // + "to_json(collect_list(hsp)) as hspl "
+                    + "top_N_traceback, program, blast_params, "
                     + "collect_list(hsp) as hsp_collected "
                     + "from tb_struct "
-                    + "group by RID, db_tag, partition_num, query_seq "
+                    + "group by RID, db_tag, partition_num, query_seq, top_N_traceback, program, blast_params "
                     + "distribute by partition_num");
         System.out.print("tb_hspl schema is ");
         tb_hspl.printSchema();
@@ -748,6 +752,8 @@ public final class BLAST_DRIVER implements Serializable {
                         String db_tag = inrow.getString(inrow.fieldIndex("db_tag"));
                         int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
                         String query_seq = inrow.getString(inrow.fieldIndex("query_seq"));
+                        String program = inrow.getString(inrow.fieldIndex("program"));
+                        String blast_params = inrow.getString(inrow.fieldIndex("blast_params"));
                         logger.log(
                                 Level.DEBUG,
                                 String.format(
@@ -776,13 +782,20 @@ public final class BLAST_DRIVER implements Serializable {
                             hspal.add(hspl);
                         }
 
+                        // FIX
+                        blast_params = blast_params.replace("\"evalue\":10", "\"evalue\":10.0");
+                        blast_params = blast_params.replace("\"evalue\":1000", "\"evalue\":1000.0");
+                        blast_params =
+                            blast_params.replace("\"evalue\":200000", "\"evalue\":20000.0");
+                        logger.log(Level.ERROR, "blast_params is " + blast_params);
+
                         BLAST_REQUEST requestobj = new BLAST_REQUEST();
                         requestobj.id = rid;
                         requestobj.query_seq = query_seq;
                         requestobj.query_url = "";
                         requestobj.db = db_tag;
-                        requestobj.params = "blastn";
-                        requestobj.program = "blastn";
+                        requestobj.params = blast_params;
+                        requestobj.program = program;
                         requestobj.top_n = top_n;
                         BLAST_PARTITION partitionobj =
                             new BLAST_PARTITION(db_location, "nt_50M", partition_num, false);
