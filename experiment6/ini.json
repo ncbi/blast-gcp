@@ -48,7 +48,7 @@
         "asn1" :
         {
             "bucket" : "blast-results",
-            "gs_or_hdfs" : "time"
+            "gs_or_hdfs" : "gs"
         },
         "status" :
         {
