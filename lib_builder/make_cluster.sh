@@ -113,12 +113,12 @@ do
     PER_EXECUTOR=$(bc -l <<< "100 * $CENTS / $EXECUTORS" )
     PER_EXECUTOR=$(printf "%0.f" "$PER_EXECUTOR")
 
-    if [[ "$PER_EXECUTOR" -lt "$HIGHEST_VALUE" ]]; then
+    if [[ "$PER_EXECUTOR" -le "$HIGHEST_VALUE" ]]; then
         HIGHEST_VALUE=$PER_EXECUTOR
         BEST_VALUE=$CORES_PER_WORKER
     fi
 
-    if [[ "$CENTS" -lt "$LOWEST_PRICE" ]]; then
+    if [[ "$CENTS" -le "$LOWEST_PRICE" ]]; then
         LOWEST_PRICE=$CENTS
         BEST_PRICE=$CORES_PER_WORKER
     fi
