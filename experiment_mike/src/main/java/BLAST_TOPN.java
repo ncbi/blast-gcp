@@ -38,7 +38,8 @@ import org.apache.log4j.Logger;
 public final class BLAST_TOPN implements Serializable {
   private Logger logger;
 
-  // So we can efficiently compute topN scores by RID
+  // So we can efficiently compute topN scores by RID, use Java's Red Black
+  // Tree to keep always sorted scores
   private HashMap<String, TreeMap<Double, ArrayList<String>>> score_map;
 
   public BLAST_TOPN() {

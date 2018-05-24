@@ -39,7 +39,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -75,7 +74,7 @@ public final class BLAST_DRIVER implements Serializable {
     // Only one spark context allowed per JVM
     private static JavaSparkContext javasparkcontext;
 
-    private int max_partitions = 0;
+    // private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
     private final String db_location = "/tmp/blast/db";
 
@@ -111,14 +110,16 @@ public final class BLAST_DRIVER implements Serializable {
         conf.set("spark.shuffle.compress", "true");
 
         dbsettings = settings.db_list;
-        Collection<BLAST_DB_SETTING> ldb_set = dbsettings.list();
-        for (BLAST_DB_SETTING db_set : ldb_set)
-            max_partitions = Math.max(max_partitions, db_set.num_partitions);
+        /*
+           Collection<BLAST_DB_SETTING> ldb_set = dbsettings.list();
+           for (BLAST_DB_SETTING db_set : ldb_set)
+           max_partitions = Math.max(max_partitions, db_set.num_partitions);
 
-        max_partitions = settings.num_executors;
-        System.out.println(String.format("max_partitions is %d", max_partitions));
+           max_partitions = settings.num_executors;
+           System.out.println(String.format("max_partitions is %d", max_partitions));
+           */
 
-        conf.set("spark.default.parallelism", Integer.toString(max_partitions));
+        // conf.set("spark.default.parallelism", Integer.toString(max_partitions));
         conf.set("spark.dynamicAllocation.enabled", Boolean.toString(settings.with_dyn_alloc));
         conf.set("spark.eventLog.enabled", "false");
 
@@ -142,7 +143,7 @@ public final class BLAST_DRIVER implements Serializable {
                     "FAIR"); // FIX, need fairscheduler.xml, see /etc/spark/conf.dist/fair_scheduler.xml
         conf.set("spark.shuffle.reduceLocality.enabled", "false");
 
-        conf.set("spark.sql.shuffle.partitions", Integer.toString(max_partitions));
+        // conf.set("spark.sql.shuffle.partitions", Integer.toString(max_partitions));
         // conf.set("spark.sql.streaming.schemaInference", "true");
         String warehouseLocation = new File("spark-warehouse").getAbsolutePath();
         conf.set("spark.sql.warehouse.dir", warehouseLocation);
@@ -196,7 +197,7 @@ public final class BLAST_DRIVER implements Serializable {
             parts
             .sort("partition_num", "db")
             .sortWithinPartitions("partition_num", "db")
-            .repartition(max_partitions, parts.col("partition_num"))
+            .repartition(parts.col("partition_num"))
             // .repartition(settings.num_executors, parts.col("partition_num"))
             .persist(StorageLevel.MEMORY_AND_DISK());
 
@@ -654,7 +655,7 @@ public final class BLAST_DRIVER implements Serializable {
         // results.col("RID"));
         Dataset<Row> prelim_search_1 =
             results.repartition(
-                    max_partitions,
+                    // max_partitions,
                     results.col("RID")); // .sort(results.col("RID"), results.col("max_score").desc());
 
         DataStreamWriter<Row> prelim_dsw = prelim_search_1.writeStream();

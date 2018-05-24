@@ -28,6 +28,8 @@ hadoop fs -rm -f \
 hadoop fs -mkdir -p /user/"$USER"/requests/
 hadoop fs -mkdir -p /user/"$USER"/results/hsps
 
+cp ../lib_builder/libblastjni.so .
+
 spark-submit --master yarn --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI
 
 
