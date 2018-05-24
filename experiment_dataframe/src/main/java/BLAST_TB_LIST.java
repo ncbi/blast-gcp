@@ -51,6 +51,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         return ( asn1_blob.length == 0 );
     }
 
+    @Override
     public int compareTo( BLAST_TB_LIST other )
     {
         // ascending order

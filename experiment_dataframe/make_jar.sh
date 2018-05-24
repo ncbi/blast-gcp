@@ -20,7 +20,8 @@
 
 echo "compiling java-classes"
 #clear
-#mvn package | grep -v INFO
-mvn -q package
+mvn package | grep WARNING | \
+    grep -v -e UPLOADER -e NODES -e READER -e SINGLETON -e SE_UTIL -e DATABASE
+#mvn -q package
 exit
 
