@@ -190,7 +190,7 @@ class BLAST_JOB extends Thread
         }
         if ( settings.gs_or_hdfs.contains( "gs" ) )
         {
-            String gs_result_key = String.format( settings.gs_result_file, req_id );
+            String gs_result_key = String.format( "%s/seq-annot.asn", req_id );
             Integer uploaded = BLAST_GS_UPLOADER.upload( settings.gs_result_bucket, gs_result_key, buf );
             elapsed = System.currentTimeMillis() - started_at;
 

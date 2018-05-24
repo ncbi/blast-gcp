@@ -152,10 +152,11 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\tjni-log-level ...... %s\n", jni_log_level );
 
         S = S + "\nRESULTS:\n";
-        S = S + String.format( "\tGS result .......... '%s' : '%s'\n", gs_result_bucket, gs_result_file );
+        S = S + String.format( "\tGS result bucket ... '%s'\n", gs_result_bucket );
+        S = S + String.format( "\tGS status bucket ... '%s'\n", gs_status_bucket);        
         S = S + String.format( "\tHDFS result ........ '%s%s'\n", hdfs_result_dir, hdfs_result_file );
         S = S + String.format( "\tGS OR HDFS ......... '%s'\n", gs_or_hdfs );
-        S = S + String.format( "\tGS status bucket ... '%s'\n", gs_status_bucket);        
+        
 
         S = S + "\nSPARK:\n";
         S = S + String.format( "\tappName ............ '%s'\n", appName );
