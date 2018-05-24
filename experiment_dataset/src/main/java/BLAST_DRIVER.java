@@ -26,6 +26,9 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+import io.opencensus.trace.Span;
+import io.opencensus.trace.Tracer;
+import io.opencensus.trace.Tracing;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,13 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -53,12 +50,7 @@ import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.ForeachWriter;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
 import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.streaming.DataStreamReader;
@@ -69,14 +61,38 @@ import org.apache.spark.storage.StorageLevel;
 import org.json.JSONObject;
 
 public final class BLAST_DRIVER implements Serializable {
-    private BLAST_SETTINGS settings;
     private static SparkSession sparksession;
     // Only one spark context allowed per JVM
     private static JavaSparkContext javasparkcontext;
-
+    private final String db_location = "/tmp/blast/db";
+    private BLAST_SETTINGS settings;
     // private int max_partitions = 0;
     private BLAST_DB_SETTINGS dbsettings;
-    private final String db_location = "/tmp/blast/db";
+
+    public static void main(String[] args) throws Exception {
+        boolean result;
+
+        BLAST_DRIVER driver = new BLAST_DRIVER();
+
+        result = driver.init(args);
+        if (!result) {
+            driver.shutdown();
+            System.exit(1);
+        }
+
+        if (!driver.make_partitions()) {
+            driver.shutdown();
+            System.exit(2);
+        }
+
+        DataStreamWriter<Row> prelim_stream = driver.make_prelim_stream();
+        DataStreamWriter<Row> traceback_stream = driver.make_traceback_stream();
+        result = driver.run_streams(prelim_stream, traceback_stream);
+        if (!result) {
+            driver.shutdown();
+            System.exit(3);
+        }
+    }
 
     public void BLAST_DRIVER() {}
 
@@ -88,6 +104,18 @@ public final class BLAST_DRIVER implements Serializable {
         final String ini_path = args[0];
 
         final String appName = "experiment_dataset";
+
+        final Tracer tracer = Tracing.getTracer();
+
+        Span rootSpan = tracer.spanBuilderWithExplicitParent(appName, null).startSpan();
+        rootSpan.addAnnotation("Annotation to the root Span before child is created.");
+        Span childSpan =
+            tracer.spanBuilderWithExplicitParent(appName + "_blaster", rootSpan).startSpan();
+        childSpan.addAnnotation("Annotation to the child Span");
+        childSpan.end();
+        rootSpan.addAnnotation("Annotation to the root Span after child is ended.");
+        rootSpan.end();
+
         settings = BLAST_SETTINGS_READER.read_from_json(ini_path, appName);
         System.out.println(String.format("settings read from '%s'", ini_path));
         if (!settings.valid()) {
@@ -850,9 +878,9 @@ public final class BLAST_DRIVER implements Serializable {
             tb_dsw
             .foreach( // FIX: Make a separate function
                     new ForeachWriter<Row>() {
+                        HashMap<String, TreeMap<Double, ArrayList<String>>> score_map;
                         private long partitionId;
                         private Logger logger;
-                        HashMap<String, TreeMap<Double, ArrayList<String>>> score_map;
 
                         @Override
                         public boolean open(long partitionId, long version) {
@@ -1001,30 +1029,5 @@ public final class BLAST_DRIVER implements Serializable {
     private void shutdown() {
         javasparkcontext.stop();
         sparksession.stop();
-    }
-
-    public static void main(String[] args) throws Exception {
-        boolean result;
-
-        BLAST_DRIVER driver = new BLAST_DRIVER();
-
-        result = driver.init(args);
-        if (!result) {
-            driver.shutdown();
-            System.exit(1);
-        }
-
-        if (!driver.make_partitions()) {
-            driver.shutdown();
-            System.exit(2);
-        }
-
-        DataStreamWriter<Row> prelim_stream = driver.make_prelim_stream();
-        DataStreamWriter<Row> traceback_stream = driver.make_traceback_stream();
-        result = driver.run_streams(prelim_stream, traceback_stream);
-        if (!result) {
-            driver.shutdown();
-            System.exit(3);
-        }
     }
 }
