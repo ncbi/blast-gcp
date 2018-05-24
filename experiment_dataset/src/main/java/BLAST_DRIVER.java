@@ -87,7 +87,7 @@ public final class BLAST_DRIVER implements Serializable {
         }
         final String ini_path = args[0];
 
-        final String appName = "experiment_mike";
+        final String appName = "experiment_dataset";
         settings = BLAST_SETTINGS_READER.read_from_json(ini_path, appName);
         System.out.println(String.format("settings read from '%s'", ini_path));
         if (!settings.valid()) {
