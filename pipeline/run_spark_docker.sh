@@ -7,17 +7,16 @@
 set -e
 
 usage="
-usage: $0 <asnbucket> <cluster>
+usage: $0 <cluster>
 Required environment variables:
     CLOUDSDK_CORE_PROJECT
     result_bucket_name
     joborch_output_topic
 "
 
-[ $# -eq 2 ] || { echo ${usage} && exit 1; }
+[ $# -eq 1 ] || { echo ${usage} && exit 1; }
 
-ASNBUCKET=$1
-CLUSTER=$2
+CLUSTER=$1
 
 checkvar=${CLOUDSDK_CORE_PROJECT?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
@@ -79,7 +78,7 @@ INI=$(cat <<-END
         {
             "asn1" :
             {
-                "bucket" : "ASNBUCKET"
+                "bucket" : "RESULTBUCKET"
             },
             "status" :
             {
@@ -111,7 +110,6 @@ END
 
 INI=${INI//PROJECT/$PROJECT}
 INI=${INI//PUBSUB/$PUBSUB}
-INI=${INI//ASNBUCKET/$ASNBUCKET}
 INI=${INI//RESULTBUCKET/$RESULTBUCKET}
 
 echo "$INI" >> /app/ini_docker.json
