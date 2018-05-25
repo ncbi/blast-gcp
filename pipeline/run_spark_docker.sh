@@ -1,17 +1,31 @@
 #!/bin/bash
 
 # Args are:
-# 1 project
-# 2 pubsub subscription
-# 3 asn bucket
-# 4 status bucket
-# 5 cluster
+# 1 asn bucket
+# 2 cluster
 
-PROJECT=$1
-PUBSUB=$2
-ASNBUCKET=$3
-RESULTBUCKET=$4
-CLUSTER=$5
+set -e
+
+usage="
+usage: $0 <asnbucket> <cluster>
+Required environment variables:
+    CLOUDSDK_CORE_PROJECT
+    result_bucket_name
+    joborch_output_topic
+"
+
+[ $# -eq 2 ] || { echo ${usage} && exit 1; }
+
+ASNBUCKET=$1
+CLUSTER=$2
+
+checkvar=${CLOUDSDK_CORE_PROJECT?"${usage}"}
+checkvar=${result_bucket_name?"${usage}"}
+checkvar=${joborch_output_topic?"${usage}"}
+
+PROJECT=${CLOUDSDK_CORE_PROJECT}
+PUBSUB=${joborch_output_topic}
+RESULTBUCKET=${result_bucket_name}
 
 INI=$(cat <<-END
     {
@@ -100,9 +114,9 @@ INI=${INI//PUBSUB/$PUBSUB}
 INI=${INI//ASNBUCKET/$ASNBUCKET}
 INI=${INI//RESULTBUCKET/$RESULTBUCKET}
 
-echo "$INI" >> ini_docker.json
+echo "$INI" >> /app/ini_docker.json
 
 echo gcloud dataproc jobs submit spark \
     --cluster "$CLUSTER" \
     --jar sparkblast-1-jar-with-dependencies.jar \
-    ini_docker.json
+    /app/ini_docker.json
