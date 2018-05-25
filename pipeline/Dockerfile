@@ -23,7 +23,7 @@ FROM us.gcr.io/ncbi-sandbox-blast/gcp-deployer:0.1
 #    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
 #    apt-get update -y && apt-get install google-cloud-sdk -y
 
-COPY ./ ./
+COPY ./ /app
 #COPY libblastjni.so libblastjni.so
 #COPY sparkblast-1-jar-with-dependencies.jar \
 #        sparkblast-1-jar-with-dependencies.jar
@@ -39,4 +39,7 @@ COPY ./ ./
 #      "ini.json" ]
 
 # Args are: PROJECT PUBSUB ASNBUCKET RESULTBUCKET CLUSTER
-ENTRYPOINT [ "run_spark_docker.sh" ]
+ENTRYPOINT [ ]
+
+CMD [ "/bin/bash", "/app/run_spark_docker.sh" ]
+
