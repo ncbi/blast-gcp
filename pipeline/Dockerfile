@@ -28,8 +28,3 @@ COPY ./ /app
 #COPY sparkblast-1-jar-with-dependencies.jar \
 #        sparkblast-1-jar-with-dependencies.jar
 
-ENTRYPOINT [ ]
-
-# Args are: ASNBUCKET CLUSTER
-CMD [ "/bin/bash", "-c", "/app/run_spark_docker.sh", "ASNBUCKET", "CLUSTER" ]
-
