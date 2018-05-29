@@ -24,6 +24,8 @@ checkvar=${region?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
 checkvar=${joborch_output_topic?"${usage}"}
 
+SPARK_BLAST_JAR="sparkblast-1-jar-with-dependencies.jar"
+SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
 
 INI=$(cat <<-END
 {
@@ -113,7 +115,7 @@ INI=${INI//RESULTBUCKET/$result_bucket_name}
 
 printf "$INI\n" > /app/ini_docker.json
 
-gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${CLUSTER}" \
-    --jar sparkblast-1-jar-with-dependencies.jar \
+gcloud dataproc jobs submit spark --project ${project} --cluster "${CLUSTER}" \
+    --jar ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
     -- /app/ini_docker.json
 
