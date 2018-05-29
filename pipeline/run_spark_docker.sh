@@ -10,6 +10,7 @@ usage="
 usage: $0 <cluster>
 Required environment variables:
     project
+    region
     result_bucket_name
     joborch_output_topic
 "
@@ -19,6 +20,7 @@ Required environment variables:
 CLUSTER=$1
 
 checkvar=${project?"${usage}"}
+checkvar=${region?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
 checkvar=${joborch_output_topic?"${usage}"}
 
@@ -111,6 +113,7 @@ INI=${INI//RESULTBUCKET/$result_bucket_name}
 
 printf "$INI\n" > /app/ini_docker.json
 
-gcloud dataproc jobs submit spark --cluster "${CLUSTER}" \
-    --jar sparkblast-1-jar-with-dependencies.jar /app/ini_docker.json
+gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${CLUSTER}" \
+    --jar sparkblast-1-jar-with-dependencies.jar \
+    -- /app/ini_docker.json
 
