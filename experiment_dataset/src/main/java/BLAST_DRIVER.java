@@ -26,9 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import io.opencensus.trace.Span;
-import io.opencensus.trace.Tracer;
-import io.opencensus.trace.Tracing;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -81,6 +78,11 @@ public final class BLAST_DRIVER implements Serializable {
 
     final String appName = "experiment_dataset";
 
+    /*
+    StackdriverTraceExporter.createAndRegisterWithProjectId(appName);
+    StackdriverTraceExporter.createAndRegister(
+        StackdriverTraceConfiguration.builder().build());
+
     final Tracer tracer = Tracing.getTracer();
 
     Span rootSpan = tracer.spanBuilderWithExplicitParent(appName, null).startSpan();
@@ -91,6 +93,7 @@ public final class BLAST_DRIVER implements Serializable {
     childSpan.end();
     rootSpan.addAnnotation("Annotation to the root Span after child is ended.");
     rootSpan.end();
+    */
 
     settings = BLAST_SETTINGS_READER.read_from_json(ini_path, appName);
     System.out.println(String.format("settings read from '%s'", ini_path));
@@ -149,13 +152,13 @@ public final class BLAST_DRIVER implements Serializable {
 
     conf.set("spark.ui.enabled", "true");
 
-    System.out.println("Default parallelism is" + conf.get("spark.default.parallelism"));
     builder.config(conf);
     System.out.println("Configuration is");
     System.out.println("----------------");
     System.out.println(conf.toDebugString().replace("\n", "\n  "));
     System.out.println();
     builder.enableHiveSupport();
+    // System.out.println("Default parallelism is" + conf.get("spark.default.parallelism"));
 
     sparksession = builder.getOrCreate();
     javasparkcontext = new JavaSparkContext(sparksession.sparkContext());
@@ -197,7 +200,12 @@ public final class BLAST_DRIVER implements Serializable {
 
     System.out.println(String.format("blast_partitions has %d entries", lparts.size()));
 
+    Encoders.bean(PART.class).schema().printTreeString();
+    System.out.println(Encoders.bean(PART.class).schema().toString());
+    System.out.println(Encoders.bean(PART.class).schema().simpleString());
     Dataset<PART> blast_partitions = sparksession.createDataset(lparts, Encoders.bean(PART.class));
+    blast_partitions.printSchema();
+    if (true) return blast_partitions;
     Dataset<PART> blast_partitions_part =
         blast_partitions
             .repartition(settings.num_executors, blast_partitions.col("db_select"))
