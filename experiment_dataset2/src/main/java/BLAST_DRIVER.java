@@ -63,7 +63,7 @@ public final class BLAST_DRIVER implements Serializable {
   private BLAST_SETTINGS settings;
   // private int max_partitions = 0;
   private BLAST_DB_SETTINGS dbsettings;
-  private Logger log;
+  private transient Logger log; // Don't serialize
   private String hsp_result_dir;
 
   public void BLAST_DRIVER() {}
@@ -213,11 +213,12 @@ public final class BLAST_DRIVER implements Serializable {
       new MapFunction<String, Row>() {
         @Override
         public Row call(String json) {
+          log = LogManager.getLogger(BLAST_DRIVER.class);
           log.log(Level.INFO, "input json was:" + json);
 
           BLAST_QUERY query = new BLAST_QUERY(json);
-          final String db_selector = query.getDb_selector();
           log.log(Level.INFO, "     parsed is:" + query.toString());
+          final String db_selector = query.getDb_selector();
           final String outjson = query.toJson();
           log.log(Level.INFO, "     output is:" + outjson);
           Row outrow = RowFactory.create(db_selector, outjson);
@@ -241,6 +242,7 @@ public final class BLAST_DRIVER implements Serializable {
         @Override
         public Iterator<Row> call(Row inrow) {
           final String jni_log_level = settings.jni_log_level;
+          log = LogManager.getLogger(BLAST_DRIVER.class);
           log.log(Level.INFO, "prelim_search");
 
           final int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
@@ -314,11 +316,12 @@ public final class BLAST_DRIVER implements Serializable {
                 new ForeachWriter<Row>() {
                   ArrayList<BLAST_QUERY> results;
                   private long partitionId;
-                  private Logger logger;
+                  private Logger log;
                   private BLAST_TOPN topn;
 
                   @Override
                   public boolean open(long partitionId, long version) {
+                    log = LogManager.getLogger(BLAST_DRIVER.class);
                     results = new ArrayList<>();
                     topn = new BLAST_TOPN();
                     this.partitionId = partitionId;
@@ -389,6 +392,7 @@ public final class BLAST_DRIVER implements Serializable {
       new FlatMapFunction<Row, Row>() {
         @Override
         public Iterator<Row> call(Row inrow) {
+          Logger log = LogManager.getLogger(BLAST_DRIVER.class);
           final String jni_log_level = settings.jni_log_level;
           log.log(Level.INFO, "traceback");
 
@@ -458,11 +462,12 @@ public final class BLAST_DRIVER implements Serializable {
                   ArrayList<BLAST_QUERY> results;
                   private long partitionId;
                   private FileSystem fs;
-                  private Logger logger;
+                  private Logger log;
                   private BLAST_TOPN topn;
 
                   @Override
                   public boolean open(long partitionId, long version) {
+                    log = LogManager.getLogger(BLAST_DRIVER.class);
                     results = new ArrayList<>();
                     topn = new BLAST_TOPN();
                     this.partitionId = partitionId;
@@ -545,6 +550,7 @@ public final class BLAST_DRIVER implements Serializable {
   private void write_to_hdfs(String dir, String RID, byte[] output) {
     final String outfile = String.format("%s/%s", dir, RID);
     try {
+      Logger log = LogManager.getLogger(BLAST_DRIVER.class);
       if (dir.toLowerCase().startsWith("gs://")) {
         Path path = new Path(outfile);
         Configuration conf = new Configuration();
@@ -577,6 +583,7 @@ public final class BLAST_DRIVER implements Serializable {
   } // write_to_hdfs
 
   private boolean copyfile(String src, String dest) {
+    Logger log = LogManager.getLogger(BLAST_DRIVER.class);
 
     final File donefile = new File(dest + ".done");
     int loops = 0;
@@ -647,6 +654,7 @@ public final class BLAST_DRIVER implements Serializable {
   }
 
   private void preload(String db_selector, int partition_num) {
+    Logger log = LogManager.getLogger(BLAST_DRIVER.class);
     log.log(Level.INFO, "db_selector is " + db_selector);
     // log.log(Level.INFO, "dbsettings is " + dbsettings.toString());
 
@@ -677,8 +685,6 @@ public final class BLAST_DRIVER implements Serializable {
     parsed.printSchema();
 
     Dataset<Row> joined = parsed.join(blast_partitions, "db_selector");
-    System.out.print("joined is:");
-    joined.show();
 
     Dataset<Row> results = prelim_results(joined);
 

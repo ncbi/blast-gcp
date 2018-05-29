@@ -37,7 +37,7 @@ import org.json.JSONObject;
 final class BLAST_QUERY implements Serializable {
   // From JSON request
   private String protocol;
-  private String rid;
+  private String RID;
   private String db_tag;
   private String db_selector;
   private int top_N_prelim;
@@ -46,7 +46,8 @@ final class BLAST_QUERY implements Serializable {
   private String query_url;
   private String program;
   private String blast_params;
-  private Timestamp starttime;
+  private String UserID;
+  private Timestamp StartTime;
   // Partitioned
   private int partition_num;
   // HSPs from prelim_search
@@ -62,13 +63,18 @@ final class BLAST_QUERY implements Serializable {
   private double evalue;
   private byte[] asn1_blob;
   */
+  private String errorlist="";
+  private long bench;
 
-  public BLAST_QUERY() {}
+  public BLAST_QUERY() {
+      errorlist="ctor";
+      bench=System.currentTimeMillis();
+  }
 
   // Copy Constructor
   public BLAST_QUERY(BLAST_QUERY in) {
     protocol = in.protocol;
-    rid = in.rid;
+    RID = in.RID;
     db_selector = in.db_selector;
     db_tag = in.db_tag;
     top_N_prelim = in.top_N_prelim;
@@ -77,10 +83,13 @@ final class BLAST_QUERY implements Serializable {
     query_url = in.query_url;
     program = in.program;
     blast_params = in.blast_params;
-    starttime = in.starttime;
+    StartTime = in.StartTime;
     partition_num = in.partition_num;
     hspl = in.hspl;
     tbl = in.tbl;
+
+    errorlist="copy ctor";
+    bench=System.currentTimeMillis();
   }
 
   // Constructor from JSON string
@@ -95,7 +104,7 @@ final class BLAST_QUERY implements Serializable {
         BLAST_QUERY in = gson.fromJson(jsonString, BLAST_QUERY.class);
         in.db_selector = in.db_tag.substring(0, 2);
         protocol = in.protocol;
-        rid = in.rid;
+        RID = in.RID;
         db_selector = in.db_selector;
         db_tag = in.db_tag;
         top_N_prelim = in.top_N_prelim;
@@ -104,10 +113,13 @@ final class BLAST_QUERY implements Serializable {
         query_url = in.query_url;
         program = in.program;
         blast_params = in.blast_params;
-        starttime = in.starttime;
+        StartTime = in.StartTime;
         partition_num = in.partition_num;
         hspl = in.hspl;
         tbl = in.tbl;
+
+        errorlist="json ctor";
+        bench=System.currentTimeMillis();
 
         /*
         rid = json.optString("RID", "");
@@ -122,7 +134,7 @@ final class BLAST_QUERY implements Serializable {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date parsedDate = dateFormat.parse(json.optString("StartTime", "1980-01-01T01:00:00.0"));
-        starttime = new java.sql.Timestamp(parsedDate.getTime());
+        StartTime = new java.sql.Timestamp(parsedDate.getTime());
 
         oid = json.optInt("oid", 0);
         partition_num = json.optInt("partition_num", 0);
@@ -150,11 +162,11 @@ final class BLAST_QUERY implements Serializable {
   */
 
   String getRid() {
-    return rid;
+    return RID;
   }
 
-  void setRid(final String rid) {
-    this.rid = rid;
+  void setRid(final String RID) {
+    this.RID = RID;
   }
 
   String getDb_tag() {
@@ -222,12 +234,12 @@ final class BLAST_QUERY implements Serializable {
   this.blast_params = blast_params;
   }
   */
-  Timestamp getStarttime() {
-    return starttime;
+  Timestamp getStartTime() {
+    return StartTime;
   }
   /*
-  void setStarttime(final Timestamp starttime) {
-  this.starttime = starttime;
+  void setStartTime(final Timestamp StartTime) {
+  this.StartTime = StartTime;
   }
   */
   BLAST_HSP_LIST[] getHspl() {
