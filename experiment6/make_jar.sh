@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 LOCAL_MAVEN_REPO=$(realpath $(cd "`dirname "$0"`"; pwd)/.local-maven-repo)
 NCBI_BLAST_PACKAGE=gov.nih.nlm.ncbi.blast
@@ -10,7 +10,7 @@ NCBI_BUILD_ARTIFACTS=gs://ncbi-build-artifacts
 if [ ! -d $LOCAL_MAVEN_REPO ] ; then 
     mkdir -p $LOCAL_MAVEN_REPO
     gsutil -qm cp ${NCBI_BUILD_ARTIFACTS}/${STATUS_TRACKER_JAR} .
-    mvn -q install:install-file \
+    mvn install:install-file \
         -Dfile=${STATUS_TRACKER_JAR} \
         -DgroupId=${NCBI_BLAST_PACKAGE} \
         -DartifactId=${STATUS_TRACKER_ARTF_ID} \
@@ -18,9 +18,20 @@ if [ ! -d $LOCAL_MAVEN_REPO ] ; then
         -Dpackaging=jar \
         -DgeneratePom=true \
         -DlocalRepositoryPath=${LOCAL_MAVEN_REPO}
+    find . -name "*.jar"
 fi 
 
-clear
-echo "compiling java-classes"
-mvn -q package
+mvn package
+
+# This is finicky at GCP
+if [ $? -ne 0 ] ; then
+    mvn install:install-file \
+        -Dfile=${STATUS_TRACKER_JAR} \
+        -DgroupId=${NCBI_BLAST_PACKAGE} \
+        -DartifactId=${STATUS_TRACKER_ARTF_ID} \
+        -Dversion=${STATUS_TRACKER_VER} \
+        -Dpackaging=jar \
+        -DgeneratePom=true
+    mvn package
+fi
 
