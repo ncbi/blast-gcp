@@ -9,7 +9,7 @@ set -e
 usage="
 usage: $0 <cluster>
 Required environment variables:
-    CLOUDSDK_CORE_PROJECT
+    project
     result_bucket_name
     joborch_output_topic
 "
@@ -18,13 +18,10 @@ Required environment variables:
 
 CLUSTER=$1
 
-checkvar=${CLOUDSDK_CORE_PROJECT?"${usage}"}
+checkvar=${project?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
 checkvar=${joborch_output_topic?"${usage}"}
 
-PROJECT=${CLOUDSDK_CORE_PROJECT}
-PUBSUB=${joborch_output_topic}
-RESULTBUCKET=${result_bucket_name}
 
 INI=$(cat <<-END
     {
@@ -108,9 +105,9 @@ INI=$(cat <<-END
 END
 )
 
-INI=${INI//PROJECT/$PROJECT}
-INI=${INI//PUBSUB/$PUBSUB}
-INI=${INI//RESULTBUCKET/$RESULTBUCKET}
+INI=${INI//PROJECT/$project}
+INI=${INI//PUBSUB/$joborch_output_topic}
+INI=${INI//RESULTBUCKET/$result_bucket_name}
 
 echo "$INI" >> /app/ini_docker.json
 
