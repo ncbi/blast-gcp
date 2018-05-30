@@ -13,6 +13,8 @@ Required environment variables:
     region
     result_bucket_name
     joborch_output_topic
+Optional environment variables:
+    NUM_EXECUTORS (defaults to 126)
 "
 
 [ $# -eq 1 ] || { echo ${usage} && exit 1; }
@@ -23,6 +25,8 @@ checkvar=${project?"${usage}"}
 checkvar=${region?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
 checkvar=${joborch_output_topic?"${usage}"}
+
+NUM_EXECUTORS=${NUM_EXECUTORS-126}
 
 SPARK_BLAST_JAR="sparkblast-1-jar-with-dependencies.jar"
 SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
@@ -93,7 +97,7 @@ INI=$(cat <<-END
         "shuffle_reduceLocality_enabled" : "false",
         "scheduler_fair" : "false",
         "with_locality" : "true",
-        "num_executors" : 400,
+        "num_executors" : NUM_EXECUTORS,
         "num_executor_cores" : 1,
         "executor_memory" : "1G",
         "locality_wait" : "30s"
@@ -112,6 +116,7 @@ END
 INI=${INI//PROJECT/$project}
 INI=${INI//PUBSUB/$joborch_output_topic}
 INI=${INI//RESULTBUCKET/$result_bucket_name}
+INI=${INI//NUM_EXECUTORS/$NUM_EXECUTORS}
 
 printf "$INI\n" > /app/ini_docker.json
 
