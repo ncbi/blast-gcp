@@ -7,7 +7,7 @@ set -o errexit
 NUM_CORES=32
 
 # Where to find startup script
-PIPELINEBUCKET="gs://blastgcp-pipeline-test"
+PIPELINEBUCKET="gs://sprint7-integration-demo"
 
 function config()
 {
@@ -53,10 +53,7 @@ function config()
     # But if we need 1GB/core, not going to use highcpu
     WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
 
-    PREEMPT_WORKERS=$((NUM_WORKERS - 2))
-    if [[ $PREEMPT_WORKERS -lt 0 ]]; then
-        PREEMPT_WORKERS=0
-    fi
+    PREEMPT_WORKERS=0
 
     # DataProc costs 1c/vCPU
     COST=0 # Units are cents/hour
@@ -160,7 +157,7 @@ CMD="gcloud beta dataproc --region us-east4 \
     --image-version 1.2 \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    $PIPELINEBUCKET/scripts/cluster_initialize.sh \
+    $PIPELINEBUCKET/cluster_initialize.sh \
     --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4"
 
