@@ -51,13 +51,13 @@
         "asn1" :
         {
             "bucket" : "blast-results",
-            "file": "%s/seq-annot.asn",
+            "file" : "%s/seq-annot.asn",
             "gs_or_hdfs" : "gs"
         },
         "status" :
         {
             "bucket"  : "blast-results",
-            "file":   : "%s/status.txt"
+            "file"    : "%s/status.txt"
         }
     },
 
