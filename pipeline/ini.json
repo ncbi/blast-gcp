@@ -27,13 +27,13 @@
                 "selector" : "nt",
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
-                "extensions" : [ "nhr", "nin", "nsq" ]
+                "extensions" : [ "nax", "nin", "nsq" ]
             },
             {
                 "selector" : "nr",
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
-                "extensions" : [ "phr", "pin", "psq" ]
+                "extensions" : [ "pax", "pin", "psq" ]
             }
         ],
         "top_n" : 100,
