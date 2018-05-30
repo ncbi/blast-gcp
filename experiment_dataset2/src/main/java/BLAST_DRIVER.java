@@ -86,7 +86,12 @@ public final class BLAST_DRIVER implements Serializable {
     final String appName = "experiment_dataset2";
 
     try {
-      StackdriverTraceExporter.createAndRegister(StackdriverTraceConfiguration.builder().build());
+      StackdriverTraceExporter.createAndRegister(
+          StackdriverTraceConfiguration.builder()
+              //              .setProjectId("ncbi-sandbox-blast")
+              //              .setCredentials(new GoogleCredentials(new AccessToken(accessToken,
+              // expirationTime)))
+              .build());
 
       final Tracer tracer = Tracing.getTracer();
 
@@ -100,6 +105,8 @@ public final class BLAST_DRIVER implements Serializable {
       rootSpan.end();
     } catch (IOException e) {
       log.log(Level.ERROR, "Couldn't register stackdriver tracing: " + e);
+    } catch (ServiceConfigurationError se) {
+      log.log(Level.ERROR, "Couldn't register stackdriver tracing: " + se);
     }
 
     settings = BLAST_SETTINGS_READER.read_from_json(ini_path, appName);
@@ -229,15 +236,17 @@ public final class BLAST_DRIVER implements Serializable {
           BLAST_QUERY query = new BLAST_QUERY(json);
           log.log(Level.INFO, "     parsed is:" + query.toString());
           final String db_selector = query.db_selector;
+          int partition_num = query.partition_num;
           final String outjson = query.toJson();
           log.log(Level.INFO, "     output is:" + outjson);
-          return RowFactory.create(db_selector, outjson);
+          return RowFactory.create(db_selector, partition_num, outjson);
         }
       };
 
   private Dataset<Row> json_parser(final Dataset<String> queries) {
     // db ser
-    StructType parsed_schema = StructType.fromDDL("db_selector string, ser string");
+    StructType parsed_schema =
+        StructType.fromDDL("db_selector string, partition_num int, ser string");
     ExpressionEncoder<Row> encoder = RowEncoder.apply(parsed_schema);
     Dataset<Row> parsed = queries.map(jsontoqueryfunc, encoder);
 
@@ -280,7 +289,7 @@ public final class BLAST_DRIVER implements Serializable {
 
           BLAST_LIB blaster = new BLAST_LIB();
           if (blaster != null) {
-            log.log(Level.ERROR, "NULL blaster library");
+            log.log(Level.FATAL, "NULL blaster library");
           }
 
           ArrayList<Row> parts = new ArrayList<Row>();
@@ -299,6 +308,7 @@ public final class BLAST_DRIVER implements Serializable {
             query.hspl = search_res;
 
             final String resser = query.toJson();
+            log.log(Level.INFO, "resser is " + resser);
             Row outrow = RowFactory.create(RID, resser);
             parts.add(outrow);
           } catch (Exception e) {
@@ -359,7 +369,6 @@ public final class BLAST_DRIVER implements Serializable {
                   @Override
                   public void close(Throwable errorOrNull) {
                     log.log(Level.INFO, "topn_dsw close results:");
-                    log.log(Level.INFO, "---------------");
 
                     log.log(
                         Level.INFO,
@@ -433,7 +442,7 @@ public final class BLAST_DRIVER implements Serializable {
 
           BLAST_LIB blaster = new BLAST_LIB();
           if (blaster != null) {
-            log.log(Level.ERROR, "NULL blaster library");
+            log.log(Level.FATAL, "NULL blaster library");
           }
 
           ArrayList<Row> parts = new ArrayList<Row>();
@@ -695,13 +704,7 @@ public final class BLAST_DRIVER implements Serializable {
     System.out.print("parsed schema is:");
     parsed.printSchema();
 
-    Dataset<Row> joined =
-        parsed.join(
-            blast_partitions,
-            parsed
-                .col("db_selector")
-                .equalTo(blast_partitions.col("db_selector"))
-                .and(parsed.col("partition_num").equalTo(blast_partitions.col("partition_num"))));
+    Dataset<Row> joined = parsed.join(blast_partitions, "db_selector");
 
     Dataset<Row> results = prelim_results(joined);
 
@@ -725,7 +728,13 @@ public final class BLAST_DRIVER implements Serializable {
 
     Dataset<Row> parsed = json_parser(queries);
 
-    Dataset<Row> joined = parsed.join(blast_partitions, "db_selector");
+    Dataset<Row> joined =
+        parsed.join(
+            blast_partitions,
+            parsed
+                .col("db_selector")
+                .equalTo(blast_partitions.col("db_selector"))
+                .and(parsed.col("partition_num").equalTo(blast_partitions.col("partition_num"))));
 
     Dataset<Row> traceback_results = traceback_results(joined);
 

@@ -29,7 +29,6 @@ package gov.nih.nlm.ncbi.blastjni;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
-import java.sql.Timestamp;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -61,7 +60,7 @@ final class BLAST_QUERY implements Serializable {
   public String userid;
 
   @SerializedName("StartTime")
-  public Timestamp starttime;
+  public String starttime;
   // Partitioned
   public int partition_num;
   // HSPs from prelim_search
@@ -154,6 +153,7 @@ final class BLAST_QUERY implements Serializable {
       }
 
     } catch (Exception e) {
+      logger.log(Level.ERROR, "JSON parsing error: " + e);
     }
   }
 
