@@ -29,7 +29,7 @@
                 "selector" : "nt",
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
-                "extensions" : [ "nhr", "nin", "nsq", "nax" ],
+                "extensions" : [ "nin", "nsq", "nax" ],
                 "num_partitions" : 887,
                 "num_locations" : 2
             },
@@ -37,7 +37,7 @@
                 "selector" : "nr",
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
-                "extensions" : [ "phr", "pin", "psq", "pax" ],
+                "extensions" : [ "pin", "psq", "pax" ],
                 "num_partitions" : 1086,
                 "num_locations" : 1
             }
