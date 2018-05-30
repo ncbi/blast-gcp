@@ -59,7 +59,7 @@
     {
         "transfer_files" : [ "libblastjni.so" ],
         "with_locality" : "true",
-        "num_executors" : 8,
+        "num_executors" : 182,
         "num_executor_cores" : 4,
         "shuffle_reduceLocality_enabled" : "false",
         "scheduler_fair" : "false",
