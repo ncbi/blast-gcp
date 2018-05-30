@@ -143,7 +143,7 @@ CMD="gcloud beta dataproc --region us-east4 \
     clusters create blast-dataproc-$USER-$(date +%Y%m%d-%-I) \
     --master-machine-type $MASTER \
         --master-boot-disk-size $DISK_PER_MASTER \
-    --num-workers 2 \
+    --num-workers ${NUM_WORKERS} \
         --worker-boot-disk-size $DISK_PER_WORKER \
     --worker-machine-type $WORKER \
     --num-preemptible-workers $PREEMPT_WORKERS \
