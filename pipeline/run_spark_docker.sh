@@ -7,19 +7,18 @@
 set -e
 
 usage="
-usage: $0 <cluster>
+usage: $0
 Required environment variables:
     project
     region
     result_bucket_name
     joborch_output_topic
+    blast_dataproc_cluster_name
 Optional environment variables:
     NUM_EXECUTORS (defaults to 126)
 "
 
 [ $# -eq 1 ] || { echo ${usage} && exit 1; }
-
-CLUSTER=$1
 
 checkvar=${project?"${usage}"}
 checkvar=${region?"${usage}"}
@@ -120,7 +119,7 @@ INI=${INI//NUM_EXECUTORS/$NUM_EXECUTORS}
 
 printf "$INI\n" > /app/ini_docker.json
 
-gcloud dataproc jobs submit spark --project ${project} --cluster "${CLUSTER}" \
+gcloud dataproc jobs submit spark --project ${project} --cluster "${blast_dataproc_cluster_name}" \
     --jar ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
     -- /app/ini_docker.json
 
