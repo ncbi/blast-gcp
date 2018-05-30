@@ -1,16 +1,11 @@
 #!/bin/bash
 
-# Args are:
-# 1 asn bucket
-# 2 cluster
-
 set -e
 
 usage="
 usage: $0
 Required environment variables:
     project
-    region
     result_bucket_name
     joborch_output_topic
     blast_dataproc_cluster_name
@@ -18,12 +13,12 @@ Optional environment variables:
     NUM_EXECUTORS (defaults to 126)
 "
 
-[ $# -eq 1 ] || { echo ${usage} && exit 1; }
+[ $# -eq 0 ] || { echo ${usage} && exit 1; }
 
 checkvar=${project?"${usage}"}
-checkvar=${region?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
 checkvar=${joborch_output_topic?"${usage}"}
+checkvar=${blast_dataproc_cluster_name?"${usage}"}
 
 NUM_EXECUTORS=${NUM_EXECUTORS-126}
 
