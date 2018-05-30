@@ -4,3 +4,4 @@ target
 bigdata-interop/
 gov/
 env/
+ini_docker.json

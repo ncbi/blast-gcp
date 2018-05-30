@@ -40,7 +40,7 @@ public final class BLAST_TOPN implements Serializable {
 
   // So we can efficiently compute topN scores by RID, use Java's Red Black
   // Tree to keep always sorted scores
-  private HashMap<String, TreeMap<Double, ArrayList<String>>> score_map;
+  private HashMap<String, TreeMap<Double, ArrayList<BLAST_QUERY>>> score_map;
 
   public BLAST_TOPN() {
     score_map = new HashMap<>();
@@ -49,54 +49,49 @@ public final class BLAST_TOPN implements Serializable {
     logger.log(Level.INFO, String.format("TOPN class"));
   }
 
-  public void add(String key, Double score, String line) {
+  public void add(String key, Double score, BLAST_QUERY line) {
     if (!score_map.containsKey(key)) {
-      TreeMap<Double, ArrayList<String>> tm =
-          new TreeMap<Double, ArrayList<String>>(Collections.reverseOrder());
+      TreeMap<Double, ArrayList<BLAST_QUERY>> tm =
+          new TreeMap<Double, ArrayList<BLAST_QUERY>>(Collections.reverseOrder());
       score_map.put(key, tm);
     }
 
     // FIX optimize: early cutoff if tm.size>topn
-    TreeMap<Double, ArrayList<String>> tm = score_map.get(key);
+    TreeMap<Double, ArrayList<BLAST_QUERY>> tm = score_map.get(key);
 
     if (!tm.containsKey(score)) {
-      ArrayList<String> al = new ArrayList<String>();
+      ArrayList<BLAST_QUERY> al = new ArrayList<BLAST_QUERY>();
       tm.put(score, al);
     }
-    ArrayList<String> al = tm.get(score);
+    ArrayList<BLAST_QUERY> al = tm.get(score);
 
     al.add(line);
     tm.put(score, al);
     score_map.put(key, tm);
   }
 
-  public ArrayList<String> results(int topn) {
+  public ArrayList<ArrayList<BLAST_QUERY>> results() {
     logger.log(Level.INFO, String.format("topn_ hashmap has %d", score_map.size()));
     if (score_map.size() > 1)
       logger.log(Level.WARN, String.format(" topn_ hashmap has > 1 RID:%d", score_map.size()));
 
-    ArrayList<String> results = new ArrayList<String>(score_map.size());
+    ArrayList<ArrayList<BLAST_QUERY>> results = new ArrayList<>();
     for (String key : score_map.keySet()) {
-      TreeMap<Double, ArrayList<String>> tm = score_map.get(key);
-      // JSON records tend to be either ~360 or ~1,200 bytes
-      StringBuilder output = new StringBuilder(tm.size() * 400);
+      TreeMap<Double, ArrayList<BLAST_QUERY>> tm = score_map.get(key);
+      ArrayList<BLAST_QUERY> al = new ArrayList<BLAST_QUERY>();
       int i = 0;
       for (Double score : tm.keySet()) {
-        if (i < topn) {
-          ArrayList<String> al = tm.get(score);
-          for (String line : al) {
-            output.append(line);
-            output.append('\n');
-          }
+        if (i < 100) // FIX
+        {
+          for (BLAST_QUERY q : tm.get(score)) al.add(q);
         } else {
           logger.log(Level.DEBUG, " Skipping rest");
           break;
         }
         ++i;
       }
-      results.add(output.toString());
+      results.add(al);
     }
-
     return results;
   }
 
@@ -105,13 +100,21 @@ public final class BLAST_TOPN implements Serializable {
 
     for (double d = -5; d < 200; ++d) {
       Double dbl = d;
-      topn.add("KEY1", d, dbl.toString());
+      BLAST_QUERY q = new BLAST_QUERY();
+      q.setRid("test");
+      topn.add("KEY1", d, q);
     }
 
-    ArrayList<String> results = topn.results(100);
+    ArrayList<ArrayList<BLAST_QUERY>> results = topn.results();
     int i = 0;
-    for (String s : results) {
-      System.out.println(String.format("%d: %s", i, s));
+    for (ArrayList<BLAST_QUERY> s : results) {
+      int j = 0;
+      for (BLAST_QUERY q : s) {
+        String rid = q.getRid();
+        System.out.println(
+            String.format("rid %d (%s): result %d (%s): %s", i, rid, j, q.getRid(), q.toString()));
+        ++j;
+      }
       ++i;
     }
   }

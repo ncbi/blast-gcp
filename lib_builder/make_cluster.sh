@@ -31,10 +31,9 @@ function config()
     DISK_PER_WORKER=$((DB_SPACE_PER_WORKER+5))
 
     # FIX: Until we can guarantee DB pinning or implement LRU:
-    DISK_PER_WORKER=$((DB_SPACE+10))
+    DISK_PER_WORKER=$((DB_SPACE+5))
 
     # JVMS ~ 1GB per executor, plus 1GB overhead
-    # FIX: Need less RAM once pinning guaranteed
     RAM_PER_WORKER=$(( (CORES_PER_WORKER + 1 + DB_SPACE_PER_WORKER)*1024 ))
 
     MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
@@ -51,6 +50,7 @@ function config()
     fi
 
     # FIX: Override with standard types: high-cpu ~3% cheaper than custom
+    # But if we need 1GB/core, not going to use highcpu
     WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
 
     PREEMPT_WORKERS=$((NUM_WORKERS - 2))
@@ -143,7 +143,7 @@ CORES_PER_WORKER=$BEST_PRICE
 config
 
 CMD="gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER-$(date +%Y%m%d-%H) \
+    clusters create blast-dataproc-$USER-$(date +%Y%m%d-%-I) \
     --master-machine-type $MASTER \
         --master-boot-disk-size $DISK_PER_MASTER \
     --num-workers 2 \

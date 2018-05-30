@@ -4,14 +4,17 @@ import atexit
 import datetime
 import getpass
 import json
-#import difflib
+
+# import difflib
 import os
 import random
 import subprocess
-#import sys
+
+# import sys
 import threading
 import time
-#import uuid
+
+# import uuid
 
 # gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS
 
@@ -44,16 +47,16 @@ def progress(submit=None, results=None):
     if submit is None:
         submit = ""
     else:
-        if '\n' in submit:
-            lines = submit.split('\n')
+        if "\n" in submit:
+            lines = submit.split("\n")
             for line in lines:
                 progress(submit=line)
 
     if results is None:
         results = ""
     else:
-        if '\n' in results:
-            lines = results.split('\n')
+        if "\n" in results:
+            lines = results.split("\n")
             for line in lines:
                 progress(results=line)
 
@@ -63,15 +66,21 @@ def progress(submit=None, results=None):
 def get_cluster():
     global CLUSTER_ID, PROJECT
     user = getpass.getuser()
-    #print("user is " + user)
+    # print("user is " + user)
     cmd = [
-        'gcloud', 'dataproc', '--project', PROJECT, '--region', 'us-east4',
-        'clusters', 'list'
+        "gcloud",
+        "dataproc",
+        "--project",
+        PROJECT,
+        "--region",
+        "us-east4",
+        "clusters",
+        "list",
     ]
     results = subprocess.check_output(cmd)
-    clusters = results.decode().split('\n')
+    clusters = results.decode().split("\n")
     for cluster in clusters:
-        cluster_name = cluster.split(' ')[0]
+        cluster_name = cluster.split(" ")[0]
         if cluster_name.startswith("blast-dataproc-" + user):
             CLUSTER_ID = cluster_name
             return
@@ -81,13 +90,13 @@ def make_pubsub():
     global TOPIC_NAME, SUBSCRIPTION, SUBSCRIPTION_PATH, PUBSUB_CLIENT, TEST_ID
     global PROJECT
     PUBSUB_CLIENT = pubsub.PublisherClient()
-    TOPIC_NAME = 'projects/{project_id}/topics/{topic}'.format(
-        project_id=PROJECT,  # os.getenv('GOOGLE_CLOUD_PROJECT'),
-        topic=TEST_ID)
+    TOPIC_NAME = "projects/{project_id}/topics/{topic}".format(
+        project_id=PROJECT, topic=TEST_ID  # os.getenv('GOOGLE_CLOUD_PROJECT'),
+    )
 
     # Create the topic.
     PUBSUB_CLIENT.create_topic(TOPIC_NAME)
-    print('  Topic created: ' + TOPIC_NAME)
+    print("  Topic created: " + TOPIC_NAME)
 
     #    print('  Topic created: {}'.format(topic))
 
@@ -96,8 +105,7 @@ def make_pubsub():
     SUBSCRIPTION_PATH = subscriber.subscription_path(PROJECT, TEST_ID)
     print("  SUBSCRIPTION_PATH is " + SUBSCRIPTION_PATH)
 
-    SUBSCRIPTION = subscriber.create_subscription(SUBSCRIPTION_PATH,
-                                                  TOPIC_NAME)
+    SUBSCRIPTION = subscriber.create_subscription(SUBSCRIPTION_PATH, TOPIC_NAME)
 
     #    print('  Subscription created: {}'.format(SUBSCRIPTION))
 
@@ -108,15 +116,15 @@ def make_bucket():
     global STORAGE_CLIENT, TEST_ID, BUCKET, BUCKET_NAME, PROJECT
     STORAGE_CLIENT = storage.Client()
     BUCKET_NAME = TEST_ID
-    print('  Creating bucket ' + BUCKET_NAME)
+    print("  Creating bucket " + BUCKET_NAME)
     BUCKET = STORAGE_CLIENT.create_bucket(BUCKET_NAME)
     labels = BUCKET.labels
-    labels['owner'] = TEST_ID
-    labels['project'] = PROJECT
-    labels['description'] = "temporary_test_bucket"
+    labels["owner"] = TEST_ID
+    labels["project"] = PROJECT
+    labels["description"] = "temporary_test_bucket"
     BUCKET.labels = labels
     BUCKET.update()
-    print('  Created  bucket ' + BUCKET_NAME)
+    print("  Created  bucket " + BUCKET_NAME)
 
 
 def get_tests():
@@ -136,7 +144,7 @@ def get_tests():
 
     # FIX: Paged
     test_blobs = test_bucket.list_blobs()
-    #random.shuffle(test_blobs)
+    # random.shuffle(test_blobs)
 
     test_count = 0
     for test_blob in test_blobs:
@@ -146,23 +154,23 @@ def get_tests():
         test_data = test_blob.download_as_string()
 
         j = json.loads(test_data.decode())
-        if 'query_url' not in j:
-            j['query_url'] = ""
+        if "query_url" not in j:
+            j["query_url"] = ""
         # Randomly put 10% of queries in gs bucket instead
-        if random.randrange(0, 100) < 10 and not j['query_url']:
+        if random.randrange(0, 100) < 10 and not j["query_url"]:
             print("    Creating out of band query in gs:// bucket")
 
-            objname = 'query-' + ('%09d.txt' % random.randrange(1, 1000000000))
+            objname = "query-" + ("%09d.txt" % random.randrange(1, 1000000000))
 
             blob = large_bucket.blob(objname)
-            blob.upload_from_string(j['query_seq'])
+            blob.upload_from_string(j["query_seq"])
 
             url = largequery_bucket_name + "/" + objname
 
-            j['query_seq'] = ''
-            j['query_url'] = url
+            j["query_seq"] = ""
+            j["query_url"] = url
 
-        TESTS[j['RID']] = j
+        TESTS[j["RID"]] = j
     print("Loaded " + str(len(TESTS)) + " tests")
 
 
@@ -183,13 +191,13 @@ def submit_thread():
             # Emulate 1..10 submissions a second with jitter
             time.sleep(random.randrange(0, 100) / 1000)
             now = datetime.datetime.utcnow()
-            TESTS[test]['StartTime'] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
+            TESTS[test]["StartTime"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
             print(TESTS[test])
             publish(TESTS[test])
-            fout=open(TESTS[test]['RID']+".json","w")
+            fout = open(TESTS[test]["RID"] + ".json", "w")
             fout.write(json.dumps(TESTS[test], sort_keys=True))
             fout.close()
-            progress(submit="  Submitted " + TESTS[test]['RID'])
+            progress(submit="  Submitted " + TESTS[test]["RID"])
         progress(submit="Waiting %f" % ramp)
         time.sleep(ramp)
         ramp = ramp * 0.8
@@ -206,19 +214,19 @@ def results_thread():
             anything = True
             # gs://blast-test-$USER/output/RID/seq-annot.asn/
             # gs://blast-test-$USER/status/RID/status.txt
-            parts = blob.name.split('/')
-            if parts[0] == 'status':
+            parts = blob.name.split("/")
+            if parts[0] == "status":
                 # TODO: Check Job Orchestration status
                 continue
-            #progress(results=str(parts))
+            # progress(results=str(parts))
             rid = parts[1].replace(".asn1", "")
 
             if rid not in TESTS:
                 continue
 
             result = TESTS[rid]
-            rid = result['RID']
-            os.makedirs(name='results', exist_ok=True)
+            rid = result["RID"]
+            os.makedirs(name="results", exist_ok=True)
             fname = "results/" + rid + ".asn1"
             txtname = "results/" + rid + ".txt"
             expected = "expected/" + rid + ".txt"
@@ -228,16 +236,22 @@ def results_thread():
             dtend = dtend.replace(tzinfo=None)
             BUCKET.delete_blob(blob.name)
 
-            dtstart = datetime.datetime.utcfromtimestamp(result['StartTime'])
+            dtstart = datetime.datetime.utcfromtimestamp(result["StartTime"])
             elapsed = dtend - dtstart
-            progress(results="%s took %6.2f seconds" % (
-                rid, elapsed.total_seconds()))
+            progress(results="%s took %6.2f seconds" % (rid, elapsed.total_seconds()))
 
             cmd = [
-                "./asntool", "-m", "asn.all", "-t", "Seq-annot", "-d", fname,
-                "-p", txtname
+                "./asntool",
+                "-m",
+                "asn.all",
+                "-t",
+                "Seq-annot",
+                "-d",
+                fname,
+                "-p",
+                txtname,
             ]
-            #print (cmd)
+            # print (cmd)
             subprocess.check_output(cmd)
 
             with open(txtname) as fnew:
@@ -249,8 +263,8 @@ def results_thread():
 
                 if fnewlines != fexpectedlines:
                     print("Files differ for " + rid)
-                    #diff=difflib.ndiff(fnewlines, fexpectedlines)
-                    #print(diff)
+                    # diff=difflib.ndiff(fnewlines, fexpectedlines)
+                    # print(diff)
 
         if not anything:
             progress(results="No objects in bucket")
@@ -299,7 +313,7 @@ def main():
 
     get_tests()
 
-    #TEST_ID="blast_test-" + secrets.token_urlsafe(6)
+    # TEST_ID="blast_test-" + secrets.token_urlsafe(6)
     # Instantiates a client
 
     # Look for cluster
@@ -314,15 +328,14 @@ def main():
     print("PubSub subscriptions created")
     print("Cloud Storage bucket created")
     print()
-    input(" " * 10 +
-          "*** Start Spark Streaming Job now, press Enter when ready ***")
+    input(" " * 10 + "*** Start Spark Streaming Job now, press Enter when ready ***")
 
     # Start threads
     #  submits
     progress(None, None)
     threading.Thread(target=submit_thread).start()
     #  status
-    #threading.Thread(target=status_thread).start()
+    # threading.Thread(target=status_thread).start()
     #  results
     threading.Thread(target=results_thread).start()
 
