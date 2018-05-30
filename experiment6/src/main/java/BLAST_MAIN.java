@@ -53,7 +53,8 @@ public final class BLAST_MAIN
 
     public static String main_spark_loop( final BLAST_STATUS status,
                                           final BLAST_JOBS jobs,
-                                          int top_n )
+                                          int top_n,
+                                          final String ini_file )
     {
         String res = "";
         String cmd;
@@ -70,7 +71,11 @@ public final class BLAST_MAIN
                     else if ( cmd.startsWith( "reset" ) )
                     {
                         status.stop();
-                        res = cmd;
+                        String[] splited = cmd.split( "\\s+" );
+                        if ( splited.length > 1 )
+                            res = splited[ 1 ];
+                        else
+                            res = ini_file;
                     }
                     else if ( cmd.startsWith( "R" ) )
                         add_request( BLAST_REQUEST_READER.parse_from_string( cmd.substring( 1 ), top_n ), status );
@@ -87,7 +92,7 @@ public final class BLAST_MAIN
         return res;
     }
 
-    public static String main_spark( String ini_file )
+    public static String main_spark( final String ini_file )
     {
         String res = "";
         final String appName = BLAST_MAIN.class.getSimpleName();
@@ -141,7 +146,7 @@ public final class BLAST_MAIN
                 System.out.println( "spark-blast started..." );
 
                 /* ************************************************ */
-                res = main_spark_loop( status, jobs, settings.top_n );
+                res = main_spark_loop( status, jobs, settings.top_n, ini_file );
                 /* ************************************************ */
 
                 jobs.stop_all_jobs();

@@ -29,8 +29,8 @@ import java.io.Serializable;
 
 final class BLAST_HSP_LIST implements Serializable
 {
-    public BLAST_PARTITION part;
-    public BLAST_REQUEST req;
+    transient public BLAST_PARTITION part;
+    transient public BLAST_REQUEST req;
     public int oid;
     public int max_score;
     public byte[] hsp_blob;

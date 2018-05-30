@@ -65,8 +65,13 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
-      <version>1.26.0</version>
-    </dependency>
+      <version>1.31.0</version>
+  </dependency>
+  <dependency>
+        <groupId>com.google.cloud</groupId>
+          <artifactId>google-cloud-trace</artifactId>
+            <version>0.49.0-beta</version>
+        </dependency>
     <!-- cloud-storage seems to require this -->
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -80,6 +85,22 @@
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
       <!-- <scope>provided</scope> -->
+    </dependency>
+    <dependency>
+      <groupId>io.opencensus</groupId>
+      <artifactId>opencensus-api</artifactId>
+      <version>0.12.2</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opencensus</groupId>
+      <artifactId>opencensus-exporter-trace-stackdriver</artifactId>
+      <version>0.12.2</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opencensus</groupId>
+      <artifactId>opencensus-impl</artifactId>
+      <version>0.12.2</version>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
   <build>
