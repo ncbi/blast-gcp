@@ -115,6 +115,6 @@ INI=${INI//NUM_EXECUTORS/$NUM_EXECUTORS}
 printf "$INI\n" > /app/ini_docker.json
 
 gcloud dataproc jobs submit spark --project ${project} --cluster "${blast_dataproc_cluster_name}" \
-    --jar ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
+    --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
     -- /app/ini_docker.json
 
