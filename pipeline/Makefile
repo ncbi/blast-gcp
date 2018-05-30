@@ -10,7 +10,7 @@ run: build address.txt
 
 address.txt:
 	sed -i "s/t7/&-${USER}/;s/results/&-${USER}/" ini.json
-	/sbin/ifconfig | awk -F: '/inet addr/ {print $$2}' | grep -v 127.0.0.1 | tr -s ' ' | cut -d ' ' -f 1
+	/sbin/ifconfig | awk -F: '/inet addr/ {print $$2}' | grep -v 127.0.0.1 | tr -s ' ' | cut -d ' ' -f 1 > $@
 	gsutil -q cp $@ gs://blast-results-${USER}/
 
 
