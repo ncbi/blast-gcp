@@ -23,12 +23,13 @@
  * ===========================================================================
  *
  */
+
 package gov.nih.nlm.ncbi.blastjni;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -36,93 +37,98 @@ import org.json.JSONObject;
 
 final class BLAST_QUERY implements Serializable {
   // From JSON request
-  private String protocol;
-  private String RID;
-  private String db_tag;
-  private String db_selector;
-  private int top_N_prelim;
-  private int top_N_traceback;
-  private String query_seq;
-  private String query_url;
-  private String program;
-  private String blast_params;
-  private String UserID;
-  private Timestamp StartTime;
-  // Partitioned
-  private int partition_num;
-  // HSPs from prelim_search
-  private BLAST_HSP_LIST[] hspl;
-  /*
-  private int oid;
-  private int max_score;
-  private byte[] hsp_blob;
-  */
-  // Tracebacks from traceback
-  private BLAST_TB_LIST[] tbl;
-  /*
-  private double evalue;
-  private byte[] asn1_blob;
-  */
-  private String errorlist="";
-  private long bench;
+  public String protocol;
 
-  public BLAST_QUERY() {
-      errorlist="ctor";
-      bench=System.currentTimeMillis();
+  @SerializedName("RID")
+  public String rid;
+
+  public int[] volumes; // Future
+  public String db_tag;
+  public String db_selector;
+
+  @SerializedName("top_N_prelim")
+  public int top_n_prelim;
+
+  @SerializedName("top_N_traceback")
+  public int top_n_traceback;
+
+  public String query_seq;
+  public String query_url;
+  public String program;
+  public String blast_params;
+
+  @SerializedName("UserID")
+  public String userid;
+
+  @SerializedName("StartTime")
+  public Timestamp starttime;
+  // Partitioned
+  public int partition_num;
+  // HSPs from prelim_search
+  public BLAST_HSP_LIST[] hspl;
+  // Tracebacks from traceback
+  public BLAST_TB_LIST[] tbl;
+  // Debugging/tracing aids
+  public String errorlist;
+  public long bench;
+
+  BLAST_QUERY() {
+    errorlist = "ctor";
+    bench = System.currentTimeMillis();
   }
 
   // Copy Constructor
-  public BLAST_QUERY(BLAST_QUERY in) {
+  BLAST_QUERY(BLAST_QUERY in) {
     protocol = in.protocol;
-    RID = in.RID;
+    rid = in.rid;
     db_selector = in.db_selector;
     db_tag = in.db_tag;
-    top_N_prelim = in.top_N_prelim;
-    top_N_traceback = in.top_N_traceback;
+    top_n_prelim = in.top_n_prelim;
+    top_n_traceback = in.top_n_traceback;
     query_seq = in.query_seq;
     query_url = in.query_url;
     program = in.program;
     blast_params = in.blast_params;
-    StartTime = in.StartTime;
+    starttime = in.starttime;
     partition_num = in.partition_num;
     hspl = in.hspl;
     tbl = in.tbl;
 
-    errorlist="copy ctor";
-    bench=System.currentTimeMillis();
+    errorlist = "copy ctor";
+    bench = System.currentTimeMillis();
   }
 
   // Constructor from JSON string
-  public BLAST_QUERY(String jsonString) {
+  BLAST_QUERY(final String jsonString) {
     Logger logger = LogManager.getLogger(BLAST_QUERY.class);
 
     JSONObject json = new JSONObject(jsonString);
     try {
       protocol = json.optString("protocol", "");
-      if (protocol.equals("1.0")) {
+      if ("1.0".equals(protocol)) {
         Gson gson = new Gson();
         BLAST_QUERY in = gson.fromJson(jsonString, BLAST_QUERY.class);
         in.db_selector = in.db_tag.substring(0, 2);
         protocol = in.protocol;
-        RID = in.RID;
+        rid = in.rid;
         db_selector = in.db_selector;
         db_tag = in.db_tag;
-        top_N_prelim = in.top_N_prelim;
-        top_N_traceback = in.top_N_traceback;
+        top_n_prelim = in.top_n_prelim;
+        top_n_traceback = in.top_n_traceback;
         query_seq = in.query_seq;
         query_url = in.query_url;
         program = in.program;
         blast_params = in.blast_params;
-        StartTime = in.StartTime;
+        starttime = in.starttime;
         partition_num = in.partition_num;
         hspl = in.hspl;
         tbl = in.tbl;
 
-        errorlist="json ctor";
-        bench=System.currentTimeMillis();
+        errorlist = "json ctor";
+        bench = System.currentTimeMillis();
 
         /*
-        rid = json.optString("RID", "");
+        rid = json.optString("rid", "");
         db_tag = json.optString("db_tag", "");
         db_selector = db_tag.substring(0, 2); // json.optString("db_selector", "");
         top_N_prelim = json.optInt("top_N_prelim", 0);
@@ -149,117 +155,6 @@ final class BLAST_QUERY implements Serializable {
 
     } catch (Exception e) {
     }
-  }
-
-  String getProtocol() {
-
-    return protocol;
-  }
-  /*
-  void setProtocol(final String protocol) {
-  this.protocol = protocol;
-  }
-  */
-
-  String getRid() {
-    return RID;
-  }
-
-  void setRid(final String RID) {
-    this.RID = RID;
-  }
-
-  String getDb_tag() {
-    return db_tag;
-  }
-
-  void setDb_tag(final String db_tag) {
-    this.db_tag = db_tag;
-  }
-
-  String getDb_selector() {
-    return db_selector;
-  }
-
-  void setDb_selector(final String db_selector) {
-    this.db_selector = db_selector;
-  }
-
-  int getTop_N_prelim() {
-    return top_N_prelim;
-  }
-  /*
-  void setTop_N_prelim(final int top_N_prelim) {
-  this.top_N_prelim = top_N_prelim;
-  }
-  */
-
-  int getTop_N_traceback() {
-    return top_N_traceback;
-  }
-  /*
-  void setTop_N_traceback(final int top_N_traceback) {
-  this.top_N_traceback = top_N_traceback;
-  }
-  */
-  String getQuery_seq() {
-    return query_seq;
-  }
-
-  void setQuery_seq(final String query_seq) {
-    this.query_seq = query_seq;
-  }
-
-  String getQuery_url() {
-    return query_url;
-  }
-  /*
-  void setQuery_url(final String query_url) {
-  this.query_url = query_url;
-  }
-  */
-  String getProgram() {
-    return program;
-  }
-  /*
-  void setProgram(final String program) {
-  this.program = program;
-  }
-  */
-  String getBlast_params() {
-    return blast_params;
-  }
-  /*
-  void setBlast_params(final String blast_params) {
-  this.blast_params = blast_params;
-  }
-  */
-  Timestamp getStartTime() {
-    return StartTime;
-  }
-  /*
-  void setStartTime(final Timestamp StartTime) {
-  this.StartTime = StartTime;
-  }
-  */
-  BLAST_HSP_LIST[] getHspl() {
-    return hspl;
-  }
-
-  void setHspl(BLAST_HSP_LIST[] hspl) {
-    this.hspl = hspl;
-  }
-
-  BLAST_TB_LIST[] getTbl() {
-    return tbl;
-  }
-
-  void setTbl(BLAST_TB_LIST[] tbl) {
-    this.tbl = tbl;
-  }
-
-  void setPartition_num(int partition_num) {
-    this.partition_num = partition_num;
   }
 
   // FIX: Serdes with ProtocolBuffer?
