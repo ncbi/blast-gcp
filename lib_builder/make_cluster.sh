@@ -140,7 +140,7 @@ CORES_PER_WORKER=$BEST_PRICE
 config
 
 CMD="gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER-$(date +%Y%m%d-%-I) \
+    clusters create blast-dataproc-$USER \
     --master-machine-type $MASTER \
         --master-boot-disk-size $DISK_PER_MASTER \
     --num-workers ${NUM_WORKERS} \
