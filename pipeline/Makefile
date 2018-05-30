@@ -6,7 +6,7 @@ SHELL=/bin/bash
 .PHONY: run build
 
 run: build address.txt
-	[ -f libblastjni.so ] || ln ../experiment6/libblastjni.so .
+	[ -f libblastjni.so ] || gsutil cp gs://blast-test-greg/libblastjni.so .
 	./run_spark.sh
 
 address.txt:
