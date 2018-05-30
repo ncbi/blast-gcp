@@ -30,8 +30,8 @@ cd /tmp
         tag blastjni-log
     </source>
 DONE
-    cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
-    service google-fluentd restart
+#    cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
+#    service google-fluentd restart
 
 # Configure all master/worker nodes' log4j
     cat << 'DONE2' > log4j.proto

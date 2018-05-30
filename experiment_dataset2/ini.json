@@ -2,7 +2,7 @@
     "appName" : "experiment_dataset2",
     "source" :
     {
-        "max_backlog" : 5,
+        "max_backlog" : 7,
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",

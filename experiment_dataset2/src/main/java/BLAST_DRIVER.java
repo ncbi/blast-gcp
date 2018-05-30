@@ -197,7 +197,10 @@ public final class BLAST_DRIVER implements Serializable {
 
   private Dataset<Row> make_partitions() {
     // db partition_num
-    StructType parts_schema = StructType.fromDDL("db_selector string, partition_num int");
+    //    StructType parts_schema = StructType.fromDDL("db_selector string, partition_num int");
+    //    Spark will force nullable for Strings
+    StructType parts_schema =
+        new StructType().add("db_selector", "string", false).add("partition_num", "int", false);
 
     ArrayList<Row> rows = new ArrayList<Row>();
 
@@ -236,17 +239,23 @@ public final class BLAST_DRIVER implements Serializable {
           BLAST_QUERY query = new BLAST_QUERY(json);
           log.log(Level.INFO, "     parsed is:" + query.toString());
           final String db_selector = query.db_selector;
-          int partition_num = query.partition_num;
+          // int partition_num = query.partition_num;
           final String outjson = query.toJson();
           log.log(Level.INFO, "     output is:" + outjson);
-          return RowFactory.create(db_selector, partition_num, outjson);
+          // return RowFactory.create(db_selector, partition_num, outjson);
+          return RowFactory.create(db_selector, outjson);
         }
       };
 
   private Dataset<Row> json_parser(final Dataset<String> queries) {
     // db ser
     StructType parsed_schema =
-        StructType.fromDDL("db_selector string, partition_num int, ser string");
+        new StructType()
+            .add("db_selector", "string", false)
+            //            .add("partition_num", "int", false)
+            .add("ser", "string", false);
+
+    // StructType.fromDDL("db_selector string, partition_num int, ser string");
     ExpressionEncoder<Row> encoder = RowEncoder.apply(parsed_schema);
     Dataset<Row> parsed = queries.map(jsontoqueryfunc, encoder);
 
@@ -266,6 +275,7 @@ public final class BLAST_DRIVER implements Serializable {
           final String ser = inrow.getString(inrow.fieldIndex("ser"));
           final BLAST_QUERY query = new BLAST_QUERY(ser);
           query.partition_num = partition_num;
+          log.log(Level.INFO, String.format("partition_num is %d", partition_num));
 
           final String db_selector =
               query.db_selector; // or inrow.getString(inrow,fieldIndex("db"));
@@ -288,8 +298,8 @@ public final class BLAST_DRIVER implements Serializable {
           preload(db_selector, partition_num);
 
           BLAST_LIB blaster = new BLAST_LIB();
-          if (blaster != null) {
-            log.log(Level.FATAL, "NULL blaster library");
+          if (blaster == null) {
+            log.log(Level.FATAL, "NULL blaster library in prelim_search_func");
           }
 
           ArrayList<Row> parts = new ArrayList<Row>();
@@ -299,28 +309,33 @@ public final class BLAST_DRIVER implements Serializable {
             if (search_res.length > 0) {
               log.log(
                   Level.INFO,
-                  String.format(" prelim returned %d hsps to Spark", search_res.length));
+                  String.format("Note: prelim returned %d hsps to Spark", search_res.length));
+              final String RID = query.rid;
+
+              // BLAST_QUERY res=new BLAST_QUERY(query);
+              // res.setHspl(search_res);
+              query.hspl = search_res;
+
+              final String resser = query.toJson();
+              log.log(Level.INFO, "resser for " + RID + " is " + resser);
+              Row outrow = RowFactory.create(RID, resser);
+              parts.add(outrow);
             }
-            final String RID = query.rid;
-
-            // BLAST_QUERY res=new BLAST_QUERY(query);
-            // res.setHspl(search_res);
-            query.hspl = search_res;
-
-            final String resser = query.toJson();
-            log.log(Level.INFO, "resser is " + resser);
-            Row outrow = RowFactory.create(RID, resser);
-            parts.add(outrow);
           } catch (Exception e) {
             log.log(Level.ERROR, "jni_prelim_search threw exception" + e.toString());
           }
 
+          log.log(
+              Level.INFO,
+              String.format("Note: prelim_search_func returning %d parts", parts.size()));
           return parts.iterator();
         }
       };
 
   private Dataset<Row> prelim_results(final Dataset<Row> joined) {
-    StructType results_schema = StructType.fromDDL("RID string, ser string");
+    StructType results_schema =
+        new StructType().add("RID", "string", false).add("ser", "string", false);
+    //        StructType.fromDDL("RID string, ser string");
     ExpressionEncoder<Row> encoder = RowEncoder.apply(results_schema);
 
     Dataset<Row> prelim_search_results = joined.flatMap(prelim_search_func, encoder);
@@ -373,7 +388,7 @@ public final class BLAST_DRIVER implements Serializable {
                     log.log(
                         Level.INFO,
                         String.format(
-                            "topn_dsw close partition %d had %d RIDs",
+                            "Note: topn_dsw close partition %d had %d RIDs",
                             partitionId, results.size()));
 
                     HashMap<String, Double> tops = topn.results();
@@ -391,6 +406,7 @@ public final class BLAST_DRIVER implements Serializable {
                             survive.add(hspl);
                           }
                         }
+                        log.log(Level.INFO, String.format("Note: %d survived", survive.size()));
                         BLAST_HSP_LIST[] hspl = survive.toArray(new BLAST_HSP_LIST[0]);
                         result.hspl = hspl;
 
@@ -441,8 +457,8 @@ public final class BLAST_DRIVER implements Serializable {
           BLAST_HSP_LIST hsparray[] = query.hspl;
 
           BLAST_LIB blaster = new BLAST_LIB();
-          if (blaster != null) {
-            log.log(Level.FATAL, "NULL blaster library");
+          if (blaster == null) {
+            log.log(Level.FATAL, "NULL blaster library in traceback_func");
           }
 
           ArrayList<Row> parts = new ArrayList<Row>();
@@ -462,12 +478,17 @@ public final class BLAST_DRIVER implements Serializable {
             log.log(Level.ERROR, "jni_traceback threw " + e.toString());
           }
 
+          log.log(
+              Level.INFO, String.format("Note: traceback_func returning %d parts", parts.size()));
+
           return parts.iterator();
         }
       };
 
   private Dataset<Row> traceback_results(final Dataset<Row> joined) {
-    StructType results_schema = StructType.fromDDL("RID string, ser string");
+    StructType results_schema =
+        new StructType().add("RID", "string", false).add("ser", "string", false);
+    // StructType.fromDDL("RID string, ser string");
     ExpressionEncoder<Row> encoder = RowEncoder.apply(results_schema);
 
     Dataset<Row> traceback_results = joined.flatMap(traceback_func, encoder);
@@ -524,8 +545,9 @@ public final class BLAST_DRIVER implements Serializable {
                     final byte[] seq_annot_suffix = {0, 0, 0, 0, 0, 0, 0, 0};
 
                     log.log(Level.INFO, "traceback topn_dsw close results:");
-                    log.log(Level.INFO, "---------------");
-                    log.log(Level.INFO, String.format(" topn_dsw saw %d records", results.size()));
+                    log.log(
+                        Level.INFO,
+                        String.format(" Note: topn_dsw saw %d records", results.size()));
 
                     HashMap<String, Double> tops = topn.results();
                     for (String RID : tops.keySet()) {
@@ -600,7 +622,7 @@ public final class BLAST_DRIVER implements Serializable {
       System.err.println(e);
       return;
     }
-    log.log(Level.INFO, String.format("Wrote %d bytes to %s", output.length, outfile));
+    log.log(Level.INFO, String.format("Note: Wrote %d bytes to %s", output.length, outfile));
   } // write_to_hdfs
 
   private boolean copyfile(String src, String dest) {
@@ -649,7 +671,7 @@ public final class BLAST_DRIVER implements Serializable {
         }
       } catch (Exception e) {
         log.log(
-            Level.ERROR,
+            Level.WARN,
             String.format(
                 "Couldn't load (attempt #%d) %s from GS:// : %s", retries, src, e.toString()));
         try {
@@ -704,9 +726,15 @@ public final class BLAST_DRIVER implements Serializable {
     System.out.print("parsed schema is:");
     parsed.printSchema();
 
+    // Dataset<Row> joined = blast_partitions.join(parsed, "db_selector");
     Dataset<Row> joined = parsed.join(blast_partitions, "db_selector");
+    System.out.print("joined schema is:");
+    joined.printSchema();
+    joined.explain(true);
 
     Dataset<Row> results = prelim_results(joined);
+    System.out.print("results schema is:");
+    results.printSchema();
 
     DataStreamWriter<Row> prelim_dsw = results.writeStream();
 
@@ -728,13 +756,15 @@ public final class BLAST_DRIVER implements Serializable {
 
     Dataset<Row> parsed = json_parser(queries);
 
-    Dataset<Row> joined =
-        parsed.join(
-            blast_partitions,
-            parsed
-                .col("db_selector")
-                .equalTo(blast_partitions.col("db_selector"))
-                .and(parsed.col("partition_num").equalTo(blast_partitions.col("partition_num"))));
+    Dataset<Row> joined = parsed;
+    /*
+            parsed.join(
+                blast_partitions,
+                parsed
+                    .col("db_selector")
+                    .equalTo(blast_partitions.col("db_selector"))
+                    .and(parsed.col("partition_num").equalTo(blast_partitions.col("partition_num"))));
+    */
 
     Dataset<Row> traceback_results = traceback_results(joined);
 
