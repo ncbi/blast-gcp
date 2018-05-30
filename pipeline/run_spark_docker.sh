@@ -114,7 +114,7 @@ INI=${INI//PUBSUB/$joborch_output_topic}
 INI=${INI//RESULTBUCKET/$result_bucket_name}
 INI=${INI//NUM_EXECUTORS/$NUM_EXECUTORS}
 
-#printf "$INI\n" > /app/ini_docker.json
+printf "$INI\n" > /app/ini_docker.json
 
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
