@@ -8,7 +8,7 @@ Required environment variables:
     project
     region
     result_bucket_name
-    joborch_output_topic
+    joborch_output_subscrip
     blast_dataproc_cluster_name
 Optional environment variables:
     NUM_EXECUTORS (defaults to 126)
@@ -19,7 +19,7 @@ Optional environment variables:
 checkvar=${project?"${usage}"}
 checkvar=${region?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
-checkvar=${joborch_output_topic?"${usage}"}
+checkvar=${joborch_output_subscrip?"${usage}"}
 checkvar=${blast_dataproc_cluster_name?"${usage}"}
 
 NUM_EXECUTORS=${NUM_EXECUTORS-126}
@@ -110,13 +110,14 @@ END
 )
 
 INI=${INI//PROJECT/$project}
-INI=${INI//PUBSUB/$joborch_output_topic}
+INI=${INI//PUBSUB/$joborch_output_subscrip}
 INI=${INI//RESULTBUCKET/$result_bucket_name}
 INI=${INI//NUM_EXECUTORS/$NUM_EXECUTORS}
 
-printf "$INI\n" > /app/ini_docker.json
+INI_JSON=ini_docker.json
+printf "$INI\n" > ${INI_JSON}
 
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
-    -- /app/ini_docker.json
+    --files ${INI_JSON} -- ${INI_JSON}
 
