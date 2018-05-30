@@ -28,7 +28,7 @@
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
                 "extensions" : [ "nax", "nin", "nsq" ],
-                "num_partitions" : 160,
+                "num_partitions" : 887,
                 "num_locations" : 2
             },
             {
@@ -36,7 +36,7 @@
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
                 "extensions" : [ "pax", "pin", "psq" ],
-                "num_partitions" : 160,
+                "num_partitions" : 1086,
                 "num_locations" : 1
             }
         ],
