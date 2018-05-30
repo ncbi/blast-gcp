@@ -36,10 +36,24 @@ public class BLAST_YARN_NODE_ITER
         this.idx = 0;
     }
 
+    BLAST_YARN_NODE_ITER( final BLAST_YARN_NODE_ITER other )
+    {
+        this.nodes = other.nodes;
+        this.idx = other.idx;
+    }
+
     public String get()
+    {
+        String res = nodes.getHost( idx );
+        advance();
+        return res;
+    }
+
+    public void advance()
     {
         if ( idx >= nodes.count() )
             idx = 0;
-        return nodes.getHost( idx++ );
+        else
+            idx++;
     }
 }
