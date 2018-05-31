@@ -24,7 +24,7 @@ checkvar=${blast_dataproc_cluster_name?"${usage}"}
 
 NUM_EXECUTORS=${NUM_EXECUTORS-126}
 
-SPARK_BLAST_JAR="sparkblast-1-jar-with-dependencies.jar"
+SPARK_BLAST_JAR="sparkblast.jar"
 SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
 
 INI=$(cat <<-END
@@ -96,7 +96,8 @@ INI=$(cat <<-END
         "num_executors" : NUM_EXECUTORS,
         "num_executor_cores" : 1,
         "executor_memory" : "1G",
-        "locality_wait" : "30s"
+        "locality_wait" : "30s",
+        "parallel_jobs" : 2
     },
 
     "log" :
@@ -119,5 +120,5 @@ printf "$INI\n" > ${INI_JSON}
 
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
-    --files libblastjni.so,${INI_JSON} -- ${INI_JSON}
+    --files dbs.json,libblastjni.so,${INI_JSON} -- ${INI_JSON}
 
