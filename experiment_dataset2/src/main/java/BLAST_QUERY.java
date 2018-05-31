@@ -26,6 +26,8 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
@@ -162,6 +164,14 @@ final class BLAST_QUERY implements Serializable {
 
   // FIX: Serdes with ProtocolBuffer? Kryo?
   public String toJson() {
+    Logger logger = LogManager.getLogger(BLAST_QUERY.class);
+    Kryo kryo = new Kryo();
+    Output output = new Output(1000, -1);
+    kryo.writeObject(output, this);
+    output.close();
+    byte[] k = output.getBuffer();
+    logger.log(Level.INFO, String.format("Info: Kryo size would be %d", k.length));
+
     return toString();
   }
 
