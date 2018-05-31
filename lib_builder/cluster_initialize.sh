@@ -27,11 +27,11 @@ cd /tmp
         path /tmp/blastjni.*.log
         pos_file /var/tmp/fluentd.blastjni.pos
         read_from_head true
-        tag blastjni-log
+        tag blast-dev
     </source>
 DONE
-#    cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
-#    service google-fluentd restart
+cp libblast-log.conf /etc/google-fluentd/config.d/libblast-log.conf
+service google-fluentd restart
 
 # Configure all master/worker nodes' log4j
     cat << 'DONE2' > log4j.proto
@@ -46,7 +46,7 @@ DONE
     log4j.appender.sparkfile=org.apache.log4j.FileAppender
     log4j.appender.sparkfile.File=/var/log/spark/blastjni.${user.name}.log
     log4j.appender.sparkfile.layout=org.apache.log4j.PatternLayout
-    log4j.appender.sparkfile.layout.ConversionPattern=%d [%p] [%t] %c: %m%n
+    log4j.appender.sparkfile.layout.ConversionPattern=%d [%p] [%t] %c: app:pipeline %m%n
 
     # Spark/JNI layers will further restrict on a per query basis
     log4j.logger.gov.nih.nlm.ncbi.blastjni=DEBUG, tmpfile, sparkfile

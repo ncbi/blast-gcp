@@ -71,7 +71,7 @@ public class BLAST_LIB {
             long threadId = Thread.currentThread().getId();
 
             if (lvl.isGreaterOrEqual(logLevel)) {
-                final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
+                final String newmsg = "app:blastjni (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
                 logger.log(lvl, newmsg);
             }
         } catch (Throwable threx) {

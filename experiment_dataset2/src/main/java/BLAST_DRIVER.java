@@ -85,6 +85,8 @@ public final class BLAST_DRIVER implements Serializable {
 
     final String appName = "experiment_dataset2";
 
+    log.log(Level.INFO,"Starting " + appName);
+
     try {
       StackdriverTraceExporter.createAndRegister(
           StackdriverTraceConfiguration.builder()
@@ -94,9 +96,13 @@ public final class BLAST_DRIVER implements Serializable {
               .build());
 
       final Tracer tracer = Tracing.getTracer();
+      System.out.println("Got tracer");
 
+      System.out.println("Building span");
       Span rootSpan = tracer.spanBuilderWithExplicitParent(appName, null).startSpan();
+      System.out.println("Adding annotation");
       rootSpan.addAnnotation("Annotation to the root Span before child is created.");
+      System.out.println("Building child span");
       Span childSpan =
           tracer.spanBuilderWithExplicitParent(appName + "_blaster", rootSpan).startSpan();
       childSpan.addAnnotation("Annotation to the child Span");
@@ -172,7 +178,7 @@ public final class BLAST_DRIVER implements Serializable {
     builder.config(conf);
     System.out.println("Configuration is");
     System.out.println("----------------");
-    System.out.println(conf.toDebugString().replace("\n", "\n  "));
+    System.out.println("    " + conf.toDebugString().replace("\n", "\n    "));
     System.out.println();
     builder.enableHiveSupport();
     // System.out.println("Default parallelism is" + conf.get("spark.default.parallelism"));
@@ -216,11 +222,17 @@ public final class BLAST_DRIVER implements Serializable {
       rows.add(r);
     }
 
-    System.out.println(String.format("blast_partitions has %d entries", rows.size()));
+    int num_blast_partitions=rows.size();
+    System.out.println(String.format("blast_partitions has %d entries", num_blast_partitions));
 
     Dataset<Row> parts = sparksession.createDataFrame(rows, parts_schema);
-    Dataset<Row> blast_partitions =
-        parts.repartition(parts.col("partition_num")).persist(StorageLevel.MEMORY_AND_DISK());
+    // If N rows are randomly hashed to M buckets, only about M*0.6 buckets
+    // filled. So to increase potential parallelism, partition on db and
+    // partition_num
+    Dataset<Row> blast_partitions = parts
+//        .repartition(parts.col("partition_num"))
+        .repartition(num_blast_partitions)
+        .persist(StorageLevel.MEMORY_AND_DISK());
 
     blast_partitions.printSchema();
     blast_partitions.show();
@@ -248,18 +260,15 @@ public final class BLAST_DRIVER implements Serializable {
       };
 
   private Dataset<Row> json_parser(final Dataset<String> queries) {
-    // db ser
     StructType parsed_schema =
         new StructType()
             .add("db_selector", "string", false)
             //            .add("partition_num", "int", false)
             .add("ser", "string", false);
 
-    // StructType.fromDDL("db_selector string, partition_num int, ser string");
     ExpressionEncoder<Row> encoder = RowEncoder.apply(parsed_schema);
     Dataset<Row> parsed = queries.map(jsontoqueryfunc, encoder);
 
-    //        parsed.createOrReplaceTempView("parsed");
     return parsed;
   }
 
@@ -275,6 +284,7 @@ public final class BLAST_DRIVER implements Serializable {
           final String ser = inrow.getString(inrow.fieldIndex("ser"));
           final BLAST_QUERY query = new BLAST_QUERY(ser);
           query.partition_num = partition_num;
+          query.prelim_partition_num = partition_num;
           log.log(Level.INFO, String.format("partition_num is %d", partition_num));
 
           final String db_selector =
@@ -306,11 +316,13 @@ public final class BLAST_DRIVER implements Serializable {
           try {
             BLAST_HSP_LIST[] search_res =
                 blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
+              final String RID = query.rid;
             if (search_res.length > 0) {
               log.log(
                   Level.INFO,
-                  String.format("Note: prelim returned %d hsps to Spark", search_res.length));
-              final String RID = query.rid;
+                  String.format("Note: prelim of %s returned %d hsps to Spark", 
+                      RID,
+                      search_res.length));
 
               // BLAST_QUERY res=new BLAST_QUERY(query);
               // res.setHspl(search_res);
@@ -340,7 +352,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     Dataset<Row> prelim_search_results = joined.flatMap(prelim_search_func, encoder);
 
-    return prelim_search_results.repartition(prelim_search_results.col("RID"));
+    return prelim_search_results; // FIX.repartition(prelim_search_results.col("RID"));
     // Don't use coalesce here, it'll group previous work onto one worker
   }
 
@@ -371,6 +383,7 @@ public final class BLAST_DRIVER implements Serializable {
                     log.log(Level.INFO, String.format(" topn_dsw in process %d", partitionId));
                     final String RID = inrow.getString(inrow.fieldIndex("RID"));
                     final String ser = inrow.getString(inrow.fieldIndex("ser"));
+                    log.log(Level.INFO, String.format ("topn_dsw for %s",RID));
                     BLAST_QUERY result = new BLAST_QUERY(ser);
 
                     BLAST_HSP_LIST[] hspl = result.hspl;
@@ -735,6 +748,7 @@ public final class BLAST_DRIVER implements Serializable {
     Dataset<Row> results = prelim_results(joined);
     System.out.print("results schema is:");
     results.printSchema();
+    results.explain(true);
 
     DataStreamWriter<Row> prelim_dsw = results.writeStream();
 

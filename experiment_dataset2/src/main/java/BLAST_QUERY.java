@@ -68,6 +68,7 @@ final class BLAST_QUERY implements Serializable {
   // Tracebacks from traceback
   public BLAST_TB_LIST[] tbl;
   // Debugging/tracing aids
+  public int prelim_partition_num;
   public String errorlist;
   public long bench;
 
@@ -95,6 +96,7 @@ final class BLAST_QUERY implements Serializable {
 
     errorlist = "copy ctor";
     bench = System.currentTimeMillis();
+    prelim_partition_num = in.prelim_partition_num;
   }
 
   // Constructor from JSON string
@@ -123,6 +125,7 @@ final class BLAST_QUERY implements Serializable {
         hspl = in.hspl;
         tbl = in.tbl;
 
+        prelim_partition_num = in.prelim_partition_num;
         errorlist = "json ctor";
         bench = System.currentTimeMillis();
 
@@ -157,7 +160,7 @@ final class BLAST_QUERY implements Serializable {
     }
   }
 
-  // FIX: Serdes with ProtocolBuffer?
+  // FIX: Serdes with ProtocolBuffer? Kryo?
   public String toJson() {
     return toString();
   }
