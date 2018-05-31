@@ -632,7 +632,7 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
                 break;
 
             hsp_lists.push_back( hsp_list );
-            log( jenv, jthis, jlog_method, "DEBUG", "  loop" );
+            //log( jenv, jthis, jlog_method, "DEBUG", "  loop" );
         }
 
         log( jenv, jthis, jlog_method, "DEBUG", "  loop complete" );
