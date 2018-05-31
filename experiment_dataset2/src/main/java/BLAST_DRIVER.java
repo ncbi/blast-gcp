@@ -75,6 +75,12 @@ public final class BLAST_DRIVER implements Serializable {
   private transient Logger log; // Don't serialize
   private String hsp_result_dir;
 
+  // Allocate collections appropriately
+  private static final int RESERVE_PRELIM_JSON = 1024 * 1024;
+  private static final int RESERVE_PRELIM_SURVIVE = 200;
+  private static final int RESERVE_PRELIM_PARTS = 300;
+  private static final int RESERVE_PRELIM_TOPN = 2000;
+
   public boolean init(final String[] args) {
     if (args.length != 1) {
       System.out.println("settings json-file missing");
@@ -317,7 +323,7 @@ public final class BLAST_DRIVER implements Serializable {
             log.log(Level.FATAL, "NULL blaster library in prelim_search_func");
           }
 
-          ArrayList<Row> parts = new ArrayList<Row>();
+          ArrayList<Row> parts = new ArrayList<Row>(RESERVE_PRELIM_PARTS);
           try {
             BLAST_HSP_LIST[] search_res =
                 blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
@@ -375,7 +381,7 @@ public final class BLAST_DRIVER implements Serializable {
                   @Override
                   public boolean open(final long partitionId, final long version) {
                     log = LogManager.getLogger(BLAST_DRIVER.class);
-                    results = new ArrayList<>();
+                    results = new ArrayList<>(RESERVE_PRELIM_TOPN);
                     topn = new BLAST_TOPN();
                     this.partitionId = partitionId;
 
@@ -415,14 +421,14 @@ public final class BLAST_DRIVER implements Serializable {
                     HashMap<String, Double> tops = topn.results();
                     log.log(Level.INFO, String.format("prelim topn_dsw had %d RIDs", tops.size()));
                     for (String RID : tops.keySet()) {
-                      StringBuffer buf = new StringBuffer(10000);
+                      StringBuffer buf = new StringBuffer(RESERVE_PRELIM_JSON);
                       Double cutoff = tops.get(RID);
 
                       for (BLAST_QUERY result : results) {
                         if (!RID.equals(result.rid)) continue;
                         int partition_num = result.partition_num;
 
-                        ArrayList<BLAST_HSP_LIST> survive = new ArrayList<>();
+                        ArrayList<BLAST_HSP_LIST> survive = new ArrayList<>(RESERVE_PRELIM_SURVIVE);
 
                         for (int i = 0; i != result.hspl.length; ++i) {
                           BLAST_HSP_LIST hspl = result.hspl[i];
