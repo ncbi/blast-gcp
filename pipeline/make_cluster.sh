@@ -25,6 +25,14 @@ checkvar=${user?"${usage}"}
 checkvar=${blast_dataproc_cluster_name?"${usage}"}
 checkvar=${blast_dataproc_cluster_max_age?"${usage}"}
 
+gcloud beta dataproc clusters describe ${blast_dataproc_cluster_name} --region ${region} > /dev/null
+if [[ $? -eq 0 ]]
+then
+    printf "Reusing dataproc cluster [%s]\n" ${blast_dataproc_cluster_name}
+    exit
+fi
+
+printf "Creating dataproc cluster [%s]\n" ${blast_dataproc_cluster_name}
 gcloud beta dataproc clusters create ${blast_dataproc_cluster_name} \
     --master-machine-type n1-standard-4 --master-boot-disk-size 100 \
     --num-workers 2 --worker-boot-disk-size 171 --worker-machine-type custom-64-151552  \
