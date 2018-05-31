@@ -58,7 +58,7 @@ INI=$(cat <<-END
                 "selector" : "nt",
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
-                "extensions" : [ "nhr", "nin", "nsq" ],
+                "extensions" : [ "nax", "nin", "nsq" ],
                 "num_partitions" : 887,
                 "num_locations" : 2
             },
@@ -66,13 +66,16 @@ INI=$(cat <<-END
                 "selector" : "nr",
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
-                "extensions" : [ "phr", "pin", "psq" ],
+                "extensions" : [ "pax", "pin", "psq" ],
                 "num_partitions" : 1086,
                 "num_locations" : 1
             }
         ],
         "jni_log_level": "DEBUG",
-        "top_n" : 100
+        "top_n" : 100,
+        "num_db_limit" : 160,
+        "num_locations" : 2,
+        "manifest_root" : "dbs.json"
     },
 
     "result" :
