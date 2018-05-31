@@ -41,7 +41,6 @@
             }
         ],
         "top_n" : 100,
-        "num_db_limit" : 160,
         "num_locations" : 2,
         "manifest_root" : "dbs.json"
     },
