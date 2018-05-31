@@ -100,7 +100,7 @@ INI=$(cat <<-END
         "num_executor_cores" : 1,
         "executor_memory" : "1G",
         "locality_wait" : "30s",
-        "parallel_jobs" : 2
+        "parallel_jobs" : 1
     },
 
     "log" :
