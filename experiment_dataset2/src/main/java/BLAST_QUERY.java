@@ -170,9 +170,13 @@ final class BLAST_QUERY implements Serializable {
     kryo.writeObject(output, this);
     output.close();
     byte[] k = output.getBuffer();
-    logger.log(Level.INFO, String.format("Info: Kryo size would be %d", k.length));
+    int pos = output.position();
+    String t = toString();
+    logger.log(
+        Level.INFO,
+        String.format("Info: Kryo size would be %d %d vs. %d", k.length, pos, t.length()));
 
-    return toString();
+    return t;
   }
 
   @Override
