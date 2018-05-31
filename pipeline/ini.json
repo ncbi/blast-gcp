@@ -68,7 +68,7 @@
         "num_executor_cores" : 4,
         "shuffle_reduceLocality_enabled" : "false",
         "scheduler_fair" : "false",
-        "parallel_jobs" : 2
+        "parallel_jobs" : 1
     },
 
     "log" :
