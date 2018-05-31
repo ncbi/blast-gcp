@@ -70,9 +70,16 @@ public final class BLAST_DRIVER implements Serializable {
   private static final String db_location = "/tmp/blast/db";
   private BLAST_SETTINGS settings;
   // private int max_partitions = 0;
+  private int num_blast_partitions = 0;
   private BLAST_DB_SETTINGS dbsettings;
   private transient Logger log; // Don't serialize
   private String hsp_result_dir;
+
+  // Allocate collections appropriately
+  private static final int RESERVE_PRELIM_JSON = 1024 * 1024;
+  private static final int RESERVE_PRELIM_SURVIVE = 200;
+  private static final int RESERVE_PRELIM_PARTS = 300;
+  private static final int RESERVE_PRELIM_TOPN = 2000;
 
   public boolean init(final String[] args) {
     if (args.length != 1) {
@@ -85,7 +92,10 @@ public final class BLAST_DRIVER implements Serializable {
 
     final String appName = "experiment_dataset2";
 
+    log.log(Level.INFO, "Starting " + appName);
+
     try {
+      System.out.println("Setting up Stackdriver Tracing");
       StackdriverTraceExporter.createAndRegister(
           StackdriverTraceConfiguration.builder()
               //              .setProjectId("ncbi-sandbox-blast")
@@ -94,9 +104,13 @@ public final class BLAST_DRIVER implements Serializable {
               .build());
 
       final Tracer tracer = Tracing.getTracer();
+      System.out.println("Got tracer");
 
+      System.out.println("Building span");
       Span rootSpan = tracer.spanBuilderWithExplicitParent(appName, null).startSpan();
+      System.out.println("Adding annotation");
       rootSpan.addAnnotation("Annotation to the root Span before child is created.");
+      System.out.println("Building child span");
       Span childSpan =
           tracer.spanBuilderWithExplicitParent(appName + "_blaster", rootSpan).startSpan();
       childSpan.addAnnotation("Annotation to the child Span");
@@ -111,6 +125,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     settings = BLAST_SETTINGS_READER.read_from_json(ini_path, appName);
     System.out.println(String.format("settings read from '%s'", ini_path));
+    System.out.println(settings);
     if (!settings.valid()) {
       System.out.println(settings.missing());
       return false;
@@ -172,7 +187,7 @@ public final class BLAST_DRIVER implements Serializable {
     builder.config(conf);
     System.out.println("Configuration is");
     System.out.println("----------------");
-    System.out.println(conf.toDebugString().replace("\n", "\n  "));
+    System.out.println("    " + conf.toDebugString().replace("\n", "\n    "));
     System.out.println();
     builder.enableHiveSupport();
     // System.out.println("Default parallelism is" + conf.get("spark.default.parallelism"));
@@ -190,7 +205,8 @@ public final class BLAST_DRIVER implements Serializable {
       javasparkcontext.addFile(a_file);
     }
 
-    hsp_result_dir = settings.hdfs_result_dir + "/hsps";
+    hsp_result_dir = settings.hdfs_result_dir + "hsps";
+    // System.out.println("hsp_results_dir is " + hsp_result_dir);
 
     return true;
   }
@@ -216,11 +232,18 @@ public final class BLAST_DRIVER implements Serializable {
       rows.add(r);
     }
 
-    System.out.println(String.format("blast_partitions has %d entries", rows.size()));
+    num_blast_partitions = rows.size();
+    System.out.println(String.format("blast_partitions has %d entries", num_blast_partitions));
 
     Dataset<Row> parts = sparksession.createDataFrame(rows, parts_schema);
+    // If N rows are randomly hashed to M buckets, only about M*0.6 buckets
+    // filled. So to increase potential parallelism, partition on db and
+    // partition_num
     Dataset<Row> blast_partitions =
-        parts.repartition(parts.col("partition_num")).persist(StorageLevel.MEMORY_AND_DISK());
+        parts
+            //        .repartition(parts.col("partition_num"))
+            .repartition(num_blast_partitions)
+            .persist(StorageLevel.MEMORY_AND_DISK());
 
     blast_partitions.printSchema();
     blast_partitions.show();
@@ -248,18 +271,15 @@ public final class BLAST_DRIVER implements Serializable {
       };
 
   private Dataset<Row> json_parser(final Dataset<String> queries) {
-    // db ser
     StructType parsed_schema =
         new StructType()
             .add("db_selector", "string", false)
             //            .add("partition_num", "int", false)
             .add("ser", "string", false);
 
-    // StructType.fromDDL("db_selector string, partition_num int, ser string");
     ExpressionEncoder<Row> encoder = RowEncoder.apply(parsed_schema);
     Dataset<Row> parsed = queries.map(jsontoqueryfunc, encoder);
 
-    //        parsed.createOrReplaceTempView("parsed");
     return parsed;
   }
 
@@ -275,6 +295,7 @@ public final class BLAST_DRIVER implements Serializable {
           final String ser = inrow.getString(inrow.fieldIndex("ser"));
           final BLAST_QUERY query = new BLAST_QUERY(ser);
           query.partition_num = partition_num;
+          query.prelim_partition_num = partition_num;
           log.log(Level.INFO, String.format("partition_num is %d", partition_num));
 
           final String db_selector =
@@ -302,15 +323,16 @@ public final class BLAST_DRIVER implements Serializable {
             log.log(Level.FATAL, "NULL blaster library in prelim_search_func");
           }
 
-          ArrayList<Row> parts = new ArrayList<Row>();
+          ArrayList<Row> parts = new ArrayList<Row>(RESERVE_PRELIM_PARTS);
           try {
             BLAST_HSP_LIST[] search_res =
                 blaster.jni_prelim_search(partitionobj, requestobj, jni_log_level);
+            final String RID = query.rid;
             if (search_res.length > 0) {
               log.log(
                   Level.INFO,
-                  String.format("Note: prelim returned %d hsps to Spark", search_res.length));
-              final String RID = query.rid;
+                  String.format(
+                      "Note: prelim of %s returned %d hsps to Spark", RID, search_res.length));
 
               // BLAST_QUERY res=new BLAST_QUERY(query);
               // res.setHspl(search_res);
@@ -340,7 +362,8 @@ public final class BLAST_DRIVER implements Serializable {
 
     Dataset<Row> prelim_search_results = joined.flatMap(prelim_search_func, encoder);
 
-    return prelim_search_results.repartition(prelim_search_results.col("RID"));
+    return prelim_search_results.repartition(
+        2 * settings.max_backlog, prelim_search_results.col("RID"));
     // Don't use coalesce here, it'll group previous work onto one worker
   }
 
@@ -358,19 +381,23 @@ public final class BLAST_DRIVER implements Serializable {
                   @Override
                   public boolean open(final long partitionId, final long version) {
                     log = LogManager.getLogger(BLAST_DRIVER.class);
-                    results = new ArrayList<>();
+                    results = new ArrayList<>(RESERVE_PRELIM_TOPN);
                     topn = new BLAST_TOPN();
                     this.partitionId = partitionId;
 
-                    log.log(Level.INFO, String.format("topn_dsw open %d %d", partitionId, version));
+                    log.log(
+                        Level.INFO,
+                        String.format("prelim topn_dsw open %d %d", partitionId, version));
                     return true;
                   } // open
 
                   @Override
                   public void process(final Row inrow) {
-                    log.log(Level.INFO, String.format(" topn_dsw in process %d", partitionId));
+                    log.log(
+                        Level.INFO, String.format("prelim topn_dsw in process %d", partitionId));
                     final String RID = inrow.getString(inrow.fieldIndex("RID"));
                     final String ser = inrow.getString(inrow.fieldIndex("ser"));
+                    log.log(Level.INFO, String.format("prelim topn_dsw for %s", RID));
                     BLAST_QUERY result = new BLAST_QUERY(ser);
 
                     BLAST_HSP_LIST[] hspl = result.hspl;
@@ -383,38 +410,43 @@ public final class BLAST_DRIVER implements Serializable {
 
                   @Override
                   public void close(Throwable errorOrNull) {
-                    log.log(Level.INFO, "topn_dsw close results:");
+                    log.log(Level.INFO, "prelim topn_dsw close results:");
 
                     log.log(
                         Level.INFO,
                         String.format(
-                            "Note: topn_dsw close partition %d had %d RIDs",
+                            "Note: prelim topn_dsw close partition %d had %d HSPs",
                             partitionId, results.size()));
 
                     HashMap<String, Double> tops = topn.results();
+                    log.log(Level.INFO, String.format("prelim topn_dsw had %d RIDs", tops.size()));
                     for (String RID : tops.keySet()) {
+                      StringBuffer buf = new StringBuffer(RESERVE_PRELIM_JSON);
                       Double cutoff = tops.get(RID);
 
                       for (BLAST_QUERY result : results) {
                         if (!RID.equals(result.rid)) continue;
+                        int partition_num = result.partition_num;
 
-                        ArrayList<BLAST_HSP_LIST> hsplist =
-                            new ArrayList<>(Arrays.asList(result.hspl));
-                        ArrayList<BLAST_HSP_LIST> survive = new ArrayList<>();
-                        for (BLAST_HSP_LIST hspl : hsplist) {
+                        ArrayList<BLAST_HSP_LIST> survive = new ArrayList<>(RESERVE_PRELIM_SURVIVE);
+
+                        for (int i = 0; i != result.hspl.length; ++i) {
+                          BLAST_HSP_LIST hspl = result.hspl[i];
                           if (hspl.max_score <= cutoff) {
                             survive.add(hspl);
                           }
                         }
-                        log.log(Level.INFO, String.format("Note: %d survived", survive.size()));
+                        log.log(
+                            Level.INFO,
+                            String.format(
+                                "Note: prelim topn_dsw %d survived for %s (part %d)",
+                                survive.size(), RID, partition_num));
                         BLAST_HSP_LIST[] hspl = survive.toArray(new BLAST_HSP_LIST[0]);
                         result.hspl = hspl;
-
-                        write_to_hdfs(
-                            hsp_result_dir,
-                            RID,
-                            result.toString().getBytes(StandardCharsets.UTF_8));
+                        buf.append(result.toString());
                       }
+                      write_to_hdfs(
+                          hsp_result_dir, RID, buf.toString().getBytes(StandardCharsets.UTF_8));
                     }
                   } // close
                 } // ForeachWriter
@@ -493,7 +525,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     Dataset<Row> traceback_results = joined.flatMap(traceback_func, encoder);
 
-    return traceback_results.repartition(traceback_results.col("RID"));
+    return traceback_results.repartition(2 * settings.max_backlog, traceback_results.col("RID"));
   }
 
   private DataStreamWriter<Row> traceback_topn_dsw(final DataStreamWriter<Row> tb_dsw) {
@@ -615,6 +647,7 @@ public final class BLAST_DRIVER implements Serializable {
         // Rename in HDFS is supposed to be atomic
         fs.rename(new Path(tmpfile), new Path(outfile));
         fs.delete(new Path(tmpfile), false);
+        log.log(Level.INFO, String.format("Note: Wrote %d bytes to %s", output.length, outfile));
       }
     } catch (Exception e) {
       log.log(Level.ERROR, "Couldn't write" + outfile + "to GS/HDFS");
@@ -622,7 +655,6 @@ public final class BLAST_DRIVER implements Serializable {
       System.err.println(e);
       return;
     }
-    log.log(Level.INFO, String.format("Note: Wrote %d bytes to %s", output.length, outfile));
   } // write_to_hdfs
 
   private boolean copyfile(String src, String dest) {
@@ -727,7 +759,8 @@ public final class BLAST_DRIVER implements Serializable {
     parsed.printSchema();
 
     // Dataset<Row> joined = blast_partitions.join(parsed, "db_selector");
-    Dataset<Row> joined = parsed.join(blast_partitions, "db_selector");
+    Dataset<Row> joined2 = parsed.join(blast_partitions, "db_selector");
+    Dataset<Row> joined = joined2.repartition(num_blast_partitions, joined2.col("partition_num"));
     System.out.print("joined schema is:");
     joined.printSchema();
     joined.explain(true);
@@ -735,6 +768,7 @@ public final class BLAST_DRIVER implements Serializable {
     Dataset<Row> results = prelim_results(joined);
     System.out.print("results schema is:");
     results.printSchema();
+    results.explain(true);
 
     DataStreamWriter<Row> prelim_dsw = results.writeStream();
 

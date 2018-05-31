@@ -26,6 +26,8 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
@@ -68,6 +70,7 @@ final class BLAST_QUERY implements Serializable {
   // Tracebacks from traceback
   public BLAST_TB_LIST[] tbl;
   // Debugging/tracing aids
+  public int prelim_partition_num;
   public String errorlist;
   public long bench;
 
@@ -95,6 +98,7 @@ final class BLAST_QUERY implements Serializable {
 
     errorlist = "copy ctor";
     bench = System.currentTimeMillis();
+    prelim_partition_num = in.prelim_partition_num;
   }
 
   // Constructor from JSON string
@@ -123,6 +127,7 @@ final class BLAST_QUERY implements Serializable {
         hspl = in.hspl;
         tbl = in.tbl;
 
+        prelim_partition_num = in.prelim_partition_num;
         errorlist = "json ctor";
         bench = System.currentTimeMillis();
 
@@ -157,9 +162,21 @@ final class BLAST_QUERY implements Serializable {
     }
   }
 
-  // FIX: Serdes with ProtocolBuffer?
+  // FIX: Serdes with ProtocolBuffer? Kryo?
   public String toJson() {
-    return toString();
+    Logger logger = LogManager.getLogger(BLAST_QUERY.class);
+    Kryo kryo = new Kryo();
+    Output output = new Output(1000, -1);
+    kryo.writeObject(output, this);
+    output.close();
+    byte[] k = output.getBuffer();
+    int pos = output.position();
+    String t = toString();
+    logger.log(
+        Level.INFO,
+        String.format("Info: Kryo size would be %d %d vs. %d", k.length, pos, t.length()));
+
+    return t;
   }
 
   @Override

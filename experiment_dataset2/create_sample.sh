@@ -22,5 +22,5 @@ hadoop fs -ls -R /user/"$USER"
 hadoop fs -copyFromLocal -f AF*.json /user/"$USER"/requests/
 #rm -f test*.json
 
-hadoop fs -ls /user/"$USER"/requests/
+hadoop fs -ls -R /user/"$USER"
 
