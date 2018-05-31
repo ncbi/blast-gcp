@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -o nounset
 set -o pipefail
-set -o errexit
 
 usage="
 usage: $0
@@ -25,7 +24,7 @@ checkvar=${user?"${usage}"}
 checkvar=${blast_dataproc_cluster_name?"${usage}"}
 checkvar=${blast_dataproc_cluster_max_age?"${usage}"}
 
-gcloud beta dataproc clusters describe ${blast_dataproc_cluster_name} --region ${region} > /dev/null
+gcloud dataproc clusters describe ${blast_dataproc_cluster_name} --region ${region} > /dev/null
 if [[ $? -eq 0 ]]
 then
     printf "Reusing dataproc cluster [%s]\n" ${blast_dataproc_cluster_name}
