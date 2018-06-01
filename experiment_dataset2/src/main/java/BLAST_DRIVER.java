@@ -66,8 +66,14 @@ import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 
+/*
+ * import org.slf4j.Logger;
+ * import org.slf4j.LoggerFactory;
+ */
+
 public final class BLAST_DRIVER implements Serializable {
   private transient Logger log; // Don't serialize
+  // private static final Logger; //slf4j
 
   private static SparkSession sparksession;
   // Only one spark context allowed per JVM
@@ -90,6 +96,11 @@ public final class BLAST_DRIVER implements Serializable {
       return false;
     }
     log = LogManager.getLogger(BLAST_DRIVER.class);
+    // log = LoggerFactory.getLogger(BLAST_DRIVER.class); // slf4j
+    // log= LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    // adds {}, {} for template (only two)
+    //
+    // log.info...
 
     final String ini_path = args[0];
 
@@ -101,7 +112,9 @@ public final class BLAST_DRIVER implements Serializable {
       System.out.println("Getting tracer");
       final Tracer tracer = Tracing.getTracer();
       System.out.println("Got tracer");
+      System.out.println("Getting Tagger");
       final Tagger tagger = Tags.getTagger();
+      System.out.println("Got Tagger");
 
       final TagKey FRONTEND_KEY = TagKey.create("ncbi.nlm.nih.gov/keys/pipeline");
 
@@ -294,7 +307,7 @@ public final class BLAST_DRIVER implements Serializable {
         public Iterator<Row> call(final Row inrow) {
           final String jni_log_level = settings.jni_log_level;
           log = LogManager.getLogger(BLAST_DRIVER.class);
-          log.log(Level.INFO, "prelim_search");
+          log.log(Level.INFO, "prelim_search_func");
 
           final int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
           final String blastquery = inrow.getString(inrow.fieldIndex("blastquery"));
@@ -319,7 +332,7 @@ public final class BLAST_DRIVER implements Serializable {
           requestobj.top_n = query.top_n_prelim;
           BLAST_PARTITION partitionobj =
               new BLAST_PARTITION(db_location, pattern, partition_num, true);
-          log.log(Level.INFO, "PARTOBJ is " + partitionobj.toString());
+          log.log(Level.DEBUG, "prelim_search PARTOBJ is " + partitionobj.toString());
 
           preload(db_selector, partition_num);
 
@@ -459,9 +472,8 @@ public final class BLAST_DRIVER implements Serializable {
                         if (!tophsps.isEmpty()) {
                           BLAST_HSP_LIST[] hspl = tophsps.toArray(new BLAST_HSP_LIST[0]);
                           result.hspl = hspl;
+                          result.top_n_prelim = -999;
                           buf.append(result.toString() + "\n");
-                        } else {
-                          log.log(Level.INFO, "No HSPs survived");
                         }
                       } // Partition
 
@@ -482,11 +494,16 @@ public final class BLAST_DRIVER implements Serializable {
         public Iterator<Row> call(final Row inrow) {
           Logger log = LogManager.getLogger(BLAST_DRIVER.class);
           final String jni_log_level = settings.jni_log_level;
-          log.log(Level.INFO, "traceback");
+          log.log(Level.INFO, "traceback_func");
 
           final int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
           final String blastquery = inrow.getString(inrow.fieldIndex("blastquery"));
           final BLAST_QUERY query = new BLAST_QUERY(blastquery);
+          log.log(
+              Level.INFO,
+              String.format(
+                  "part = %d %d %d",
+                  partition_num, query.partition_num, query.prelim_partition_num));
 
           final String db_selector = query.db_selector;
           BLAST_DB_SETTING dbs = dbsettings.get(db_selector);
@@ -502,7 +519,7 @@ public final class BLAST_DRIVER implements Serializable {
           requestobj.top_n = query.top_n_traceback;
           BLAST_PARTITION partitionobj =
               new BLAST_PARTITION(db_location, pattern, partition_num, true);
-          log.log(Level.INFO, "PARTOBJ is " + partitionobj.toString());
+          log.log(Level.DEBUG, "traceback PARTOBJ is " + partitionobj.toString());
 
           preload(db_selector, partition_num);
 
@@ -529,6 +546,7 @@ public final class BLAST_DRIVER implements Serializable {
             final String RID = query.rid;
 
             query.tbl = tb_res;
+            query.hspl = null; // Not needed anymore, save space/serialization
             final String resser = query.toJson();
             Row outrow = RowFactory.create(RID, resser);
             parts.add(outrow);
@@ -696,7 +714,7 @@ public final class BLAST_DRIVER implements Serializable {
 
     final File donefile = new File(dest + ".done");
     if (donefile.exists()) {
-      log.log(Level.INFO, "Preloaded already: " + dest);
+      // log.log(Level.INFO, "Preloaded already: " + dest);
       return true;
     }
 
@@ -763,7 +781,7 @@ public final class BLAST_DRIVER implements Serializable {
 
   private void preload(String db_selector, int partition_num) {
     Logger log = LogManager.getLogger(BLAST_DRIVER.class);
-    log.log(Level.INFO, "db_selector is " + db_selector);
+    log.log(Level.DEBUG, "db_selector is " + db_selector);
     // log.log(Level.INFO, "dbsettings is " + dbsettings.toString());
 
     final BLAST_DB_SETTING dbs = dbsettings.get(db_selector);
@@ -820,11 +838,11 @@ public final class BLAST_DRIVER implements Serializable {
     // Each line is a new element
     Dataset<String> queries = hsp_stream.textFile(hsp_result_dir);
 
-    Dataset<Row> parsed = json_parser(queries);
+    Dataset<Row> parsed = json_parser(queries).repartition(num_blast_partitions);
 
     Dataset<Row> joined2 = parsed.join(blast_partitions, "db_selector");
     Dataset<Row> joined = joined2.repartition(num_blast_partitions, joined2.col("partition_num"));
-    joined.explain(true);
+    //    joined.explain(true);
 
     Dataset<Row> traceback_results = traceback_results(joined);
 
