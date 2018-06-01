@@ -7,6 +7,7 @@ SHELL=/bin/bash
 
 SPARK_BLAST_CLASS=gov.nih.nlm.ncbi.blastjni.BLAST_MAIN
 SPARK_BLAST_JAR=target/sparkblast-1-jar-with-dependencies.jar
+REGION=us-east4
 
 run: ${SPARK_BLAST_JAR} libblastjni.so address.txt
 	./run_spark.sh
@@ -23,12 +24,11 @@ address.txt:
 ###########################################################################
 # Targets to run from NCBI hosts
 
-# TODO: gcloud dataproc jobs wait b6a3f736e4ac4e46b1ff64e0e7b71903 --project ncbi-sandbox-blast --region=us-east4
 run_rmt: ${SPARK_BLAST_JAR} libblastjni.so ini-tmp.json rmt_address.txt
 	gcloud beta dataproc jobs submit spark --cluster blast-dataproc-${USER} \
 		--class=${SPARK_BLAST_CLASS} \
 		--jars=${SPARK_BLAST_JAR} \
-		--region=us-east4 --labels="owner=${USER},project=blast" \
+		--region=${REGION} --labels="owner=${USER},project=blast" \
 		--files libblastjni.so,ini-tmp.json,dbs.json \
 		-- ini-tmp.json
 
@@ -41,6 +41,17 @@ libblastjni.so:
 
 ini-tmp.json:
 	sed "s/t7/t6-${USER}/;s/results/&-${USER}/" ini.json > $@
+
+rmt_jobid.txt:
+	gcloud -q beta dataproc jobs list --cluster=blast-dataproc-${USER} --region=${REGION} --state-filter=active | grep -v ^JOB | head -1 | awk '{print $$1}' > $@
+
+rmt_kill: rmt_jobid.txt
+	@echo Killing `cat rmt_jobid.txt`
+	gcloud -q beta dataproc jobs kill --region=${REGION} `cat rmt_jobid.txt`
+	rm $^
+
+rmt_log: rmt_jobid.txt
+	gcloud dataproc jobs wait `cat rmt_jobid.txt` --region=${REGION}
 
 ### # Ganglia.sh comes from https://github.com/GoogleCloudPlatform/dataproc-initialization-actions.git 
 ### setup_sprint_bucket:
