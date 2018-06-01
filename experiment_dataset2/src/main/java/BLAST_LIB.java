@@ -48,7 +48,7 @@ public class BLAST_LIB {
                 invalid = new ExceptionInInitializerError(threx2);
             }
         }
-        processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
+        processID = ManagementFactory.getRuntimeMXBean().getName().split("@", 2)[0];
         logLevel = Level.INFO;
     }
 
@@ -176,6 +176,7 @@ public class BLAST_LIB {
         log("INFO", "  query_seq : " + req.query_seq);
         log("INFO", "  query_url : " + req.query_url);
         log("INFO", "  db_spec   : " + part.db_spec);
+        log("INFO", "  hspl      : " + hspl.length + " entries");
 
         String query;
         long starttime = System.currentTimeMillis();

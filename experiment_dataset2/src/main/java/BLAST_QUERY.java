@@ -131,28 +131,6 @@ final class BLAST_QUERY implements Serializable {
         errorlist = "json ctor";
         bench = System.currentTimeMillis();
 
-        /*
-        rid = json.optString("rid", "");
-        db_tag = json.optString("db_tag", "");
-        db_selector = db_tag.substring(0, 2); // json.optString("db_selector", "");
-        top_N_prelim = json.optInt("top_N_prelim", 0);
-        top_N_traceback = json.optInt("top_N_traceback", 0);
-        query_seq = json.optString("query_seq", "");
-        query_url = json.optString("query_url", "");
-        program = json.optString("program", "");
-        blast_params = json.optString("blast_params", "");
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        Date parsedDate = dateFormat.parse(json.optString("StartTime", "1980-01-01T01:00:00.0"));
-        StartTime = new java.sql.Timestamp(parsedDate.getTime());
-
-        oid = json.optInt("oid", 0);
-        partition_num = json.optInt("partition_num", 0);
-        max_score = json.optInt("max_score", 0);
-        hsp_blob = Base64.getDecoder().decode(json.optString("hsp_blob", ""));
-        evalue = json.optDouble("evalue");
-        asn1_blob = Base64.getDecoder().decode(json.optString("asn1_blob", ""));
-        */
       } else {
         logger.log(Level.ERROR, "Unknown JSON protocol: " + protocol);
       }
@@ -166,15 +144,17 @@ final class BLAST_QUERY implements Serializable {
   public String toJson() {
     Logger logger = LogManager.getLogger(BLAST_QUERY.class);
     Kryo kryo = new Kryo();
-    Output output = new Output(1000, -1);
+    Output output = new Output(5 * 4096, -1);
+    /*
     kryo.writeObject(output, this);
     output.close();
     byte[] k = output.getBuffer();
     int pos = output.position();
-    String t = toString();
     logger.log(
         Level.INFO,
         String.format("Info: Kryo size would be %d %d vs. %d", k.length, pos, t.length()));
+        */
+    String t = toString();
 
     return t;
   }

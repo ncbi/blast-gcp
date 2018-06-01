@@ -45,8 +45,6 @@ public final class BLAST_TOPN implements Serializable {
     score_map = new HashMap<>();
     topns = new HashMap<>();
     logger = LogManager.getLogger(BLAST_DRIVER.class);
-
-    logger.log(Level.INFO, String.format("TOPN class"));
   }
 
   public void add(String key, Double score, int topn) {
@@ -69,7 +67,7 @@ public final class BLAST_TOPN implements Serializable {
   }
 
   public HashMap<String, Double> results() {
-    logger.log(Level.INFO, String.format("topn_ hashmap has %d", score_map.size()));
+    logger.log(Level.DEBUG, String.format("topn_ hashmap has %d", score_map.size()));
     if (score_map.size() > 1)
       logger.log(Level.WARN, String.format(" topn_ hashmap has > 1 RID:%d", score_map.size()));
 

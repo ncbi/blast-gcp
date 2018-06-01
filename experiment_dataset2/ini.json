@@ -2,7 +2,7 @@
     "appName" : "experiment_dataset2",
     "source" :
     {
-        "max_backlog" : 15,
+        "max_backlog" : 5,
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
@@ -42,7 +42,7 @@
                 "num_locations" : 1
             }
         ],
-        "jni_log_level": "DEBUG"
+        "jni_log_level": "WARN"
     },
 
     "result" :
