@@ -19,13 +19,22 @@ address.txt:
 	/sbin/ifconfig | awk -F: '/inet addr/ {print $$2}' | grep -v 127.0.0.1 | tr -s ' ' | cut -d ' ' -f 1 > $@
 	gsutil -q cp $@ gs://blast-results-${USER}/
 
-run_rmt: ${SPARK_BLAST_JAR} libblastjni.so ini-tmp.json
+
+###########################################################################
+# Targets to run from NCBI hosts
+
+# TODO: gcloud dataproc jobs wait b6a3f736e4ac4e46b1ff64e0e7b71903 --project ncbi-sandbox-blast --region=us-east4
+run_rmt: ${SPARK_BLAST_JAR} libblastjni.so ini-tmp.json rmt_address.txt
 	gcloud beta dataproc jobs submit spark --cluster blast-dataproc-${USER} \
 		--class=${SPARK_BLAST_CLASS} \
 		--jars=${SPARK_BLAST_JAR} \
 		--region=us-east4 --labels="owner=${USER},project=blast" \
-		--files libblastjni.so,ini-tmp.json \
+		--files libblastjni.so,ini-tmp.json,dbs.json \
 		-- ini-tmp.json
+
+rmt_address.txt:
+	gcloud compute instances describe blast-dataproc-camacho-m | awk '/networkIP/ {print $$2}' > $@
+	gsutil -q cp $@ gs://blast-results-${USER}/address.txt
 
 libblastjni.so:
 	[ -f $@ ] || gsutil cp gs://blast-test-greg/$@ .
