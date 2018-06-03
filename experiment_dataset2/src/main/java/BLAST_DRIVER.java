@@ -496,7 +496,7 @@ public final class BLAST_DRIVER implements Serializable {
           final String jni_log_level = settings.jni_log_level;
           log.log(Level.INFO, "traceback_func");
 
-          final int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
+          int partition_num = inrow.getInt(inrow.fieldIndex("partition_num"));
           final String blastquery = inrow.getString(inrow.fieldIndex("blastquery"));
           final BLAST_QUERY query = new BLAST_QUERY(blastquery);
           log.log(
@@ -505,6 +505,7 @@ public final class BLAST_DRIVER implements Serializable {
                   "part = %d %d %d",
                   partition_num, query.partition_num, query.prelim_partition_num));
 
+          partition_num = query.partition_num;
           final String db_selector = query.db_selector;
           BLAST_DB_SETTING dbs = dbsettings.get(db_selector);
           final String pattern = dbs.pattern; // nt_50M
@@ -528,8 +529,11 @@ public final class BLAST_DRIVER implements Serializable {
           if (hsparray.length == 0) {
             log.log(Level.ERROR, "Empty hsparray");
           }
+          log.log(Level.INFO, String.format("hsparray has %d elements", hsparray.length));
 
-          log.log(Level.INFO, " Calling jni_traceback, JSON is " + query.toString());
+          log.log(
+              Level.INFO,
+              " Calling jni_traceback, JSON is " + query.toString().substring(0, 500) + "...");
 
           BLAST_LIB blaster = new BLAST_LIB();
           if (blaster == null) {
