@@ -7,6 +7,8 @@ usage: $0
 Required environment variables:
     project
     region
+    deploy_id
+    deploy_user
     result_bucket_name
     joborch_output_subscrip
     blast_dataproc_cluster_name
@@ -18,6 +20,8 @@ Optional environment variables:
 
 checkvar=${project?"${usage}"}
 checkvar=${region?"${usage}"}
+checkvar=${deploy_id?"${usage}"}
+checkvar=${deploy_user?"${usage}"}
 checkvar=${result_bucket_name?"${usage}"}
 checkvar=${joborch_output_subscrip?"${usage}"}
 checkvar=${blast_dataproc_cluster_name?"${usage}"}
@@ -82,11 +86,14 @@ INI=$(cat <<-END
     {
         "asn1" :
         {
-            "bucket" : "RESULTBUCKET"
+            "bucket": "RESULTBUCKET",
+            "file": "%s/seq-annot.asn",
+            "gs_or_hdfs": "gs"
         },
         "status" :
         {
-            "bucket"  : "RESULTBUCKET"
+            "bucket"  : "RESULTBUCKET",
+            "file" : "%s/status.txt"
         }
     },
 
@@ -122,6 +129,7 @@ INI_JSON=ini_docker.json
 printf "$INI\n" > ${INI_JSON}
 
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
+    --labels owner=${deploy_user},deploy_id=${deploy_id} \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
     --files dbs.json,libblastjni.so,${INI_JSON} -- ${INI_JSON}
 
