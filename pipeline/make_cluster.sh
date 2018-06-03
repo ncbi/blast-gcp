@@ -8,7 +8,7 @@ Required environment variables:
     project
     region
     zone
-    user
+    deploy_user
     deploy_id
     blast_dataproc_cluster_name
     blast_dataproc_cluster_max_age
@@ -19,8 +19,8 @@ Required environment variables:
 checkvar=${project?"${usage}"}
 checkvar=${region?"${usage}"}
 checkvar=${zone?"${usage}"}
+checkvar=${deploy_user?"${usage}"}
 checkvar=${deploy_id?"${usage}"}
-checkvar=${user?"${usage}"}
 checkvar=${blast_dataproc_cluster_name?"${usage}"}
 checkvar=${blast_dataproc_cluster_max_age?"${usage}"}
 
@@ -37,7 +37,7 @@ gcloud beta dataproc clusters create ${blast_dataproc_cluster_name} \
     --num-workers 2 --worker-boot-disk-size 171 --worker-machine-type custom-64-151552  \
     --num-preemptible-workers 0 --preemptible-worker-boot-disk-size 171 --scopes cloud-platform \
     --project ${project} \
-    --labels owner=${user},deploy_id=${deploy_id} \
+    --labels owner=${deploy_user},deploy_id=${deploy_id} \
     --region ${region} \
     --zone ${zone} \
     --max-age=${blast_dataproc_cluster_max_age} \
