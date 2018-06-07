@@ -140,21 +140,20 @@ final class BLAST_QUERY implements Serializable {
     }
   }
 
-  // FIX: Serdes with ProtocolBuffer? Kryo?
   public String toJson() {
     Logger logger = LogManager.getLogger(BLAST_QUERY.class);
     Kryo kryo = new Kryo();
-    Output output = new Output(5 * 4096, -1);
-    /*
+    Output output = new Output(32768, -1);
     kryo.writeObject(output, this);
     output.close();
     byte[] k = output.getBuffer();
     int pos = output.position();
+
+    String t = toString();
     logger.log(
         Level.INFO,
-        String.format("Info: Kryo size would be %d %d vs. %d", k.length, pos, t.length()));
-        */
-    String t = toString();
+        String.format("Info: Kryo size would be %d %d vs. JSON's %d", k.length, pos, t.length()));
+
 
     return t;
   }
