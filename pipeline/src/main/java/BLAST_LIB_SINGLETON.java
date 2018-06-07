@@ -54,7 +54,6 @@ class PART_INST
     public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         Boolean res = false;
-        Boolean isProtein = false;  //FIXME: change this to support protein BLASTDBs
         try
         {
             List< CONF_VOLUME_FILE > to_copy = new LinkedList<>();

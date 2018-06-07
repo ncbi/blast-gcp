@@ -37,6 +37,8 @@ import org.apache.spark.api.java.JavaRDD;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.rdd.RDD;
+import org.apache.spark.util.LongAccumulator;
+
 
 class BLAST_JOB extends Thread
 {
@@ -83,7 +85,10 @@ class BLAST_JOB extends Thread
     }
 
     private JavaRDD< BLAST_TB_LIST_LIST > prelim_search_and_traceback(
-                    final JavaRDD< BLAST_DATABASE_PART > SRC, Broadcast< BLAST_LOG_SETTING > SE, Broadcast< BLAST_REQUEST > REQ )
+                    final JavaRDD< BLAST_DATABASE_PART > SRC,
+                    Broadcast< BLAST_LOG_SETTING > SE,
+                    Broadcast< BLAST_REQUEST > REQ,
+                    LongAccumulator ERRORS )
     {
         return SRC.flatMap( item ->
         {
@@ -122,6 +127,7 @@ class BLAST_JOB extends Thread
                         }
                         catch ( Exception e )
                         {
+                            ERRORS.add( 1 );
                             BLAST_SEND.send( log,
                                              String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                         }
@@ -129,12 +135,14 @@ class BLAST_JOB extends Thread
                 }
                 catch ( Exception e )
                 {
+                    ERRORS.add( 1 );
                     BLAST_SEND.send( log,
                                      String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                 }
             }
             else
             {
+                ERRORS.add( 1 );
                 BLAST_SEND.send( log,
                                  String.format( "prelim-search: no database found for selector: '%s'", req.db ) );
             }
@@ -211,7 +219,9 @@ class BLAST_JOB extends Thread
         return elapsed;
     }
 
-    private long handle_request( final BLAST_REQUEST request, BLAST_DATABASE blast_db )
+    private long handle_request( final BLAST_REQUEST request,
+                                 BLAST_DATABASE blast_db,
+                                 LongAccumulator ERRORS )
     {
         Long started_at = System.currentTimeMillis();
         long elapsed = 0L;
@@ -220,7 +230,7 @@ class BLAST_JOB extends Thread
 
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
 
-        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, REQ );
+        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, REQ, ERRORS );
 
         BLAST_TB_LIST_LIST the_result = null;
         try
@@ -265,13 +275,16 @@ class BLAST_JOB extends Thread
                     String gs_status_key = String.format( settings.gs_status_file, entry.request.id );
                     BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_running );
 
-                    long elapsed = handle_request( entry.request, blast_db );
+                    LongAccumulator ERRORS = sc.sc().longAccumulator();
+                    long elapsed = handle_request( entry.request, blast_db, ERRORS );
                     status.after_request( elapsed );
                     System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
 
                     gs_status_key = String.format( settings.gs_status_file, entry.request.id );
-                    BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_done );
-
+                    if ( ERRORS.value() == 0 )
+                        BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_done );
+                    else
+                        BLAST_GS_UPLOADER.upload( settings.gs_status_bucket, gs_status_key, settings.gs_status_error );
                 }
                 else
                 {
