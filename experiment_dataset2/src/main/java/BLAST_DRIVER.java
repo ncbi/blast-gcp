@@ -486,6 +486,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                                 write_to_hdfs(
                                         hsp_result_dir, RID, buf.toString().getBytes(StandardCharsets.UTF_8));
+                                buf.setLength(0);
                             } // RID
                         } // close
                     } // ForeachWriter
@@ -647,11 +648,11 @@ public final class BLAST_DRIVER implements Serializable {
                                     String.format(" Note: traceback topn_dsw saw %d records", results.size()));
 
                             HashMap<String, Double> tops = topn.results();
+                            ByteArrayOutputStream bytes = new ByteArrayOutputStream(RESERVE_ASN1);
                             for (String RID : tops.keySet()) {
                                 Double min_score = tops.get(RID);
-                                log.log(Level.INFO,String.format("Traceback %s min_score is %f", RID, min_score));
+                                log.log(Level.INFO,String.format("traceback %s min_score is %f", RID, min_score));
 
-                                ByteArrayOutputStream bytes = new ByteArrayOutputStream(RESERVE_ASN1);
                                 bytes.write(seq_annot_prefix, 0, seq_annot_prefix.length);
                                 for (BLAST_QUERY result : results) {
                                     if (!RID.equals(result.rid)) continue;
@@ -679,6 +680,7 @@ public final class BLAST_DRIVER implements Serializable {
                                         "gs://" + settings.gs_result_bucket,
                                         "/output/" + RID + ".asn1",
                                         bytes.toByteArray());
+                                bytes.reset();
 
                                 log.log(Level.DEBUG, String.format("close %d", partitionId));
                             }
