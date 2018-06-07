@@ -27,9 +27,8 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 // import static org.apache.spark.sql.functions.*;
-
-import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
-import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
+//import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
+//import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
 import io.opencensus.tags.TagKey;
 import io.opencensus.tags.Tagger;
 import io.opencensus.tags.Tags;
@@ -83,6 +82,8 @@ public final class BLAST_DRIVER implements Serializable {
   private int num_blast_partitions;
   private BLAST_DB_SETTINGS dbsettings;
   private String hsp_result_dir;
+  private Tracer tracer;
+  private Tagger tagger;
 
   // Allocate collections appropriately
   private static final int RESERVE_PRELIM_JSON = 4 * 1024 * 1024;
@@ -110,21 +111,23 @@ public final class BLAST_DRIVER implements Serializable {
 
     try {
       System.out.println("Getting tracer");
-      final Tracer tracer = Tracing.getTracer();
+      tracer = Tracing.getTracer();
       System.out.println("Got tracer");
       System.out.println("Getting Tagger");
-      final Tagger tagger = Tags.getTagger();
+      tagger = Tags.getTagger();
       System.out.println("Got Tagger");
 
       final TagKey FRONTEND_KEY = TagKey.create("ncbi.nlm.nih.gov/keys/pipeline");
 
       System.out.println("Setting up Stackdriver Tracing");
+      /*
       StackdriverTraceExporter.createAndRegister(
           StackdriverTraceConfiguration.builder()
               .setProjectId("sandbox-blast")
               //              .setCredentials(new GoogleCredentials(new AccessToken(accessToken,
               // expirationTime)))
               .build());
+      */
 
       System.out.println("Building span");
       Span rootSpan = tracer.spanBuilderWithExplicitParent(appName, null).startSpan();
@@ -137,8 +140,10 @@ public final class BLAST_DRIVER implements Serializable {
       childSpan.end();
       rootSpan.addAnnotation("Annotation to the root Span after child is ended.");
       rootSpan.end();
+      /*
     } catch (IOException e) {
       log.log(Level.ERROR, "Couldn't register stackdriver tracing: " + e);
+      */
     } catch (ServiceConfigurationError se) {
       log.log(Level.ERROR, "Couldn't register stackdriver tracing: " + se);
     }

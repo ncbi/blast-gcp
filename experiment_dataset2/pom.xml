@@ -76,7 +76,13 @@
     <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>23.0</version>
+        <version>25.0-jre</version>
+    </dependency>
+    <dependency>
+        <artifactId>guava-jdk5</artifactId>
+        <groupId>com.google.guava</groupId>
+        <version>17.0</version>
+        <scope>provided</scope>
     </dependency>
     <!-- FIX: Apache Log4J 1.2 was EOL'ed on 8/2015, but Spark still uses it,
          so shall we. -->
@@ -94,19 +100,21 @@
     <dependency>
         <groupId>io.opencensus</groupId>
         <artifactId>opencensus-api</artifactId>
-        <version>0.13.2</version>
+        <version>0.14.0</version>
     </dependency>
+    <!--
     <dependency>
         <groupId>io.opencensus</groupId>
         <artifactId>opencensus-exporter-trace-stackdriver</artifactId>
-        <version>0.13.2</version>
+        <version>0.14.0</version>
     </dependency>
     <dependency>
         <groupId>io.opencensus</groupId>
         <artifactId>opencensus-impl</artifactId>
-        <version>0.13.2</version>
+        <version>0.14.0</version>
         <scope>runtime</scope>
     </dependency>
+    -->
     <dependency>
         <groupId>com.esotericsoftware</groupId>
         <artifactId>kryo</artifactId>
@@ -115,6 +123,39 @@
 </dependencies>
 <build>
     <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.1.1</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <artifactSet>
+                            <includes>
+                                <include>*:*</include>
+                            </includes>
+                        </artifactSet>
+                        <minimizeJar>false</minimizeJar>
+                        <relocations>
+                            <relocation><!-- Shade guava -->
+                                <pattern>com.google.common</pattern>
+                                <shadedPattern>repackaged.com.google.common</shadedPattern>
+                            </relocation>
+                            <relocation><!-- Shade protobuf -->
+                                <pattern>com.google.protobuf</pattern>
+                                <shadedPattern>repackaged.com.google.protobuf</shadedPattern>
+                            </relocation>
+                        </relocations>
+                        <shadedArtifactAttached>true</shadedArtifactAttached>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
