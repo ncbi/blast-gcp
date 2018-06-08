@@ -70,16 +70,16 @@ pushd ../pipeline > /dev/null
 
 ./make_jar.sh
 
-if [ "0" == "1" ]; then
+if [ "1" == "1" ]; then
     echo "Running Java linters/static analyzers"
     mvn -q checkstyle:checkstyle > /dev/null 2>&1
     CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
     gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
     echo "  Output in $CHECKSTYLE"
 
-    mvn -q site > /dev/null 2>&1
-    PMD="gs://blast-builds/pmd.$TS.html"
-    gsutil cp target/site/pmd.html "$PMD"
+    #mvn -q site > /dev/null 2>&1
+    #PMD="gs://blast-builds/pmd.$TS.html"
+    #gsutil cp target/site/pmd.html "$PMD"
 
     CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
     gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
@@ -94,11 +94,13 @@ popd > /dev/null
     #    $JAVASRCDIR/BLAST_HSP_LIST.java \
     #    $JAVASRCDIR/BLAST_TB_LIST.java \
     #    $JAVASRCDIR/BLAST_LIB.java \
-javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
-    ./BLAST_TEST.java
-javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
-    ./BLAST_BENCH.java
 
+if [ "0" == "1" ]; then
+    javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
+        ./BLAST_TEST.java
+    javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
+        ./BLAST_BENCH.java
+fi
 echo
 echo "Creating JNI header"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
@@ -167,7 +169,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
 
-    if [ "0" == "1" ]; then
+    if [ "1" == "1" ]; then
         echo "Running static analysis on C++ code"
         cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
         scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
@@ -200,6 +202,7 @@ fi
 echo "  Testing for unresolved libraries OK"
 
 echo "  Testing JNI"
+if [ "0" == "1" ]; then
 #-verbose:jni \
     #-Djava.library.path="../pipeline" \
     java \
@@ -207,14 +210,15 @@ echo "  Testing JNI"
     -cp $MAIN_JAR:.  \
     gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
     > output.$$ 2>&1
-sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
-cmp test.result test.expected
-if [[ $? -ne 0 ]]; then
-    cat -tn output.$$
-    #rm -f output.$$
-    sdiff -w 70 test.result test.expected
-    echo "  Testing of JNI failed"
-    exit 1
+    sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
+    cmp test.result test.expected
+    if [[ $? -ne 0 ]]; then
+        cat -tn output.$$
+        #rm -f output.$$
+        sdiff -w 70 test.result test.expected
+        echo "  Testing of JNI failed"
+        exit 1
+    fi
 fi
 rm -f output.$$
 set -o errexit
@@ -223,15 +227,25 @@ echo "Tests complete"
 line
 #fi
 
-if [ "$BUILDENV" = "google" ]; then
+#if [ "$BUILDENV" = "google" ]; then
+    BUILDTAG=$(date "+dev-%Y%m%d")
     echo "Copying to Cloud Storage Bucket"
     gsutil cp \
         cluster_initialize.sh \
         "$PIPELINEBUCKET/scripts/cluster_initialize.sh"
-    gsutil cp libblastjni.so gs://ncbi-build-artifacts
-    gsutil cp target/sparkblast-1-jar-with-dependencies.jar \
-        gs://ncbi-build-artifacts
-fi
+
+    gsutil cp libblastjni.so \
+        "gs://ncbi-build-artifacts/libblastjni.$BUILDTAG.so"
+
+    gsutil cp ../pipeline/target/sparkblast-1-jar-with-dependencies.jar \
+        gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.$BUILDTAG.jar
+
+    gcloud container builds submit \
+        --project ncbi-sandbox-blast \
+        --config ../pipeline/cloudbuild.yaml \
+        --substitutions=_PATH=.,_TAG=dev-$BUILDTAG .
+
+#fi
 
 echo "Build Complete"
 date

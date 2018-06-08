@@ -12,7 +12,7 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
   final void throwIfBad();
     descriptor: ()V
 
-  private void log(java.lang.String, java.lang.String);
+  public void log(java.lang.String, java.lang.String);
     descriptor: (Ljava/lang/String;Ljava/lang/String;)V
 
   final java.lang.String get_blob(java.lang.String);
