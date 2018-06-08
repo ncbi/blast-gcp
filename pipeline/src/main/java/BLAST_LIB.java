@@ -49,7 +49,8 @@ public class BLAST_LIB {
                 invalid = new ExceptionInInitializerError(threx2);
             }
         }
-        processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
+        processID = ManagementFactory.getRuntimeMXBean().getName().split("@", 2)[0];
+
         logLevel = Level.INFO;
     }
 
@@ -65,14 +66,14 @@ public class BLAST_LIB {
 
     // We can't rely on log4j.properties to filter, instead we'll look at
     // logLevel
-    private void log(final String level, final String msg) {
+    public void log(final String level, final String msg) {
         try {
             Logger logger = LogManager.getLogger(BLAST_LIB.class);
             Level lvl = Level.toLevel(level);
             long threadId = Thread.currentThread().getId();
 
             if (lvl.isGreaterOrEqual(logLevel)) {
-                final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
+                final String newmsg = "app:blastjni (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
                 logger.log(lvl, newmsg);
             }
         } catch (Throwable threx) {
@@ -134,13 +135,15 @@ public class BLAST_LIB {
             BLAST_LIB.logLevel = Level.toLevel(pslogLevel);
 
             // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
-            log( "INFO", "Java jni_prelim_search called with" );
-            log( "INFO", "  query_seq : " + req.query_seq );
-            log( "INFO", "  query_url : " + req.query_url );
-            log( "INFO", "  db_spec   : " + part.db_spec );
-            log( "INFO", "  program   : " + req.program );
+            log("INFO", "Java jni_prelim_search called with" );
+            log("INFO", "  query_seq : " + req.query_seq );
+            log("INFO", "  query_url : " + req.query_url );
+            log("INFO", "  db_spec   : " + part.db_spec );
+            log("INFO", "  program   : " + req.program );
             // FIX - top_n_prelim
             log("INFO", "  topn      : " + req.top_n);
+
+            if (req.query_seq == null) throw new Exception("query_seq is null");
 
             if (req.query_seq.contains("\n")) {
                 log("WARN", "Query contains newline, which may crash Blast library");
@@ -160,9 +163,19 @@ public class BLAST_LIB {
                 query = req.query_seq;
             }
 
+            if (query.length() < 2) {
+                log("ERROR", "Short query" + query);
+                throw new Exception("query is short");
+            }
+
+
             BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n );
 
             long finishtime = System.currentTimeMillis();
+            long totaltime = finishtime - starttime;
+
+            if (totaltime > 1000) log("WARN", "jni_prelim_search slow, returned in " + totaltime + " ms.");
+
             log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
             log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
             int hspcnt = 0;
@@ -192,10 +205,10 @@ public class BLAST_LIB {
         throwIfBad();
 
         BLAST_LIB.logLevel = Level.toLevel( tblogLevel );
-        log( "INFO", "Java jni_traceback called with" );
-        log( "INFO", "  query_seq : " + req.query_seq );
-        log( "INFO", "  query_url : " + req.query_url );
-        log( "INFO", "  db_spec   : " + part.db_spec );
+        log("INFO", "Java jni_traceback called with" );
+        log("INFO", "  query_seq : " + req.query_seq );
+        log("INFO", "  query_url : " + req.query_url );
+        log("INFO", "  db_spec   : " + part.db_spec );
 
         String query;
         long starttime = System.currentTimeMillis();
@@ -222,7 +235,7 @@ public class BLAST_LIB {
         }
 
         return ret;
-        }
+            }
 
     private native BLAST_HSP_LIST[] prelim_search(
             String query, String dbspec, String program, String params, int topn);
