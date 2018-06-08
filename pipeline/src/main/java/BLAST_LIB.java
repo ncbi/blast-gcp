@@ -176,7 +176,7 @@ public class BLAST_LIB {
 
             if (totaltime > 1000) log("WARN", "jni_prelim_search slow, returned in " + totaltime + " ms.");
 
-            log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
+            log("INFO", "jni_prelim_search returned in " + totaltime + " ms.");
             log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
             int hspcnt = 0;
             for ( BLAST_HSP_LIST hspl : ret )
