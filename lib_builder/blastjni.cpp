@@ -150,7 +150,7 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
         strcpy( buffer, "log: failed to make a String ( string too long )" );
 
     if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
-        fprintf( stderr, "Log method had pending exception\n" );
+        fprintf( stderr, "Log method has pending exception\n" );
 
     // make String object
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
@@ -166,7 +166,7 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
 
     if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
         fprintf( stderr,
-                 "Log method threw an exception, which it should never do.\n" );
+                 "Log method has an exception pending.\n" );
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &etime);
     // fprintf(stderr, "1000 iterations took %lu ns\n", etime.tv_nsec -
     // stime.tv_nsec);
