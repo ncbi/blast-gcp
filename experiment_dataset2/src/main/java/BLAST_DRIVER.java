@@ -558,7 +558,11 @@ public final class BLAST_DRIVER implements Serializable {
                     final String RID = query.rid;
 
                     query.tbl = tb_res;
-                    query.hspl = null; // Not needed anymore, save space/serialization
+                    // Below not needed anymore, save space/serialization
+                    query.hspl = null; 
+                    query.query_seq = null;
+                    query.blast_params= null;
+
                     final String resser = query.toJson();
                     Row outrow = RowFactory.create(RID, resser);
                     parts.add(outrow);
