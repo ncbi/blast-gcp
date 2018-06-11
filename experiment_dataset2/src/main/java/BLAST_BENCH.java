@@ -41,6 +41,7 @@ public final class BLAST_BENCH implements Serializable {
             "."; // /panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
 
         for (int arg = 0; arg != args.length; ++arg) {
+                    int max_part=0;
             long starttime=System.currentTimeMillis();
             final String jsonfile = args[arg];
 
@@ -76,7 +77,6 @@ public final class BLAST_BENCH implements Serializable {
                     requestobj.top_n = top_n_prelim;
                     System.out.println(requestobj.toString());
 
-                    int max_part;
                     if ("nt_50M".equals(db))
                         max_part=887;
                     else if ("nr_50M".equals(db))
@@ -123,7 +123,8 @@ public final class BLAST_BENCH implements Serializable {
 
             long finishtime=System.currentTimeMillis();
             long totaltime=finishtime-starttime;
-            System.out.println(String.format("Took %d ms for %s", totaltime, jsonfile));
+            System.out.println(String.format("Took %d ms for %s %d", totaltime, jsonfile, max_part
+                        ));
         }
 
 

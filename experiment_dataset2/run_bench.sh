@@ -15,11 +15,12 @@ SPARK_TEST_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 
 for test in A*json; do
     echo -n "Checking $test..."
+    ~/blast-gcp/experiment_dataset2/fixjson.py $test
     java -Xcheck:jni -Xdiag -Xfuture \
         -Djava.library.path="." \
         -cp $SPARK_TEST_JAR:.:/usr/local/spark/2.2.0/jars/* \
         $SPARK_TEST_CLASS \
-        "$test" > "$test.result" 2>&1 &
+        "$test.fix" > "$test.result" 2>&1 &
     j=`jobs | wc -l`
     while [ $j -ge $MAXJOBS ]; do
         j=`jobs | wc -l`
