@@ -158,9 +158,10 @@ CMD="gcloud beta dataproc --region us-east4 \
     --zone   us-east4-b \
     --max-age=8h \
     --image-version 1.2 \
+    --properties dataproc:dataproc.monitoring.stackdriver.enabled=true,dataproc:dataproc.logging.stackdriver.enabled=true, \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    $PIPELINEBUCKET/scripts/cluster_initialize.sh,gs://dataproc-initialization-actions/ganglia/ganglia.sh \
+    $PIPELINEBUCKET/scripts/cluster_initialize.sh,$PIPELINEBUCKET/scripts/ganglia.sh \
     --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4"
 
