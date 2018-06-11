@@ -34,7 +34,7 @@ import java.util.*;
 import org.apache.spark.sql.*;
 import org.json.JSONObject;
 
-public final class BLAST_TEST implements Serializable {
+public final class BLAST_BENCH implements Serializable {
 
     public static void main(final String[] args) throws Exception {
         final String location =
@@ -74,30 +74,44 @@ public final class BLAST_TEST implements Serializable {
                     requestobj.program = program;
                     requestobj.top_n = top_n_prelim;
                     System.out.println(requestobj.toString());
-                    BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db, 613, true);
-                    System.out.println(partitionobj.toString());
 
-                    BLAST_HSP_LIST[] search_res =
-                        blaster.jni_prelim_search(partitionobj, requestobj, "DEBUG");
-
-                    if (search_res != null) {
-                        System.out.println(" prelim_search returned " + search_res.length + " HSP lists:");
-                        Gson gson = new Gson();
-                        String hspjson = gson.toJson(search_res);
-                        System.out.println("RID " + rid + " prelim_search JSON: "  + hspjson);
-                    } else {
-                        System.out.println("NULL search_res");
+                    int max_part;
+                    if ("nt_50M".equals(db))
+                        max_part=887;
+                    else if ("nr_50M".equals(db))
+                        max_part=1086;
+                    else
+                    {
+                        System.out.println("Unknown db " + db);
+                        return;
                     }
+                    for (int part_num=0; part_num != max_part; ++part_num)
+                    {
+                        BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db, part_num, true);
+                        System.out.println(partitionobj.toString());
 
-                    BLAST_TB_LIST[] tb_res =
-                        blaster.jni_traceback(search_res, partitionobj, requestobj, "DEBUG");
+                        BLAST_HSP_LIST[] search_res =
+                            blaster.jni_prelim_search(partitionobj, requestobj, "DEBUG");
 
-                    if (tb_res != null) {
-                        Gson gson = new Gson();
-                        String tbjson = gson.toJson(tb_res);
-                        System.out.println("RID " + rid + " traceback JSON:" + tbjson);
-                    } else {
-                        System.out.println("NULL asn1");
+                        if (search_res != null) {
+                            System.out.println(" prelim_search returned " + search_res.length + " HSP lists:");
+                            Gson gson = new Gson();
+                            String hspjson = gson.toJson(search_res);
+                            System.out.println("RID " + rid + " prelim_search JSON: " + hspjson);
+                        } else {
+                            System.out.println("NULL search_res");
+                        }
+
+                        BLAST_TB_LIST[] tb_res =
+                            blaster.jni_traceback(search_res, partitionobj, requestobj, "DEBUG");
+
+                        if (tb_res != null) {
+                            Gson gson = new Gson();
+                            String tbjson = gson.toJson(tb_res);
+                            System.out.println("RID " + rid + " traceback JSON:" + tbjson);
+                        } else {
+                            System.out.println("NULL asn1");
+                        }
                     }
                 } else {
                     System.out.println("Unknown JSON protocol: " + protocol);
