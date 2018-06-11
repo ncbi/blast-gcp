@@ -8,6 +8,7 @@ SHELL=/bin/bash
 SPARK_BLAST_CLASS=gov.nih.nlm.ncbi.blastjni.BLAST_MAIN
 SPARK_BLAST_JAR=target/sparkblast-1-jar-with-dependencies.jar
 REGION=us-east4
+ZONE=us-east4-b
 
 run: ${SPARK_BLAST_JAR} libblastjni.so address.txt
 	./run_spark.sh
@@ -19,6 +20,12 @@ address.txt:
 	sed -i "s/t7/t6-${USER}/;s/results/&-${USER}/" ini.json
 	/sbin/ifconfig | awk -F: '/inet addr/ {print $$2}' | grep -v 127.0.0.1 | tr -s ' ' | cut -d ' ' -f 1 > $@
 	gsutil -q cp $@ gs://blast-results-${USER}/
+
+# Only works on master node
+NUM_WORKERS=$$(( $(shell /usr/share/google/get_metadata_value attributes/dataproc-worker-count) - 1))
+.PHONY: kickstart_ganglia
+kickstart_ganglia:
+	for n in {0..${NUM_WORKERS}}; do gcloud compute ssh blast-dataproc-${USER}-w-$$n --zone ${ZONE} --command 'sudo systemctl restart ganglia-monitor'; done
 
 
 ###########################################################################
@@ -37,7 +44,7 @@ rmt_address.txt:
 	gsutil -q cp $@ gs://blast-results-${USER}/address.txt
 
 libblastjni.so:
-	[ -f $@ ] || gsutil cp gs://blast-test-greg/$@ .
+	[ -f $@ ] || ln ../lib_builder/$@ .
 
 ini-tmp.json:
 	sed "s/t7/t6-${USER}/;s/results/&-${USER}/" ini.json > $@
