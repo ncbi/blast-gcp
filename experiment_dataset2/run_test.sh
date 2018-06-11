@@ -26,6 +26,7 @@ for test in AFE*json; do
         exit 1
     else
         echo "OK"
+        rm -f "$test.result"
     fi
 
 done
