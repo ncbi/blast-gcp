@@ -74,7 +74,7 @@ public final class BLAST_TEST implements Serializable {
                     requestobj.program = program;
                     requestobj.top_n = top_n_prelim;
                     System.out.println(requestobj.toString());
-                    BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db, 14, true);
+                    BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db, 613, true);
                     System.out.println(partitionobj.toString());
 
                     BLAST_HSP_LIST[] search_res =
@@ -84,7 +84,7 @@ public final class BLAST_TEST implements Serializable {
                         System.out.println(" prelim_search returned " + search_res.length + " HSP lists:");
                         Gson gson = new Gson();
                         String hspjson = gson.toJson(search_res);
-                        System.out.println("RID prelim_search results:" + rid + ":" + hspjson);
+                        System.out.println("RID " + rid + " prelim_search JSON: "  + hspjson);
                     } else {
                         System.out.println("NULL search_res");
                     }
@@ -95,7 +95,7 @@ public final class BLAST_TEST implements Serializable {
                     if (tb_res != null) {
                         Gson gson = new Gson();
                         String tbjson = gson.toJson(tb_res);
-                        System.out.println("RID traceback results:" + rid + ":" + tbjson);
+                        System.out.println("RID " + rid + " traceback JSON:" + tbjson);
                     } else {
                         System.out.println("NULL asn1");
                     }
