@@ -41,6 +41,7 @@ public final class BLAST_BENCH implements Serializable {
             "."; // /panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
 
         for (int arg = 0; arg != args.length; ++arg) {
+            long starttime=System.currentTimeMillis();
             final String jsonfile = args[arg];
 
             final String jsonstr = new String(Files.readAllBytes(Paths.get(jsonfile)));
@@ -119,6 +120,12 @@ public final class BLAST_BENCH implements Serializable {
             } catch (Exception e) {
                 System.out.println("JSON parsing error: " + e);
             }
+
+            long finishtime=System.currentTimeMillis();
+            long totaltime=finishtime-starttime;
+            System.out.println(String.format("Took %d ms for %s", totaltime, jsonfile));
         }
+
+
     }
 }
