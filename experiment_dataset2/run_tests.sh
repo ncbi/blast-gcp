@@ -1,36 +1,40 @@
 #!/bin/bash
 
+MAXJOBS=10
+
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/ncbi/gcc/4.9.3/lib64/"
 
-if [ -e nt_50M.14.psi ]; then
-    gsutil cp gs://nr_50mb_chunks/*.14.* .
-    gsutil cp gs://nt_50mb_chunks/*.14.* .
+cd $TMP
+
+if [ ! -e nt_50M.613.nsi ]; then
+    gsutil -m cp gs://nr_50mb_chunks/*.613.* .
+    gsutil -m cp gs://nt_50mb_chunks/*.613.* .
 fi
 
 SPARK_TEST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_TEST"
-SPARK_TEST_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
-MAXJOBS=15
+SPARK_TEST_JAR="/home/vartanianmh/blast-gcp/experiment_dataset2/target/sparkblast-1-jar-with-dependencies.jar"
+cp ~/blast-gcp/experiment_dataset2/libblastjni.so .
 
+mkdir -p tests
 pushd tests
-#gsutil -m cp gs://blast-test-requests-sprint6/*json .
-rm -f *.json.out *.json.fix
-#tar -xf orig.tar
+rm -f *.json.out *.json.fix $TMP/*.out
+gsutil -m cp -n gs://blast-test-requests-sprint6/*json .
 popd
 
 for test in tests/A*json; do
-    OUT=$test.out
-    ./fixjson.py $test
-    echo "Running $test"
+    ~/blast-gcp/experiment_dataset2/fixjson.py $test
+    OUT="$TMP/$(basename $test).out"
+    echo $OUT
+    echo "Running $test to $OUT"
     echo "$test" >> $OUT
     nice java -Xcheck:jni -Xfuture \
-        -Djava.library.path="." \
-        -cp $SPARK_TEST_JAR:.:/usr/local/spark/2.2.0/jars/* \
+        -Djava.library.path=".:/home/vartanianmh/blast-gcp/experiment_dataset2" \
+        -cp $SPARK_TEST_JAR:.:/home/vartanianmh/blast-gcp/experiment_dataset2:/usr/local/spark/2.2.0/jars/* \
         $SPARK_TEST_CLASS \
         $test.fix >> $OUT 2>&1 &
     j=`jobs | wc -l`
     while [ $j -ge $MAXJOBS ]; do
         j=`jobs | wc -l`
     done
-
 done

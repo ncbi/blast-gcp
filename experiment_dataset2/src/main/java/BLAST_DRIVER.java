@@ -277,6 +277,7 @@ public final class BLAST_DRIVER implements Serializable {
         return blast_partitions;
     }
 
+    // FIX: Good place to map query_url -> query_seq?
     MapFunction<String, Row> jsontoqueryfunc =
         new MapFunction<String, Row>() {
             @Override
