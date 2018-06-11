@@ -4,7 +4,7 @@
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
-            "subscript_id" : "spark-test-subscript",
+            "subscript_id" : "integration-queue-dataproc-subscription-sprint7",
             "use" : "true"
         },
         "socket" :
@@ -27,17 +27,20 @@
                 "selector" : "nt",
                 "bucket"   : "nt_50mb_chunks",
                 "pattern"  : "nt_50M",
-                "extensions" : [ "nax", "nin", "nsq" ]
+                "extensions" : [ "nax", "nin", "nsq" ],
+                "num_partitions" : 887,
+                "num_locations" : 2
             },
             {
                 "selector" : "nr",
                 "bucket"   : "nr_50mb_chunks",
                 "pattern"  : "nr_50M",
-                "extensions" : [ "pax", "pin", "psq" ]
+                "extensions" : [ "pax", "pin", "psq" ],
+                "num_partitions" : 1086,
+                "num_locations" : 1
             }
         ],
         "top_n" : 100,
-        "num_db_limit" : 160,
         "num_locations" : 2,
         "manifest_root" : "dbs.json"
     },
@@ -46,12 +49,14 @@
     {
         "asn1" :
         {
-            "bucket" : "blastgcp-pipeline-test",
+            "bucket" : "blast-results",
+            "file" : "%s/seq-annot.asn",
             "gs_or_hdfs" : "gs"
         },
         "status" :
         {
-            "bucket"  : "blastgcp-pipeline-test"
+            "bucket"  : "blast-results",
+            "file"    : "%s/status.txt"
         }
     },
 
@@ -70,6 +75,10 @@
     {
         "port" : 10011,
         "pref_loc" : "false",
-        "part_prep" : "true"
+        "part_prep" : "true",
+        "log_worker_shift": true,
+        "log_job_start": true,
+        "log_job_done": true,
+        "log_cutoff": true
     }
 }
