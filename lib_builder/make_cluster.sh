@@ -53,10 +53,7 @@ function config()
     # But if we need 1GB/core, not going to use highcpu
     WORKER=custom-"$CORES_PER_WORKER-$RAM_PER_WORKER"
 
-    PREEMPT_WORKERS=$((NUM_WORKERS - 2))
-    if [[ $PREEMPT_WORKERS -lt 0 ]]; then
-        PREEMPT_WORKERS=0
-    fi
+    PREEMPT_WORKERS=0
 
     # DataProc costs 1c/vCPU
     COST=0 # Units are cents/hour
@@ -143,10 +140,10 @@ CORES_PER_WORKER=$BEST_PRICE
 config
 
 CMD="gcloud beta dataproc --region us-east4 \
-    clusters create blast-dataproc-$USER-$(date +%Y%m%d-%-I) \
+    clusters create blast-dataproc-$USER \
     --master-machine-type $MASTER \
         --master-boot-disk-size $DISK_PER_MASTER \
-    --num-workers 2 \
+    --num-workers ${NUM_WORKERS} \
         --worker-boot-disk-size $DISK_PER_WORKER \
     --worker-machine-type $WORKER \
     --num-preemptible-workers $PREEMPT_WORKERS \
