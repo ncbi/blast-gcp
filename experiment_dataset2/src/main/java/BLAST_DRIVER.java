@@ -277,6 +277,7 @@ public final class BLAST_DRIVER implements Serializable {
         return blast_partitions;
     }
 
+    // FIX: Good place to map query_url -> query_seq?
     MapFunction<String, Row> jsontoqueryfunc =
         new MapFunction<String, Row>() {
             @Override
@@ -558,7 +559,11 @@ public final class BLAST_DRIVER implements Serializable {
                     final String RID = query.rid;
 
                     query.tbl = tb_res;
-                    query.hspl = null; // Not needed anymore, save space/serialization
+                    // Below not needed anymore, save space/serialization
+                    query.hspl = null; 
+                    query.query_seq = null;
+                    query.blast_params= null;
+
                     final String resser = query.toJson();
                     Row outrow = RowFactory.create(RID, resser);
                     parts.add(outrow);
