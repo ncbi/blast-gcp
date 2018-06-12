@@ -125,9 +125,9 @@ class BLAST_REQUEST_READER
         res = append_string_to_long_param( res, root, "db_num_seqs", 0L, "," );
         res = append_double_param( res, root, "evalue", 10.0, "," );
         res = append_string_param( res, root, "filter_string", "F", "," );
-        res = append_int_param( res, root, "gap_extend", 1, "," );
-        res = append_int_param( res, root, "gap_open", 11, "," );
-        res = append_bool_param( res, root, "gapped_alignment", false, "," );
+        //res = append_int_param( res, root, "gap_extend", 1, "," );
+        //res = append_int_param( res, root, "gap_open", 11, "," );
+        //res = append_bool_param( res, root, "gapped_alignment", false, "," );
         res = append_int_param( res, root, "hitlist_size", 100, "," );
         res = append_string_param( res, root, "matrix", "BLOSUM62", "," );
         res = append_double_param( res, root, "perc_identity", 0.0, "," );
