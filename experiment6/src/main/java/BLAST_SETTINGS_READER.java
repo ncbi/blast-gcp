@@ -81,7 +81,7 @@ class SOURCE_SETTINGS_READER
     // ------------------- sections in json-file ----------------------------------
     public static final String key = "source";
     public static final String key_max_backlog = "max_backlog";
-    public static final Integer dflt_max_backlog = 100;
+    public static final Integer dflt_max_backlog = 10;
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
@@ -249,12 +249,12 @@ class SPARK_SETTINGS_READER
     public static final String  dflt_locality_wait = "3s";
     public static final Boolean dflt_with_locality = false;
     public static final Boolean dflt_with_dyn_alloc = false;
-    public static final Integer dflt_num_executors = 10;
-    public static final Integer dflt_num_executor_cores = 5;
+    public static final Integer dflt_num_executors = 8;
+    public static final Integer dflt_num_executor_cores = 2;
     public static final String  dflt_executor_memory = "";
     public static final Boolean dflt_shuffle_reduceLocality_enabled = false;
     public static final Boolean dflt_scheduler_fair = false;
-    public static final Integer dflt_parallel_jobs = 3;
+    public static final Integer dflt_parallel_jobs = 2;
     public static final Integer dflt_comm_port = 10013;
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )

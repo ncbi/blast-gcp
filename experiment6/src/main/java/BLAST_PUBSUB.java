@@ -157,19 +157,8 @@ public final class BLAST_PUBSUB  extends Thread
                             }
                             else
                             {
-                                boolean added = status.add_request( re );
-                                if ( settings.log.request )
-                                {
-                                    if ( added )
-                                    {
-                                        System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
-                                    }
-                                    else
-                                    {
-                                        System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
-                                        status.update_ack( re );
-                                    }
-                                }
+                                if ( !status.add_request( re, settings.log.request ? System.out : null ) )
+                                    status.update_ack( re );
                             }
                         }
                         perform_sleep = false;

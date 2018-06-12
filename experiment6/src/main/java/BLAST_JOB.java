@@ -72,9 +72,9 @@ class BLAST_JOB extends Thread
 
     public void update_ack( final REQUESTQ_ENTRY re )
     {
-        synchronized( entry )
+        if ( entry != null )
         {
-            if ( entry != null )
+            synchronized( entry )
             {
                 if ( entry.ack_id != null && entry.request.id.equals( re.request.id ) )
                 {
