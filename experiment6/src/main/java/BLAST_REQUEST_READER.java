@@ -96,6 +96,15 @@ class BLAST_REQUEST_READER
         return src + String.format( "\"%s\": %d%s ", key, SE_UTILS.get_json_int( root, key, dflt ), term );
     }
 
+    private static String append_string_to_long_param( final String src, JsonObject root, final String key, Long dflt, final String term )
+    {
+        Long l_value = dflt;
+        String s_value = SE_UTILS.get_json_string( root, key, "" );
+        if ( !s_value.isEmpty() )
+            l_value = Long.parseLong( s_value, 10 );
+        return src + String.format( "\"%s\": %d%s ", key, l_value, term );
+    }
+
     private static String append_double_param( final String src, JsonObject root, final String key, double dflt, final String term )
     {
         return src + String.format( "\"%s\": %.1f%s ", key, SE_UTILS.get_json_double( root, key, dflt ), term );
@@ -112,8 +121,8 @@ class BLAST_REQUEST_READER
     private static String extract_params( BLAST_REQUEST request, JsonObject root )
     {
         String res = String.format( "{\"db\":\"%s\", ", request.db );
-        res = append_string_param( res, root, "db_length", "0", "," );
-        res = append_string_param( res, root, "db_num_seqs", "0", "," );
+        res = append_string_to_long_param( res, root, "db_length", 0L, "," );
+        res = append_string_to_long_param( res, root, "db_num_seqs", 0L, "," );
         res = append_double_param( res, root, "evalue", 10.0, "," );
         res = append_string_param( res, root, "filter_string", "F", "," );
         res = append_int_param( res, root, "gap_extend", 1, "," );
