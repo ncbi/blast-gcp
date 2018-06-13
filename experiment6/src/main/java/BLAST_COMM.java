@@ -53,7 +53,7 @@ class BLAST_COMM extends Thread
                 {
                     ss.setSoTimeout( 500 );
                     Socket client_socket = ss.accept();
-                    BLAST_COMM_CLIENT client = new BLAST_COMM_CLIENT( status, settings, client_socket );
+                    BLAST_COMM_CLIENT client = new BLAST_COMM_CLIENT( status, client_socket );
                     client.start();
                 }
                 catch ( Exception e )

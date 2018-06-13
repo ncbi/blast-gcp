@@ -102,6 +102,27 @@ class SE_UTILS
         return res;
     }
 
+    public static Double get_json_double( JsonObject root, final String key, final Double dflt )
+    {
+        Double res = dflt;
+        if ( root != null )
+        {
+            JsonElement elem = root.get( key );
+            if ( elem != null )
+            {
+                try
+                {
+                    res = elem.getAsDouble();
+                }
+                catch( Exception e )
+                {
+                    System.out.println( String.format( "json-parsing for %s -> %s", key, e ) );
+                }
+            }
+        }
+        return res;
+    }
+
     public static Boolean get_json_bool( JsonObject root, final String key, final Boolean dflt )
     {
         Boolean res = dflt;

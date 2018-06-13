@@ -26,6 +26,16 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import com.google.api.services.storage.Storage;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
@@ -76,37 +86,55 @@ class BLAST_REQUEST_READER
         if ( req.params.isEmpty() ) req.params = dflt_params;
     }
 
-    private static String get_json_string( JsonObject root, final String name, final String dflt )
+    private static String append_string_param( final String src, JsonObject root, final String key, final String dflt, final String term )
     {
-        String res = dflt;
-        JsonElement elem = root.get( name );
-        if ( elem != null )
-        {
-            try
-            {
-                res = elem.getAsString();
-            }
-            catch( Exception e )
-            {
-            }
-        }
-        return res;
+        return src + String.format( "\"%s\": \"%s\"%s ", key, SE_UTILS.get_json_string( root, key, dflt ), term );
     }
 
-    private static Integer get_json_int( JsonObject root, final String name, final Integer dflt )
+    private static String append_int_param( final String src, JsonObject root, final String key, int dflt, final String term )
     {
-        Integer res = dflt;
-        JsonElement elem = root.get( name );
-        if ( elem != null )
-        {
-            try
-            {
-                res = elem.getAsInt();
-            }
-            catch( Exception e )
-            {
-            }
-        }
+        return src + String.format( "\"%s\": %d%s ", key, SE_UTILS.get_json_int( root, key, dflt ), term );
+    }
+
+    private static String append_string_to_long_param( final String src, JsonObject root, final String key, Long dflt, final String term )
+    {
+        Long l_value = dflt;
+        String s_value = SE_UTILS.get_json_string( root, key, "" );
+        if ( !s_value.isEmpty() )
+            l_value = Long.parseLong( s_value, 10 );
+        return src + String.format( "\"%s\": %d%s ", key, l_value, term );
+    }
+
+    private static String append_double_param( final String src, JsonObject root, final String key, double dflt, final String term )
+    {
+        return src + String.format( "\"%s\": %.1f%s ", key, SE_UTILS.get_json_double( root, key, dflt ), term );
+    }
+
+    private static String append_bool_param( final String src, JsonObject root, final String key, boolean dflt, final String term )
+    {
+        if ( SE_UTILS.get_json_bool( root, key, dflt ) )
+            return src + String.format( "\"%s\": true%s ", key, term );
+        else
+            return src + String.format( "\"%s\": false%s ", key, term );
+    }
+
+    private static String extract_params( BLAST_REQUEST request, JsonObject root )
+    {
+        String res = String.format( "{\"db\":\"%s\", ", request.db );
+        res = append_string_to_long_param( res, root, "db_length", 0L, "," );
+        res = append_string_to_long_param( res, root, "db_num_seqs", 0L, "," );
+        res = append_double_param( res, root, "evalue", 10.0, "," );
+        res = append_string_param( res, root, "filter_string", "F", "," );
+        //res = append_int_param( res, root, "gap_extend", 1, "," );
+        //res = append_int_param( res, root, "gap_open", 11, "," );
+        //res = append_bool_param( res, root, "gapped_alignment", false, "," );
+        res = append_int_param( res, root, "hitlist_size", 100, "," );
+        res = append_string_param( res, root, "matrix", "BLOSUM62", "," );
+        res = append_double_param( res, root, "perc_identity", 0.0, "," );
+        res = res + String.format( "\"program\":\"%s\", ", request.program );
+        res = append_int_param( res, root, "window_size", 40, "," );
+        res = append_int_param( res, root, "word_size", 6 , ",");
+        res = append_int_param( res, root, "word_threshold", 21, "}" );
         return res;
     }
 
@@ -116,9 +144,9 @@ class BLAST_REQUEST_READER
         {
             JsonObject root = tree.getAsJsonObject();
 
-            request.id = get_json_string( root, "RID", dflt_id );
-            request.query_seq = get_json_string (root, "query_seq",dflt_query );
-            request.query_url = get_json_string (root, "query_url", "");
+            request.id = SE_UTILS.get_json_string( root, "RID", dflt_id );
+            request.query_seq = SE_UTILS.get_json_string ( root, "query_seq", "" );
+            request.query_url = SE_UTILS.get_json_string ( root, "query_url", "" );
             JsonElement blast_params_elem = root.get( "blast_params" );
             if ( blast_params_elem != null )
             {
@@ -129,14 +157,23 @@ class BLAST_REQUEST_READER
                     {
                         if ( blast_params.isJsonObject() )
                         {
-                            request.db = get_json_string( blast_params, "db", dflt_db );
-                            request.program = get_json_string( blast_params, "program", dflt_program );
-                            request.params = request.program;
-                            request.top_n = get_json_int( blast_params, "hitlist_size", top_n );
+                            request.db = SE_UTILS.get_json_string( blast_params, "db", dflt_db );
+                            request.program = SE_UTILS.get_json_string( blast_params, "program", dflt_program );
+                            request.params = extract_params( request, blast_params );
+                            request.top_n = SE_UTILS.get_json_int( blast_params, "hitlist_size", top_n );
+                            if ( request.query_seq.isEmpty() )
+                            {
+                                List< String > l = new ArrayList<>();
+                                SE_UTILS.get_string_list( blast_params, "queries", null, l );
+                                if ( !l.isEmpty() )
+                                    request.query_seq = l.get( 0 );
+                            }
                         }
                     }
                 }
             }
+            if ( request.query_seq.isEmpty() )
+                request.query_seq = dflt_query;
         }
     }
 
@@ -177,13 +214,35 @@ class BLAST_REQUEST_READER
         JsonParser parser = new JsonParser();
         try
         {
-            BLAST_REQUEST request = new BLAST_REQUEST();
-            JsonElement tree = parser.parse( new FileReader( filename ) );
-            parse_json_tree( request, tree, top_n );
-            return new REQUESTQ_ENTRY( request );
+            JsonElement tree = null;
+
+            URI uri = new URI( filename );
+            if ( uri.getScheme().equals( "gs" ) )
+            {
+                Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
+                String bucket = uri.getAuthority();
+                String key = uri.getPath();
+                if ( key.startsWith( "/" ) )
+                    key = key.substring( 1 );
+                InputStream is = BLAST_GS_DOWNLOADER.download_as_stream( storage, bucket, key );
+                if ( is != null )
+                    tree = parser.parse( new InputStreamReader( is ) );
+                else
+                    System.out.println( String.format( "no inputstream from: '%s'", filename ) );                    
+            }
+            else
+                tree = parser.parse( new FileReader( filename ) );
+
+            if ( tree != null )
+            {
+                BLAST_REQUEST request = new BLAST_REQUEST();
+                parse_json_tree( request, tree, top_n );
+                return new REQUESTQ_ENTRY( request );
+            }
         }
         catch( Exception e )
         {
+            System.out.println( String.format( "error parsing from file: '%s'", filename ) );
         }
         return null;
     }
