@@ -125,10 +125,10 @@ public class BLAST_LIB {
         String query;
         long starttime = System.currentTimeMillis();
 
-        if (req.query_url.length() > 0 && req.query_seq.length() > 0) {
+        if (req.query_url!=null && req.query_url.length() > 0 && req.query_seq.length() > 0) {
             log("WARN", "Both query_url and query_seq populated, choosing url");
         }
-        if (req.query_url.length() > 0) {
+        if (req.query_url!=null && req.query_url.length() > 0) {
             query = get_blob(req.query_url);
         } else {
             query = req.query_seq;
@@ -138,6 +138,8 @@ public class BLAST_LIB {
             log("ERROR", "Short query" + query);
             throw new Exception("query is short");
         }
+
+        log("INFO", "Calling JNI");
 
         BLAST_HSP_LIST[] ret = prelim_search(query, part.db_spec, req.program, req.params, req.top_n);
 

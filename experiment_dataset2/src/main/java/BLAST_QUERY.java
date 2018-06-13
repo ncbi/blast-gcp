@@ -131,6 +131,8 @@ final class BLAST_QUERY implements Serializable {
         errorlist = "json ctor";
         bench = System.currentTimeMillis();
 
+        if (query_url==null) query_url="";
+
       } else {
         logger.log(Level.ERROR, "Unknown JSON protocol: " + protocol);
       }

@@ -286,11 +286,11 @@ public final class BLAST_DRIVER implements Serializable {
                 log.log(Level.INFO, "input json was:" + json);
 
                 BLAST_QUERY query = new BLAST_QUERY(json);
-                log.log(Level.INFO, "     parsed is:" + query.toString());
+                log.log(Level.INFO, "     parsed is:" + query.toString().substring(0,200));
                 final String db_selector = query.db_selector;
                 // int partition_num = query.partition_num;
                 final String outjson = query.toJson();
-                log.log(Level.INFO, "     parsed json is:" + outjson);
+                log.log(Level.INFO, "     parsed json is:" + outjson.substring(0,200));
                 // return RowFactory.create(db_selector, partition_num, outjson);
                 return RowFactory.create(db_selector, outjson);
             }
@@ -370,7 +370,7 @@ public final class BLAST_DRIVER implements Serializable {
                         parts.add(outrow);
                     }
                 } catch (Exception e) {
-                    log.log(Level.ERROR, "jni_prelim_search threw exception" + e.toString());
+                    log.log(Level.ERROR, "jni_prelim_search threw exception:" + e.toString());
                 }
 
                 log.log(
@@ -561,14 +561,14 @@ public final class BLAST_DRIVER implements Serializable {
                     query.tbl = tb_res;
                     // Below not needed anymore, save space/serialization
                     query.hspl = null; 
-                    query.query_seq = null;
-                    query.blast_params= null;
+                    query.query_seq = "";
+                    query.blast_params= "";
 
                     final String resser = query.toJson();
                     Row outrow = RowFactory.create(RID, resser);
                     parts.add(outrow);
                 } catch (Exception e) {
-                    log.log(Level.ERROR, "jni_traceback threw " + e.toString());
+                    log.log(Level.ERROR, "jni_traceback threw:" + e.toString());
                 }
 
                 log.log(
@@ -647,7 +647,7 @@ public final class BLAST_DRIVER implements Serializable {
                             };
                             final byte[] seq_annot_suffix = {0, 0, 0, 0, 0, 0, 0, 0};
 
-                            log.log(Level.INFO, "traceback topn_dsw close results:");
+                            log.log(Level.INFO, String.format("traceback topn_dsw close %d results:", partitionId));
                             log.log(
                                     Level.INFO,
                                     String.format(" Note: traceback topn_dsw saw %d records", results.size()));
