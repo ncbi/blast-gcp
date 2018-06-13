@@ -1,15 +1,22 @@
+# gcloud container builds submit --config cloudbuild.yaml --substitutions=_PATH=.,_TAG=dev-20180612 .
+
 steps:
 - name: gcr.io/cloud-builders/gsutil
   args: ['cp', 'gs://ncbi-build-artifacts/libblastjni.${_TAG}.so', '${_PATH}/libblastjni.so']
 - name: gcr.io/cloud-builders/gsutil
   args: ['cp', 'gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.${_TAG}.jar', '${_PATH}/sparkblast.jar']
+  waitFor: ['-'] # concurrent with the first step
+
+# build docker container once all packages have been downloaded
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '--tag', 'us.gcr.io/$PROJECT_ID/${_IMAGE_NAME}:${COMMIT_SHA}${_TAG}', '${_PATH}' ]
+
 substitutions:
   # path from the repo root
   _PATH: pipeline
   _IMAGE_NAME: blast-pipeline
   # define _TAG for builds not triggered by Google Container Builder
   _TAG:
+
 images:
   - 'us.gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${COMMIT_SHA}${_TAG}'
