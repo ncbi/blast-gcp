@@ -2,7 +2,7 @@
 set -o nounset # same as -u
 set -o errexit # same as -e
 set -o pipefail
-shopt -s nullglob globstar # 
+shopt -s nullglob globstar #
 
 function line() {
     echo "---------------------------------------------"
@@ -129,7 +129,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     g++ \
     blastjni.cpp \
     -std=gnu++11 \
-    -Wall -O  -I . \
+    -Wall -O -I . \
     -Wextra -pedantic \
     -Wlogical-op \
     -Wjump-misses-init \
@@ -137,6 +137,21 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -Wformat=2 \
     -Wformat-security \
     -Woverloaded-virtual \
+    -Wcast-align \
+    -Wno-ctor-dtor-privacy \
+    -Wdisabled-optimization \
+    -Winit-self \
+    -Wmissing-declarations \
+    -Wmissing-include-dirs \
+    -Wredundant-decls \
+    -Wsign-promo \
+    -Wstrict-overflow=5 \
+    -Wswitch \
+    -Wno-unused \
+    -Wnon-virtual-dtor \
+    -Wreorder \
+    -Wdeprecated \
+    -Wno-float-equal \
     -shared \
     -fPIC \
     $JAVA_INC \
@@ -207,7 +222,7 @@ if [ "0" == "1" ]; then
     #-Djava.library.path="../pipeline" \
     java \
     -Xcheck:jni -Xdiag -Xfuture \
-    -cp $MAIN_JAR:.  \
+    -cp $MAIN_JAR:. \
     gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
     > output.$$ 2>&1
     sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
