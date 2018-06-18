@@ -139,7 +139,8 @@ HIGHEST_VALUE=$(bc -l <<< "$HIGHEST_VALUE / 10000")
 printf "Best value is: $%0.4f/core hour at %d cores/worker\n" "$HIGHEST_VALUE" "$BEST_VALUE"
 
 #CORES_PER_WORKER=$BEST_VALUE
-CORES_PER_WORKER=$BEST_PRICE
+#CORES_PER_WORKER=$BEST_PRICE
+CORES_PER_WORKER=16
 config
 
 CMD="gcloud beta dataproc --region us-east4 \
