@@ -266,22 +266,31 @@ class BLAST_REQUEST_READER
         {
             JsonElement tree = null;
 
-            URI uri = new URI( filename );
-            if ( uri.getScheme().equals( "gs" ) )
+            try
             {
-                Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
-                String bucket = uri.getAuthority();
-                String key = uri.getPath();
-                if ( key.startsWith( "/" ) )
-                    key = key.substring( 1 );
-                InputStream is = BLAST_GS_DOWNLOADER.download_as_stream( storage, bucket, key );
-                if ( is != null )
-                    tree = parser.parse( new InputStreamReader( is ) );
+                URI uri = new URI( filename );
+                if ( uri.getScheme().equals( "gs" ) )
+                {
+                    Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
+                    String bucket = uri.getAuthority();
+                    String key = uri.getPath();
+                    if ( key.startsWith( "/" ) )
+                        key = key.substring( 1 );
+                    InputStream is = BLAST_GS_DOWNLOADER.download_as_stream( storage, bucket, key );
+                    if ( is != null )
+                        tree = parser.parse( new InputStreamReader( is ) );
+                    else
+                        System.out.println( String.format( "no inputstream from: '%s'", filename ) );                    
+                }
                 else
-                    System.out.println( String.format( "no inputstream from: '%s'", filename ) );                    
+                {
+                    tree = parser.parse( new FileReader( filename ) );
+                }
             }
-            else
+            catch( Exception e )
+            {
                 tree = parser.parse( new FileReader( filename ) );
+            }
 
             if ( tree != null )
             {
