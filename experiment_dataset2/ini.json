@@ -63,7 +63,7 @@
         "shuffle_reduceLocality_enabled" : "false",
         "scheduler_fair" : "false",
         "with_locality" : "true",
-        "num_executors" : 256,
+        "num_executors" : 512,
         "num_executor_cores" : 1,
         "executor_memory" : "768M",
         "locality_wait" : "30s"

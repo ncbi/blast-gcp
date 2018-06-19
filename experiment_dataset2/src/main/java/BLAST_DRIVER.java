@@ -267,7 +267,7 @@ public final class BLAST_DRIVER implements Serializable {
         // filled. So to increase potential parallelism, partition on db and
         // partition_num
         Dataset<Row> blast_partitions =
-            parts.repartition(num_blast_partitions).persist(StorageLevel.MEMORY_AND_DISK());
+            parts.repartition(num_blast_partitions).persist(StorageLevel.MEMORY_AND_DISK_2());
 
         blast_partitions.printSchema();
         blast_partitions.show();
@@ -917,7 +917,7 @@ public final class BLAST_DRIVER implements Serializable {
             System.err.println("Spark exception: " + e);
             return false;
         }
-        System.out.println("That is enough for now");
+        System.out.println("That is enough for now.");
 
         return true;
             }
