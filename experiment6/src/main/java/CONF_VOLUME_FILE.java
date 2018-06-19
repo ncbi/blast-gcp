@@ -28,6 +28,12 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 
+import java.io.File;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+
+import com.google.api.services.storage.Storage;
+
 public class CONF_VOLUME_FILE implements Serializable
 {
     public String f_type;   /* for example : 'nhr' */
@@ -38,6 +44,27 @@ public class CONF_VOLUME_FILE implements Serializable
     @Override public String toString()
     {
         return String.format( "\t\t\t[ type:'%s', name:'%s', md5:'%s', local:'%s'\n", f_type, f_name, f_md5, f_local );
+    }
+
+    public boolean present()
+    {
+        File f = new File( f_local );
+        return ( f.exists() && f.length() > 0 );
+    }
+
+    public int copy( Storage storage, final String bucket )
+    {
+        int res = 0;
+        String dir = f_local.substring( 0, f_local.lastIndexOf( File.separator) );
+        try
+        {
+            Files.createDirectories( Paths.get( dir ) );
+            res = BLAST_GS_DOWNLOADER.download( storage, bucket, f_name, f_local ) ? 1 : 0;
+        }
+        catch( Exception e )
+        {
+        }
+        return res;
     }
 }
 

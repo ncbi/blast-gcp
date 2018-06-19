@@ -113,6 +113,14 @@ class BLAST_JOB extends Thread
             {
                 try
                 {
+                    if ( !part.present() )
+                    {
+                        if ( part.copy() == 0 )
+                            BLAST_SEND.send( log, String.format( "%s copy failed", part ) );
+                        else if ( !part.present() )
+                            BLAST_SEND.send( log, String.format( "%s still not present", part ) );
+                    }
+
                     BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, log.jni_log_level );
                     if ( search_res != null )
                     {

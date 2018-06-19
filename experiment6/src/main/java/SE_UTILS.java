@@ -158,6 +158,18 @@ class SE_UTILS
         return null;
     }
 
+    public static String get_sub_as_string( JsonObject root, final String key )
+    {
+        String res = "";
+        if ( root != null )
+        {
+            JsonElement e = root.get( key );
+            if ( e != null )
+                res = e.toString();
+        }
+        return res;
+    }
+
     public static JsonArray get_sub_array( JsonObject root, final String key )
     {
         if ( root != null )

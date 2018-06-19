@@ -51,9 +51,8 @@ public class BLAST_YARN_NODE_ITER
 
     public void advance()
     {
+        idx++;
         if ( idx >= nodes.count() )
             idx = 0;
-        else
-            idx++;
     }
 }

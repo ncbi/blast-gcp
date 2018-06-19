@@ -136,11 +136,10 @@ public class BLAST_LIB {
             // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
             log( "INFO", "Java jni_prelim_search called with" );
             log( "INFO", "  query_seq : " + req.query_seq );
-            log( "INFO", "  query_url : " + req.query_url );
             log( "INFO", "  db_spec   : " + part.db_spec );
             log( "INFO", "  program   : " + req.program );
             // FIX - top_n_prelim
-            log("INFO", "  topn      : " + req.top_n);
+            log( "INFO", "  topn      : " + req.top_n_prelim );
 
             if (req.query_seq.contains("\n")) {
                 log("WARN", "Query contains newline, which may crash Blast library");
@@ -148,19 +147,9 @@ public class BLAST_LIB {
 
             String query;
             long starttime = System.currentTimeMillis();
+            query = req.query_seq;
 
-            if (req.query_url.length() > 0 && req.query_seq.length() > 0) {
-                log("WARN", "Both query_url and query_seq populated, choosing url");
-            }
-            if (req.query_url.length() > 0) {
-                query = get_blob(req.query_url);
-                // FIX
-                query = req.query_seq;
-            } else {
-                query = req.query_seq;
-            }
-
-            BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n );
+            BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n_prelim );
 
             long finishtime = System.currentTimeMillis();
             log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
@@ -194,23 +183,13 @@ public class BLAST_LIB {
         BLAST_LIB.logLevel = Level.toLevel( tblogLevel );
         log( "INFO", "Java jni_traceback called with" );
         log( "INFO", "  query_seq : " + req.query_seq );
-        log( "INFO", "  query_url : " + req.query_url );
         log( "INFO", "  db_spec   : " + part.db_spec );
 
         String query;
         long starttime = System.currentTimeMillis();
-        if (req.query_url.length() > 0 && req.query_seq.length() > 0) {
-            log("WARN", "Both query_url and query_seq populated, choosing url");
-        }
-        if (req.query_url.length() > 0) {
-            query = get_blob(req.query_url);
-            // FIX
-            query = req.query_seq;
-        } else {
-            query = req.query_seq;
-        }
+        query = req.query_seq;
 
-        BLAST_TB_LIST[] ret = traceback(hspl, query, part.db_spec, req.program, req.params);
+        BLAST_TB_LIST[] ret = traceback( hspl, query, part.db_spec, req.program, req.params );
         long finishtime = System.currentTimeMillis();
 
         log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");
@@ -218,7 +197,7 @@ public class BLAST_LIB {
 
         for ( BLAST_TB_LIST t : ret )
         {
-            t.top_n = req.top_n;
+            t.top_n = req.top_n_traceback;
         }
 
         return ret;

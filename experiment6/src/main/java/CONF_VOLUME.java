@@ -30,6 +30,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.google.api.services.storage.Storage;
+
 public class CONF_VOLUME implements Serializable
 {
     public String name;     /* for example: 'nt_50M.00' */
@@ -53,5 +55,27 @@ public class CONF_VOLUME implements Serializable
         return S;
     }
 
+    public boolean present()
+    {
+        for ( CONF_VOLUME_FILE f : files )
+            if ( !f.present() )
+                return false;
+        return true;
+    }
+
+    public int copy()
+    {
+        int res = 0;
+        try
+        {
+            Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
+            for ( CONF_VOLUME_FILE f : files )
+                res += f.copy( storage, bucket );
+        }
+        catch( Exception e )
+        {
+        }
+        return res;
+    }
 }
 

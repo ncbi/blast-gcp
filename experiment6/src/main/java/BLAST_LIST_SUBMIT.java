@@ -73,6 +73,9 @@ class BLAST_LIST_SUBMIT extends Thread
             BufferedReader br = new BufferedReader( new InputStreamReader( fs ) );
             String line;
             String src = "";
+            long started_at = System.currentTimeMillis();
+            long total_at_start = status.get_total_requests();
+            long submitted = 0L;
 
             while ( is_running() && ( ( line = br.readLine() ) != null ) )
             {
@@ -84,7 +87,9 @@ class BLAST_LIST_SUBMIT extends Thread
                     }
                     else
                     {
-                        String req_file = String.format( "%s/%s", src, line.trim() );
+                        String req_file = line.trim();;
+                        if ( !src.isEmpty() )
+                            req_file = String.format( "%s/%s", src, line.trim() );
                         boolean done = false;
                         while( !done )
                         {
@@ -93,11 +98,18 @@ class BLAST_LIST_SUBMIT extends Thread
                                 sleep_now( 500 );
                         }
                         cmd.stream.println( String.format( "REQUEST-FILE '%s' added", req_file ) );
+                        submitted++;
                     }
                 }
             }
             br.close();
-            cmd.stream.println( String.format( "done with list : %s", list_filename ) );
+
+            // for testing wait for the status to have no more jobs...
+            while( ( status.get_total_requests() - total_at_start ) < submitted )
+                sleep_now( 100 );
+
+            long elapsed = System.currentTimeMillis() - started_at;
+            cmd.stream.println( String.format( "done with list : %s in %,d ms", list_filename, elapsed ) );
         }
         catch( Exception e )
         {

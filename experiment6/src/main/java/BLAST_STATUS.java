@@ -83,6 +83,8 @@ class BLAST_STATUS
 
     public long get_avg() { return avg_time.get(); }
     public void set_parallel_jobs( int n ) { parallel_jobs.set( n ); }
+    public int get_running_jobs() { return running_jobs.get(); }
+    public long get_total_requests() { return total_requests.get(); }
 
     public int inc_running_jobs( final String id )
     {

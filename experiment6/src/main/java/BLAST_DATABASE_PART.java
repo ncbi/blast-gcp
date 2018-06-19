@@ -69,6 +69,22 @@ class BLAST_DATABASE_PART implements Serializable
         return String.format( "part( %s.%d: '%s' )", volume.key, nr, volume.name );
     }
 
+    public String full_info()
+    {
+        String res = String.format( "%s %s", toString(), volume.toString() );
+        return res;
+    }
+
+    public boolean present()
+    {
+        return volume.present();
+    }
+
+    public int copy()
+    {
+        return volume.copy();
+    }
+
     public Integer getPartition( Integer num_partitions )
     {
         if ( num_partitions > 0 )
