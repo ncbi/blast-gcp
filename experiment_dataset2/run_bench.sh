@@ -17,8 +17,8 @@ SPARK_TEST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_BENCH"
 SPARK_TEST_JAR="/home/vartanianmh/blast-gcp/experiment_dataset2/target/sparkblast-1-jar-with-dependencies.jar"
 
 for test in tests/*json; do
-    echo -n "Checking $test..."
     ~/blast-gcp/experiment_dataset2/fixjson.py $test
+    echo -n "Running $test..."
     nice java -Xdiag -Xfuture \
         -Xmx2g \
         -XX:+UseSerialGC \

@@ -22,7 +22,7 @@ function config()
 
     CORES_PER_MASTER=4
     RAM_PER_MASTER=$((CORES_PER_MASTER * 4 * 1024))
-    DISK_PER_MASTER=100
+    DISK_PER_MASTER=400 # For test data
     MASTER=custom-"$CORES_PER_MASTER-$RAM_PER_MASTER"
     # FIX: Override with standard types
     MASTER=n1-standard-4
