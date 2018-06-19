@@ -27,8 +27,8 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 // import static org.apache.spark.sql.functions.*;
-//import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
-//import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
+// import io.opencensus.exporter.trace.stackdriver.StackdriverTraceConfiguration;
+// import io.opencensus.exporter.trace.stackdriver.StackdriverTraceExporter;
 import io.opencensus.tags.TagKey;
 import io.opencensus.tags.Tagger;
 import io.opencensus.tags.Tags;
@@ -37,7 +37,6 @@ import io.opencensus.trace.Tracer;
 import io.opencensus.trace.Tracing;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -278,7 +277,7 @@ public final class BLAST_DRIVER implements Serializable {
     }
 
     // FIX: Good place to map query_url -> query_seq?
-    MapFunction<String, Row> jsontoqueryfunc =
+    private MapFunction<String, Row> jsontoqueryfunc =
         new MapFunction<String, Row>() {
             @Override
             public Row call(final String json) {
@@ -286,11 +285,11 @@ public final class BLAST_DRIVER implements Serializable {
                 log.log(Level.INFO, "input json was:" + json);
 
                 BLAST_QUERY query = new BLAST_QUERY(json);
-                log.log(Level.INFO, "     parsed is:" + query.toString().substring(0,200));
+                log.log(Level.INFO, "     parsed is:" + query.toString().substring(0, 200));
                 final String db_selector = query.db_selector;
                 // int partition_num = query.partition_num;
                 final String outjson = query.toJson();
-                log.log(Level.INFO, "     parsed json is:" + outjson.substring(0,200));
+                log.log(Level.INFO, "     parsed json is:" + outjson.substring(0, 200));
                 // return RowFactory.create(db_selector, partition_num, outjson);
                 return RowFactory.create(db_selector, outjson);
             }
@@ -497,7 +496,7 @@ public final class BLAST_DRIVER implements Serializable {
         return topn_dsw;
     } // prelim_topn_dsw
 
-    FlatMapFunction<Row, Row> traceback_func =
+    private FlatMapFunction<Row, Row> traceback_func =
         new FlatMapFunction<Row, Row>() {
             @Override
             public Iterator<Row> call(final Row inrow) {
@@ -533,7 +532,7 @@ public final class BLAST_DRIVER implements Serializable {
 
                 preload(db_selector, partition_num);
 
-                BLAST_HSP_LIST hsparray[] = query.hspl;
+                BLAST_HSP_LIST[] hsparray = query.hspl;
 
                 if (hsparray.length == 0) {
                     log.log(Level.ERROR, "Empty hsparray");
@@ -554,15 +553,18 @@ public final class BLAST_DRIVER implements Serializable {
                     BLAST_TB_LIST[] tb_res =
                         blaster.jni_traceback(hsparray, partitionobj, requestobj, jni_log_level);
                     log.log(
-                            Level.INFO, String.format(" traceback for part %d returned %d blobs to Spark", partition_num, tb_res.length));
+                            Level.INFO,
+                            String.format(
+                                " traceback for part %d returned %d blobs to Spark",
+                                partition_num, tb_res.length));
 
                     final String RID = query.rid;
 
                     query.tbl = tb_res;
                     // Below not needed anymore, save space/serialization
-                    query.hspl = null; 
+                    query.hspl = null;
                     query.query_seq = "";
-                    query.blast_params= "";
+                    query.blast_params = "";
 
                     final String resser = query.toJson();
                     Row outrow = RowFactory.create(RID, resser);
@@ -572,7 +574,10 @@ public final class BLAST_DRIVER implements Serializable {
                 }
 
                 log.log(
-                        Level.INFO, String.format("Note: traceback_func for part %d returning %d parts", partition_num, parts.size()));
+                        Level.INFO,
+                        String.format(
+                            "Note: traceback_func for part %d returning %d parts",
+                            partition_num, parts.size()));
 
                 return parts.iterator();
             }
@@ -603,7 +608,7 @@ public final class BLAST_DRIVER implements Serializable {
                         private BLAST_TOPN topn;
 
                         @Override
-                        public boolean open(long partitionId, long version) {
+                        public boolean open(final long partitionId, final long version) {
                             log = LogManager.getLogger(BLAST_DRIVER.class);
                             results = new ArrayList<>();
                             topn = new BLAST_TOPN();
@@ -615,7 +620,7 @@ public final class BLAST_DRIVER implements Serializable {
                         } // open
 
                         @Override
-                        public void process(Row inrow) {
+                        public void process(final Row inrow) {
                             log.log(
                                     Level.INFO, String.format("traceback topn_dsw in process %d", partitionId));
                             final String RID = inrow.getString(inrow.fieldIndex("RID"));
@@ -634,7 +639,7 @@ public final class BLAST_DRIVER implements Serializable {
                         } // process
 
                         @Override
-                        public void close(Throwable errorOrNull) {
+                        public void close(final Throwable errorOrNull) {
                             final byte[] seq_annot_prefix = {
                                 (byte) 0x30,
                                 (byte) 0x80,
@@ -647,7 +652,9 @@ public final class BLAST_DRIVER implements Serializable {
                             };
                             final byte[] seq_annot_suffix = {0, 0, 0, 0, 0, 0, 0, 0};
 
-                            log.log(Level.INFO, String.format("traceback topn_dsw close %d results:", partitionId));
+                            log.log(
+                                    Level.INFO,
+                                    String.format("traceback topn_dsw close %d results:", partitionId));
                             log.log(
                                     Level.INFO,
                                     String.format(" Note: traceback topn_dsw saw %d records", results.size()));
@@ -656,21 +663,25 @@ public final class BLAST_DRIVER implements Serializable {
                             ByteArrayOutputStream bytes = new ByteArrayOutputStream(RESERVE_ASN1);
                             for (String RID : tops.keySet()) {
                                 Double min_score = tops.get(RID);
-                                log.log(Level.INFO,String.format("traceback %s min_score is %f", RID, min_score));
+                                log.log(
+                                        Level.INFO,
+                                        String.format("traceback %s min_score is %f", RID, min_score));
 
                                 bytes.write(seq_annot_prefix, 0, seq_annot_prefix.length);
                                 for (BLAST_QUERY result : results) {
                                     if (!RID.equals(result.rid)) continue;
-                                    log.log(Level.INFO,String.format("Traceback hit %s=%s", RID, result.rid));
-                                    if (result.tbl==null)
-                                        log.log(Level.ERROR,"traceback NULL tbl");
+                                    log.log(Level.INFO, String.format("Traceback hit %s=%s", RID, result.rid));
+                                    if (result.tbl == null) log.log(Level.ERROR, "traceback NULL tbl");
 
                                     ArrayList<BLAST_TB_LIST> tblist =
                                         new ArrayList<>(Arrays.asList(result.tbl));
                                     // ArrayList<BLAST_TB_LIST> tophsps=new ArrayList<>();
                                     for (BLAST_TB_LIST tbl : tblist) {
                                         if (tbl.evalue >= min_score) {
-                                            log.log(Level.INFO, String.format("traceback appending %d bytes", tbl.asn1_blob.length));
+                                            log.log(
+                                                    Level.INFO,
+                                                    String.format(
+                                                        "traceback appending %d bytes", tbl.asn1_blob.length));
                                             bytes.write(tbl.asn1_blob, 0, tbl.asn1_blob.length);
                                         }
                                     }
@@ -699,7 +710,7 @@ public final class BLAST_DRIVER implements Serializable {
         return topn_dsw;
     }
 
-    private void write_to_hdfs(String dir, String RID, final byte[] output) {
+    private void write_to_hdfs(final String dir, final String RID, final byte[] output) {
         final String outfile = String.format("%s/%s", dir, RID);
 
         try {
@@ -740,7 +751,7 @@ public final class BLAST_DRIVER implements Serializable {
         }
     } // write_to_hdfs
 
-    private boolean copyfile(String src, String dest) {
+    private boolean copyfile(final String src, final String dest) {
         Logger log = LogManager.getLogger(BLAST_DRIVER.class);
 
         final File donefile = new File(dest + ".done");
@@ -810,7 +821,7 @@ public final class BLAST_DRIVER implements Serializable {
         return true;
     }
 
-    private void preload(String db_selector, int partition_num) {
+    private void preload(final String db_selector, final int partition_num) {
         Logger log = LogManager.getLogger(BLAST_DRIVER.class);
         log.log(Level.DEBUG, "db_selector is " + db_selector);
         // log.log(Level.INFO, "dbsettings is " + dbsettings.toString());
@@ -886,7 +897,7 @@ public final class BLAST_DRIVER implements Serializable {
     }
 
     private boolean run_streams(
-            DataStreamWriter<Row> prelim_dsw, DataStreamWriter<Row> traceback_dsw) {
+            final DataStreamWriter<Row> prelim_dsw, final DataStreamWriter<Row> traceback_dsw) {
         System.out.println("starting streams...");
         //  StreamingQuery prelim_results = prelim_dsw.outputMode("append").format("console").start();
         try {

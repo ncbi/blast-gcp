@@ -39,7 +39,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
     public double evalue;
     public byte[] asn1_blob;
 
-    public BLAST_TB_LIST( int oid, double evalue, byte[] asn1_blob )
+    BLAST_TB_LIST( final int oid, final double evalue, final byte[] asn1_blob )
     {
         this.oid = oid;
         this.evalue = evalue;
@@ -52,7 +52,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
     }
 
     @Override
-    public int compareTo( BLAST_TB_LIST other )
+    public int compareTo( final BLAST_TB_LIST other )
     {
         // ascending order
         double v = this.evalue - other.evalue;
@@ -64,7 +64,7 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
             return 1;
     }
 
-    public static String toHex(byte[] blob)
+    public static String toHex(final byte[] blob)
     {
         String res = "";
         res += "\n        ";
