@@ -33,6 +33,7 @@ class BLAST_REQUEST implements Serializable
     public String id, db, query_seq, program, params;
     public Integer top_n_prelim;
     public Integer top_n_traceback;
+    public Boolean skip_jni;
 
     @Override public String toString()
     {

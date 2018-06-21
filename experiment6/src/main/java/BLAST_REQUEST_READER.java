@@ -52,12 +52,15 @@ class BLAST_REQUEST_READER
     public static final String dflt_program = "blastn";
     public static final String dflt_params = "blastn";
 
-    public static BLAST_REQUEST parse( final String line, final Integer top_n )
+    private static BLAST_REQUEST parse( final String line, final Integer top_n )
     {
+        BLAST_REQUEST res = null;
         String S = line.trim();
         if ( S.startsWith( "{" ) )
-            return parse_json( S, top_n );
-        return parse_colons_sep_list( S, top_n );
+            res = parse_json( S, top_n );
+        else
+            res = parse_colons_sep_list( S, top_n );
+        return res;
     }
 
     private static BLAST_REQUEST parse_colons_sep_list( final String line, final Integer top_n )
@@ -243,23 +246,29 @@ class BLAST_REQUEST_READER
         return request;
     }
 
-    public static REQUESTQ_ENTRY parse_from_string( final String line, final Integer top_n )
+    public static REQUESTQ_ENTRY parse_from_string( final String line, final Integer top_n, final Boolean skip_jni )
     {
         BLAST_REQUEST request = parse( line, top_n );
         if ( request != null )
+        {
+            request.skip_jni = skip_jni;
             return new REQUESTQ_ENTRY( request );
+        }
         return null;
     }
 
-    public static REQUESTQ_ENTRY parse_from_string_and_ack( final String line, final String ack, final Integer top_n )
+    public static REQUESTQ_ENTRY parse_from_string_and_ack( final String line, final String ack, final Integer top_n, final Boolean skip_jni )
     {
         BLAST_REQUEST request = parse( line, top_n );
         if ( request != null )
+        {
+            request.skip_jni = skip_jni;
             return new REQUESTQ_ENTRY( request, ack );
+        }
         return null;
     }
 
-    public static REQUESTQ_ENTRY parse_from_file( final String filename, final Integer top_n )
+    public static REQUESTQ_ENTRY parse_from_file( final String filename, final Integer top_n, final Boolean skip_jni )
     {
         JsonParser parser = new JsonParser();
         try
@@ -296,6 +305,7 @@ class BLAST_REQUEST_READER
             {
                 BLAST_REQUEST request = new BLAST_REQUEST();
                 parse_json_tree( request, tree, top_n );
+                request.skip_jni = skip_jni;
                 return new REQUESTQ_ENTRY( request );
             }
         }

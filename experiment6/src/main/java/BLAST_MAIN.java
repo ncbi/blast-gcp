@@ -85,6 +85,24 @@ public final class BLAST_MAIN
                         else
                             e.stream.println( "another list is processed right now" );
                     }
+                    else if ( e.line.startsWith( "skip" ) )
+                    {
+                        String[] splited = e.line.split( "\\s+" );
+                        if ( splited[ 1 ].equals( "on" ) )
+                        {
+                            status.set_skip_jni( true );
+                            e.stream.println( "skip-jni: on" );
+                        }
+                        else if ( splited[ 1 ].equals( "off" ) )
+                        {
+                            status.set_skip_jni( false );
+                            e.stream.println( "skip-jni: off" );
+                        }
+                        else
+                        {
+                            e.stream.printf( "unknown: '%s'\n", e.line );
+                        }
+                    }
                 }
                 else
                 {

@@ -38,9 +38,9 @@
         ],
         "top_n" : 100,
         "max_backlog" : 10,
-        "x-num_db_limit" : 512,
-        "num_locations" : 2,
-        "manifest_root" : "dbs.json"
+        "num_db_limit" : 15,
+        "num_locations" : 1,
+        "manifest_root" : "dbs_500M.json"
     },
 
     "result" :
@@ -60,7 +60,7 @@
     {
         "transfer_files" : [ "libblastjni.so" ],
         "with_locality" : "true",
-        "num_executors" : 16,
+        "num_executors" : 15,
         "num_executor_cores" : 2,
         "shuffle_reduceLocality_enabled" : "false",
         "scheduler_fair" : "false",
@@ -70,7 +70,8 @@
     "log" :
     {
         "port" : 10011,
-        "pref_loc" : "false",
-        "part_prep" : "false"
+        "pref_loc" : "true",
+        "part_prep" : "false",
+        "db_copy" : "false"
     }
 }
