@@ -128,7 +128,8 @@ public final class BLAST_THREAD implements Serializable {
                     requestobj.program = program;
                     requestobj.top_n = top_n_prelim;
                     System.out.println(requestobj.toString());
-                    for (int i = 0; i != 887; ++i) {
+                    //for (int i = 0; i != 887; ++i) {
+                    for (int i = 0; i != 18; ++i) {
                         BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db, i, true);
                         ConcLoad p = new ConcLoad(i, rid, requestobj, partitionobj);
                         p.start();

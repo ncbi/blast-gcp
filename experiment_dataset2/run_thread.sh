@@ -27,9 +27,11 @@ SPARK_TEST_JAR="/home/vartanianmh/blast-gcp/experiment_dataset2/target/sparkblas
 
 for test in tests/*json; do
     ~/blast-gcp/experiment_dataset2/fixjson.py $test
-    nice time java -Xdiag -Xfuture \
+    nice  \
+    valgrind -v --trace-children=yes --log-file=vg.$RANDOM \
+    java -Xdiag -Xfuture \
         -Xmx2g \
-        -XX:+UseSerialGC \
+        -XX:ParallelGCThreads=4 \
         -Djava.library.path="." \
         -cp $SPARK_TEST_JAR:.:/usr/local/spark/2.2.0/jars/* \
         $SPARK_TEST_CLASS \

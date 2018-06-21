@@ -132,7 +132,6 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -Wall -O -I . \
     -Wextra -pedantic \
     -Wlogical-op \
-    -Wjump-misses-init \
     -Wshadow \
     -Wformat=2 \
     -Wformat-security \
@@ -194,6 +193,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     echo "Compiling and linking blastjni.cpp"
     $GPPCOMMAND
     cp libblastjni.so ../pipeline
+
 fi
 
 line
