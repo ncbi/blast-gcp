@@ -543,10 +543,12 @@ we now record the HSP data within the blob
                 log( jenv, jthis, jlog_method, "ERROR",
                      "exception in iterate_HSPs" );
                 free( hspblob );
+                hspblob=NULL;
                 throw;
             }
 
             free( hspblob );
+            hspblob=NULL;
         }
         else
         {
@@ -632,8 +634,10 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
             if ( status != kBlastHSPStream_Success || !hsp_list )
                 break;
 
-            hsp_lists.push_back( hsp_list );
-            //log( jenv, jthis, jlog_method, "DEBUG", "  loop" );
+            if (hsp_list->oid != -1)
+                hsp_lists.push_back( hsp_list );
+            else
+                log( jenv, jthis, jlog_method, "WARN", "skipping oid==-1" );
         }
 
         log( jenv, jthis, jlog_method, "DEBUG", "  loop complete" );
@@ -883,10 +887,8 @@ static std::vector<ncbi::blast::SFlatHSP> iterate_HSPs_nojni( std::vector< Blast
     size_t             num_tuples = 0;
     int                min_score  = INT_MIN;
 
-    max_scores.reserve( hsp_lists.size() );
-    for ( size_t i = 0; i != hsp_lists.size(); ++i )
+    for (const auto & hsp_list : hsp_lists)
     {
-        const BlastHSPList * hsp_list = hsp_lists[i];
         int max_score = INT_MIN;
 
         if ( hsp_list->hspcnt )
@@ -918,8 +920,8 @@ static std::vector<ncbi::blast::SFlatHSP> iterate_HSPs_nojni( std::vector< Blast
             }
         }
 
-        for ( size_t i = 0; i != max_scores.size(); ++i )
-            if ( max_scores[i] >= min_score )
+        for (const auto max_score : max_scores)
+            if ( max_score >= min_score )
                 ++num_tuples;
     }
     else
@@ -957,9 +959,6 @@ static std::vector<ncbi::blast::SFlatHSP> iterate_HSPs_nojni( std::vector< Blast
                     = hsp_list->hsp_array[h]->subject.frame;
                 flathsp.subject_gapped_start
                     = hsp_list->hsp_array[h]->subject.gapped_start;
-
-                if (oid >=0)
-                    retarray.push_back(flathsp);
             }
         }
     }
@@ -1009,7 +1008,8 @@ ncbi::blast::TIntermediateAlignments searchandtb(std::string query,
                 break;
             }
 
-            hsp_lists.push_back( hsp_list );
+            if (hsp_list->oid != -1)
+                hsp_lists.push_back( hsp_list );
         }
     }
     catch ( ... )
