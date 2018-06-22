@@ -177,12 +177,13 @@ public final class BLAST_MAIN
                 sc.addFile( fn );
 
             Broadcast< BLAST_LOG_SETTING > LOG_SETTING = sc.broadcast( settings.log );
+            Broadcast< String > LIB_NAME = sc.broadcast( settings.lib_name );
 
             try
             {
                 BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, LOG_SETTING, sc );
 
-                BLAST_JOBS jobs = new BLAST_JOBS( settings, LOG_SETTING, sc, db_map, status );
+                BLAST_JOBS jobs = new BLAST_JOBS( settings, LOG_SETTING, LIB_NAME, sc, db_map, status );
 
                 System.out.println( "spark-blast started..." );
 

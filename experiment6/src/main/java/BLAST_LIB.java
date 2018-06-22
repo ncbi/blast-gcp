@@ -34,19 +34,33 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkFiles;
 
-public class BLAST_LIB {
+public class BLAST_LIB
+{
     // Guaranteed to be a singleton courtesy of BLAST_LIB_SINGLETON
-    public BLAST_LIB() {
-        try {
+    public BLAST_LIB( final String libname )
+    {
+        try
+        {
             // Java will look for libblastjni.so, thread safe if successful?
-            System.loadLibrary("blastjni");
-        } catch (Throwable threx) {
-            try {
-                System.load(SparkFiles.get("libblastjni.so"));
-            } catch (ExceptionInInitializerError xininit) {
+            final int lastPeriodPos = libname.lastIndexOf( '.' );
+            if ( lastPeriodPos <= 0 )
+                System.loadLibrary( libname );
+            else
+                System.loadLibrary( libname.substring( 0, lastPeriodPos ) );
+        }
+        catch ( Throwable threx )
+        {
+            try
+            {
+                System.load( SparkFiles.get( libname ) );
+            }
+            catch ( ExceptionInInitializerError xininit )
+            {
                 invalid = xininit;
-            } catch (Throwable threx2) {
-                invalid = new ExceptionInInitializerError(threx2);
+            }
+            catch ( Throwable threx2 )
+            {
+                invalid = new ExceptionInInitializerError( threx2 );
             }
         }
         processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
@@ -57,35 +71,45 @@ public class BLAST_LIB {
     private static ExceptionInInitializerError invalid;
     private static Level logLevel;
 
-    final void throwIfBad() {
-        if (invalid != null) {
+    final void throwIfBad()
+    {
+        if ( invalid != null )
+        {
             throw invalid;
         }
     }
 
     // We can't rely on log4j.properties to filter, instead we'll look at
     // logLevel
-    private void log(final String level, final String msg) {
-        try {
-            Logger logger = LogManager.getLogger(BLAST_LIB.class);
-            Level lvl = Level.toLevel(level);
+    private void log( final String level, final String msg )
+    {
+        try
+        {
+            Logger logger = LogManager.getLogger( BLAST_LIB.class );
+            Level lvl = Level.toLevel( level );
             long threadId = Thread.currentThread().getId();
 
-            if (lvl.isGreaterOrEqual(logLevel)) {
-                final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
-                logger.log(lvl, newmsg);
-            }
-        } catch (Throwable threx) {
+            if ( lvl.isGreaterOrEqual( logLevel ) )
             {
-                System.err.println("ERROR Log throw");
-                if (msg != null) System.err.println(msg);
+                final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
+                logger.log( lvl, newmsg );
+            }
+        }
+        catch ( Throwable threx )
+        {
+            {
+                System.err.println( "ERROR Log throw" );
+                if ( msg != null )
+                    System.err.println( msg );
             }
         }
     }
 
-    final String get_blob(String url) {
-        if (!url.startsWith("gs://")) {
-            log("ERROR", "url: " + url + " not in a gs:// bucket");
+    final String get_blob( String url )
+    {
+        if ( !url.startsWith( "gs://" ) )
+        {
+            log( "ERROR", "url: " + url + " not in a gs:// bucket" );
             return "";
         }
         return "";

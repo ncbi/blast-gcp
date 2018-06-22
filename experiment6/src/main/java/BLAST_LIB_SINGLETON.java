@@ -113,7 +113,7 @@ class BLAST_LIB_SINGLETON
 {
     // let us have a map of PARTITION-ID to BLAST_LIB
     private static Map< String, PART_MAP > map = new ConcurrentHashMap<>();
-    private static BLAST_LIB blaster = new BLAST_LIB();
+    private static BLAST_LIB blaster = null;
 
     /* this ensures that nobody can make an instance of this class, but the class itself */
     private BLAST_LIB_SINGLETON()
@@ -157,7 +157,7 @@ class BLAST_LIB_SINGLETON
         return null;
     }
 
-    public static BLAST_LIB get_lib( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
+    public static BLAST_LIB get_lib( final String libname, final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         PART_INST p_inst = getPartInst( part );
         if ( p_inst != null )
@@ -165,6 +165,8 @@ class BLAST_LIB_SINGLETON
             if ( !p_inst.prepared )
                 p_inst.prepared = p_inst.prepare( part, log );
         }
+        if ( blaster == null )
+            blaster = new BLAST_LIB( libname );
         return blaster;
     }
 

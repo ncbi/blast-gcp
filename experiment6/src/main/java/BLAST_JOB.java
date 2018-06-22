@@ -44,6 +44,7 @@ class BLAST_JOB extends Thread
 {
     private final BLAST_SETTINGS settings;
     private Broadcast< BLAST_LOG_SETTING > LOG_SETTING;
+    private Broadcast< String > LIB_NAME;
     private final JavaSparkContext sc;
     private final BLAST_DATABASE_MAP db;
     private final AtomicBoolean running;
@@ -52,12 +53,14 @@ class BLAST_JOB extends Thread
 
     public BLAST_JOB( final BLAST_SETTINGS settings,
                       Broadcast< BLAST_LOG_SETTING > a_LOG_SETTING,
+                      Broadcast< String > a_LIB_NAME,
                       JavaSparkContext sc,
                       BLAST_DATABASE_MAP a_db,
                       BLAST_STATUS a_status )
     {
         this.settings = settings;
         this.LOG_SETTING = a_LOG_SETTING;
+        this.LIB_NAME = a_LIB_NAME;
         this.sc = sc;
         this.db = a_db;
         this.status = a_status;
@@ -87,6 +90,7 @@ class BLAST_JOB extends Thread
     private JavaRDD< BLAST_TB_LIST_LIST > prelim_search_and_traceback(
                     final JavaRDD< BLAST_DATABASE_PART > SRC,
                     Broadcast< BLAST_LOG_SETTING > SE,
+                    Broadcast< String > LIB_N,
                     Broadcast< BLAST_REQUEST > REQ,
                     LongAccumulator ERRORS )
     {
@@ -110,7 +114,7 @@ class BLAST_JOB extends Thread
 
             if ( !req.skip_jni )
             {
-                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, log );
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( LIB_N.getValue(), part, log );
                 if ( blaster != null )
                 {
                     try
@@ -243,7 +247,7 @@ class BLAST_JOB extends Thread
 
         try
         {
-            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, REQ, ERRORS );
+            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
             BLAST_TB_LIST_LIST result = reduce_results( RESULTS );
             if ( result != null )
                 elapsed = write_results( request.id, result, started_at );

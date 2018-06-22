@@ -6,49 +6,20 @@
             "project_id" : "ncbi-sandbox-blast",
             "subscript_id" : "spark-test-subscript",
             "use" : "true"
-        },
-        "socket" :
-        {
-            "trigger_port" : 10012,
-            "use" : "false"
-        },
-        "hdfs" :
-        {
-            "dir" : "hdfs:///user/%s/requests",
-            "use" : "false"
         }
     },
 
     "blastjni" :
     {
-        "db" :
-        [
-            {
-                "selector" : "nt",
-                "bucket"   : "nt_50mb_chunks",
-                "pattern"  : "nt_50M",
-                "extensions" : [ "nax", "nin", "nsq" ]
-            },
-            {
-                "selector" : "nr",
-                "bucket"   : "nr_50mb_chunks",
-                "pattern"  : "nr_50M",
-                "extensions" : [ "pax", "pin", "psq" ]
-            }
-        ],
-        "top_n" : 100,
-        "max_backlog" : 10,
         "num_db_limit" : 15,
-        "num_locations" : 1,
-        "manifest_root" : "dbs_500M.json"
+        "manifest_root" : "dbs_50M.json"
     },
 
     "result" :
     {
         "asn1" :
         {
-            "bucket" : "blastgcp-pipeline-test",
-            "gs_or_hdfs" : "gs"
+            "bucket" : "blastgcp-pipeline-test"
         },
         "status" :
         {
@@ -58,20 +29,7 @@
 
     "spark" :
     {
-        "transfer_files" : [ "libblastjni.so" ],
-        "with_locality" : "true",
         "num_executors" : 15,
-        "num_executor_cores" : 2,
-        "shuffle_reduceLocality_enabled" : "false",
-        "scheduler_fair" : "false",
-        "parallel_jobs" : 2
-    },
-
-    "log" :
-    {
-        "port" : 10011,
-        "pref_loc" : "true",
-        "part_prep" : "false",
-        "db_copy" : "false"
+        "num_executor_cores" : 2
     }
 }

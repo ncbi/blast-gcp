@@ -102,12 +102,15 @@ class BLASTJNI_SETTINGS_READER
     public static final String key_manifest_root = "manifest_root";
     public static final String key_location = "location";
     public static final String key_num_locations = "num_locations";
+    public static final String key_lib_name = "lib_name";
 
     public static final Integer dflt_top_n = 10;
     public static final Integer dflt_num_db_limit = 0;
     public static final String  dflt_jni_log_level = "INFO";
+    public static final String  dflt_manifest_root = "";
     public static final String  dflt_location = "/tmp/blast/db";
     public static final Integer dflt_num_locations = 1;
+    public static final String  dflt_lib_name = "libblastjni.so";
 
     private static void db_list_from_json( JsonObject obj, BLAST_SETTINGS settings )
     {
@@ -146,8 +149,9 @@ class BLASTJNI_SETTINGS_READER
             settings.num_db_limit  = SE_UTILS.get_json_int( obj, key_num_db_limit, dflt_num_db_limit );
             settings.num_locations = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
             settings.jni_log_level = SE_UTILS.get_json_string( obj, key_jni_log_level, dflt_jni_log_level );
-            settings.manifest_root = SE_UTILS.get_json_string( obj, key_manifest_root, "" );
+            settings.manifest_root = SE_UTILS.get_json_string( obj, key_manifest_root, dflt_manifest_root );
             settings.location      = SE_UTILS.get_json_string( obj, key_location, dflt_location );
+            settings.lib_name      = SE_UTILS.get_json_string( obj, key_lib_name, dflt_lib_name );
 
             if ( settings.manifest_root.isEmpty() )
             {
@@ -161,19 +165,29 @@ class BLASTJNI_SETTINGS_READER
                 db_list_from_conf( conf, settings );
             }
         }
+        else
+        {
+            settings.top_n         = dflt_top_n;
+            settings.num_db_limit  = dflt_num_db_limit;
+            settings.num_locations = dflt_num_locations;
+            settings.jni_log_level = dflt_jni_log_level;
+            settings.manifest_root = dflt_manifest_root;
+            settings.location      = dflt_location;
+            settings.lib_name      = dflt_lib_name;
+        }
     }
 }
 
 class ASN1_SETTINGS_READER
 {
     public static final String key = "asn1";
-    public static final String key_gs_bucket = "bucket";
-    public static final String key_gs_file = "file";
+    public static final String key_gs_result_bucket = "bucket";
+    public static final String key_gs_result_file = "file";
     public static final String key_hdfs_dir  = "hdfs_dir";
     public static final String key_hdfs_file = "hdfs_file";
     public static final String key_gs_or_hdfs = "gs_or_hdfs";
 
-    public static final String  dflt_gs_bucket = "";
+    public static final String  dflt_gs_result_bucket = "";
     public static final String  dflt_gs_result_file = "output/%s/seq-annot.asn";
     public static final String  dflt_hdfs_dir = "hdfs:///user/%s/results/";
     public static final String  dflt_hdfs_file = "%s.asn";
@@ -182,8 +196,8 @@ class ASN1_SETTINGS_READER
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
         JsonObject obj = SE_UTILS.get_sub( root, key );
-        settings.gs_result_bucket = SE_UTILS.get_json_string( obj, key_gs_bucket, dflt_gs_bucket );
-        settings.gs_result_file   = SE_UTILS.get_json_string( obj, key_gs_file, dflt_gs_result_file );
+        settings.gs_result_bucket = SE_UTILS.get_json_string( obj, key_gs_result_bucket, dflt_gs_result_bucket );
+        settings.gs_result_file   = SE_UTILS.get_json_string( obj, key_gs_result_file, dflt_gs_result_file );
         settings.hdfs_result_dir  = SE_UTILS.get_json_string( obj, key_hdfs_dir, SE_UTILS.insert_username( dflt_hdfs_dir ) );
         settings.hdfs_result_file = SE_UTILS.get_json_string( obj, key_hdfs_file, dflt_hdfs_file );
         settings.gs_or_hdfs       = SE_UTILS.get_json_string( obj, key_gs_or_hdfs, dflt_gs_or_hdfs );
@@ -247,14 +261,14 @@ class SPARK_SETTINGS_READER
     public static final String  dflt_transfer_file = "libblastjni.so";
     public static final String  dflt_spark_log_level = "ERROR";
     public static final String  dflt_locality_wait = "3s";
-    public static final Boolean dflt_with_locality = false;
+    public static final Boolean dflt_with_locality = true;
     public static final Boolean dflt_with_dyn_alloc = false;
     public static final Integer dflt_num_executors = 8;
     public static final Integer dflt_num_executor_cores = 2;
     public static final String  dflt_executor_memory = "";
     public static final Boolean dflt_shuffle_reduceLocality_enabled = false;
     public static final Boolean dflt_scheduler_fair = false;
-    public static final Integer dflt_parallel_jobs = 2;
+    public static final Integer dflt_parallel_jobs = 6;
     public static final Integer dflt_comm_port = 10013;
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
