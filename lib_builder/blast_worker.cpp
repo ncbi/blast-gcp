@@ -70,20 +70,26 @@ int main( int argc, char * argv[] )
 
     std::string db=std::string(db_spec,0,2);
     std::string location="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
-    if (db=="nr")
+    for (size_t i=0; i!=887; ++i)
     {
-        db=location + "nr_50M.14";
-    }
-    else if (db=="nt")
-    {
-        db=location + "nt_50M.14";
-    }
-    else
-    {
-        std::cerr << "Unknown db:" << db << "\n";
-        return 2;
-    }
+        char dbloc[1024];
 
-    auto alignments=searchandtb(query, db, program, params, top_n_prelim, top_n_traceback );
+        if (db=="nr")
+        {
+            sprintf(dbloc,"%snr_50M.%02d", location.c_str(), i);
+        }
+        else if (db=="nt")
+        {
+            sprintf(dbloc,"%snt_50M.%02d", location.c_str(), i);
+        }
+        else
+        {
+            std::cerr << "Unknown db:" << db << "\n";
+            return 2;
+        }
+
+        fprintf(stderr,"dbloc is %s\n", dbloc);
+        auto alignments=searchandtb(query, std::string(dbloc), program, params, top_n_prelim, top_n_traceback );
+    }
 }
 
