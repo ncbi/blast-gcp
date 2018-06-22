@@ -22,7 +22,7 @@ function config()
 
     CORES_PER_MASTER=4
     RAM_PER_MASTER=$((CORES_PER_MASTER * 4 * 1024))
-    DISK_PER_MASTER=100
+    DISK_PER_MASTER=400 # For test data
     MASTER=custom-"$CORES_PER_MASTER-$RAM_PER_MASTER"
     # FIX: Override with standard types
     MASTER=n1-standard-4
@@ -139,7 +139,8 @@ HIGHEST_VALUE=$(bc -l <<< "$HIGHEST_VALUE / 10000")
 printf "Best value is: $%0.4f/core hour at %d cores/worker\n" "$HIGHEST_VALUE" "$BEST_VALUE"
 
 #CORES_PER_WORKER=$BEST_VALUE
-CORES_PER_WORKER=$BEST_PRICE
+#CORES_PER_WORKER=$BEST_PRICE
+CORES_PER_WORKER=16
 config
 
 CMD="gcloud beta dataproc --region us-east4 \
@@ -158,9 +159,10 @@ CMD="gcloud beta dataproc --region us-east4 \
     --zone   us-east4-b \
     --max-age=8h \
     --image-version 1.2 \
+    --properties dataproc:dataproc.monitoring.stackdriver.enabled=true,dataproc:dataproc.logging.stackdriver.enabled=true, \
     --initialization-action-timeout 30m \
     --initialization-actions \
-    $PIPELINEBUCKET/scripts/cluster_initialize.sh,gs://dataproc-initialization-actions/ganglia/ganglia.sh \
+    $PIPELINEBUCKET/scripts/cluster_initialize.sh,$PIPELINEBUCKET/scripts/ganglia.sh \
     --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \
     --bucket dataproc-3bd9289a-e273-42db-9248-bd33fb5aee33-us-east4"
 

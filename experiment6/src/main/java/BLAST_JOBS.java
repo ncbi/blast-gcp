@@ -38,12 +38,14 @@ class BLAST_JOBS
     private final List< BLAST_JOB > jobs;
     private final BLAST_SETTINGS settings;
     private final Broadcast< BLAST_LOG_SETTING > LOG_SETTING;
+    private final Broadcast< String > LIB_NAME;
     private final JavaSparkContext sc;
     private final BLAST_DATABASE_MAP db;
     private final BLAST_STATUS status;
 
     public BLAST_JOBS( final BLAST_SETTINGS a_settings,
                        Broadcast< BLAST_LOG_SETTING > a_LOG_SETTING,
+                       Broadcast< String > a_LIB_NAME,
                        JavaSparkContext a_sc,
                        BLAST_DATABASE_MAP a_db,
                        BLAST_STATUS a_status )
@@ -51,6 +53,7 @@ class BLAST_JOBS
         jobs = new ArrayList<>();
         this.settings = a_settings;
         this.LOG_SETTING = a_LOG_SETTING;
+        this.LIB_NAME = a_LIB_NAME;
         this.sc = a_sc;
         this.db = a_db;
         this.status = a_status;
@@ -62,7 +65,7 @@ class BLAST_JOBS
     private void start_jobs()
     {
         for ( int i = 0; i < settings.parallel_jobs; ++i )
-            jobs.add( new BLAST_JOB( settings, LOG_SETTING, sc, db, status ) );
+            jobs.add( new BLAST_JOB( settings, LOG_SETTING, LIB_NAME, sc, db, status ) );
         for ( BLAST_JOB j : jobs )
             j.start();
         status.set_parallel_jobs( jobs.size() );
@@ -120,7 +123,7 @@ class BLAST_JOBS
         System.out.println( String.format( "adding %d jobs", N ) );        
         List< BLAST_JOB > to_add = new ArrayList<>();
         for ( int i = 0; i < N; ++i )
-            to_add.add( new BLAST_JOB( settings, LOG_SETTING, sc, db, status ) );
+            to_add.add( new BLAST_JOB( settings, LOG_SETTING, LIB_NAME, sc, db, status ) );
         for ( BLAST_JOB j : to_add )
         {
             j.start();

@@ -25,6 +25,7 @@
  */
 
 #include "gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h"
+#include "blastjni.hpp"
 #include <algo/blast/api/blast4spark.hpp>
 #include <algo/blast/api/blast_advprot_options.hpp>
 #include <algo/blast/api/blast_exception.hpp>
@@ -150,7 +151,7 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
         strcpy( buffer, "log: failed to make a String ( string too long )" );
 
     if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
-        fprintf( stderr, "Log method had pending exception\n" );
+        fprintf( stderr, "Log method has pending exception\n" );
 
     // make String object
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stime);
@@ -166,7 +167,7 @@ static void log( JNIEnv * jenv, jobject jthis, jmethodID jlog_method,
 
     if ( jenv->ExceptionCheck() )  // Mostly to silence -Xcheck:jni
         fprintf( stderr,
-                 "Log method threw an exception, which it should never do.\n" );
+                 "Log method has an exception pending.\n" );
     // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &etime);
     // fprintf(stderr, "1000 iterations took %lu ns\n", etime.tv_nsec -
     // stime.tv_nsec);
@@ -542,10 +543,12 @@ we now record the HSP data within the blob
                 log( jenv, jthis, jlog_method, "ERROR",
                      "exception in iterate_HSPs" );
                 free( hspblob );
+                hspblob=NULL;
                 throw;
             }
 
             free( hspblob );
+            hspblob=NULL;
         }
         else
         {
@@ -631,8 +634,10 @@ static jobjectArray prelim_search( JNIEnv * jenv, jobject jthis,
             if ( status != kBlastHSPStream_Success || !hsp_list )
                 break;
 
-            hsp_lists.push_back( hsp_list );
-            //log( jenv, jthis, jlog_method, "DEBUG", "  loop" );
+            if (hsp_list->oid != -1)
+                hsp_lists.push_back( hsp_list );
+            else
+                log( jenv, jthis, jlog_method, "WARN", "skipping oid==-1" );
         }
 
         log( jenv, jthis, jlog_method, "DEBUG", "  loop complete" );
@@ -874,3 +879,171 @@ Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_traceback(
     jenv->ReleaseStringUTFChars( jparams, params );
     return ret;
 }
+
+static std::vector<ncbi::blast::SFlatHSP> iterate_HSPs_nojni( std::vector< BlastHSPList * > & hsp_lists, int topn )
+{
+    std::vector< int > max_scores;
+    std::set< int >    score_set;
+    size_t             num_tuples = 0;
+    int                min_score  = INT_MIN;
+
+    for (const auto & hsp_list : hsp_lists)
+    {
+        int max_score = INT_MIN;
+
+        if ( hsp_list->hspcnt )
+        {
+            for ( int h = 0; h != hsp_list->hspcnt; ++h )
+            {
+                int hsp_score = hsp_list->hsp_array[h]->score;
+                if ( max_score < hsp_score )
+                    max_score = hsp_score;
+            }
+        }
+
+        max_scores.push_back( max_score );
+        score_set.insert( max_score );
+    }
+
+    fprintf(stderr,"score_set has %zu\n", score_set.size());
+
+    if ( (int)score_set.size() > topn )
+    {
+        int top = topn;
+        for ( auto sit = score_set.rbegin(); sit != score_set.rend(); ++sit )
+        {
+            --top;
+            if ( !top )
+            {
+                min_score = *sit;
+                break;
+            }
+        }
+
+        for (const auto max_score : max_scores)
+            if ( max_score >= min_score )
+                ++num_tuples;
+    }
+    else
+        num_tuples = hsp_lists.size();
+
+    fprintf(stderr,"num_tuples is %zu, min_score is %d \n", num_tuples, min_score);
+
+    std::vector<ncbi::blast::SFlatHSP> retarray; // (num_tuples);
+
+    for ( size_t i = 0; i != hsp_lists.size(); ++i )
+    {
+        if ( max_scores[i] >= min_score )
+        {
+            const BlastHSPList * hsp_list = hsp_lists[i];
+
+            int    oid = hsp_list->oid;
+            for ( int h = 0; h != hsp_list->hspcnt; ++h )
+            {
+                struct ncbi::blast::SFlatHSP flathsp;
+
+                flathsp.oid   = oid;
+                flathsp.score = hsp_list->hsp_array[h]->score;
+                flathsp.query_start
+                    = hsp_list->hsp_array[h]->query.offset;
+                flathsp.query_end = hsp_list->hsp_array[h]->query.end;
+                flathsp.query_frame
+                    = hsp_list->hsp_array[h]->query.frame;
+                flathsp.query_gapped_start
+                    = hsp_list->hsp_array[h]->query.gapped_start;
+                flathsp.subject_start
+                    = hsp_list->hsp_array[h]->subject.offset;
+                flathsp.subject_end
+                    = hsp_list->hsp_array[h]->subject.end;
+                flathsp.subject_frame
+                    = hsp_list->hsp_array[h]->subject.frame;
+                flathsp.subject_gapped_start
+                    = hsp_list->hsp_array[h]->subject.gapped_start;
+            }
+        }
+    }
+    return retarray;
+}
+
+
+// typedef std::vector<std::pair<double, std::string>> TIntermediateAlignments
+ncbi::blast::TIntermediateAlignments searchandtb(std::string query,
+                                                 std::string db_spec,
+                                                 std::string program,
+                                                 std::string params,
+                                                 int top_n_prelim,
+                                                 int top_n_traceback)
+{
+    fprintf(stderr,"Calling PrelimSearch\n");
+    ncbi::blast::TBlastHSPStream * hsp_stream =
+        ncbi::blast::PrelimSearch(query,
+                                  db_spec,
+                                  program,
+                                  params);
+    fprintf(stderr,"Called  PrelimSearch\n");
+
+    if ( !hsp_stream )
+    {
+        fprintf(stderr,"NULL hsp_stream" );
+    }
+
+    std::vector< BlastHSPList * > hsp_lists;
+
+    try
+    {
+        while ( 1 )
+        {
+            BlastHSPList * hsp_list = NULL;
+            int            status
+                = BlastHSPStreamRead( hsp_stream->GetPointer(), &hsp_list );
+
+            if ( status == kBlastHSPStream_Error )
+            {
+                fprintf(stderr, "ERROR kBlastHSPStream_Error" );
+                break;
+            }
+
+            if ( status != kBlastHSPStream_Success || !hsp_list )
+            {
+                break;
+            }
+
+            if (hsp_list->oid != -1)
+                hsp_lists.push_back( hsp_list );
+        }
+    }
+    catch ( ... )
+    {
+        fprintf(stderr, "ERROR exception in loop" );
+    }
+
+    fprintf(stderr,"Have %zu hsp_lists\n", hsp_lists.size());
+
+    std::vector<ncbi::blast::SFlatHSP> flat_hsp_list= iterate_HSPs_nojni(hsp_lists, top_n_prelim);
+
+    for (size_t i=0; i!= flat_hsp_list.size(); ++i)
+    {
+        fprintf(stderr, "Flat HSP #%zu ", i);
+        fprintf(stderr, "oid=%d ", flat_hsp_list[i].oid);
+        fprintf(stderr, "score=%d ", flat_hsp_list[i].score);
+        fprintf(stderr,"\n");
+    }
+
+    ncbi::blast::TIntermediateAlignments alignments;
+
+    // FIX: top_n_traceback
+
+    fprintf(stderr,"Calling TracebackSearch with %zu flat HSPs\n", flat_hsp_list.size());
+    int  result = ncbi::blast::TracebackSearch(
+                                               query,
+                                               db_spec,
+                                               program,
+                                               params,
+                                               flat_hsp_list,
+                                               alignments);
+    fprintf(stderr,"Called  TracebackSearch, returned %d, got %zu alignments\n", result, alignments.size());
+
+
+    return alignments;
+}
+

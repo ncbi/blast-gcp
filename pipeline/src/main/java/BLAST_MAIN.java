@@ -26,6 +26,8 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+//import java.io.PrintStream;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
@@ -34,22 +36,7 @@ import org.apache.spark.broadcast.Broadcast;
 public final class BLAST_MAIN
 {
 
-    public static void add_request( final REQUESTQ_ENTRY re,
-                                    final BLAST_STATUS status )
-    {
-        if ( status.can_take() > 0 )
-        {
-            if ( re == null )
-                System.out.println( "REQUEST invalid" );
-            else
-            {
-                if ( !status.add_request( re ) )
-                    System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
-                else
-                    System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
-            }
-        }
-    }
+    /* the handling of all user-interface ( console as well as socket-communication is centralized here */
 
     public static String main_spark_loop( final BLAST_STATUS status,
                                           final BLAST_JOBS jobs,
@@ -58,32 +45,86 @@ public final class BLAST_MAIN
     {
         String res = "";
         String cmd;
+        BLAST_LIST_SUBMIT submitter = null;
+
         while( status.is_running() )
         {
             try
             {
-                if ( ( cmd = status.get_cmd() ) != null )
+                CMD_Q_ENTRY e = status.get_cmd();
+                if ( e != null )
                 {
-                    if ( cmd.startsWith( "J" ) )
-                        jobs.set( cmd.substring( 1 ) );
-                    else if ( cmd.equals( "exit" ) )
+                    if ( e.line.startsWith( "J" ) )
+                        jobs.set( e.line.substring( 1 ) );
+                    else if ( e.line.equals( "exit" ) )
                         status.stop();
-                    else if ( cmd.startsWith( "reset" ) )
+                    else if ( e.line.equals( "status" ) )
+                        e.stream.printf( "%s\n", status );
+                    else if ( e.line.equals( "backlog" ) )
+                        e.stream.printf( "%d\n", status.get_backlog() );
+                    else if ( e.line.startsWith( "reset" ) )
                     {
                         status.stop();
-                        String[] splited = cmd.split( "\\s+" );
+                        String[] splited = e.line.split( "\\s+" );
                         if ( splited.length > 1 )
                             res = splited[ 1 ];
                         else
                             res = ini_file;
                     }
-                    else if ( cmd.startsWith( "R" ) )
-                        add_request( BLAST_REQUEST_READER.parse_from_string( cmd.substring( 1 ), top_n ), status );
-                    else if ( cmd.startsWith( "F" ) )
-                        add_request( BLAST_REQUEST_READER.parse_from_file( cmd.substring( 1 ), top_n ), status );
+                    else if ( e.line.startsWith( "R" ) )
+                        status.add_request_string( e.line.substring( 1 ), e.stream, top_n );
+                    else if ( e.line.startsWith( "F" ) )
+                        status.add_request_file( e.line.substring( 1 ), e.stream, top_n );
+                    else if ( e.line.startsWith( "L" ) )
+                    {
+                        if ( submitter == null )
+                        {
+                            submitter = new BLAST_LIST_SUBMIT( status, e, top_n );
+                            submitter.start();
+                        }
+                        else
+                            e.stream.println( "another list is processed right now" );
+                    }
+                    else if ( e.line.startsWith( "skip" ) )
+                    {
+                        String[] splited = e.line.split( "\\s+" );
+                        if ( splited[ 1 ].equals( "on" ) )
+                        {
+                            status.set_skip_jni( true );
+                            e.stream.println( "skip-jni: on" );
+                        }
+                        else if ( splited[ 1 ].equals( "off" ) )
+                        {
+                            status.set_skip_jni( false );
+                            e.stream.println( "skip-jni: off" );
+                        }
+                        else
+                        {
+                            e.stream.printf( "unknown: '%s'\n", e.line );
+                        }
+                    }
                 }
                 else
+                {
                     Thread.sleep( 250 );
+                    if ( submitter != null )
+                    {
+                        if ( !submitter.is_running() )
+                            submitter = null;
+                    }
+                }
+            }
+            catch ( InterruptedException e )
+            {
+            }
+        }
+
+        if ( submitter != null )
+        {
+            submitter.done();
+            try
+            {
+                submitter.join();
             }
             catch ( InterruptedException e )
             {
@@ -111,7 +152,7 @@ public final class BLAST_MAIN
             BLAST_STATUS status = new BLAST_STATUS( settings );
 
             // reader thread for console commands
-            BLAST_CONSOLE cons = new BLAST_CONSOLE( status, settings, 200 );
+            BLAST_CONSOLE cons = new BLAST_CONSOLE( status, 200 );
             cons.start();
 
             // reader-writer thread for communication-port
@@ -136,12 +177,13 @@ public final class BLAST_MAIN
                 sc.addFile( fn );
 
             Broadcast< BLAST_LOG_SETTING > LOG_SETTING = sc.broadcast( settings.log );
+            Broadcast< String > LIB_NAME = sc.broadcast( settings.lib_name );
 
             try
             {
                 BLAST_DATABASE_MAP db_map = new BLAST_DATABASE_MAP( settings, LOG_SETTING, sc );
 
-                BLAST_JOBS jobs = new BLAST_JOBS( settings, LOG_SETTING, sc, db_map, status );
+                BLAST_JOBS jobs = new BLAST_JOBS( settings, LOG_SETTING, LIB_NAME, sc, db_map, status );
 
                 System.out.println( "spark-blast started..." );
 

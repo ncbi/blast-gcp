@@ -29,13 +29,13 @@ import java.io.Serializable;
 
 final class BLAST_HSP_LIST implements Serializable
 {
-    transient public BLAST_PARTITION part;
-    transient public BLAST_REQUEST req;
+    public transient BLAST_PARTITION part;
+    public transient BLAST_REQUEST req;
     public int oid;
     public int max_score;
     public byte[] hsp_blob;
 
-    public BLAST_HSP_LIST( int oid, int max_score, byte[] hsp_blob )
+    BLAST_HSP_LIST( final int oid, final int max_score, final byte[] hsp_blob )
     {
         this.oid = oid;
         this.max_score = max_score;
@@ -58,10 +58,10 @@ final class BLAST_HSP_LIST implements Serializable
         res += "\n      ";
         int brk = 0;
         for (int i = 0; i != hsp_blob.length; ++i) {
-          byte b = hsp_blob[i];
-          res += String.format("%02x", b);
-          ++brk;
-          if ((brk % 4) == 0) res += " ";
+            byte b = hsp_blob[i];
+            res += String.format("%02x", b);
+            ++brk;
+            if ((brk % 4) == 0) res += " ";
         }
         res += "\n";
         return res;

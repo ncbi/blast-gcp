@@ -26,6 +26,8 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
+import java.io.PrintStream;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,10 +44,11 @@ class BLAST_STATUS
     private final AtomicInteger running_jobs;
     private final AtomicInteger backlog;
     private final AtomicBoolean running;
+    private final AtomicBoolean skip_jni;
     private final ConcurrentHashMap< String, Integer > running_ids;
     private final ConcurrentLinkedQueue< REQUESTQ_ENTRY > request_q;
     private final ConcurrentLinkedQueue< String > ack_q;
-    private final ConcurrentLinkedQueue< String > cmd_q;
+    private final ConcurrentLinkedQueue< CMD_Q_ENTRY > cmd_q;
     private BLAST_JOBS jobs;
 
     public BLAST_STATUS( final BLAST_SETTINGS a_settings )
@@ -58,6 +61,7 @@ class BLAST_STATUS
         running_jobs = new AtomicInteger( 0 );
         backlog = new AtomicInteger( 0 );
         running = new AtomicBoolean( true );
+        skip_jni = new AtomicBoolean( false );
         running_ids = new ConcurrentHashMap<>();
 
         request_q = new ConcurrentLinkedQueue<>();
@@ -81,6 +85,10 @@ class BLAST_STATUS
 
     public long get_avg() { return avg_time.get(); }
     public void set_parallel_jobs( int n ) { parallel_jobs.set( n ); }
+    public int get_running_jobs() { return running_jobs.get(); }
+    public long get_total_requests() { return total_requests.get(); }
+    public boolean get_skip_jni() { return skip_jni.get(); }
+    public void set_skip_jni( boolean value ) { skip_jni.set( value ); }
 
     public int inc_running_jobs( final String id )
     {
@@ -106,13 +114,48 @@ class BLAST_STATUS
         return res;
     }
 
-    public boolean add_request( REQUESTQ_ENTRY re )
+    public boolean add_request( REQUESTQ_ENTRY re, final PrintStream ps )
     {
         boolean res = !contains( re );
         if ( res )
         {
             inc_backlog();
             request_q.offer( re );
+            if ( ps != null )
+                ps.printf( "REQUEST '%s' added\n", re.request.id );
+        }
+        else
+        {
+            if ( ps != null )
+                ps.printf( "REQUEST '%s' rejected\n", re.request.id );
+        }
+        return res;
+    }
+
+    public boolean add_request_string( final String req_string, final PrintStream ps, int top_n )
+    {
+        boolean res = false;
+        if ( can_take() > 0 )
+        {
+            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string( req_string, top_n, get_skip_jni() );
+            if ( re != null )
+                res = add_request( re, ps );
+            else if ( ps != null )
+                ps.printf( "invalid request '%s'\n", req_string );
+        }
+        return res;
+    }
+
+    public boolean add_request_file( final String filename, final PrintStream ps, int top_n )
+    {
+        boolean res = false;
+        if ( can_take() > 0 )
+        {
+            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_file( filename, top_n, get_skip_jni() );
+            if ( re != null )
+                res = add_request( re, ps );
+            else if ( ps != null )
+                ps.printf( "invalid request in '%s'\n", filename );
         }
         return res;
     }
@@ -128,8 +171,8 @@ class BLAST_STATUS
     public void add_ack( final String ack_id ) { ack_q.offer( ack_id ); }
     public String get_ack() { return ack_q.poll(); }
 
-    public void add_cmd( final String cmd ) { cmd_q.offer( cmd ); }
-    public String get_cmd() { return cmd_q.poll(); }
+    public void add_cmd( final CMD_Q_ENTRY entry ) { cmd_q.offer( entry ); }
+    public CMD_Q_ENTRY get_cmd() { return cmd_q.poll(); }
 
     private int inc_backlog() { return backlog.incrementAndGet(); }
     public int dec_backlog() { return backlog.decrementAndGet(); }
@@ -157,8 +200,9 @@ class BLAST_STATUS
 
     @Override public String toString()
     {
-        String S = String.format( "avg=%,d ms, parallel=%d, running=%d, backlog=%d",
-            get_avg(), parallel_jobs.get(), running_jobs.get(), backlog.get() );
+        String S = String.format( "avg=%,d ms, parallel=%d, running=%d, backlog=%d n=%d",
+            get_avg(), parallel_jobs.get(), running_jobs.get(), backlog.get(), total_requests.get() );
+        S = S + String.format( "\nskip-jni: '%s'", Boolean.toString( get_skip_jni() ) );
         for ( String id : running_ids.keySet() )
             S = S + String.format( "\nrunning: %s", id );
         REQUESTQ_ENTRY[] waiting = request_q.toArray( new REQUESTQ_ENTRY[ request_q.size() ] );

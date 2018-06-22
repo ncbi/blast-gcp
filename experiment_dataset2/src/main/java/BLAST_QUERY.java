@@ -38,41 +38,41 @@ import org.json.JSONObject;
 
 final class BLAST_QUERY implements Serializable {
   // From JSON request
-  public String protocol;
+  String protocol;
 
   @SerializedName("RID")
-  public String rid;
+  String rid;
 
-  public int[] volumes; // Future
-  public String db_tag;
-  public String db_selector;
+  int[] volumes; // Future
+  String db_tag;
+  String db_selector;
 
   @SerializedName("top_N_prelim")
-  public int top_n_prelim;
+  int top_n_prelim;
 
   @SerializedName("top_N_traceback")
-  public int top_n_traceback;
+  int top_n_traceback;
 
-  public String query_seq;
-  public String query_url;
-  public String program;
-  public String blast_params;
+  String query_seq;
+  String query_url;
+  String program;
+  String blast_params;
 
   @SerializedName("UserID")
-  public String userid;
+  String userid;
 
   @SerializedName("StartTime")
-  public String starttime;
+  String starttime;
   // Partitioned
-  public int partition_num;
+  int partition_num;
   // HSPs from prelim_search
-  public BLAST_HSP_LIST[] hspl;
+  BLAST_HSP_LIST[] hspl;
   // Tracebacks from traceback
-  public BLAST_TB_LIST[] tbl;
+  BLAST_TB_LIST[] tbl;
   // Debugging/tracing aids
-  public int prelim_partition_num;
-  public String errorlist;
-  public long bench;
+  int prelim_partition_num;
+  String errorlist;
+  long bench;
 
   BLAST_QUERY() {
     errorlist = "ctor";
@@ -131,6 +131,8 @@ final class BLAST_QUERY implements Serializable {
         errorlist = "json ctor";
         bench = System.currentTimeMillis();
 
+        if (query_url==null) query_url="";
+
       } else {
         logger.log(Level.ERROR, "Unknown JSON protocol: " + protocol);
       }
@@ -140,21 +142,20 @@ final class BLAST_QUERY implements Serializable {
     }
   }
 
-  // FIX: Serdes with ProtocolBuffer? Kryo?
   public String toJson() {
     Logger logger = LogManager.getLogger(BLAST_QUERY.class);
     Kryo kryo = new Kryo();
-    Output output = new Output(5 * 4096, -1);
-    /*
+    Output output = new Output(32768, -1);
     kryo.writeObject(output, this);
     output.close();
     byte[] k = output.getBuffer();
     int pos = output.position();
+
+    String t = toString();
     logger.log(
         Level.INFO,
-        String.format("Info: Kryo size would be %d %d vs. %d", k.length, pos, t.length()));
-        */
-    String t = toString();
+        String.format("Info: Kryo size would be %d %d vs. JSON's %d", k.length, pos, t.length()));
+
 
     return t;
   }

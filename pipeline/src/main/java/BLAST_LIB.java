@@ -34,19 +34,33 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkFiles;
 
-public class BLAST_LIB {
+public class BLAST_LIB
+{
     // Guaranteed to be a singleton courtesy of BLAST_LIB_SINGLETON
-    public BLAST_LIB() {
-        try {
+    public BLAST_LIB( final String libname )
+    {
+        try
+        {
             // Java will look for libblastjni.so, thread safe if successful?
-            System.loadLibrary("blastjni");
-        } catch (Throwable threx) {
-            try {
-                System.load(SparkFiles.get("libblastjni.so"));
-            } catch (ExceptionInInitializerError xininit) {
+            final int lastPeriodPos = libname.lastIndexOf( '.' );
+            if ( lastPeriodPos <= 0 )
+                System.loadLibrary( libname );
+            else
+                System.loadLibrary( libname.substring( 0, lastPeriodPos ) );
+        }
+        catch ( Throwable threx )
+        {
+            try
+            {
+                System.load( SparkFiles.get( libname ) );
+            }
+            catch ( ExceptionInInitializerError xininit )
+            {
                 invalid = xininit;
-            } catch (Throwable threx2) {
-                invalid = new ExceptionInInitializerError(threx2);
+            }
+            catch ( Throwable threx2 )
+            {
+                invalid = new ExceptionInInitializerError( threx2 );
             }
         }
         processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
@@ -57,35 +71,45 @@ public class BLAST_LIB {
     private static ExceptionInInitializerError invalid;
     private static Level logLevel;
 
-    final void throwIfBad() {
-        if (invalid != null) {
+    final void throwIfBad()
+    {
+        if ( invalid != null )
+        {
             throw invalid;
         }
     }
 
     // We can't rely on log4j.properties to filter, instead we'll look at
     // logLevel
-    private void log(final String level, final String msg) {
-        try {
-            Logger logger = LogManager.getLogger(BLAST_LIB.class);
-            Level lvl = Level.toLevel(level);
+    private void log( final String level, final String msg )
+    {
+        try
+        {
+            Logger logger = LogManager.getLogger( BLAST_LIB.class );
+            Level lvl = Level.toLevel( level );
             long threadId = Thread.currentThread().getId();
 
-            if (lvl.isGreaterOrEqual(logLevel)) {
-                final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
-                logger.log(lvl, newmsg);
-            }
-        } catch (Throwable threx) {
+            if ( lvl.isGreaterOrEqual( logLevel ) )
             {
-                System.err.println("ERROR Log throw");
-                if (msg != null) System.err.println(msg);
+                final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
+                logger.log( lvl, newmsg );
+            }
+        }
+        catch ( Throwable threx )
+        {
+            {
+                System.err.println( "ERROR Log throw" );
+                if ( msg != null )
+                    System.err.println( msg );
             }
         }
     }
 
-    final String get_blob(String url) {
-        if (!url.startsWith("gs://")) {
-            log("ERROR", "url: " + url + " not in a gs:// bucket");
+    final String get_blob( String url )
+    {
+        if ( !url.startsWith( "gs://" ) )
+        {
+            log( "ERROR", "url: " + url + " not in a gs:// bucket" );
             return "";
         }
         return "";
@@ -136,11 +160,10 @@ public class BLAST_LIB {
             // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
             log( "INFO", "Java jni_prelim_search called with" );
             log( "INFO", "  query_seq : " + req.query_seq );
-            log( "INFO", "  query_url : " + req.query_url );
             log( "INFO", "  db_spec   : " + part.db_spec );
             log( "INFO", "  program   : " + req.program );
             // FIX - top_n_prelim
-            log("INFO", "  topn      : " + req.top_n);
+            log( "INFO", "  topn      : " + req.top_n_prelim );
 
             if (req.query_seq.contains("\n")) {
                 log("WARN", "Query contains newline, which may crash Blast library");
@@ -148,19 +171,9 @@ public class BLAST_LIB {
 
             String query;
             long starttime = System.currentTimeMillis();
+            query = req.query_seq;
 
-            if (req.query_url.length() > 0 && req.query_seq.length() > 0) {
-                log("WARN", "Both query_url and query_seq populated, choosing url");
-            }
-            if (req.query_url.length() > 0) {
-                query = get_blob(req.query_url);
-                // FIX
-                query = req.query_seq;
-            } else {
-                query = req.query_seq;
-            }
-
-            BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n );
+            BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n_prelim );
 
             long finishtime = System.currentTimeMillis();
             log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
@@ -194,23 +207,13 @@ public class BLAST_LIB {
         BLAST_LIB.logLevel = Level.toLevel( tblogLevel );
         log( "INFO", "Java jni_traceback called with" );
         log( "INFO", "  query_seq : " + req.query_seq );
-        log( "INFO", "  query_url : " + req.query_url );
         log( "INFO", "  db_spec   : " + part.db_spec );
 
         String query;
         long starttime = System.currentTimeMillis();
-        if (req.query_url.length() > 0 && req.query_seq.length() > 0) {
-            log("WARN", "Both query_url and query_seq populated, choosing url");
-        }
-        if (req.query_url.length() > 0) {
-            query = get_blob(req.query_url);
-            // FIX
-            query = req.query_seq;
-        } else {
-            query = req.query_seq;
-        }
+        query = req.query_seq;
 
-        BLAST_TB_LIST[] ret = traceback(hspl, query, part.db_spec, req.program, req.params);
+        BLAST_TB_LIST[] ret = traceback( hspl, query, part.db_spec, req.program, req.params );
         long finishtime = System.currentTimeMillis();
 
         log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");
@@ -218,7 +221,7 @@ public class BLAST_LIB {
 
         for ( BLAST_TB_LIST t : ret )
         {
-            t.top_n = req.top_n;
+            t.top_n = req.top_n_traceback;
         }
 
         return ret;

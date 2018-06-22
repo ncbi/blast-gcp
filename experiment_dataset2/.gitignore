@@ -1,5 +1,8 @@
 spark_blast.jar
 libblastjni.so
-target
+*.json.out
+*.result
+target/
 bigdata-interop/
 gov/
+*50M*

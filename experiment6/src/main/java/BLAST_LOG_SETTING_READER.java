@@ -44,7 +44,7 @@ public class BLAST_LOG_SETTING_READER
     public static final String key_db_copy = "db_copy";
 
     public static final String  dflt_host = "";
-    public static final Integer dflt_port = 0; //10011;
+    public static final Integer dflt_port = 10011;
     public static final Boolean dflt_request = true;
     public static final Boolean dflt_start = false;
     public static final Boolean dflt_done = false;
@@ -89,6 +89,10 @@ public class BLAST_LOG_SETTING_READER
             setting.db_copy      = SE_UTILS.get_json_bool( obj, key_db_copy, dflt_db_copy );
 
             setting.jni_log_level = a_jni_log_level;
+        }
+        else
+        {
+            defaults( setting );
         }
     }
 

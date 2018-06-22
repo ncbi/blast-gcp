@@ -58,6 +58,8 @@ class BLAST_DATABASE_MAP
     public BLAST_DATABASE get( final String key )
     {
         BLAST_DATABASE res = databases.get( key );
+        if ( res == null )
+            res = databases.get( key.substring( 0, 2 ) );        
         return res;
     }
 }

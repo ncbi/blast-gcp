@@ -6,8 +6,8 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
     descriptor: Ljava/lang/ExceptionInInitializerError;
   private static org.apache.log4j.Level logLevel;
     descriptor: Lorg/apache/log4j/Level;
-  public gov.nih.nlm.ncbi.blastjni.BLAST_LIB();
-    descriptor: ()V
+  public gov.nih.nlm.ncbi.blastjni.BLAST_LIB(java.lang.String);
+    descriptor: (Ljava/lang/String;)V
 
   final void throwIfBad();
     descriptor: ()V

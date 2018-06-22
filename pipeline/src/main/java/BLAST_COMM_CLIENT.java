@@ -35,15 +35,12 @@ import java.io.PrintStream;
 class BLAST_COMM_CLIENT extends Thread
 {
     private final BLAST_STATUS status;
-    private final BLAST_SETTINGS settings;
     private final Socket socket;
 
     public BLAST_COMM_CLIENT( BLAST_STATUS a_status,
-                              BLAST_SETTINGS a_settings,
                               Socket a_socket )
     {
         this.status = a_status;
-        this.settings = a_settings;
         this.socket = a_socket;
     }
     
@@ -60,13 +57,12 @@ class BLAST_COMM_CLIENT extends Thread
             {
                 String trimmed = input.trim();
                 if ( trimmed.equals( "bye" ) )
+                {
+                    ps.println( "closing connection" );
                     break;
-                else if ( trimmed.equals( "status" ) )
-                    ps.printf( "%s\n", status );
-                else if ( trimmed.equals( "backlog" ) )
-                    ps.printf( "%d\n", status.get_backlog() );
+                }
                 else
-                    status.add_cmd( trimmed );
+                    status.add_cmd( new CMD_Q_ENTRY( ps, trimmed ) );
             }
             socket.close();
         }

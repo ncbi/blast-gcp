@@ -76,7 +76,7 @@ public class BLAST_DB_SETTING_READER
                     vol_f.f_type = s;
                     vol_f.f_name = String.format( "%s.%s", name, s );
                     vol_f.f_md5 = "";   // we do not know without manifest-file
-                    vol_f.f_local = String.format( "%s/%s/%s", loc, pattern, vol_f.f_name );
+                    vol_f.f_local = String.format( "%s/%s/%s", loc, name, vol_f.f_name );
                     vol.files.add( vol_f );
                 }
                 res.volumes.add( vol );

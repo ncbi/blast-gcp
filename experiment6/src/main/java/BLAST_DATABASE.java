@@ -54,9 +54,9 @@ class BLAST_DATABASE
                     final BLAST_DB_SETTING a_db_setting )
     {
         if ( settings.with_locality )
-            DB_SECS = make_db_partitions_2( settings, LOG_SETTING, sc, nodes, a_db_setting );
+            DB_SECS = make_db_partitions_with_locality( settings, LOG_SETTING, sc, nodes, a_db_setting );
         else
-            DB_SECS = make_db_partitions_1( settings, LOG_SETTING, sc, a_db_setting );
+            DB_SECS = make_db_partitions_no_locality( settings, LOG_SETTING, sc, a_db_setting );
 
         final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
         total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
@@ -76,7 +76,7 @@ class BLAST_DATABASE
     /* ===========================================================================================
             create database-partitions
        =========================================================================================== */
-    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_1(
+    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_no_locality(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,
@@ -105,7 +105,7 @@ class BLAST_DATABASE
         } ).cache();
     }
 
-    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_2(
+    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_with_locality(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,

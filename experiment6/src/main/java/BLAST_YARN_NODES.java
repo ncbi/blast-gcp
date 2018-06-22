@@ -58,7 +58,8 @@ public class BLAST_YARN_NODES
                 if ( !l.startsWith( "Total Nodes" ) && !l.startsWith( "Node-Id" ) )
                 {
                     String name = l.substring( 0, l.indexOf( ':' ) );
-                    nodes.add( name );
+                    if ( !name.isEmpty() )
+                        nodes.add( name );
                 }
             }
             b.close();

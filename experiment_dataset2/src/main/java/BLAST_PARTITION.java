@@ -82,7 +82,7 @@ class BLAST_PARTITION implements Serializable
 
     @Override public String toString()
     {
-        return String.format( "part( %d: '%s' )", this.nr, this.name );
+        return String.format( "part( %d: '%s' '%s')", this.nr, this.name, this.db_spec );
     }
 
     public Integer getPartition( Integer num_partitions )

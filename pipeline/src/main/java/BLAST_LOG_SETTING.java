@@ -32,15 +32,15 @@ public class BLAST_LOG_SETTING implements Serializable
 {
     public String host;
     public Integer port;
-    public Boolean request;
-    public Boolean job_start;
-    public Boolean job_done;
-    public Boolean cutoff;
-    public Boolean log_final;
-    public Boolean part_prep;
-    public Boolean worker_shift;
-    public Boolean pref_loc;
-    public Boolean db_copy;
+    public boolean request;
+    public boolean job_start;
+    public boolean job_done;
+    public boolean cutoff;
+    public boolean log_final;
+    public boolean part_prep;
+    public boolean worker_shift;
+    public boolean pref_loc;
+    public boolean db_copy;
     public String jni_log_level;
 
     @Override public String toString()
@@ -57,7 +57,7 @@ public class BLAST_LOG_SETTING implements Serializable
         if ( worker_shift )  S_log = S_log + "worker-shift ";
         if ( pref_loc )  S_log = S_log + "pref_log ";
         if ( db_copy )   S_log = S_log + "db-copy ";
-
+        S = S + String.format( "\tjni log level ...... %s\n", jni_log_level );
         return S + String.format( "\tlog ................ %s\n", S_log );
     }
 }

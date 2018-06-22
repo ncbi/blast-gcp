@@ -52,6 +52,7 @@ public class BLAST_SETTINGS implements Serializable
     public String  jni_log_level;
     public String  manifest_root;
     public String  location;
+    public String  lib_name;
 
     /* RESULTS */
     public String gs_result_bucket;
@@ -183,6 +184,7 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\tnum_db_limit ....... %d\n", num_db_limit );
         S = S + String.format( "\tjni-log-level ...... %s\n", jni_log_level );
         S = S + String.format( "\tmanifest root ...... %s\n", manifest_root );
+        S = S + String.format( "\tlib-name ........... %s\n", lib_name );
 
         S = S + "\nDB:\n" + dbs_toString();
 
