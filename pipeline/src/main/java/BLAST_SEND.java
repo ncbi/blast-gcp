@@ -61,6 +61,11 @@ public class BLAST_SEND
         {
             instance = new BLAST_SEND( host, port );
         }
+        else
+        {
+            if ( instance.ps == null )
+                instance = new BLAST_SEND( host, port );
+        }
         return instance;
     }
 
@@ -68,10 +73,12 @@ public class BLAST_SEND
     {
         try
         {
-            ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId(), msg );
+            if ( ps != null )
+                ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId(), msg );
         }
         catch ( Exception e )
         {
+            ps = null;
         }
     }
 

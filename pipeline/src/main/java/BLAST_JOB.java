@@ -44,6 +44,7 @@ class BLAST_JOB extends Thread
 {
     private final BLAST_SETTINGS settings;
     private Broadcast< BLAST_LOG_SETTING > LOG_SETTING;
+    private Broadcast< String > LIB_NAME;
     private final JavaSparkContext sc;
     private final BLAST_DATABASE_MAP db;
     private final AtomicBoolean running;
@@ -52,12 +53,14 @@ class BLAST_JOB extends Thread
 
     public BLAST_JOB( final BLAST_SETTINGS settings,
                       Broadcast< BLAST_LOG_SETTING > a_LOG_SETTING,
+                      Broadcast< String > a_LIB_NAME,
                       JavaSparkContext sc,
                       BLAST_DATABASE_MAP a_db,
                       BLAST_STATUS a_status )
     {
         this.settings = settings;
         this.LOG_SETTING = a_LOG_SETTING;
+        this.LIB_NAME = a_LIB_NAME;
         this.sc = sc;
         this.db = a_db;
         this.status = a_status;
@@ -72,9 +75,9 @@ class BLAST_JOB extends Thread
 
     public void update_ack( final REQUESTQ_ENTRY re )
     {
-        synchronized( entry )
+        if ( entry != null )
         {
-            if ( entry != null )
+            synchronized( entry )
             {
                 if ( entry.ack_id != null && entry.request.id.equals( re.request.id ) )
                 {
@@ -87,6 +90,7 @@ class BLAST_JOB extends Thread
     private JavaRDD< BLAST_TB_LIST_LIST > prelim_search_and_traceback(
                     final JavaRDD< BLAST_DATABASE_PART > SRC,
                     Broadcast< BLAST_LOG_SETTING > SE,
+                    Broadcast< String > LIB_N,
                     Broadcast< BLAST_REQUEST > REQ,
                     LongAccumulator ERRORS )
     {
@@ -108,43 +112,54 @@ class BLAST_JOB extends Thread
                 }
             }
 
-            BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( part, log );
-            if ( blaster != null )
+            if ( !req.skip_jni )
             {
-                try
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( LIB_N.getValue(), part, log );
+                if ( blaster != null )
                 {
-                    BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, log.jni_log_level );
-                    if ( search_res != null )
+                    try
                     {
-                        try
+                        if ( !part.present() )
                         {
-                            BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, log.jni_log_level );
-                            if ( tb_results != null )
+                            if ( part.copy() == 0 )
+                                BLAST_SEND.send( log, String.format( "%s copy failed", part ) );
+                            else if ( !part.present() )
+                                BLAST_SEND.send( log, String.format( "%s still not present", part ) );
+                        }
+
+                        BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, log.jni_log_level );
+                        if ( search_res != null )
+                        {
+                            try
                             {
-                                for ( BLAST_TB_LIST tbl : tb_results )
-                                    res.add( new BLAST_TB_LIST_LIST( tbl ) );
+                                BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, log.jni_log_level );
+                                if ( tb_results != null )
+                                {
+                                    for ( BLAST_TB_LIST tbl : tb_results )
+                                        res.add( new BLAST_TB_LIST_LIST( tbl ) );
+                                }
+                            }
+                            catch ( Exception e )
+                            {
+                                ERRORS.add( 1 );
+                                BLAST_SEND.send( log,
+                                                 String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                             }
                         }
-                        catch ( Exception e )
-                        {
-                            ERRORS.add( 1 );
-                            BLAST_SEND.send( log,
-                                             String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
-                        }
+                    }
+                    catch ( Exception e )
+                    {
+                        ERRORS.add( 1 );
+                        BLAST_SEND.send( log,
+                                         String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                     }
                 }
-                catch ( Exception e )
+                else
                 {
                     ERRORS.add( 1 );
                     BLAST_SEND.send( log,
-                                     String.format( "prelim-search: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
+                                     String.format( "prelim-search: no database found for selector: '%s'", req.db ) );
                 }
-            }
-            else
-            {
-                ERRORS.add( 1 );
-                BLAST_SEND.send( log,
-                                 String.format( "prelim-search: no database found for selector: '%s'", req.db ) );
             }
 
             return res.iterator();
@@ -230,13 +245,12 @@ class BLAST_JOB extends Thread
 
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
 
-        final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, REQ, ERRORS );
-
-        BLAST_TB_LIST_LIST the_result = null;
         try
         {
-            the_result = reduce_results( RESULTS );
-            elapsed = write_results( request.id, the_result, started_at );
+            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
+            BLAST_TB_LIST_LIST result = reduce_results( RESULTS );
+            if ( result != null )
+                elapsed = write_results( request.id, result, started_at );
         }
         catch ( Exception e )
         {

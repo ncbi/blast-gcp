@@ -1,0 +1,6 @@
+{
+    "databases": [
+      { "type": "nucleotide", "manifest": "gs://nt_50mb_chunks/nt_50M.20180502_1.dbmanifest.json" },
+      { "type": "protein", "manifest": "gs://nr_50mb_chunks/nr_50M.20180502_1.dbmanifest.json" }
+    ]
+}

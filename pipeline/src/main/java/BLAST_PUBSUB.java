@@ -146,7 +146,7 @@ public final class BLAST_PUBSUB  extends Thread
                         if ( msg_string != null )
                         {
                             ack = msg.getAckId();
-                            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string_and_ack( msg_string, ack, settings.top_n );
+                            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string_and_ack( msg_string, ack, settings.top_n, false );
                             if ( re == null )
                             {
                                 System.out.println( "REQUEST from PUBSUB invalid" );
@@ -157,19 +157,8 @@ public final class BLAST_PUBSUB  extends Thread
                             }
                             else
                             {
-                                boolean added = status.add_request( re );
-                                if ( settings.log.request )
-                                {
-                                    if ( added )
-                                    {
-                                        System.out.println( String.format( "REQUEST '%s' added", re.request.id ) );
-                                    }
-                                    else
-                                    {
-                                        System.out.println( String.format( "REQUEST '%s' rejected", re.request.id ) );
-                                        status.update_ack( re );
-                                    }
-                                }
+                                if ( !status.add_request( re, settings.log.request ? System.out : null ) )
+                                    status.update_ack( re );
                             }
                         }
                         perform_sleep = false;

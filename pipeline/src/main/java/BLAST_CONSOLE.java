@@ -34,16 +34,13 @@ import java.io.IOException;
 public final class BLAST_CONSOLE  extends Thread
 {
     private final BLAST_STATUS status;
-    private final BLAST_SETTINGS settings;
 
     private final Integer sleep_time;
 
     public BLAST_CONSOLE( final BLAST_STATUS a_status,
-                          final BLAST_SETTINGS a_settings,
                           final Integer a_sleep_time )
     {
         this.status = a_status;
-        this.settings = a_settings;
         this.sleep_time = a_sleep_time;
     }
 
@@ -82,10 +79,7 @@ public final class BLAST_CONSOLE  extends Thread
             String line = get_line( br );
             if ( line != null && !line.isEmpty() )
             {
-                if ( line.equals( "status" ) )
-                    System.out.println( String.format( "%s\n", status ) );
-                else
-                    status.add_cmd( line );
+                status.add_cmd( new CMD_Q_ENTRY( System.out, line ) );
                 do_sleep = false;
             }
 

@@ -42,79 +42,30 @@ INI=$(cat <<-END
             "subscript_id": "PUBSUB",
             "use": "true"
         },
-        "socket":
-        {
-            "trigger_port": 10012,
-            "use": "false"
-        },
-        "hdfs":
-        {
-            "dir": "hdfs:///user/%s/requests",
-            "use": "false"
-        }
     },
 
     "blastjni":
     {
-        "db":
-        [
-            {
-                "selector": "nt",
-                "bucket": "nt_50mb_chunks",
-                "pattern": "nt_50M",
-                "extensions": [ "nax", "nin", "nsq" ],
-                "num_partitions": 887,
-                "num_locations": 2
-            },
-            {
-                "selector": "nr",
-                "bucket": "nr_50mb_chunks",
-                "pattern": "nr_50M",
-                "extensions": [ "pax", "pin", "psq" ],
-                "num_partitions": 1086,
-                "num_locations": 1
-            }
-        ],
-        "jni_log_level": "DEBUG",
-        "top_n": 100,
-        "num_db_limit": 160,
-        "num_locations": 2,
-        "manifest_root": "dbs.json"
+        "num_db_limit": 1089,
+        "manifest_root": "dbs_50M.json"
     },
 
     "result":
     {
         "asn1":
         {
-            "bucket": "RESULTBUCKET",
-            "file": "%%s/seq-annot.asn",
-            "gs_or_hdfs": "gs"
+            "bucket": "RESULTBUCKET"
         },
         "status":
         {
-            "bucket": "RESULTBUCKET",
-            "file": "%%s/status.txt"
+            "bucket": "RESULTBUCKET"
         }
     },
 
     "spark":
     {
-        "transfer_files": [ "libblastjni.so" ],
-        "shuffle_reduceLocality_enabled": "false",
-        "scheduler_fair": "false",
-        "with_locality": "true",
         "num_executors": NUM_EXECUTORS,
-        "num_executor_cores": 1,
-        "executor_memory": "1G",
-        "locality_wait": "30s",
-        "parallel_jobs": 1
-    },
-
-    "log":
-    {
-        "log_port": 10011,
-        "pref_loc": "false",
-        "part_prep": "true"
+        "num_executor_cores": 1
     }
 }
 END
