@@ -959,6 +959,8 @@ static std::vector<ncbi::blast::SFlatHSP> iterate_HSPs_nojni( std::vector< Blast
                     = hsp_list->hsp_array[h]->subject.frame;
                 flathsp.subject_gapped_start
                     = hsp_list->hsp_array[h]->subject.gapped_start;
+
+                retarray.push_back(flathsp);
             }
         }
     }
@@ -1030,6 +1032,8 @@ ncbi::blast::TIntermediateAlignments searchandtb(std::string query,
     }
 
     ncbi::blast::TIntermediateAlignments alignments;
+
+    fprintf(stderr, "Ignoring top_n_traceback=%d\n", top_n_traceback);
 
     // FIX: top_n_traceback
 

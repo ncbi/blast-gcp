@@ -30,8 +30,9 @@
 
     "spark" :
     {
-        "parallel_jobs": 20,
-        "num_executors" : 275,
+        "log_level" : "ERROR",
+        "parallel_jobs": 10,
+        "num_executors" : 1800,
         "num_executor_cores" : 16
     }
 }

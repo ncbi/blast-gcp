@@ -90,6 +90,8 @@ int main( int argc, char * argv[] )
 
         fprintf(stderr,"dbloc is %s\n", dbloc);
         auto alignments=searchandtb(query, std::string(dbloc), program, params, top_n_prelim, top_n_traceback );
+        fprintf(stderr,"Got back %zu for %s\n", alignments.size(), dbloc);
+        //if (alignments.size()>0) return 0;
     }
 }
 
