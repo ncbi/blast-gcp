@@ -343,6 +343,8 @@ public class BLAST_SETTINGS_READER
             conf.set( "spark.scheduler.mode", "FAIR" );
             conf.set( "spark.scheduler.allocation.file", "./pooles.xml" );
         }
+
+        conf.set( "spark.yarn.executor.memoryOverhead", "1024" );
         return conf;
     }
 }
