@@ -35,8 +35,8 @@ function config()
     # FIX: Until we can guarantee DB pinning or implement LRU:
     #DISK_PER_WORKER=$((DB_SPACE + 5))
 
-    # JVMS ~ 1GB per executor, plus 2GB overhead, plus cache for DB
-    RAM_PER_WORKER=$(( (1 * CORES_PER_WORKER + 2 + DB_SPACE_PER_WORKER)*1024 ))
+    # JVMS ~ 2GB per executor, plus 2GB overhead, plus cache for DB
+    RAM_PER_WORKER=$(( (2 * CORES_PER_WORKER + 2 + DB_SPACE_PER_WORKER)*1024 ))
 
     MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
     MAX_RAM=$((CORES_PER_WORKER * 6656)) # 1024 * 6.5
@@ -171,7 +171,7 @@ CMD="gcloud beta dataproc --region us-east4 \
 echo "Command is: $CMD"
 echo
 EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
-echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
+#echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
 echo
 read -p "Press enter to start this cluster"
 

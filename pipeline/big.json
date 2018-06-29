@@ -31,9 +31,10 @@
     "spark" :
     {
         "log_level" : "ERROR",
+        "locailty_wait" : "3s",
         "parallel_jobs": 10,
-        "num_executors" : 1800,
-        "executor_memory" : "4G",
-        "num_executor_cores" : 16
+        "num_executors" : 2500,
+        "executor_memory" : "1G",
+        "num_executor_cores" : 1
     }
 }

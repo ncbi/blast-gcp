@@ -176,7 +176,7 @@ public class BLAST_LIB
             BLAST_HSP_LIST[] ret = prelim_search( query, part.db_spec, req.program, req.params, req.top_n_prelim );
 
             long finishtime = System.currentTimeMillis();
-            log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms.");
+            log("INFO", "jni_prelim_search returned in " + (finishtime - starttime) + " ms." + " for query=" + query + " ,db_spec=" + part.db_spec);
             log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
             int hspcnt = 0;
             for ( BLAST_HSP_LIST hspl : ret )
