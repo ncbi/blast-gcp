@@ -32,7 +32,7 @@
     {
         "log_level" : "ERROR",
         "locailty_wait" : "3s",
-        "parallel_jobs": 10,
+        "parallel_jobs": 5,
         "num_executors" : 2500,
         "executor_memory" : "1G",
         "num_executor_cores" : 1
