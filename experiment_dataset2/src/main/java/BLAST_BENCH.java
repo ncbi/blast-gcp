@@ -38,7 +38,7 @@ public final class BLAST_BENCH implements Serializable {
 
     public static void main(final String[] args) throws Exception {
         final String location =
-            "."; // /panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
+            "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
 
         for (int arg = 0; arg != args.length; ++arg) {
                     int max_part=0;
@@ -89,7 +89,7 @@ public final class BLAST_BENCH implements Serializable {
                     for (int part_num=0; part_num != max_part; ++part_num)
                     {
                         BLAST_PARTITION partitionobj = new BLAST_PARTITION(location, db, part_num, true);
-                        System.out.println(partitionobj.toString());
+                        System.out.println("partobj is " + partitionobj.toString());
 
                         BLAST_HSP_LIST[] search_res =
                             blaster.jni_prelim_search(partitionobj, requestobj, "DEBUG");

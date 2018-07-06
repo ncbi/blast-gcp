@@ -1,6 +1,6 @@
 #!/bin/bash
 
-renice +5 -p $$
+renice +19 -p $$
 
 MAXJOBS=24
 
@@ -18,6 +18,6 @@ for test in $TESTS; do
     j=`jobs | wc -l`
     while [ $j -ge $MAXJOBS ]; do
         j=`jobs | wc -l`
-        sleep 1
+        sleep 0.5
     done
 done
