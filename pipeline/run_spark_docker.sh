@@ -54,11 +54,14 @@ INI=$(cat <<-END
     {
         "asn1":
         {
-            "bucket": "RESULTBUCKET"
+            "bucket": "RESULTBUCKET",
+            "file": "%s/seq-annot.asn",
+            "gs_or_hdfs": "gs"
         },
         "status":
         {
-            "bucket": "RESULTBUCKET"
+            "bucket"  : "RESULTBUCKET",
+            "file" : "%s/status.txt"
         }
     },
 
