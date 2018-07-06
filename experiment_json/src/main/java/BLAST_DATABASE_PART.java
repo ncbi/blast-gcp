@@ -31,7 +31,7 @@ import java.net.InetAddress;
 class BLAST_DATABASE_PART implements Serializable
 {
     public final Integer nr;
-    public final String db_spec;
+    public String db_spec;
     public String worker_name;
     public final CONF_VOLUME volume;
 
