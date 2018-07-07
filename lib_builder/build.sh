@@ -255,6 +255,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
 fi
 
 line
+set -o errexit
 echo "Running tests..."
 echo "  Testing JNI function signatures"
 md5sum -c signatures.md5 > /dev/null
@@ -273,12 +274,13 @@ fi
 ./blast_json traceback blast_json.traceback.json > blast_json.traceback.result 2>/dev/null
 cmp blast_json.traceback.result blast_json.traceback.expected
 if [[ $? -ne 0 ]]; then
-    sdiff -w 70 blast_json.traceback.result blast_json.traceback.expected
+    sdiff -s -w 70 blast_json.traceback.result blast_json.traceback.expected
     echo "Testing of blast_json failed"
     exit 1
 fi
 
 echo "  Testing blast_json OK"
+set +errexit
 
 
 #if [ "$BUILDENV" = "google" ]; then
