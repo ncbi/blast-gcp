@@ -27,5 +27,5 @@ SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
     --labels owner=${deploy_user},deploy_id=${deploy_id} \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
-    --files dbs.json,libblastjni.so,${INI_JSON} -- ${INI_JSON}
+    --files /etc/blast/dbs.json,libblastjni.so,${INI_JSON} -- ${INI_JSON}
 
