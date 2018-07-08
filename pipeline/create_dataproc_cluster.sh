@@ -8,11 +8,18 @@ Required variables from environment and/or ini:
     project
     region
     zone
+    labels
     deploy_id
     deploy_user
-    deploy_gcs_url
     blast_dataproc_cluster_name
-    blast_dataproc_cluster_max_age
+    master_machine_type
+    master_boot_disk_size
+    num_workers
+    worker_machine_type
+    worker_boot_disk_size
+    num_preemptible_workers
+    max_age
+    image_version
 "
 
 [ $# -eq 1 ] || { echo ${usage} && exit 1; }
@@ -35,7 +42,7 @@ checkvar=${num_workers?"${usage}"}
 checkvar=${worker_machine_type?"${usage}"}
 checkvar=${worker_boot_disk_size?"${usage}"}
 checkvar=${num_preemptible_workers?"${usage}"}
-checkvar=${blast_dataproc_cluster_max_age?"${usage}"}
+checkvar=${max_age?"${usage}"}
 checkvar=${image_version?"${usage}"}
 
 set +e
@@ -58,7 +65,7 @@ else
         --labels ${labels} \
         --region ${region} \
         --zone ${zone} \
-        --max-age=${blast_dataproc_cluster_max_age} \
+        --max-age=${max_age} \
         --tags ${blast_dataproc_cluster_name} \
         --image-version ${image_version} \
         --initialization-action-timeout 30m \
