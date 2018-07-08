@@ -7,4 +7,13 @@
 *.md
 !README*.md
 !libblastjni.so
-
+dbs*.json
+ini*.json
+big.json
+run_spark.sh
+pom.xml
+pooles.xml
+make_jar.sh
+CMDS
+*.txt
+google_connector
