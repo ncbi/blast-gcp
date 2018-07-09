@@ -7,6 +7,7 @@
 *.md
 !README*.md
 !libblastjni.so
+!sparkblast.jar
 dbs*.json
 ini*.json
 big.json

@@ -1,19 +1,13 @@
 # gcloud container builds submit --config cloudbuild.yaml --substitutions=_PATH=.,_VERSION=dev-20180612 .
 
 steps:
-- name: gcr.io/cloud-builders/gsutil
-  args: ['cp', '${_SPARKBLAST_JAR}', '${_PATH}/sparkblast.jar']
-
-# build docker container once all packages have been downloaded
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '--tag', 'us.gcr.io/$PROJECT_ID/${_IMAGE_NAME}:${COMMIT_SHA}${_VERSION}', '${_PATH}' ]
 
 substitutions:
-  # path from the repo root
   _PATH: pipeline
   _IMAGE_NAME: blast-pipeline
   _VERSION:
-  _SPARKBLAST_JAR: "gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.20180705.jar"
 
 images:
   - 'us.gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${COMMIT_SHA}${_VERSION}'
