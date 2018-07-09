@@ -44,7 +44,7 @@ public final class BLAST_TEST implements Serializable {
 
             final String jsonstr = new String(Files.readAllBytes(Paths.get(jsonfile)));
 
-            BLAST_LIB blaster = new BLAST_LIB("");
+            BLAST_LIB blaster = new BLAST_LIB("../lib_builder/blast_json");
             if (blaster == null) {
                 System.out.println("NULL blaster library");
             }
@@ -75,8 +75,8 @@ public final class BLAST_TEST implements Serializable {
                     System.out.println(requestobj.toString());
                     CONF_VOLUME cv = new CONF_VOLUME(db, "", "");
                     BLAST_DATABASE_PART partitionobj = new BLAST_DATABASE_PART(613, cv, location);
-                    //partitionobj.db_spec=location+db+"456";
-                    partitionobj.db_spec=String.format("%s/%s.%d", location, db, 613);
+                    // partitionobj.db_spec=location+db+"456";
+                    partitionobj.db_spec = String.format("%s/%s.%d", location, db, 613);
                     System.out.println(partitionobj.toString());
 
                     BLAST_HSP_LIST[] search_res =

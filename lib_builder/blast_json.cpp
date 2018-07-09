@@ -179,7 +179,7 @@ int main( int argc, char * argv[] )
     if ( argc != 3 )
     {
         std::cerr << "Usage: " << argv[0]
-                  << "{prelim_search|traceback} query.json\n";
+            << "{prelim_search|traceback} query.json\n";
         return 1;
     }
 
@@ -273,8 +273,9 @@ int main( int argc, char * argv[] )
             hsps.push_back( hsp );
         }
         json result;
+        result["protocol"] = "prelim-json-1.0";
         result["blast_hsp_list"] = hsps;
-        std::cout << result.dump() << std::endl;
+        std::cout << result.dump(2) << std::endl;
     }
     else if ( traceback )
     {
@@ -320,7 +321,7 @@ int main( int argc, char * argv[] )
         fprintf( stderr, "Calling TracebackSearch with %zu flat HSPs\n",
                  flat_hsp_list.size() );
         int result = ncbi::blast::TracebackSearch(
-            query, db_location, program, params, flat_hsp_list, alignments );
+                                                  query, db_location, program, params, flat_hsp_list, alignments );
         fprintf( stderr,
                  "Called  TracebackSearch, returned %d, got %zu alignments\n",
                  result, alignments.size() );
@@ -329,7 +330,7 @@ int main( int argc, char * argv[] )
         for ( size_t i = 0; i != alignments.size(); ++i )
         {
             struct blast_tb_list btbl;
-            btbl.oid         = -1;
+            btbl.oid         = flat_hsp_list[i].oid;
             btbl.evalue      = alignments[i].first;
             size_t blob_size = alignments[i].second.size();
             for ( size_t b = 0; b != blob_size; ++b )
@@ -343,13 +344,15 @@ int main( int argc, char * argv[] )
         for ( size_t i = 0; i != tbl.size(); ++i )
         {
             json jtbl;
+            jtbl["oid"]    = tbl[i].oid;
             jtbl["evalue"]    = tbl[i].evalue;
             jtbl["asn1_blob"] = tbl[i].asn1_blob;
             jtbs.push_back( jtbl );
         }
         json jtblist;
+        jtblist["protocol"] = "prelim-traceback-1.0";
         jtblist["blast_tb_list"] = jtbs;
-        std::cout << jtblist.dump() << std::endl;
+        std::cout << jtblist.dump(2) << std::endl;
     }
 
     return 0;

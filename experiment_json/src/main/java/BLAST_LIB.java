@@ -22,10 +22,10 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.File;
-import java.io.PrintWriter;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import org.apache.log4j.Level;
@@ -33,11 +33,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class BLAST_LIB {
-    public BLAST_LIB(final String libname) {
+    public BLAST_LIB(final String iblast_json) {
+        blast_json = iblast_json;
         processID = ManagementFactory.getRuntimeMXBean().getName().split("@", 2)[0];
         logLevel = Level.INFO;
     }
 
+    private static String blast_json;
     private static Level logLevel;
     private static String processID;
 
@@ -76,36 +78,33 @@ public class BLAST_LIB {
             String query = req.query_seq;
 
             JSONObject jsonout = new JSONObject();
-            jsonout.put("protocol", "1.0");
+            jsonout.put("protocol", "prelim-json-1.0");
             jsonout.put("query_seq", query);
             jsonout.put("db_location", part.db_spec);
             jsonout.put("program", req.program);
             jsonout.put("blast_params", req.params);
             jsonout.put("top_N_prelim", req.top_n_prelim);
 
-            File tempFile = File.createTempFile("blast-", ".json");
+            File tempFile = File.createTempFile("blast-prelim-", ".json");
             String tempFileName = tempFile.getCanonicalPath();
             log("INFO", "JSON file will be " + tempFileName);
             try (PrintWriter out = new PrintWriter(tempFileName)) {
-                out.println(jsonout.toString());
+                out.println(jsonout.toString(2));
             }
             // tempFile.deleteOnExit();
 
-            System.out.println("JSON is" + jsonout.toString());
-            BLAST_HSP_LIST[] ret = new BLAST_HSP_LIST[0];
-
             long starttime = System.currentTimeMillis();
 
-            ProcessBuilder builder=new ProcessBuilder("../lib_builder/blast_json", "prelim_search", tempFileName);
+            ProcessBuilder builder = new ProcessBuilder(blast_json, "prelim_search", tempFileName);
             builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
             Process process = builder.start();
 
-            StringBuilder pout=new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream()))) {
+            StringBuilder pout = new StringBuilder();
+            try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
                 reader.lines().forEach(line -> pout.append(line + "\n"));
-                        }
+                    }
 
             process.waitFor();
             long finishtime = System.currentTimeMillis();
@@ -129,27 +128,27 @@ public class BLAST_LIB {
                     + " ,db_spec="
                     + part.db_spec);
 
-            log("INFO", "Returned string was: " + pout.toString());
+            // log("INFO", "Returned string was: " + pout.toString());
             JSONObject jsonin = new JSONObject(pout.toString());
-            log("INFO", "Returned JSON was: " + jsonin.toString());
-            JSONArray jhsplarr=jsonin.getJSONArray("blast_hsp_list");
-            ArrayList<BLAST_HSP_LIST> alhsp=new ArrayList<>();
+            log("INFO", "Returned JSON was: " + jsonin.toString(2));
+            JSONArray jhsplarr = jsonin.getJSONArray("blast_hsp_list");
+            ArrayList<BLAST_HSP_LIST> alhsp = new ArrayList<>();
 
-            for (int i=0; i!=jhsplarr.length(); ++i)
-            {
-                JSONObject j=jhsplarr.getJSONObject(i);
-                int max_score=j.getInt("max_score");
-                int oid=j.getInt("oid");
-                JSONArray jblob=j.getJSONArray("hsp_blob");
-                byte[] blob=new byte[jblob.length()];
-                for (int b=0; b!= jblob.length(); ++i)
-                {
-                    blob[b]=(byte)jblob.getInt(b);
+            for (int i = 0; i != jhsplarr.length(); ++i) {
+                JSONObject j = jhsplarr.getJSONObject(i);
+                int max_score = j.getInt("max_score");
+                int oid = j.getInt("oid");
+                JSONArray jblob = j.getJSONArray("hsp_blob");
+                byte[] blob = new byte[jblob.length()];
+                for (int b = 0; b != jblob.length(); ++b) {
+                    blob[b] = (byte) jblob.getInt(b);
                 }
                 log("INFO", String.format("idx %d, oid=%d, max_score=%d", i, oid, max_score));
-                BLAST_HSP_LIST hspl=new BLAST_HSP_LIST(oid, max_score, blob);
+                BLAST_HSP_LIST hspl = new BLAST_HSP_LIST(oid, max_score, blob);
                 alhsp.add(hspl);
             }
+
+            BLAST_HSP_LIST[] ret = alhsp.toArray(new BLAST_HSP_LIST[0]);
 
             log("INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:");
 
@@ -160,28 +159,107 @@ public class BLAST_LIB {
             final BLAST_HSP_LIST[] hspl,
             final BLAST_DATABASE_PART part,
             final BLAST_REQUEST req,
-            final String tblogLevel) {
+            final String tblogLevel)
+            throws Exception {
 
-        BLAST_LIB.logLevel = Level.toLevel(tblogLevel);
-        log("INFO", "Java jni_traceback called with");
-        log("INFO", "  query_seq : " + req.query_seq);
-        log("INFO", "  db_spec   : " + part.db_spec);
+            BLAST_LIB.logLevel = Level.toLevel(tblogLevel);
+            log("INFO", "Java jni_traceback called with");
+            log("INFO", "  query_seq : " + req.query_seq);
+            log("INFO", "  db_spec   : " + part.db_spec);
+            log("INFO", "  hspls     : " + Integer.toString(hspl.length));
 
-        String query;
-        long starttime = System.currentTimeMillis();
-        query = req.query_seq;
+            String query = req.query_seq;
+            long starttime = System.currentTimeMillis();
 
-        BLAST_TB_LIST[] ret =
-            new BLAST_TB_LIST[0]; // = traceback( hspl, query, part.db_spec, req.program, req.params );
-        long finishtime = System.currentTimeMillis();
+            JSONObject jsonout = new JSONObject();
+            jsonout.put("protocol", "traceback-json-1.0");
+            jsonout.put("query_seq", query);
+            jsonout.put("db_location", part.db_spec);
+            jsonout.put("program", req.program);
+            jsonout.put("blast_params", req.params);
+            jsonout.put("top_N_traceback", req.top_n_traceback);
 
-        log("INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms.");
-        log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs:");
+            JSONArray jhsplarr = new JSONArray();
+            for (int i = 0; i != hspl.length; ++i) {
+                JSONObject j = new JSONObject();
+                j.put("max_score", hspl[i].max_score);
+                j.put("oid", hspl[i].oid);
+                JSONArray jblob = new JSONArray();
+                for (int b = 0; b != hspl[i].hsp_blob.length; ++b) {
+                    jblob.put(b, hspl[i].hsp_blob[b]);
+                }
+                j.put("hsp_blob", jblob);
+                jhsplarr.put(i, j);
+            }
 
-        for (BLAST_TB_LIST t : ret) {
-            t.top_n = req.top_n_traceback;
-        }
+            jsonout.put("blast_hsp_list", jhsplarr);
 
-        return ret;
+            File tempFile = File.createTempFile("blast-traceback-", ".json");
+            String tempFileName = tempFile.getCanonicalPath();
+            log("INFO", "JSON file will be " + tempFileName);
+            try (PrintWriter out = new PrintWriter(tempFileName)) {
+                out.println(jsonout.toString(2));
+            }
+            // tempFile.deleteOnExit();
+
+            ProcessBuilder builder = new ProcessBuilder(blast_json, "traceback", tempFileName);
+            builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
+            Process process = builder.start();
+
+            StringBuilder pout = new StringBuilder();
+            try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+
+                reader.lines().forEach(line -> pout.append(line + "\n"));
+                    }
+
+            process.waitFor();
+            long finishtime = System.currentTimeMillis();
+            if (finishtime - starttime > 50000)
+                log(
+                        "WARN",
+                        "LONG jni_treacback returned in "
+                        + (finishtime - starttime)
+                        + " ms."
+                        + " for query="
+                        + query
+                        + " ,db_spec="
+                        + part.db_spec);
+            log(
+                    "INFO",
+                    "jni_traceback returned in "
+                    + (finishtime - starttime)
+                    + " ms."
+                    + " for query="
+                    + query
+                    + " ,db_spec="
+                    + part.db_spec);
+
+            // log("INFO", "Returned string was: " + pout.toString());
+            JSONObject jsonin = new JSONObject(pout.toString());
+            log("INFO", "Returned JSON was: " + jsonin.toString(2));
+            JSONArray jtblarr = jsonin.getJSONArray("blast_tb_list");
+            ArrayList<BLAST_TB_LIST> altbl = new ArrayList<>();
+
+            for (int i = 0; i != jtblarr.length(); ++i) {
+                JSONObject j = jtblarr.getJSONObject(i);
+                double evalue = j.getDouble("evalue");
+                int oid = j.getInt("oid");
+                JSONArray jblob = j.getJSONArray("asn1_blob");
+                byte[] blob = new byte[jblob.length()];
+                for (int b = 0; b != jblob.length(); ++b) {
+                    blob[b] = (byte) jblob.getInt(b);
+                }
+                log("INFO", String.format("idx %d, evalue=%f", i, evalue));
+                BLAST_TB_LIST tbl = new BLAST_TB_LIST(oid, evalue, blob);
+                tbl.top_n = req.top_n_traceback;
+                altbl.add(tbl);
+            }
+
+            BLAST_TB_LIST[] ret = altbl.toArray(new BLAST_TB_LIST[0]);
+
+            log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs:");
+
+            return ret;
             }
 }
