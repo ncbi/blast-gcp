@@ -18,3 +18,4 @@ make_jar.sh
 CMDS
 *.txt
 google_connector
+src
