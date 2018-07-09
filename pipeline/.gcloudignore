@@ -8,8 +8,8 @@
 !README*.md
 !libblastjni.so
 !sparkblast.jar
-dbs*.json
-ini*.json
+*dbs*.json
+*ini*.json
 big.json
 run_spark.sh
 pom.xml
