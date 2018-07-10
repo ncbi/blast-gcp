@@ -37,6 +37,7 @@ import org.apache.spark.api.java.JavaRDD;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.rdd.RDD;
+import org.apache.spark.SparkFiles;
 import org.apache.spark.util.LongAccumulator;
 
 
@@ -114,7 +115,11 @@ class BLAST_JOB extends Thread
 
             if ( !req.skip_jni )
             {
-                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( LIB_N.getValue(), part, log );
+                String blast_json_path=SparkFiles.get("blast_json");
+                System.out.println("blast_json path is " + blast_json_path);
+
+
+                BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib( blast_json_path, part, log );
                 if ( blaster != null )
                 {
                     try
