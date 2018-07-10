@@ -29,23 +29,24 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-class BLAST_COMM extends Thread
+class BLAST_LOG_RECEIVER extends Thread
 {
     private final BLAST_STATUS status;
-    private final BLAST_SETTINGS settings;
+    private final BLAST_LOG_WRITER writer;
+    private int port;
 
-    public BLAST_COMM( BLAST_STATUS a_status,
-                       final BLAST_SETTINGS a_settings )
+    public BLAST_LOG_RECEIVER( BLAST_STATUS a_status, int a_port, final BLAST_LOG_WRITER a_writer )
     {
         this.status = a_status;
-        this.settings = a_settings;
+        this.port = a_port;
+		this.writer = a_writer;
     }
 
     @Override public void run()
     {
         try
         {
-            ServerSocket ss = new ServerSocket( settings.comm_port );
+            ServerSocket ss = new ServerSocket( port );
 
             while( status.is_running() )
             {
@@ -53,7 +54,7 @@ class BLAST_COMM extends Thread
                 {
                     ss.setSoTimeout( 500 );
                     Socket client_socket = ss.accept();
-                    BLAST_COMM_CLIENT client = new BLAST_COMM_CLIENT( status, client_socket );
+                    BLAST_LOG_RECEIVER_CLIENT client = new BLAST_LOG_RECEIVER_CLIENT( status, client_socket, writer );
                     client.start();
                 }
                 catch ( Exception e )
@@ -66,7 +67,8 @@ class BLAST_COMM extends Thread
         }
         catch ( Exception e )
         {
-            System.out.println( String.format( "BLAST_COMM: %s", e ) );
+            System.out.println( String.format( "BLAST_LOG_RECEIVER: %s", e ) );
         }
     }
 }
+

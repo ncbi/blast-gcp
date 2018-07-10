@@ -57,7 +57,7 @@
 
     "log" :
     {
-        "host" : "",
+        "host" : "blast-raetzw-m",
         "port" : 10011,
         "request" : true,
         "start" : false,

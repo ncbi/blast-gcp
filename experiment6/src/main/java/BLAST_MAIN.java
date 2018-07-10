@@ -26,8 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-//import java.io.PrintStream;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
@@ -36,9 +34,59 @@ import org.apache.spark.broadcast.Broadcast;
 public final class BLAST_MAIN
 {
 
-    /* the handling of all user-interface ( console as well as socket-communication is centralized here */
+	private static void handle_skip( final BLAST_STATUS status, final CMD_Q_ENTRY e )
+	{
+        String[] splited = e.line.split( "\\s+" );
+        if ( splited[ 1 ].equals( "on" ) )
+        {
+            status.set_skip_jni( true );
+            e.stream.println( "skip-jni: on" );
+        }
+        else if ( splited[ 1 ].equals( "off" ) )
+        {
+            status.set_skip_jni( false );
+            e.stream.println( "skip-jni: off" );
+        }
+        else
+        {
+            e.stream.printf( "unknown: '%s'\n", e.line );
+        }
+	}
 
+	private static void handle_log( final BLAST_LOG_WRITER log_writer, final CMD_Q_ENTRY e )
+	{
+        String[] splited = e.line.split( "\\s+" );
+        if ( splited[ 1 ].equals( "on" ) )
+        {
+			log_writer.console_out( true );
+            e.stream.println( "log: on" );
+        }
+        else if ( splited[ 1 ].equals( "off" ) )
+        {
+			log_writer.console_out( false );
+            e.stream.println( "log: off" );
+        }
+        else if ( splited[ 1 ].equals( "file" ) )
+        {
+			log_writer.set_filename( splited[ 2 ] );
+            e.stream.println( String.format( "log-file: '%s'", log_writer.get_filename() ) );
+        }
+        else if ( splited[ 1 ].equals( "status" ) )
+        {
+			if ( log_writer.console_status() )
+            	e.stream.println( String.format( "log-console: on, log-file: '%s'", log_writer.get_filename() ) );
+			else
+            	e.stream.println( String.format( "log-console: off, log-file: '%s'", log_writer.get_filename() ) );
+        }
+        else
+        {
+            e.stream.printf( "unknown: '%s'\n", e.line );
+        }
+	}
+
+    /* the handling of all user-interface ( console as well as socket-communication is centralized here */
     public static String main_spark_loop( final BLAST_STATUS status,
+										  final BLAST_LOG_WRITER log_writer,
                                           final BLAST_JOBS jobs,
                                           int top_n,
                                           final String ini_file )
@@ -86,23 +134,9 @@ public final class BLAST_MAIN
                             e.stream.println( "another list is processed right now" );
                     }
                     else if ( e.line.startsWith( "skip" ) )
-                    {
-                        String[] splited = e.line.split( "\\s+" );
-                        if ( splited[ 1 ].equals( "on" ) )
-                        {
-                            status.set_skip_jni( true );
-                            e.stream.println( "skip-jni: on" );
-                        }
-                        else if ( splited[ 1 ].equals( "off" ) )
-                        {
-                            status.set_skip_jni( false );
-                            e.stream.println( "skip-jni: off" );
-                        }
-                        else
-                        {
-                            e.stream.printf( "unknown: '%s'\n", e.line );
-                        }
-                    }
+						handle_skip( status, e );
+					else if ( e.line.startsWith( "log" ) )
+						handle_log( log_writer, e );
                 }
                 else
                 {
@@ -159,6 +193,14 @@ public final class BLAST_MAIN
             BLAST_COMM comm = new BLAST_COMM( status, settings );
             comm.start();
 
+            // writer for the log-messages from the workers
+			BLAST_LOG_WRITER log_writer = new BLAST_LOG_WRITER( status );
+			log_writer.start();
+
+            // reader for the log-messages from the workers
+            BLAST_LOG_RECEIVER log_receiver = new BLAST_LOG_RECEIVER( status, settings.log.port, log_writer );
+            log_receiver.start();
+
             // reader for pubsub
             BLAST_PUBSUB pubsub = null;
             if ( settings.use_pubsub_source )
@@ -188,10 +230,12 @@ public final class BLAST_MAIN
                 System.out.println( "spark-blast started..." );
 
                 /* ************************************************ */
-                res = main_spark_loop( status, jobs, settings.top_n, ini_file );
+                res = main_spark_loop( status, log_writer, jobs, settings.top_n, ini_file );
                 /* ************************************************ */
 
                 jobs.stop_all_jobs();
+				log_receiver.join();
+				log_writer.join();
                 comm.join();
                 cons.join();
 

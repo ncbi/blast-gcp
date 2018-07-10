@@ -26,47 +26,42 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
-class BLAST_COMM extends Thread
+class BLAST_LOG_RECEIVER_CLIENT extends Thread
 {
     private final BLAST_STATUS status;
-    private final BLAST_SETTINGS settings;
+    private final BLAST_LOG_WRITER writer;
+    private final Socket socket;
 
-    public BLAST_COMM( BLAST_STATUS a_status,
-                       final BLAST_SETTINGS a_settings )
+    public BLAST_LOG_RECEIVER_CLIENT( BLAST_STATUS a_status, Socket a_socket, final BLAST_LOG_WRITER a_writer )
     {
         this.status = a_status;
-        this.settings = a_settings;
+        this.socket = a_socket;
+		this.writer = a_writer;
     }
-
+    
     @Override public void run()
     {
         try
         {
-            ServerSocket ss = new ServerSocket( settings.comm_port );
+            socket.setTcpNoDelay( true );
+            BufferedReader in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
+            String input;
 
-            while( status.is_running() )
+            while( status.is_running() && ( ( input = in.readLine() ) != null ) ) 
             {
-                try
-                {
-                    ss.setSoTimeout( 500 );
-                    Socket client_socket = ss.accept();
-                    BLAST_COMM_CLIENT client = new BLAST_COMM_CLIENT( status, client_socket );
-                    client.start();
-                }
-                catch ( Exception e )
-                {
-                    // do nothing if the loop times out...
-                }
+				writer.write( input.trim() );
             }
-
-            ss.close();
+            socket.close();
         }
         catch ( Exception e )
         {
-            System.out.println( String.format( "BLAST_COMM: %s", e ) );
+            System.out.println( String.format( "BLAST_LOG_RECEIVER_CLIENT: %s", e ) );
         }
     }
 }
+
