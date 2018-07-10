@@ -5,3 +5,4 @@ gov/
 Req*asn1
 output.*
 blast_worker
+blast_json

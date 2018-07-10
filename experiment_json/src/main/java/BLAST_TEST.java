@@ -49,63 +49,67 @@ public final class BLAST_TEST implements Serializable {
                 System.out.println("NULL blaster library");
             }
 
-            JSONObject json = new JSONObject(jsonstr);
-            try {
-                final String protocol = json.optString("protocol", "");
-                if ("1.0".equals(protocol)) {
-                    final String query_seq = json.getString("query_seq");
-                    final String blast_params = json.getString("blast_params");
-                    final String rid = json.getString("RID");
-                    final String program = json.getString("program");
-                    final String db_tag = json.getString("db_tag");
-                    final int top_n_prelim = json.getInt("top_N_prelim");
-                    final int top_n_traceback = json.getInt("top_N_traceback");
+            //final int partition=613;
+            for (int partition=613; partition !=614; ++partition)
+            {
 
-                    System.out.println(String.format("RID %s, db_tag %s", rid, db_tag));
+                JSONObject json = new JSONObject(jsonstr);
+                try {
+                    final String protocol = json.optString("protocol", "");
+                    if ("1.0".equals(protocol)) {
+                        final String query_seq = json.getString("query_seq");
+                        final String blast_params = json.getString("blast_params");
+                        final String rid = json.getString("RID");
+                        final String program = json.getString("program");
+                        final String db_tag = json.getString("db_tag");
+                        final int top_n_prelim = json.getInt("top_N_prelim");
+                        final int top_n_traceback = json.getInt("top_N_traceback");
 
-                    final String db = db_tag.substring(0, 6);
-                    BLAST_REQUEST requestobj = new BLAST_REQUEST();
-                    requestobj.id = rid;
-                    requestobj.query_seq = query_seq;
-                    requestobj.params = blast_params;
-                    requestobj.db = db;
-                    requestobj.top_n_prelim = top_n_prelim;
-                    requestobj.top_n_traceback = top_n_traceback;
-                    requestobj.program = program;
-                    System.out.println(requestobj.toString());
-                    CONF_VOLUME cv = new CONF_VOLUME(db, "", "");
-                    BLAST_DATABASE_PART partitionobj = new BLAST_DATABASE_PART(613, cv, location);
-                    // partitionobj.db_spec=location+db+"456";
-                    partitionobj.db_spec = String.format("%s/%s.%d", location, db, 613);
-                    System.out.println(partitionobj.toString());
+                        System.out.println(String.format("RID %s, db_tag %s", rid, db_tag));
 
-                    BLAST_HSP_LIST[] search_res =
-                        blaster.jni_prelim_search(partitionobj, requestobj, "DEBUG");
+                        final String db = db_tag.substring(0, 6);
+                        BLAST_REQUEST requestobj = new BLAST_REQUEST();
+                        requestobj.id = rid;
+                        requestobj.query_seq = query_seq;
+                        requestobj.params = blast_params;
+                        requestobj.db = db;
+                        requestobj.top_n_prelim = top_n_prelim;
+                        requestobj.top_n_traceback = top_n_traceback;
+                        requestobj.program = program;
+                        System.out.println(requestobj.toString());
+                        CONF_VOLUME cv = new CONF_VOLUME(db, "", "");
+                        BLAST_DATABASE_PART partitionobj = new BLAST_DATABASE_PART(partition, cv, location);
+                        partitionobj.db_spec = String.format("%s/%s.%d", location, db, partition);
+                        System.out.println(partitionobj.toString());
 
-                    if (search_res != null) {
-                        System.out.println(" prelim_search returned " + search_res.length + " HSP lists:");
-                        Gson gson = new Gson();
-                        String hspjson = gson.toJson(search_res);
-                        System.out.println("RID " + rid + " prelim_search JSON: " + hspjson);
+                        BLAST_HSP_LIST[] search_res =
+                            blaster.jni_prelim_search(partitionobj, requestobj, "DEBUG");
+
+                        if (search_res != null) {
+                            System.out.println(" prelim_search returned " + search_res.length + " HSP lists:");
+                            Gson gson = new Gson();
+                            String hspjson = gson.toJson(search_res);
+                            System.out.println("RID " + rid + " prelim_search JSON: " + hspjson);
+                        } else {
+                            System.out.println("NULL search_res");
+                        }
+
+                        BLAST_TB_LIST[] tb_res =
+                            blaster.jni_traceback(search_res, partitionobj, requestobj, "DEBUG");
+
+                        if (tb_res != null) {
+                            Gson gson = new Gson();
+                            String tbjson = gson.toJson(tb_res);
+                            System.out.println("RID " + rid + " traceback JSON:" + tbjson);
+                        } else {
+                            System.out.println("NULL asn1");
+                        }
                     } else {
-                        System.out.println("NULL search_res");
+                        System.out.println("Unknown JSON protocol: " + protocol);
                     }
-
-                    BLAST_TB_LIST[] tb_res =
-                        blaster.jni_traceback(search_res, partitionobj, requestobj, "DEBUG");
-
-                    if (tb_res != null) {
-                        Gson gson = new Gson();
-                        String tbjson = gson.toJson(tb_res);
-                        System.out.println("RID " + rid + " traceback JSON:" + tbjson);
-                    } else {
-                        System.out.println("NULL asn1");
-                    }
-                } else {
-                    System.out.println("Unknown JSON protocol: " + protocol);
+                } catch (Exception e) {
+                    System.out.println("JSON parsing error: " + e);
                 }
-            } catch (Exception e) {
-                System.out.println("JSON parsing error: " + e);
             }
         }
     }
