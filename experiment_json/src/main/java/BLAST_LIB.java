@@ -50,7 +50,9 @@ public class BLAST_LIB {
             long threadId = Thread.currentThread().getId();
 
             final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
-            System.err.println(level + " : " + newmsg.replace("\n",""));
+            System.err.println(level + " : " + newmsg
+                    .replace("\n"," ")
+                    .replace("\r"," "));
         } catch (Throwable threx) {
             {
                 System.err.println("ERROR Log throw");
@@ -264,7 +266,7 @@ public class BLAST_LIB {
 
             BLAST_TB_LIST[] ret = altbl.toArray(new BLAST_TB_LIST[0]);
 
-            log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs:");
+            log("INFO", "jni_traceback returned " + ret.length + " TB_LISTs.");
 
             return ret;
             }
