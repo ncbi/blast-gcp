@@ -129,7 +129,7 @@ class BLAST_JOB extends Thread
 
 						if ( log.job_start )
 						{
-							BLAST_SEND.send( log, String.format( "S,0,%s,%s", part.nr, req.id ) );
+							BLAST_SEND.send( log, String.format( "S 0 %s %s", part.volume.name, req.id ) );
 						}
 
                         BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, log.jni_log_level );
@@ -148,7 +148,7 @@ class BLAST_JOB extends Thread
 
 								if ( log.job_done )
 								{
-									BLAST_SEND.send( log, String.format( "D,%d,%s,%s", n_tb_results, part.nr, req.id ) );
+									BLAST_SEND.send( log, String.format( "D %d %s %s", n_tb_results, part.volume.name, req.id ) );
 								}
                             }
                             catch ( Exception e )
