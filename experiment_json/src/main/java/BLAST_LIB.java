@@ -107,6 +107,12 @@ public class BLAST_LIB {
                     }
 
             process.waitFor();
+            int exitval=process.exitValue();
+            if (exitval!=0)
+            {
+                log("ERROR", String.format("%s returned non-zero exit value %d", blast_json, exitval));
+            }
+
             long finishtime = System.currentTimeMillis();
             if (finishtime - starttime > 50000)
                 log(

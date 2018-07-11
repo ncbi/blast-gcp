@@ -341,7 +341,7 @@ line
     gcloud container builds submit \
         --project ncbi-sandbox-blast \
         --config ../pipeline/cloudbuild.yaml \
-        --substitutions=_PATH=.,_TAG=dev-$BUILDTAG .
+        --substitutions=_PATH=.,_TAG=dev-$BUILDTAG,_VERSION=$BUILDTAG .
 
 #fi
 

@@ -49,6 +49,7 @@
 #include <objects/seqset/Seq_entry.hpp>
 #include <pthread.h>
 #include <set>
+#include <signal.h>
 #include <sstream>
 #include <stdexcept>
 #include <stdio.h>
@@ -173,6 +174,10 @@ iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
     return retarray;
 }
 
+void sighandler(int signum)
+{
+    fprintf(stderr, "Received signal %d\n", signum);
+}
 
 int main( int argc, char * argv[] )
 {
@@ -193,7 +198,7 @@ int main( int argc, char * argv[] )
     else
     {
         fprintf( stderr, "Unknown function: %s\n", func );
-        return 1;
+        return 2;
     }
 
     const char *      jsonfname = argv[2];
@@ -208,6 +213,18 @@ int main( int argc, char * argv[] )
     std::string db_location = j["db_location"];
     std::string program     = j["program"];
     std::string params      = j["blast_params"];
+
+    struct sigaction new_action;
+
+    new_action.sa_handler=sighandler;
+    sigemptyset(&new_action.sa_mask);
+    new_action.sa_flags=0;
+    sigaction (SIGABRT, &new_action, NULL);
+    sigaction (SIGFPE, &new_action, NULL);
+    sigaction (SIGBUS, &new_action, NULL);
+    sigaction (SIGILL, &new_action, NULL);
+    sigaction (SIGSEGV, &new_action, NULL);
+    sigaction (SIGSYS, &new_action, NULL);
 
     if ( prelim )
     {
@@ -235,7 +252,7 @@ int main( int argc, char * argv[] )
                 if ( status == kBlastHSPStream_Error )
                 {
                     fprintf( stderr, "ERROR kBlastHSPStream_Error" );
-                    break;
+                    return 3;
                 }
 
                 if ( status != kBlastHSPStream_Success || !hsp_list )
