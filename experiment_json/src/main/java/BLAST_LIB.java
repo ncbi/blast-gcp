@@ -151,7 +151,7 @@ public class BLAST_LIB {
                 for (int b = 0; b != jblob.length(); ++b) {
                     blob[b] = (byte) jblob.getInt(b);
                 }
-                log("INFO", String.format("idx %d, oid=%d, max_score=%d", i, oid, max_score));
+                log("INFO", String.format("idx %d, oid=%d, max_score=%d, blob_size=%d", i, oid, max_score, blob.length));
                 BLAST_HSP_LIST hspl = new BLAST_HSP_LIST(oid, max_score, blob);
                 alhsp.add(hspl);
             }
@@ -258,7 +258,7 @@ public class BLAST_LIB {
                 for (int b = 0; b != jblob.length(); ++b) {
                     blob[b] = (byte) jblob.getInt(b);
                 }
-                log("INFO", String.format("idx %d, evalue=%f", i, evalue));
+                log("INFO", String.format("idx %d, evalue=%f, asn1_blob_size=%d", i, evalue, blob.length));
                 BLAST_TB_LIST tbl = new BLAST_TB_LIST(oid, evalue, blob);
                 tbl.top_n = req.top_n_traceback;
                 altbl.add(tbl);
