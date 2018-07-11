@@ -1,4 +1,5 @@
 spark_blast.jar
+sparkblast.jar
 libblastjni*.so
 target
 bigdata-interop/

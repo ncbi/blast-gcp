@@ -70,7 +70,7 @@ int main( int argc, char * argv[] )
 
     std::string db=std::string(db_spec,0,2);
     std::string location="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
-    for (size_t i=0; i!=887; ++i)
+    for (size_t i=0; i!=886; ++i)
     {
         char dbloc[1024];
 
@@ -90,6 +90,8 @@ int main( int argc, char * argv[] )
 
         fprintf(stderr,"dbloc is %s\n", dbloc);
         auto alignments=searchandtb(query, std::string(dbloc), program, params, top_n_prelim, top_n_traceback );
+        fprintf(stderr,"Got back %zu for %s\n", alignments.size(), dbloc);
+        //if (alignments.size()>0) return 0;
     }
 }
 

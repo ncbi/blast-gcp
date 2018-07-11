@@ -31,5 +31,15 @@
     {
         "num_executors" : 15,
         "num_executor_cores" : 2
+    },
+
+    "log" :
+    {
+        "port" : 10011,
+        "request" : true,
+        "start" : true,
+        "done" : true,
+        "final" : true
     }
+
 }

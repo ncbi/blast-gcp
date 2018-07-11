@@ -38,12 +38,15 @@ public class BLAST_SEND
 
     private PrintStream ps;
     private String localName;
+    private String executorName;
+	private long start_milisecs;
 
     private BLAST_SEND( final String host, final int port )
     {
         try
         {
-            localName = java.net.InetAddress.getLocalHost().getHostName();
+            localName = "W" + java.net.InetAddress.getLocalHost().getHostName().replaceAll( "\\D+","" );
+			executorName = SparkEnv.get().executorId();
             Socket socket = new Socket( host, port );
             socket.setTcpNoDelay( true );
             ps = new PrintStream( socket.getOutputStream() );
@@ -74,7 +77,10 @@ public class BLAST_SEND
         try
         {
             if ( ps != null )
-                ps.printf( "[%s|%s] %s\n", localName, SparkEnv.get().executorId(), msg );
+			{
+				long milliseconds = System.currentTimeMillis();
+				ps.printf( "%d,%s,%s,%s\n", milliseconds, localName, executorName, msg );
+			}
         }
         catch ( Exception e )
         {

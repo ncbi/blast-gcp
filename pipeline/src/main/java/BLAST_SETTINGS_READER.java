@@ -343,6 +343,7 @@ public class BLAST_SETTINGS_READER
             conf.set( "spark.scheduler.mode", "FAIR" );
             conf.set( "spark.scheduler.allocation.file", "./pooles.xml" );
         }
+
         return conf;
     }
 }

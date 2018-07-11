@@ -186,6 +186,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     if [ "1" == "1" ]; then
         echo "Running static analysis on C++ code"
         cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
         scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
         echo "Static analysis on C++ code complete"
     fi
@@ -194,15 +195,94 @@ if [ "$BUILDENV" = "ncbi" ]; then
     $GPPCOMMAND
     cp libblastjni.so ../pipeline
 
+    g++ \
+    blast_json.cpp \
+    -std=gnu++11 \
+    -Wall -O -I . \
+    -Wextra -pedantic \
+    -Wlogical-op \
+    -Wshadow \
+    -Wformat=2 \
+    -Wformat-security \
+    -Woverloaded-virtual \
+    -Wcast-align \
+    -Wno-ctor-dtor-privacy \
+    -Wdisabled-optimization \
+    -Winit-self \
+    -Wmissing-declarations \
+    -Wmissing-include-dirs \
+    -Wredundant-decls \
+    -Wsign-promo \
+    -Wstrict-overflow=5 \
+    -Wswitch \
+    -Wno-unused \
+    -Wnon-virtual-dtor \
+    -Wreorder \
+    -Wdeprecated \
+    -Wno-float-equal \
+    -fPIC \
+    -L./int/blast/libs \
+    -I $BLASTBYDATE/include \
+    $JAVA_INC \
+    -I $BLASTBYDATE/ReleaseMT/inc \
+    -L $BLASTBYDATE/ReleaseMT/lib \
+    -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L . \
+    -L ext \
+    -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+    -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
+    -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
+    -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
+    -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
+    -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
+    -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
+    -lblast_services -lxalnmgr -lxobjutil -lxobjread \
+    -lvariation -lcreaders -lsubmit -lxnetblastcli \
+    -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
+    -lncbi_xloader_genbank -lncbi_xreader_id1 \
+    -lncbi_xreader \
+    -lncbi_xreader_id2 \
+    -lxconnect -lid1 -lid2 -lxobjmgr \
+    -lgenome_collection -lseqedit -lseqsplit -lsubmit \
+    -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
+    -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
+    -llmdb-static -lpthread -lz -lbz2 \
+    -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+    -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
+    -o blast_json
+    cp blast_json ../pipeline
+
+
 fi
 
 line
+set +errexit
 echo "Running tests..."
 echo "  Testing JNI function signatures"
 md5sum -c signatures.md5 > /dev/null
 echo "  Testing JNI function signatures OK"
 #md5sum signatures > signatures.md5
 
+echo "  Testing blast_json"
+./blast_json prelim_search blast_json.test.json > blast_json.test.result 2>/dev/null
+cmp blast_json.test.result blast_json.test.expected
+if [[ $? -ne 0 ]]; then
+    sdiff -w 70 blast_json.test.result blast_json.test.expected | head
+    echo "Testing of blast_json failed"
+    exit 1
+fi
+
+./blast_json traceback blast_json.traceback.json > blast_json.traceback.result 2>/dev/null
+cmp blast_json.traceback.result blast_json.traceback.expected
+if [[ $? -ne 0 ]]; then
+    sdiff -s -w 70 blast_json.traceback.result blast_json.traceback.expected | head
+    echo "Testing of blast_json failed"
+#    exit 1
+fi
+
+echo "  Testing blast_json OK"
+set -o errexit
 
 
 #if [ "$BUILDENV" = "google" ]; then
@@ -252,8 +332,11 @@ line
     gsutil cp libblastjni.so \
         "gs://ncbi-build-artifacts/libblastjni.$BUILDTAG.so"
 
+    gsutil cp blast_json \
+        "gs://ncbi-build-artifacts/blast_json.$BUILDTAG"
+
     gsutil cp ../pipeline/target/sparkblast-1-jar-with-dependencies.jar \
-        gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.$BUILDTAG.jar
+        "gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.$BUILDTAG.jar"
 
     gcloud container builds submit \
         --project ncbi-sandbox-blast \

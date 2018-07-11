@@ -27,14 +27,16 @@ function config()
     # FIX: Override with standard types
     MASTER=n1-standard-4
 
-    # DataProc install takes around 5GB of disk
-    DISK_PER_WORKER=$((DB_SPACE_PER_WORKER+5))
+    # DataProc is going to only start 2 executors per worker.
+    # They'll each get ~35% of RAM
+    # DataProc install takes around 5GB of disk, minimum 50 for logs
+    DISK_PER_WORKER=$((DB_SPACE_PER_WORKER + 50))
 
     # FIX: Until we can guarantee DB pinning or implement LRU:
-    DISK_PER_WORKER=$((DB_SPACE+5))
+    #DISK_PER_WORKER=$((DB_SPACE + 5))
 
-    # JVMS ~ 1GB per executor, plus 1GB overhead
-    RAM_PER_WORKER=$(( (CORES_PER_WORKER + 1 + DB_SPACE_PER_WORKER)*1024 ))
+    # JVMS ~ 2GB per executor, plus 2GB overhead, plus cache for DB
+    RAM_PER_WORKER=$(( (2 * CORES_PER_WORKER + 2 + DB_SPACE_PER_WORKER)*1024 ))
 
     MIN_RAM=$((CORES_PER_WORKER * 921)) # 1024 * 0.6
     MAX_RAM=$((CORES_PER_WORKER * 6656)) # 1024 * 6.5
@@ -169,7 +171,7 @@ CMD="gcloud beta dataproc --region us-east4 \
 echo "Command is: $CMD"
 echo
 EXECUTORS=$(bc -l <<< "$NUM_WORKERS * ($CORES_PER_WORKER - 1)" )
-echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
+#echo "In ini.json set \"num_executors\" : $EXECUTORS ,"
 echo
 read -p "Press enter to start this cluster"
 

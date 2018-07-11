@@ -35,7 +35,7 @@ class BLAST_COMM extends Thread
     private final BLAST_SETTINGS settings;
 
     public BLAST_COMM( BLAST_STATUS a_status,
-                       BLAST_SETTINGS a_settings )
+                       final BLAST_SETTINGS a_settings )
     {
         this.status = a_status;
         this.settings = a_settings;

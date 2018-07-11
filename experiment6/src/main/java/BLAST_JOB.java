@@ -122,22 +122,34 @@ class BLAST_JOB extends Thread
                         if ( !part.present() )
                         {
                             if ( part.copy() == 0 )
-                                BLAST_SEND.send( log, String.format( "%s copy failed", part ) );
+                                BLAST_SEND.send( log, String.format( "copy-failed,%s", part ) );
                             else if ( !part.present() )
-                                BLAST_SEND.send( log, String.format( "%s still not present", part ) );
+                                BLAST_SEND.send( log, String.format( "still-not-present,%s", part ) );
                         }
+
+						if ( log.job_start )
+						{
+							BLAST_SEND.send( log, String.format( "S,0,%s,%s", part.nr, req.id ) );
+						}
 
                         BLAST_HSP_LIST[] search_res = blaster.jni_prelim_search( part, req, log.jni_log_level );
                         if ( search_res != null )
                         {
                             try
                             {
+								int n_tb_results = 0;
                                 BLAST_TB_LIST [] tb_results = blaster.jni_traceback( search_res, part, req, log.jni_log_level );
                                 if ( tb_results != null )
                                 {
                                     for ( BLAST_TB_LIST tbl : tb_results )
                                         res.add( new BLAST_TB_LIST_LIST( tbl ) );
+									n_tb_results = tb_results.length;
                                 }
+
+								if ( log.job_done )
+								{
+									BLAST_SEND.send( log, String.format( "D,%d,%s,%s", n_tb_results, part.nr, req.id ) );
+								}
                             }
                             catch ( Exception e )
                             {
@@ -146,6 +158,8 @@ class BLAST_JOB extends Thread
                                                  String.format( "traceback: '%s on %s' for '%s'", e, req.toString(), part.toString() ) );
                             }
                         }
+
+
                     }
                     catch ( Exception e )
                     {

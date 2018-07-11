@@ -41,7 +41,7 @@ export MALLOC_CHECK_=2
     g++ \
     blastjni.cpp \
     -std=gnu++11 \
-    -Wall -g -I . \
+    -Wall -O -I . \
     -Wextra -pedantic \
     -Wlogical-op \
     -Wshadow \
@@ -68,8 +68,8 @@ export MALLOC_CHECK_=2
     $JAVA_INC \
     -L./int/blast/libs \
     -I $BLASTBYDATE/include \
-    -I $BLASTBYDATE/DebugMT/inc \
-    -L $BLASTBYDATE/DebugMT/lib \
+    -I $BLASTBYDATE/ReleaseMT/inc \
+    -L $BLASTBYDATE/ReleaseMT/lib \
     -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
     -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
     -L . \
@@ -109,7 +109,7 @@ export MALLOC_CHECK_=2
     g++ \
     blast_worker.cpp \
     -std=gnu++11 \
-    -Wall -g -I . \
+    -Wall -O -I . \
     -Wextra -pedantic \
     -Wlogical-op \
     -Wshadow \
@@ -135,8 +135,8 @@ export MALLOC_CHECK_=2
     -L./int/blast/libs \
     -I $BLASTBYDATE/include \
     $JAVA_INC \
-    -I $BLASTBYDATE/DebugMT/inc \
-    -L $BLASTBYDATE/DebugMT/lib \
+    -I $BLASTBYDATE/ReleaseMT/inc \
+    -L $BLASTBYDATE/ReleaseMT/lib \
     -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
     -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
     -L . \
