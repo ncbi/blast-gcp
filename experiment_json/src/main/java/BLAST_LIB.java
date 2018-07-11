@@ -50,7 +50,7 @@ public class BLAST_LIB {
             long threadId = Thread.currentThread().getId();
 
             final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
-            System.err.println(level + " : " + newmsg);
+            System.err.println(level + " : " + newmsg.replace("\n",""));
         } catch (Throwable threx) {
             {
                 System.err.println("ERROR Log throw");

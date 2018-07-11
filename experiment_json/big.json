@@ -21,10 +21,12 @@
     {
         "asn1" :
         {
+            "file" : "output2/%s/seq-annot.asn",
             "bucket" : "blastgcp-pipeline-test"
         },
         "status" :
         {
+            "file" : "status2/%s/status.txt",
             "bucket"  : "blastgcp-pipeline-test"
         }
     },
