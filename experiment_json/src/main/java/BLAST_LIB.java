@@ -138,7 +138,7 @@ public class BLAST_LIB {
 
             // log("INFO", "Returned string was: " + pout.toString());
             JSONObject jsonin = new JSONObject(pout.toString());
-            log("INFO", "Returned JSON was: " + jsonin.toString(2));
+            //log("INFO", "Returned JSON was: " + jsonin.toString(2));
             JSONArray jhsplarr = jsonin.getJSONArray("blast_hsp_list");
             ArrayList<BLAST_HSP_LIST> alhsp = new ArrayList<>();
 
@@ -245,7 +245,7 @@ public class BLAST_LIB {
 
             // log("INFO", "Returned string was: " + pout.toString());
             JSONObject jsonin = new JSONObject(pout.toString());
-            log("INFO", "Returned JSON was: " + jsonin.toString(2));
+            //log("INFO", "Returned JSON was: " + jsonin.toString(2));
             JSONArray jtblarr = jsonin.getJSONArray("blast_tb_list");
             ArrayList<BLAST_TB_LIST> altbl = new ArrayList<>();
 
