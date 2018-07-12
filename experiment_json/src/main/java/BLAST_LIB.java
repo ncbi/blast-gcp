@@ -99,7 +99,7 @@ public class BLAST_LIB {
             builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
             Process process = builder.start();
 
-            StringBuilder pout = new StringBuilder(16384);
+            StringBuilder pout = new StringBuilder(32768);
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
@@ -214,7 +214,7 @@ public class BLAST_LIB {
             builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
             Process process = builder.start();
 
-            StringBuilder pout = new StringBuilder(16384);
+            StringBuilder pout = new StringBuilder(4*1024*1024);
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
