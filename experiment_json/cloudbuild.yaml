@@ -4,6 +4,8 @@ steps:
 - name: gcr.io/cloud-builders/gsutil
   args: ['cp', 'gs://ncbi-build-artifacts/libblastjni.${_TAG}.so', '${_PATH}/libblastjni.so']
 - name: gcr.io/cloud-builders/gsutil
+  args: ['cp', 'gs://ncbi-build-artifacts/blast_json.${_TAG}', '${_PATH}/blast_json']
+- name: gcr.io/cloud-builders/gsutil
   args: ['cp', 'gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.${_TAG}.jar', '${_PATH}/sparkblast.jar']
   waitFor: ['-'] # concurrent with the first step
 

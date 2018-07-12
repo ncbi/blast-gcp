@@ -82,5 +82,5 @@ printf "$INI\n" > ${INI_JSON}
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
     --labels owner=${deploy_user},deploy_id=${deploy_id} \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
-    --files dbs.json,libblastjni.so,${INI_JSON} -- ${INI_JSON}
+    --files dbs.json,libblastjni.so,blast_json,${INI_JSON} -- ${INI_JSON}
 

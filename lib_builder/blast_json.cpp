@@ -35,6 +35,7 @@
 #include <algo/blast/api/prelim_stage.hpp>
 #include <algo/blast/api/setup_factory.hpp>
 #include <algo/blast/core/blast_hspstream.h>
+#include <algorithm>
 #include <ctype.h>
 #include <fstream>
 #include <iostream>
@@ -108,7 +109,7 @@ iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
         score_set.insert( max_score );
     }
 
-    fprintf( stderr, "score_set has %zu\n", score_set.size() );
+    fprintf( stderr, "  score_set has %zu\n", score_set.size() );
 
     if ( (int)score_set.size() > topn )
     {
@@ -130,7 +131,7 @@ iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
     else
         num_tuples = hsp_lists.size();
 
-    fprintf( stderr, "num_tuples is %zu, min_score is %d \n", num_tuples,
+    fprintf( stderr, "  num_tuples is %zu, min_score is %d \n", num_tuples,
              min_score );
 
     std::vector< struct blast_hsp_list > retarray;
@@ -240,14 +241,14 @@ int main( int argc, char * argv[] )
         gettimeofday( &tv_cur, NULL );
         unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
 
-        fprintf( stderr, "Calling PrelimSearch\n" );
+        fprintf( stderr, "blast_json calling PrelimSearch\n" );
 
         ncbi::blast::TBlastHSPStream * hsp_stream
             = ncbi::blast::PrelimSearch( query, db_location, program, params );
 
         gettimeofday( &tv_cur, NULL );
         unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
-        fprintf( stderr, "Called  PrelimSearch, took %lu ms \n",
+        fprintf( stderr, "blast_json called  PrelimSearch, took %lu ms \n",
                  ( finishtime - starttime ) / 1000 );
 
         if ( !hsp_stream )
@@ -286,13 +287,14 @@ int main( int argc, char * argv[] )
             fprintf( stderr, "ERROR exception in loop" );
         }
 
-        fprintf( stderr, "Have %zu hsp_lists\n", hsp_lists.size() );
+        fprintf( stderr, "  Have %zu hsp_lists\n", hsp_lists.size() );
 
         std::vector< struct blast_hsp_list > hspl
             = iterate_HSPs( hsp_lists, top_n_prelim );
 
         json hsps;
-        for ( size_t i = 0; i != hspl.size(); ++i )
+        size_t cutoff=std::min(hspl.size(), (size_t)1000);
+        for ( size_t i = 0; i != cutoff; ++i )
         {
             json hsp;
             hsp["oid"]       = hspl[i].oid;
@@ -328,11 +330,10 @@ int main( int argc, char * argv[] )
             struct blast_hsp_list bhspl;
             bhspl.oid       = jhspl["oid"];
             bhspl.max_score = jhspl["max_score"];
-            fprintf( stderr, "blob %zu oid=%d max_score=%d\n", i, bhspl.oid,
-                     bhspl.max_score );
             json   jblob     = jhspl["hsp_blob"];
             size_t blob_size = jblob.size();
-            fprintf( stderr, "blob_size is %zu\n", blob_size );
+            fprintf( stderr, "  blob #%zu oid=%d max_score=%d, blob_size=%zu\n", 
+                     i, bhspl.oid, bhspl.max_score, blob_size);
 
             ncbi::blast::SFlatHSP * hsp_blob
                 = (ncbi::blast::SFlatHSP *)malloc( blob_size );  // FIX: Free
@@ -357,7 +358,7 @@ int main( int argc, char * argv[] )
         gettimeofday( &tv_cur, NULL );
         unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
 
-        fprintf( stderr, "Calling TracebackSearch with %zu flat HSPs\n",
+        fprintf( stderr, "blast_json calling TracebackSearch with %zu flat HSPs\n",
 
                  flat_hsp_list.size() );
         int result = ncbi::blast::TracebackSearch(
@@ -366,13 +367,14 @@ int main( int argc, char * argv[] )
         gettimeofday( &tv_cur, NULL );
         unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
         fprintf( stderr,
-                 "Called  TracebackSearch, took %lu ms returned %d, got %zu "
+                 "blast_json called  TracebackSearch, took %lu ms returned %d, got %zu "
                  "alignments\n",
                  ( finishtime - starttime ) / 1000, result, alignments.size() );
 
         std::vector< struct blast_tb_list > tbl;
         tbl.reserve( alignments.size() );
-        for ( size_t i = 0; i != alignments.size(); ++i )
+        size_t cutoff=std::min(alignments.size(), (size_t)1000);
+        for ( size_t i = 0; i != cutoff; ++i )
         {
             struct blast_tb_list btbl;
             btbl.oid         = flat_hsp_list[i].oid;

@@ -2,6 +2,8 @@ steps:
 - name: gcr.io/cloud-builders/gsutil
   args: ['cp', 'gs://ncbi-build-artifacts/libblastjni.${_TAG}.so', '${_PATH}/libblastjni.so']
 - name: gcr.io/cloud-builders/gsutil
+  args: ['cp', 'gs://ncbi-build-artifacts/blast_json.${_TAG}', '${_PATH}/blast_json']
+- name: gcr.io/cloud-builders/gsutil
   args: ['cp', 'gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.${_TAG}.jar', '${_PATH}/sparkblast.jar']
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '--tag', 'us.gcr.io/$PROJECT_ID/${_IMAGE_NAME}:${COMMIT_SHA}${_TAG}', '${_PATH}' ]
