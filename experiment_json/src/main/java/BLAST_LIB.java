@@ -50,9 +50,7 @@ public class BLAST_LIB {
             long threadId = Thread.currentThread().getId();
 
             final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
-            System.err.println(level + " : " + newmsg
-                    .replace("\n"," ")
-                    .replace("\r"," "));
+            System.err.println(level + " : " + newmsg.replace("\n", " ").replace("\r", " "));
         } catch (Throwable threx) {
             {
                 System.err.println("ERROR Log throw");
@@ -101,7 +99,7 @@ public class BLAST_LIB {
             builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
             Process process = builder.start();
 
-            StringBuilder pout = new StringBuilder();
+            StringBuilder pout = new StringBuilder(16384);
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
@@ -109,9 +107,8 @@ public class BLAST_LIB {
                     }
 
             process.waitFor();
-            int exitval=process.exitValue();
-            if (exitval!=0)
-            {
+            int exitval = process.exitValue();
+            if (exitval != 0) {
                 log("ERROR", String.format("%s returned non-zero exit value %d", blast_json, exitval));
             }
 
@@ -138,9 +135,9 @@ public class BLAST_LIB {
 
             // log("INFO", "Returned string was: " + pout.toString());
             JSONObject jsonin = new JSONObject(pout.toString());
-            //log("INFO", "Returned JSON was: " + jsonin.toString(2));
+            // log("INFO", "Returned JSON was: " + jsonin.toString(2));
             JSONArray jhsplarr = jsonin.getJSONArray("blast_hsp_list");
-            ArrayList<BLAST_HSP_LIST> alhsp = new ArrayList<>();
+            ArrayList<BLAST_HSP_LIST> alhsp = new ArrayList<>(jhsplarr.length());
 
             for (int i = 0; i != jhsplarr.length(); ++i) {
                 JSONObject j = jhsplarr.getJSONObject(i);
@@ -151,7 +148,10 @@ public class BLAST_LIB {
                 for (int b = 0; b != jblob.length(); ++b) {
                     blob[b] = (byte) jblob.getInt(b);
                 }
-                log("INFO", String.format("idx %d, oid=%d, max_score=%d, blob_size=%d", i, oid, max_score, blob.length));
+                log(
+                        "INFO",
+                        String.format(
+                            "idx %d, oid=%d, max_score=%d, blob_size=%d", i, oid, max_score, blob.length));
                 BLAST_HSP_LIST hspl = new BLAST_HSP_LIST(oid, max_score, blob);
                 alhsp.add(hspl);
             }
@@ -214,7 +214,7 @@ public class BLAST_LIB {
             builder.inheritIO().redirectOutput(ProcessBuilder.Redirect.PIPE);
             Process process = builder.start();
 
-            StringBuilder pout = new StringBuilder();
+            StringBuilder pout = new StringBuilder(16384);
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
@@ -245,9 +245,9 @@ public class BLAST_LIB {
 
             // log("INFO", "Returned string was: " + pout.toString());
             JSONObject jsonin = new JSONObject(pout.toString());
-            //log("INFO", "Returned JSON was: " + jsonin.toString(2));
+            // log("INFO", "Returned JSON was: " + jsonin.toString(2));
             JSONArray jtblarr = jsonin.getJSONArray("blast_tb_list");
-            ArrayList<BLAST_TB_LIST> altbl = new ArrayList<>();
+            ArrayList<BLAST_TB_LIST> altbl = new ArrayList<>(jtblarr.length());
 
             for (int i = 0; i != jtblarr.length(); ++i) {
                 JSONObject j = jtblarr.getJSONObject(i);

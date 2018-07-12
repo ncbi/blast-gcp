@@ -183,22 +183,12 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
 
-    if [ "1" == "1" ]; then
-        echo "Running static analysis on C++ code"
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
-        echo "Static analysis on C++ code complete"
-    fi
-
-    echo "Compiling and linking blastjni.cpp"
-    $GPPCOMMAND
-    cp libblastjni.so ../pipeline
-
+    BLAST_JSON_GPP_COMMAND="
     g++ \
     blast_json.cpp \
     -std=gnu++11 \
-    -Wall -O -I . \
+    -march=sandybridge \
+    -Wall -O3 -I . \
     -Wextra -pedantic \
     -Wlogical-op \
     -Wshadow \
@@ -250,7 +240,23 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -llmdb-static -lpthread -lz -lbz2 \
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
-    -o blast_json
+    -o blast_json"
+
+
+    if [ "1" == "1" ]; then
+        echo "Running static analysis on C++ code"
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$BLAST_JSON_GPP_COMMAND"
+        echo "Static analysis on C++ code complete"
+    fi
+
+    echo "Compiling and linking blastjni.cpp"
+    $GPPCOMMAND
+    cp libblastjni.so ../pipeline
+
+    $BLAST_JSON_GPP_COMMAND
     cp blast_json ../pipeline
 
 

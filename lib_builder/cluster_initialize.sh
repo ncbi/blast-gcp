@@ -55,7 +55,7 @@ log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_BENCH=INFO, tmpfile
 log4j.logger.gov.nih.nlm.ncbi.blastjni.BLAST_TEST=INFO, tmpfile
 
 DONE2
-    cat log4j.proto >> /etc/spark/conf.dist/log4j.properties
+#    cat log4j.proto >> /etc/spark/conf.dist/log4j.properties
 
     logger -t cluster_initialize.sh \
         "BLASTJNI Logging agent begun with cluster_initialize.sh"

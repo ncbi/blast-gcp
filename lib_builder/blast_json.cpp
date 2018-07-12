@@ -56,6 +56,7 @@
 #include <stdlib.h>
 #include <streambuf>
 #include <string>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
@@ -77,6 +78,8 @@ struct blast_tb_list
     std::vector< int > asn1_blob;
 };
 
+void sighandler( int signum );
+
 static std::vector< struct blast_hsp_list >
 iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
 {
@@ -84,6 +87,8 @@ iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
     std::set< int >    score_set;
     size_t             num_tuples = 0;
     int                min_score  = INT_MIN;
+
+    max_scores.reserve( 500 );
 
     for ( const auto & hsp_list : hsp_lists )
     {
@@ -129,6 +134,7 @@ iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
              min_score );
 
     std::vector< struct blast_hsp_list > retarray;
+    retarray.reserve( 500 );
 
     for ( size_t i = 0; i != hsp_lists.size(); ++i )
     {
@@ -174,9 +180,9 @@ iterate_HSPs( std::vector< BlastHSPList * > & hsp_lists, int topn )
     return retarray;
 }
 
-void sighandler(int signum)
+void sighandler( int signum )
 {
-    fprintf(stderr, "Received signal %d\n", signum);
+    fprintf( stderr, "Received signal %d\n", signum );
 }
 
 int main( int argc, char * argv[] )
@@ -216,23 +222,33 @@ int main( int argc, char * argv[] )
 
     struct sigaction new_action;
 
-    new_action.sa_handler=sighandler;
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_flags=0;
-    sigaction (SIGABRT, &new_action, NULL);
-    sigaction (SIGFPE, &new_action, NULL);
-    sigaction (SIGBUS, &new_action, NULL);
-    sigaction (SIGILL, &new_action, NULL);
-    sigaction (SIGSEGV, &new_action, NULL);
-    sigaction (SIGSYS, &new_action, NULL);
+    new_action.sa_handler = sighandler;
+    sigemptyset( &new_action.sa_mask );
+    new_action.sa_flags = 0;
+    sigaction( SIGABRT, &new_action, NULL );
+    sigaction( SIGFPE, &new_action, NULL );
+    sigaction( SIGBUS, &new_action, NULL );
+    sigaction( SIGILL, &new_action, NULL );
+    sigaction( SIGSEGV, &new_action, NULL );
+    sigaction( SIGSYS, &new_action, NULL );
+
+    struct timeval tv_cur;
 
     if ( prelim )
     {
         int top_n_prelim = j["top_N_prelim"];
+        gettimeofday( &tv_cur, NULL );
+        unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
+
         fprintf( stderr, "Calling PrelimSearch\n" );
+
         ncbi::blast::TBlastHSPStream * hsp_stream
             = ncbi::blast::PrelimSearch( query, db_location, program, params );
-        fprintf( stderr, "Called  PrelimSearch\n" );
+
+        gettimeofday( &tv_cur, NULL );
+        unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
+        fprintf( stderr, "Called  PrelimSearch, took %lu ms \n",
+                 ( finishtime - starttime ) / 1000 );
 
         if ( !hsp_stream )
         {
@@ -240,6 +256,7 @@ int main( int argc, char * argv[] )
         }
 
         std::vector< BlastHSPList * > hsp_lists;
+        hsp_lists.reserve( 500 );
 
         try
         {
@@ -281,6 +298,7 @@ int main( int argc, char * argv[] )
             hsp["oid"]       = hspl[i].oid;
             hsp["max_score"] = hspl[i].max_score;
             std::vector< int > blob;
+            blob.reserve( hspl[i].blob_size );
             for ( size_t b = 0; b != hspl[i].blob_size; ++b )
             {
                 blob.push_back( hspl[i].hsp_blob[b] );
@@ -290,9 +308,9 @@ int main( int argc, char * argv[] )
             hsps.push_back( hsp );
         }
         json result;
-        result["protocol"] = "prelim-json-1.0";
+        result["protocol"]       = "prelim-json-1.0";
         result["blast_hsp_list"] = hsps;
-        std::cout << result.dump(2) << std::endl;
+        std::cout << result.dump( 2 ) << std::endl;
     }
     else if ( traceback )
     {
@@ -300,6 +318,7 @@ int main( int argc, char * argv[] )
         fprintf( stderr, "Ignoring top_n_traceback=%d\n", top_n_traceback );
 
         std::vector< ncbi::blast::SFlatHSP > flat_hsp_list;
+        flat_hsp_list.reserve( 500 );
 
         json jbhpl = j["blast_hsp_list"];
         for ( size_t i = 0; i != jbhpl.size(); ++i )
@@ -335,15 +354,24 @@ int main( int argc, char * argv[] )
         }
 
         ncbi::blast::TIntermediateAlignments alignments;
+        gettimeofday( &tv_cur, NULL );
+        unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
+
         fprintf( stderr, "Calling TracebackSearch with %zu flat HSPs\n",
+
                  flat_hsp_list.size() );
         int result = ncbi::blast::TracebackSearch(
                                                   query, db_location, program, params, flat_hsp_list, alignments );
+
+        gettimeofday( &tv_cur, NULL );
+        unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
         fprintf( stderr,
-                 "Called  TracebackSearch, returned %d, got %zu alignments\n",
-                 result, alignments.size() );
+                 "Called  TracebackSearch, took %lu ms returned %d, got %zu "
+                 "alignments\n",
+                 ( finishtime - starttime ) / 1000, result, alignments.size() );
 
         std::vector< struct blast_tb_list > tbl;
+        tbl.reserve( alignments.size() );
         for ( size_t i = 0; i != alignments.size(); ++i )
         {
             struct blast_tb_list btbl;
@@ -361,15 +389,15 @@ int main( int argc, char * argv[] )
         for ( size_t i = 0; i != tbl.size(); ++i )
         {
             json jtbl;
-            jtbl["oid"]    = tbl[i].oid;
+            jtbl["oid"]       = tbl[i].oid;
             jtbl["evalue"]    = tbl[i].evalue;
             jtbl["asn1_blob"] = tbl[i].asn1_blob;
             jtbs.push_back( jtbl );
         }
         json jtblist;
-        jtblist["protocol"] = "prelim-traceback-1.0";
+        jtblist["protocol"]      = "prelim-traceback-1.0";
         jtblist["blast_tb_list"] = jtbs;
-        std::cout << jtblist.dump(2) << std::endl;
+        std::cout << jtblist.dump( 2 ) << std::endl;
     }
 
     return 0;
