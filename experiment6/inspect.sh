@@ -2,7 +2,7 @@
 LOG=$1
 PLOT=$LOG.plot
 STARTX="0"
-ENDX="500"
+ENDX="1000"
 
 #sort the log-file numerically
 sort $LOG -n -o $LOG

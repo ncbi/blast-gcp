@@ -9,5 +9,5 @@ set xtics nomirror
 unset key
 
 plot file using 1 : 4 : 2 : (0.0) : 6 : yticlabel(3) with vectors arrowstyle 1, \
-	 file using 1 : 4 : 5 with labels left offset 0,-1
+	 file using 1 : 4 : 5 with labels left offset 0,-0.5
 
