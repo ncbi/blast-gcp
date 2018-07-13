@@ -53,9 +53,10 @@ class vector:
 
 #=================================================================================
 class executor_line:
-	def __init__( self, y, x ):
+	def __init__( self, y, x, idx ):
 		self.y = y
 		self.x = x
+		self.idx = idx
 
 #=================================================================================
 class executor:
@@ -65,38 +66,44 @@ class executor:
 	def add( self, vector ) :
 		self.vectors.append( vector )
 
-	def spread( self ) :
+	def spread( self, factor ) :
 		lines = []
+		res = 0
 		for v in self.vectors:		
 			l = len( lines )
 			if l == 0 :
 				#we do not have to adjust the vector, just record its end-point
-				lines.append( executor_line( 0, v.start_time + v.duration ) )
+				lines.append( executor_line( 0, v.start_time + v.duration, 0 ) )
 			else :
 				#find the line that has the shortest distance between its end-point
 				#and the start of the vector, adjust endpoint of that line
 				distance = sys.maxint
 				idx = 0
+				y = 0
 				for el in lines :
 					d = v.start_time - el.x
 					if d < distance and d > 0 :
 						distance = d
-						idx = el.y
+						idx = el.idx
+						y = el.y
 				if distance < sys.maxint :
 					#we found a line to use
-					v.y = idx
+					v.y = y
 					lines[ idx ].x = v.start_time + v.duration
 				else :
 					#we did not find a line to use, add another one
-					v.y = l
-					lines.append( executor_line( v.y, v.start_time + v.duration ) )
-		return max( 1, len( lines ) )
+					v.y = l * factor
+					v.idx = l
+					lines.append( executor_line( v.y, v.start_time + v.duration, v.idx ) )
+				if v.y > res :
+					res = v.y
+		return res
 
-	def write_to( self, plot, line_nr ) :
-		num_lines = self.spread()
+	def write_to( self, plot, line_nr, factor ) :
+		num_lines = self.spread( factor )
 		for v in self.vectors:
 			v.write_to( plot, line_nr )
-		return line_nr + num_lines
+		return line_nr + num_lines + factor
 
 
 #=================================================================================
@@ -111,10 +118,10 @@ class vectors:
 			self.executors[ vector.executor_name ] = e
 		e.add( vector )
 
-	def write_to( self, plot ) :
-		line_nr = 1
+	def write_to( self, plot, factor ) :
+		line_nr = factor
 		for key in sorted( self.executors ) :
-			line_nr = self.executors[ key ].write_to( plot, line_nr )
+			line_nr = self.executors[ key ].write_to( plot, line_nr, factor )
 
 
 #=================================================================================
@@ -166,9 +173,7 @@ if __name__ == '__main__':
 			plot_file_name = sys.argv[ 2 ]
 			print "transforming '%s' ---> '%s'" % ( event_file_name, plot_file_name )
 			v = transform( event_file_name )
-			plot_file = open( plot_file_name, "w" )
-			v.write_to( plot_file )
-			plot_file.close()
+			v.write_to( open( plot_file_name, "w" ), 2 )
         else :
             print "'%s' does not exist!" % event_file_name
     else :

@@ -8,6 +8,7 @@ ENDX="1000"
 sort $LOG -n -o $LOG
 
 #transform the log-file with python script into the plot-file
+rm $PLOT
 ./transform.py $LOG $PLOT
 
 #sort the plot-file numerically

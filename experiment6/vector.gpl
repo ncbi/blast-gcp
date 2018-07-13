@@ -1,13 +1,18 @@
+#set terminal qt size 60000,400
+#set terminal pdf size 60000,400
+#set size ratio -1
+
 set title "timing"
 set style arrow 1 filled lt 3 lw 1.5 lc rgb variable
 set border 3
 set yrange [0:]
 set xrange [startx:endx]
+#set xrange []
 set grid x y
 set ytics nomirror
 set xtics nomirror
 unset key
 
 plot file using 1 : 4 : 2 : (0.0) : 6 : yticlabel(3) with vectors arrowstyle 1, \
-	 file using 1 : 4 : 5 with labels left offset 0,-0.5
+	 file using 1 : 4 : 5 with labels left offset 0,-0.3 font "Helvetica,5"
 
