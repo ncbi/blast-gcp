@@ -293,6 +293,8 @@ int main( int argc, char * argv[] )
             = iterate_HSPs( hsp_lists, top_n_prelim );
 
         json hsps;
+        if (hspl.size() >= 1000)
+            fprintf ( stderr, "  WARN Cutting off large vector %zu\n", hspl.size());
         size_t cutoff=std::min(hspl.size(), (size_t)1000);
         for ( size_t i = 0; i != cutoff; ++i )
         {
@@ -373,6 +375,8 @@ int main( int argc, char * argv[] )
 
         std::vector< struct blast_tb_list > tbl;
         tbl.reserve( alignments.size() );
+        if (alignments.size() >= 1000)
+            fprintf ( stderr, "  WARN Cutting off large vector %zu\n", alignments.size());
         size_t cutoff=std::min(alignments.size(), (size_t)1000);
         for ( size_t i = 0; i != cutoff; ++i )
         {
