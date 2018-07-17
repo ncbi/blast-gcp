@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import gov.nih.nlm.ncbi.blast.CustomLogger;
+
 class BLAST_STATUS
 {
     private final BLAST_SETTINGS settings;
@@ -50,6 +52,8 @@ class BLAST_STATUS
     private final ConcurrentLinkedQueue< String > ack_q;
     private final ConcurrentLinkedQueue< CMD_Q_ENTRY > cmd_q;
     private BLAST_JOBS jobs;
+
+    private static final CustomLogger cl_js = new CustomLogger("projects/ncbi-sandbox-blast/logs/dataproc-job-stats", "blast-gcp", "global", null);
 
     public BLAST_STATUS( final BLAST_SETTINGS a_settings )
     {
@@ -93,13 +97,31 @@ class BLAST_STATUS
     public int inc_running_jobs( final String id )
     {
         running_ids.put( id, 1 );
-        return running_jobs.incrementAndGet();
+        int running_cnt = running_jobs.incrementAndGet();
+
+        int currentTime = (int)(System.currentTimeMillis()/1000L);
+        String logmsg = "rid=" + id
+                + ";action=Starting Spark Run"
+                + ";running_count=" + Integer.toString(running_cnt)
+                + ";spark_start_time=" + Integer.toString(currentTime);
+        cl_js.info(logmsg);
+
+        return running_cnt;
     }
 
     public int dec_running_jobs( final String id )
     {
         running_ids.remove( id );
-        return running_jobs.decrementAndGet();
+        int running_cnt = running_jobs.decrementAndGet();
+
+        int currentTime = (int)(System.currentTimeMillis()/1000L);
+        String logmsg = "rid=" + id
+                + ";action=Starting Spark Run"
+                + ";running_count=" + Integer.toString(running_cnt)
+                + ";spark_start_time=" + Integer.toString(currentTime);
+        cl_js.info(logmsg);
+
+        return running_cnt;
     }
 
     private boolean is_a_running_id( final String id )
@@ -119,10 +141,17 @@ class BLAST_STATUS
         boolean res = !contains( re );
         if ( res )
         {
-            inc_backlog();
+            int backlog_sz = inc_backlog();
             request_q.offer( re );
-            if ( ps != null )
+            if ( ps != null ) {
                 ps.printf( "REQUEST '%s' added\n", re.request.id );
+                int currentTime = (int)(System.currentTimeMillis()/1000L);
+                String logmsg = "rid=" + re.request.id 
+                        + ";action=Queuing to Backlog"
+                        + ";backlog_size=" + Integer.toString(backlog_sz)
+                        + ";backlog_queue_time=" + Integer.toString(currentTime);
+                cl_js.info(logmsg);
+            }
         }
         else
         {
@@ -163,8 +192,15 @@ class BLAST_STATUS
     public REQUESTQ_ENTRY get_request()
     {
         REQUESTQ_ENTRY res = request_q.poll();
-        if ( res != null )
-            dec_backlog();
+        if ( res != null ) {
+            int backlog_sz = dec_backlog();
+            int currentTime = (int)(System.currentTimeMillis()/1000L);
+            String logmsg = "rid=" + res.request.id 
+                    + ";action=Queuing to Spark"
+                    + ";backlog_size=" + Integer.toString(backlog_sz)
+                    + ";spark_queue_time=" + Integer.toString(currentTime);
+            cl_js.info(logmsg);
+        }
         return res;
     }
 
