@@ -122,7 +122,7 @@ public final class BLAST_MAIN
                     else if ( e.line.startsWith( "R" ) )
                         status.add_request_string( e.line.substring( 1 ), e.stream, top_n );
                     else if ( e.line.startsWith( "F" ) )
-                        status.add_request_file( e.line.substring( 1 ), e.stream, top_n );
+                        status.add_request_file( e.line.substring( 1 ), e.stream, top_n, "" );
                     else if ( e.line.startsWith( "L" ) )
                     {
                         if ( submitter == null )

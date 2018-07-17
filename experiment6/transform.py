@@ -51,6 +51,16 @@ class vector:
 		plot.write( line )
 		plot.flush()
 
+
+#=================================================================================
+class executor_sub:
+	def __init__( self, offset ):
+		self.vectors = []
+		self.offset = offset
+
+	def add( self, vector ) :
+		self.vectors.append( vector )
+
 #=================================================================================
 class executor_line:
 	def __init__( self, y, x, idx ):
