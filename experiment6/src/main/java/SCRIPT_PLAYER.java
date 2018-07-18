@@ -23,68 +23,54 @@
 * ===========================================================================
 *
 */
-
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Console;
-import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
+import java.io.BufferedReader;
 
-public final class BLAST_CONSOLE extends Thread
+class SCRIPT_PLAYER extends Thread
 {
+    private final String script_filename;
     private final BLAST_STATUS status;
 
-    private final Integer sleep_time;
-
-    public BLAST_CONSOLE( final BLAST_STATUS a_status,
-                          final Integer a_sleep_time )
+    public SCRIPT_PLAYER( final String a_script_filename, final BLAST_STATUS a_status )
     {
-        this.status = a_status;
-        this.sleep_time = a_sleep_time;
-    }
-
-    private void sleep_now()
-    {
-        try
-        {
-            Thread.sleep( sleep_time );
-        }
-        catch ( InterruptedException e )
-        {
-        }
-    }
-
-    private String get_line( BufferedReader br )
-    {
-        try
-        {
-            if ( br.ready() )
-                return br.readLine().trim();
-        }
-        catch ( IOException e )
-        {
-        }
-        return null;
+		this.script_filename = a_script_filename;
+		this.status = a_status;
     }
 
     @Override public void run()
-    {
-        BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
-
-        while( status.is_running() && br != null )
+	{
+        try
         {
-            boolean do_sleep = true;
+			if ( !script_filename.isEmpty() )
+			{
+		        System.out.println( String.format( "running script: '%s'", script_filename ) );
 
-            String line = get_line( br );
-            if ( line != null && !line.isEmpty() )
-            {
-                status.add_cmd( new CMD_Q_ENTRY( System.out, line ) );
-                do_sleep = false;
-            }
+		        FileInputStream fs = new FileInputStream( script_filename );
+		        BufferedReader br = new BufferedReader( new InputStreamReader( fs ) );
+		        String line;
 
-            if ( status.is_running() && do_sleep ) sleep_now();
+		        while ( ( line = br.readLine() ) != null )
+		        {
+		            if ( !line.isEmpty() && !line.startsWith( "#" ) )
+		            {
+		                String cmd = line.trim();;
+		                if ( !cmd.isEmpty() )
+						{
+		        			System.out.println( String.format( "script-line: '%s'", cmd ) );
+							status.add_cmd( new CMD_Q_ENTRY( System.out, cmd ) );
+		                }
+		            }
+		        }
+		        br.close();
+			}
+		}
+        catch( Exception e )
+        {
+            System.out.println( String.format( "SCRIPT_PLAYER : %s", e ) );
         }
-    }
-}
 
+	}
+}

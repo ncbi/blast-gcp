@@ -46,6 +46,9 @@ class vector:
 		self.label = label
 		self.color = color
 
+	def end( self, txt_len ) :
+		return self.start_time + max( self.duration, txt_len )
+
 	def write_to( self, plot, line_nr ) :
 		line = "%d %d %s %d %s %s\n" % ( self.start_time, self.duration, self.executor_name, line_nr + self.y, self.label, self.color )
 		plot.write( line )
@@ -61,12 +64,14 @@ class executor_sub:
 	def add( self, vector ) :
 		self.vectors.append( vector )
 
+
 #=================================================================================
 class executor_line:
 	def __init__( self, y, x, idx ):
 		self.y = y
 		self.x = x
 		self.idx = idx
+
 
 #=================================================================================
 class executor:
@@ -76,14 +81,14 @@ class executor:
 	def add( self, vector ) :
 		self.vectors.append( vector )
 
-	def spread( self, factor ) :
+	def spread( self, factor, txt_len ) :
 		lines = []
 		res = 0
 		for v in self.vectors:		
 			l = len( lines )
 			if l == 0 :
 				#we do not have to adjust the vector, just record its end-point
-				lines.append( executor_line( 0, v.start_time + v.duration, 0 ) )
+				lines.append( executor_line( 0, v.end( txt_len ), 0 ) )
 			else :
 				#find the line that has the shortest distance between its end-point
 				#and the start of the vector, adjust endpoint of that line
@@ -91,6 +96,8 @@ class executor:
 				idx = 0
 				y = 0
 				for el in lines :
+					#distance between start of this vector and end of the previous
+					#one on this line
 					d = v.start_time - el.x
 					if d < distance and d > 0 :
 						distance = d
@@ -99,18 +106,18 @@ class executor:
 				if distance < sys.maxint :
 					#we found a line to use
 					v.y = y
-					lines[ idx ].x = v.start_time + v.duration
+					lines[ idx ].x = v.end( txt_len )
 				else :
 					#we did not find a line to use, add another one
 					v.y = l * factor
 					v.idx = l
-					lines.append( executor_line( v.y, v.start_time + v.duration, v.idx ) )
+					lines.append( executor_line( v.y, v.end( txt_len ), v.idx ) )
 				if v.y > res :
 					res = v.y
 		return res
 
-	def write_to( self, plot, line_nr, factor ) :
-		num_lines = self.spread( factor )
+	def write_to( self, plot, line_nr, factor, txt_len ) :
+		num_lines = self.spread( factor, txt_len )
 		for v in self.vectors:
 			v.write_to( plot, line_nr )
 		return line_nr + num_lines + factor
@@ -128,10 +135,10 @@ class vectors:
 			self.executors[ vector.executor_name ] = e
 		e.add( vector )
 
-	def write_to( self, plot, factor ) :
+	def write_to( self, plot, factor, txt_len ) :
 		line_nr = factor
 		for key in sorted( self.executors ) :
-			line_nr = self.executors[ key ].write_to( plot, line_nr, factor )
+			line_nr = self.executors[ key ].write_to( plot, line_nr, factor, txt_len )
 
 
 #=================================================================================
@@ -181,9 +188,14 @@ if __name__ == '__main__':
         event_file_name = sys.argv[ 1 ]
         if os.path.isfile( event_file_name ) :
 			plot_file_name = sys.argv[ 2 ]
+			txt_len = 200
+			if ( sys.argv > 4 ) :
+				startx = int( sys.argv[ 3 ] )
+				endx = int( sys.argv[ 4 ] )
+				txt_len = ( ( endx - startx ) / 5 )
 			print "transforming '%s' ---> '%s'" % ( event_file_name, plot_file_name )
 			v = transform( event_file_name )
-			v.write_to( open( plot_file_name, "w" ), 2 )
+			v.write_to( open( plot_file_name, "w" ), 2, 0 )
         else :
             print "'%s' does not exist!" % event_file_name
     else :

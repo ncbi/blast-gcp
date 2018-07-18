@@ -248,7 +248,7 @@ class SPARK_SETTINGS_READER
     public static final String key_transfer_files = "transfer_files";
     public static final String key_spark_log_level = "log_level";
     public static final String key_locality_wait = "locality_wait";
-    public static final String key_with_locality = "with_locality";
+    public static final String key_locality_mode = "locality_mode";
     public static final String key_with_dyn_alloc = "with_dyn_alloc";
     public static final String key_num_executors = "num_executors";
     public static final String key_num_executor_cores = "num_executor_cores";
@@ -261,7 +261,7 @@ class SPARK_SETTINGS_READER
     public static final String  dflt_transfer_file = "libblastjni.so";
     public static final String  dflt_spark_log_level = "ERROR";
     public static final String  dflt_locality_wait = "3s";
-    public static final Boolean dflt_with_locality = true;
+    public static final Integer dflt_locality_mode = 0;
     public static final Boolean dflt_with_dyn_alloc = false;
     public static final Integer dflt_num_executors = 8;
     public static final Integer dflt_num_executor_cores = 2;
@@ -278,7 +278,7 @@ class SPARK_SETTINGS_READER
         SE_UTILS.get_string_list( obj, key_transfer_files, dflt_transfer_file, settings.transfer_files );
         settings.spark_log_level    = SE_UTILS.get_json_string( obj, key_spark_log_level, dflt_spark_log_level );
         settings.locality_wait      = SE_UTILS.get_json_string( obj, key_locality_wait, dflt_locality_wait );
-        settings.with_locality      = SE_UTILS.get_json_bool( obj, key_with_locality, dflt_with_locality );
+        settings.locality_mode      = SE_UTILS.get_json_int( obj, key_locality_mode, dflt_locality_mode );
         settings.with_dyn_alloc     = SE_UTILS.get_json_bool( obj, key_with_dyn_alloc, dflt_with_dyn_alloc );
         settings.num_executors      = SE_UTILS.get_json_int( obj, key_num_executors, dflt_num_executors );
         settings.num_executor_cores = SE_UTILS.get_json_int( obj, key_num_executor_cores, dflt_num_executor_cores );

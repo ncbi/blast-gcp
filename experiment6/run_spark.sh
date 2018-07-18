@@ -14,6 +14,7 @@
 SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
 SPARK_BLAST_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 SPARK_BLAST_INI="ini.json"
+SCRIPT_FILE="$1"
 
 #
 # on google-cluster:
@@ -21,7 +22,7 @@ SPARK_BLAST_INI="ini.json"
 #   --executor-cores Y  : Y should match the number of vCPU's per worker-node - 1
 #
 
-spark-submit --master yarn --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI
+spark-submit --master yarn --class $SPARK_BLAST_CLASS $SPARK_BLAST_JAR $SPARK_BLAST_INI $SCRIPT_FILE
 
 #gcloud dataproc jobs submit spark --cluster wblast --class $SPARK_BLAST_CLASS --jars $PUBSUB_JAR,$SPAKR_BLAST_JAR --project ncbi-sandbox-blast --region us-east4 -- $SPARK_BLAST_INI
 

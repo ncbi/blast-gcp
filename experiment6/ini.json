@@ -29,9 +29,10 @@
 
     "spark" :
     {
-        "num_executors" : 16,
-        "num_executor_cores" : 2,
-		"with_locality" : false
+        "num_executors" : 32,
+        "num_executor_cores" : 1,
+		"locality_mode" : 1,
+		"parallel_jobs" : 12
     },
 
     "log" :
