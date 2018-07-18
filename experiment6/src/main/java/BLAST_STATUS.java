@@ -116,9 +116,9 @@ class BLAST_STATUS
 
         int currentTime = (int)(System.currentTimeMillis()/1000L);
         String logmsg = "rid=" + id
-                + ";action=Starting Spark Run"
+                + ";action=Endiing Spark Run"
                 + ";running_count=" + Integer.toString(running_cnt)
-                + ";spark_start_time=" + Integer.toString(currentTime);
+                + ";spark_end_time=" + Integer.toString(currentTime);
         cl_js.info(logmsg);
 
         return running_cnt;
