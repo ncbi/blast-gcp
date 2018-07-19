@@ -4,7 +4,7 @@
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
-            "subscript_id" : "spark-test-subscript",
+            "subscript_id" : "integration-queue-dataproc-subscription-sprint6",
             "use" : "true"
         }
     },
@@ -19,16 +19,20 @@
     {
         "asn1" :
         {
-            "bucket" : "blastgcp-pipeline-test"
+            "bucket" : "blast-results",
+            "file"   : "%s/seq-annot.asn",
+            "gs_or_hdfs" : "gs"
         },
         "status" :
         {
-            "bucket"  : "blastgcp-pipeline-test"
+            "bucket" : "blast-results",
+            "file"   : "%s/status.txt"
         }
     },
 
     "spark" :
     {
+        "transfer_files" : [ "libblastjni.so" ],
         "num_executors" : 16,
         "num_executor_cores" : 2,
 		"with_locality" : false
