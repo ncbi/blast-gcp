@@ -41,7 +41,8 @@ export MALLOC_CHECK_=2
     g++ \
     blastjni.cpp \
     -std=gnu++11 \
-    -Wall -O -I . \
+    -march=sandybridge \
+    -Wall -O3 -I . \
     -Wextra -pedantic \
     -Wlogical-op \
     -Wshadow \

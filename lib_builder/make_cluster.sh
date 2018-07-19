@@ -162,7 +162,7 @@ CMD="gcloud beta dataproc --region us-east4 \
     --max-age=8h \
     --image-version 1.2 \
     --properties dataproc:dataproc.monitoring.stackdriver.enabled=true,dataproc:dataproc.logging.stackdriver.enabled=true, \
-    --initialization-action-timeout 30m \
+    --initialization-action-timeout 5m \
     --initialization-actions \
     $PIPELINEBUCKET/scripts/cluster_initialize.sh,$PIPELINEBUCKET/scripts/ganglia.sh \
     --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \

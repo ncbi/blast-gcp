@@ -2,7 +2,7 @@
 
 renice +19 -p $$
 
-MAXJOBS=24
+MAXJOBS=8
 
 export LD_LIBRARY_PATH="$LD_LIBARAY_PATH:/home/vartanianmh/blast-gcp/lib_builder/:."
 
