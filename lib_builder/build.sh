@@ -42,7 +42,7 @@ rm -f ./*.class
 rm -rf gov
 rm -f ./*test.result
 rm -f ./*.jar
-rm -f /tmp/blastjni."$USER".log
+rm -f /tmp/blastjni."$USER".log /tmp/blast_server.log
 rm -f ./signatures
 rm -f ./core.* ./hs_err_* ./output.*
 rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-* > /dev/null 2>&1

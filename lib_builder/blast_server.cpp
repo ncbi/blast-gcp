@@ -36,11 +36,11 @@
 #include <algo/blast/api/setup_factory.hpp>
 #include <algo/blast/core/blast_hspstream.h>
 #include <algorithm>
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fstream>
 #include <iostream>
-#include <ncbi_pch.hpp>
 #include <ncbi_pch.hpp>
 #include <objects/seq/Bioseq.hpp>
 #include <objects/seq/Seq_data.hpp>
@@ -65,15 +65,8 @@
 #include <unistd.h>
 #include <vector>
 
-// See "man 7 unix" and
-// https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=233946
-#ifndef UNIX_PATH_MAX
-#define UNIX_PATH_MAX 108
-#endif
-
-static const char * SOCKETPATH = "blast_socket";
-static const char * LOGPATH    = "/tmp/blast_server.log";
-bool volatile TERM             = false;  // updated in signal handler
+static const char * LOGPATH = "/tmp/blast_server.log";
+bool volatile TERM          = false;  // updated in signal handler
 static void log(const char * loglevel, const char * fmt, ...);
 
 using json = nlohmann::json;
@@ -368,31 +361,42 @@ void process(int fdsocket)
 
 int main(int argc, char * argv[])
 {
-    if (argc != 1)
+    if (argc != 2)
     {
-        std::cerr << "Usage: " << argv[0] << "\n";
+        std::cerr << "Usage: " << argv[0] << "socket\n";
         return 1;
     }
 
-    int unix_socket = socket(AF_UNIX, SOCK_STREAM, 0);  // SOCK_SEQPACKET?
-    if (unix_socket == -1)
+    int tcp_port = strtol(argv[1], NULL, 10);
+    if (tcp_port < 1024 || tcp_port > 65535)
+    {
+        std::cerr << "Socket must be between 1024..65535\n";
+        return 1;
+    }
+
+    int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcp_socket == -1)
     {
         perror("socket");
         return 2;
     }
 
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family      = AF_INET;
+    addr.sin_port        = htons(tcp_port);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (strlen(SOCKETPATH) >= UNIX_PATH_MAX - 1)
+    int enable = 1;
+    if (setsockopt(tcp_socket, SOL_SOCKET, SO_REUSEADDR, &enable,
+                   sizeof(enable))
+        < 0)
     {
-        std::cerr << "SOCKETPATH too long\n";
+        perror("setsockopt SO_REUSEADDR");
         return 2;
     }
-    struct sockaddr_un addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, SOCKETPATH, sizeof(addr.sun_path) - 1);
 
-    int ret = bind(unix_socket, (const struct sockaddr *)&addr, sizeof(addr));
+    int ret = bind(tcp_socket, (const struct sockaddr *)&addr, sizeof(addr));
     if (ret != 0)
     {
         if (errno == EADDRINUSE)
@@ -428,9 +432,10 @@ int main(int argc, char * argv[])
     else if (pid > 0)  // Parent
     {
         fprintf(stderr,
-                "blast_server daemon started (pid=%d).\nListening on "
-                "\"%s\"\nSee %s for logs\n",
-                pid, SOCKETPATH, LOGPATH);
+                "blast_server daemon started (pid=%d).\n"
+                "Listening on TCP port %d\n"
+                "See %s for logs\n",
+                pid, tcp_port, LOGPATH);
         return 0;
     }
 
@@ -444,7 +449,7 @@ int main(int argc, char * argv[])
 
     // FIX: Terminate child if time exceeded? (alarm() trigger SIGALRM)
 
-    if (listen(unix_socket, 64) != 0)
+    if (listen(tcp_socket, 64) != 0)
     {
         log("ERROR", "listen returned %d: %s", errno, strerror(errno));
         return 2;
@@ -453,12 +458,11 @@ int main(int argc, char * argv[])
     while (!TERM)
     {
         log("INFO", "Daemon listening");
-        int fdsocket = accept(unix_socket, NULL, NULL);
+        int fdsocket = accept(tcp_socket, NULL, NULL);
         if (fdsocket == -1)
         {
             log("ERROR", "accept returned %d: %s", errno, strerror(errno));
-            unlink(SOCKETPATH);
-            return 2;
+            continue;
         }
 
         pid = fork();
@@ -481,7 +485,6 @@ int main(int argc, char * argv[])
     }
 
     log("INFO", "Daemon terminating");
-    unlink(SOCKETPATH);
 
     return 0;
 }
