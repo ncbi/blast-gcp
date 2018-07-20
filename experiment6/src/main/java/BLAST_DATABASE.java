@@ -56,7 +56,7 @@ class BLAST_DATABASE
 		if ( settings.locality_mode == 0 )
             DB_SECS = make_db_with_prefered_localition( settings, LOG_SETTING, sc, nodes, a_db_setting );
 		else if ( settings.locality_mode == 1 )
-            DB_SECS = make_db_with_partitions( settings, LOG_SETTING, sc, a_db_setting );
+            DB_SECS = make_db_with_partitions( settings, LOG_SETTING, sc, nodes, a_db_setting );
 		else
 			DB_SECS = make_db_without_locality( settings, LOG_SETTING, sc, a_db_setting );
 
@@ -82,6 +82,7 @@ class BLAST_DATABASE
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,
+                                final BLAST_YARN_NODES nodes,
                                 final BLAST_DB_SETTING db )
     {
         final List< Tuple2< Integer, BLAST_DATABASE_PART > > db_list = new ArrayList<>();
@@ -93,9 +94,9 @@ class BLAST_DATABASE
             db_list.add( new Tuple2<>( i++, part ) );
         }
 
-        Integer n = db.volumes.size();
-        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( n );
-        return sc.parallelizePairs( db_list, n ).partitionBy( p ).map( item ->
+        //Integer n = db.volumes.size();
+        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( nodes.count() );
+        return sc.parallelizePairs( db_list, nodes.count() ).partitionBy( p ).map( item ->
         {
             BLAST_DATABASE_PART part = item._2();
 
