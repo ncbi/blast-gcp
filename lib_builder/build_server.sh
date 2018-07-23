@@ -92,6 +92,16 @@ cp blast_server ../pipeline
 line
 set +errexit
 echo "Running tests..."
+./blast_server 12345
+cat blast_server.test.json | nc localhost 12345 > blast_server.test.result
+killall blast_server
+cmp blast_server.test.result blast_server.test.expected
+if [[ $? -ne 0 ]]; then
+    sdiff -w 70 blast_server.test.result blast_server.test.expected
+    echo "  Testing of blast_server failed"
+    exit 1
+fi
+
 echo "Tests complete"
 line
 

@@ -494,7 +494,7 @@ int main(int argc, char * argv[])
         process(fdsocket);
         log("INFO", "Request handled, child exiting\n");
         shutdown(fdsocket, SHUT_RDWR);
-        exit(0);
+        return 0;
     }
 
     log("INFO", "Parent daemon terminating");
