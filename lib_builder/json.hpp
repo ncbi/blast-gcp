@@ -67,7 +67,7 @@ namespace nlohmann
 @brief default JSONSerializer template argument
 
 This serializer ignores the template arguments and uses ADL
-([argument-dependent lookup](http://en.cppreference.com/w/cpp/language/adl))
+([argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl))
 for serialization.
 */
 template<typename T = void, typename SFINAE = void>
@@ -119,13 +119,15 @@ using json = basic_json<>;
 // You MUST include macro_unscope.hpp at the end of json.hpp to undef all of them
 
 // exclude unsupported compilers
-#if defined(__clang__)
-    #if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
-        #error "unsupported Clang version - see https://github.com/nlohmann/json#supported-compilers"
-    #endif
-#elif defined(__GNUC__) && !(defined(__ICC) || defined(__INTEL_COMPILER))
-    #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
-        #error "unsupported GCC version - see https://github.com/nlohmann/json#supported-compilers"
+#if !defined(JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
+    #if defined(__clang__)
+        #if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
+            #error "unsupported Clang version - see https://github.com/nlohmann/json#supported-compilers"
+        #endif
+    #elif defined(__GNUC__) && !(defined(__ICC) || defined(__INTEL_COMPILER))
+        #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
+            #error "unsupported GCC version - see https://github.com/nlohmann/json#supported-compilers"
+        #endif
     #endif
 #endif
 
@@ -354,6 +356,17 @@ struct is_compatible_object_type_impl<true, RealType, CompatibleObjectType>
         std::is_constructible<typename RealType::mapped_type, typename CompatibleObjectType::mapped_type>::value;
 };
 
+template<bool B, class RealType, class CompatibleStringType>
+struct is_compatible_string_type_impl : std::false_type {};
+
+template<class RealType, class CompatibleStringType>
+struct is_compatible_string_type_impl<true, RealType, CompatibleStringType>
+{
+    static constexpr auto value =
+        std::is_same<typename RealType::value_type, typename CompatibleStringType::value_type>::value and
+        std::is_constructible<RealType, CompatibleStringType>::value;
+};
+
 template<class BasicJsonType, class CompatibleObjectType>
 struct is_compatible_object_type
 {
@@ -362,6 +375,15 @@ struct is_compatible_object_type
                                   has_mapped_type<CompatibleObjectType>,
                                   has_key_type<CompatibleObjectType>>::value,
                                   typename BasicJsonType::object_t, CompatibleObjectType >::value;
+};
+
+template<class BasicJsonType, class CompatibleStringType>
+struct is_compatible_string_type
+{
+    static auto constexpr value = is_compatible_string_type_impl <
+                                  conjunction<negation<std::is_same<void, CompatibleStringType>>,
+                                  has_value_type<CompatibleStringType>>::value,
+                                  typename BasicJsonType::string_t, CompatibleStringType >::value;
 };
 
 template<typename BasicJsonType, typename T>
@@ -930,6 +952,16 @@ namespace nlohmann
 {
 namespace detail
 {
+template<typename BasicJsonType>
+void from_json(const BasicJsonType& j, typename std::nullptr_t& n)
+{
+    if (JSON_UNLIKELY(not j.is_null()))
+    {
+        JSON_THROW(type_error::create(302, "type must be null, but is " + std::string(j.type_name())));
+    }
+    n = nullptr;
+}
+
 // overloads for basic_json template parameters
 template<typename BasicJsonType, typename ArithmeticType,
          enable_if_t<std::is_arithmetic<ArithmeticType>::value and
@@ -977,6 +1009,23 @@ void from_json(const BasicJsonType& j, typename BasicJsonType::string_t& s)
     {
         JSON_THROW(type_error::create(302, "type must be string, but is " + std::string(j.type_name())));
     }
+    s = *j.template get_ptr<const typename BasicJsonType::string_t*>();
+}
+
+template <
+    typename BasicJsonType, typename CompatibleStringType,
+    enable_if_t <
+        is_compatible_string_type<BasicJsonType, CompatibleStringType>::value and
+        not std::is_same<typename BasicJsonType::string_t,
+                         CompatibleStringType>::value,
+        int > = 0 >
+void from_json(const BasicJsonType& j, CompatibleStringType& s)
+{
+    if (JSON_UNLIKELY(not j.is_string()))
+    {
+        JSON_THROW(type_error::create(302, "type must be string, but is " + std::string(j.type_name())));
+    }
+
     s = *j.template get_ptr<const typename BasicJsonType::string_t*>();
 }
 
@@ -1283,6 +1332,137 @@ constexpr const auto& from_json = detail::static_const<detail::from_json_fn>::va
 
 // #include <nlohmann/detail/value_t.hpp>
 
+// #include <nlohmann/detail/iterators/iteration_proxy.hpp>
+
+
+#include <cstddef> // size_t
+#include <string> // string, to_string
+#include <iterator> // input_iterator_tag
+
+// #include <nlohmann/detail/value_t.hpp>
+
+
+namespace nlohmann
+{
+namespace detail
+{
+/// proxy class for the items() function
+template<typename IteratorType> class iteration_proxy
+{
+  private:
+    /// helper class for iteration
+    class iteration_proxy_internal
+    {
+      public:
+        using difference_type = std::ptrdiff_t;
+        using value_type = iteration_proxy_internal;
+        using pointer = iteration_proxy_internal*;
+        using reference = iteration_proxy_internal&;
+        using iterator_category = std::input_iterator_tag;
+
+      private:
+        /// the iterator
+        IteratorType anchor;
+        /// an index for arrays (used to create key names)
+        std::size_t array_index = 0;
+        /// last stringified array index
+        mutable std::size_t array_index_last = 0;
+        /// a string representation of the array index
+        mutable std::string array_index_str = "0";
+        /// an empty string (to return a reference for primitive values)
+        const std::string empty_str = "";
+
+      public:
+        explicit iteration_proxy_internal(IteratorType it) noexcept : anchor(it) {}
+
+        iteration_proxy_internal(const iteration_proxy_internal&) = default;
+        iteration_proxy_internal& operator=(const iteration_proxy_internal&) = default;
+
+        /// dereference operator (needed for range-based for)
+        iteration_proxy_internal& operator*()
+        {
+            return *this;
+        }
+
+        /// increment operator (needed for range-based for)
+        iteration_proxy_internal& operator++()
+        {
+            ++anchor;
+            ++array_index;
+
+            return *this;
+        }
+
+        /// equality operator (needed for InputIterator)
+        bool operator==(const iteration_proxy_internal& o) const noexcept
+        {
+            return anchor == o.anchor;
+        }
+
+        /// inequality operator (needed for range-based for)
+        bool operator!=(const iteration_proxy_internal& o) const noexcept
+        {
+            return anchor != o.anchor;
+        }
+
+        /// return key of the iterator
+        const std::string& key() const
+        {
+            assert(anchor.m_object != nullptr);
+
+            switch (anchor.m_object->type())
+            {
+                // use integer array index as key
+                case value_t::array:
+                {
+                    if (array_index != array_index_last)
+                    {
+                        array_index_str = std::to_string(array_index);
+                        array_index_last = array_index;
+                    }
+                    return array_index_str;
+                }
+
+                // use key from the object
+                case value_t::object:
+                    return anchor.key();
+
+                // use an empty key for all primitive types
+                default:
+                    return empty_str;
+            }
+        }
+
+        /// return value of the iterator
+        typename IteratorType::reference value() const
+        {
+            return anchor.value();
+        }
+    };
+
+    /// the container to iterate
+    typename IteratorType::reference container;
+
+  public:
+    /// construct iteration proxy from a container
+    explicit iteration_proxy(typename IteratorType::reference cont) noexcept
+        : container(cont) {}
+
+    /// return iterator begin (needed for range-based for)
+    iteration_proxy_internal begin() noexcept
+    {
+        return iteration_proxy_internal(container.begin());
+    }
+
+    /// return iterator end (needed for range-based for)
+    iteration_proxy_internal end() noexcept
+    {
+        return iteration_proxy_internal(container.end());
+    }
+};
+}
+}
+
 
 namespace nlohmann
 {
@@ -1322,6 +1502,16 @@ struct external_constructor<value_t::string>
     {
         j.m_type = value_t::string;
         j.m_value = std::move(s);
+        j.assert_invariant();
+    }
+
+    template<typename BasicJsonType, typename CompatibleStringType,
+             enable_if_t<not std::is_same<CompatibleStringType, typename BasicJsonType::string_t>::value,
+                         int> = 0>
+    static void construct(BasicJsonType& j, const CompatibleStringType& str)
+    {
+        j.m_type = value_t::string;
+        j.m_value.string = j.template create<typename BasicJsonType::string_t>(str);
         j.assert_invariant();
     }
 };
@@ -1520,7 +1710,7 @@ void to_json(BasicJsonType& j, const CompatibleArrayType& arr)
 
 template<typename BasicJsonType, typename T,
          enable_if_t<std::is_convertible<T, BasicJsonType>::value, int> = 0>
-void to_json(BasicJsonType& j, std::valarray<T> arr)
+void to_json(BasicJsonType& j, const std::valarray<T>& arr)
 {
     external_constructor<value_t::array>::construct(j, std::move(arr));
 }
@@ -1555,6 +1745,14 @@ template<typename BasicJsonType, typename... Args>
 void to_json(BasicJsonType& j, const std::pair<Args...>& p)
 {
     j = {p.first, p.second};
+}
+
+// for https://github.com/nlohmann/json/pull/1134
+template<typename BasicJsonType, typename T,
+         enable_if_t<std::is_same<T, typename iteration_proxy<typename BasicJsonType::iterator>::iteration_proxy_internal>::value, int> = 0>
+void to_json(BasicJsonType& j, T b) noexcept
+{
+    j = {{b.key(), b.value()}};
 }
 
 template<typename BasicJsonType, typename Tuple, std::size_t... Idx>
@@ -1733,7 +1931,7 @@ template<typename WideStringType>
 class wide_string_input_adapter : public input_adapter_protocol
 {
   public:
-    wide_string_input_adapter(const WideStringType& w) : str(w) {}
+    explicit wide_string_input_adapter(const WideStringType& w) : str(w) {}
 
     std::char_traits<char>::int_type get_character() noexcept override
     {
@@ -3165,7 +3363,7 @@ scan_number_done:
             {
                 // escape control characters
                 char cs[9];
-                snprintf(cs, 9, "<U+%.4X>", c);
+                snprintf(cs, 9, "<U+%.4hhX>", static_cast<unsigned char>(c));
                 result += cs;
             }
             else
@@ -3746,11 +3944,9 @@ class json_sax_dom_callback_parser : public json_sax<BasicJsonType>
 
     bool end_object() override
     {
-        bool keep = true;
         if (ref_stack.back())
         {
-            keep = callback(static_cast<int>(ref_stack.size()) - 1, parse_event_t::object_end, *ref_stack.back());
-            if (not keep)
+            if (not callback(static_cast<int>(ref_stack.size()) - 1, parse_event_t::object_end, *ref_stack.back()))
             {
                 // discard object
                 *ref_stack.back() = discarded;
@@ -4595,7 +4791,7 @@ class primitive_iterator_t
     primitive_iterator_t const operator++(int) noexcept
     {
         auto result = *this;
-        m_it++;
+        ++m_it;
         return result;
     }
 
@@ -4608,7 +4804,7 @@ class primitive_iterator_t
     primitive_iterator_t const operator--(int) noexcept
     {
         auto result = *this;
-        m_it--;
+        --m_it;
         return result;
     }
 
@@ -4695,7 +4891,7 @@ This class implements a both iterators (iterator and const_iterator) for the
 
 @requirement The class satisfies the following concept requirements:
 -
-[BidirectionalIterator](http://en.cppreference.com/w/cpp/concept/BidirectionalIterator):
+[BidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator):
   The iterator that can be moved can be moved in both directions (i.e.
   incremented and decremented).
 
@@ -5279,118 +5475,6 @@ class iter_impl
 
 // #include <nlohmann/detail/iterators/iteration_proxy.hpp>
 
-
-#include <cstddef> // size_t
-#include <string> // string, to_string
-
-// #include <nlohmann/detail/value_t.hpp>
-
-
-namespace nlohmann
-{
-namespace detail
-{
-/// proxy class for the items() function
-template<typename IteratorType> class iteration_proxy
-{
-  private:
-    /// helper class for iteration
-    class iteration_proxy_internal
-    {
-      private:
-        /// the iterator
-        IteratorType anchor;
-        /// an index for arrays (used to create key names)
-        std::size_t array_index = 0;
-        /// last stringified array index
-        mutable std::size_t array_index_last = 0;
-        /// a string representation of the array index
-        mutable std::string array_index_str = "0";
-        /// an empty string (to return a reference for primitive values)
-        const std::string empty_str = "";
-
-      public:
-        explicit iteration_proxy_internal(IteratorType it) noexcept : anchor(it) {}
-
-        /// dereference operator (needed for range-based for)
-        iteration_proxy_internal& operator*()
-        {
-            return *this;
-        }
-
-        /// increment operator (needed for range-based for)
-        iteration_proxy_internal& operator++()
-        {
-            ++anchor;
-            ++array_index;
-
-            return *this;
-        }
-
-        /// inequality operator (needed for range-based for)
-        bool operator!=(const iteration_proxy_internal& o) const noexcept
-        {
-            return anchor != o.anchor;
-        }
-
-        /// return key of the iterator
-        const std::string& key() const
-        {
-            assert(anchor.m_object != nullptr);
-
-            switch (anchor.m_object->type())
-            {
-                // use integer array index as key
-                case value_t::array:
-                {
-                    if (array_index != array_index_last)
-                    {
-                        array_index_str = std::to_string(array_index);
-                        array_index_last = array_index;
-                    }
-                    return array_index_str;
-                }
-
-                // use key from the object
-                case value_t::object:
-                    return anchor.key();
-
-                // use an empty key for all primitive types
-                default:
-                    return empty_str;
-            }
-        }
-
-        /// return value of the iterator
-        typename IteratorType::reference value() const
-        {
-            return anchor.value();
-        }
-    };
-
-    /// the container to iterate
-    typename IteratorType::reference container;
-
-  public:
-    /// construct iteration proxy from a container
-    explicit iteration_proxy(typename IteratorType::reference cont) noexcept
-        : container(cont) {}
-
-    /// return iterator begin (needed for range-based for)
-    iteration_proxy_internal begin() noexcept
-    {
-        return iteration_proxy_internal(container.begin());
-    }
-
-    /// return iterator end (needed for range-based for)
-    iteration_proxy_internal end() noexcept
-    {
-        return iteration_proxy_internal(container.end());
-    }
-};
-}
-}
-
 // #include <nlohmann/detail/iterators/json_reverse_iterator.hpp>
 
 
@@ -5415,10 +5499,10 @@ create @ref const_reverse_iterator).
 
 @requirement The class satisfies the following concept requirements:
 -
-[BidirectionalIterator](http://en.cppreference.com/w/cpp/concept/BidirectionalIterator):
+[BidirectionalIterator](https://en.cppreference.com/w/cpp/named_req/BidirectionalIterator):
   The iterator that can be moved can be moved in both directions (i.e.
   incremented and decremented).
-- [OutputIterator](http://en.cppreference.com/w/cpp/concept/OutputIterator):
+- [OutputIterator](https://en.cppreference.com/w/cpp/named_req/OutputIterator):
   It is possible to write to the pointed-to element (only if @a Base is
   @ref iterator).
 
@@ -5435,11 +5519,11 @@ class json_reverse_iterator : public std::reverse_iterator<Base>
     using reference = typename Base::reference;
 
     /// create reverse iterator from iterator
-    json_reverse_iterator(const typename base_iterator::iterator_type& it) noexcept
+    explicit json_reverse_iterator(const typename base_iterator::iterator_type& it) noexcept
         : base_iterator(it) {}
 
     /// create reverse iterator from base class
-    json_reverse_iterator(const base_iterator& it) noexcept : base_iterator(it) {}
+    explicit json_reverse_iterator(const base_iterator& it) noexcept : base_iterator(it) {}
 
     /// post-increment (it++)
     json_reverse_iterator const operator++(int)
@@ -5670,6 +5754,7 @@ class binary_reader
 {
     using number_integer_t = typename BasicJsonType::number_integer_t;
     using number_unsigned_t = typename BasicJsonType::number_unsigned_t;
+    using number_float_t = typename BasicJsonType::number_float_t;
     using string_t = typename BasicJsonType::string_t;
     using json_sax_t = json_sax<BasicJsonType>;
 
@@ -6042,35 +6127,39 @@ class binary_reader
                 // half-precision floating-point numbers in the C language
                 // is shown in Fig. 3.
                 const int half = (byte1 << 8) + byte2;
-                const int exp = (half >> 10) & 0x1F;
-                const int mant = half & 0x3FF;
-                double val;
-                if (exp == 0)
+                const double val = [&half]
                 {
-                    val = std::ldexp(mant, -24);
-                }
-                else if (exp != 31)
-                {
-                    val = std::ldexp(mant + 1024, exp - 25);
-                }
-                else
-                {
-                    val = (mant == 0) ? std::numeric_limits<double>::infinity()
-                          : std::numeric_limits<double>::quiet_NaN();
-                }
-                return sax->number_float((half & 0x8000) != 0 ? -val : val, "");
+                    const int exp = (half >> 10) & 0x1F;
+                    const int mant = half & 0x3FF;
+                    assert(0 <= exp and exp <= 32);
+                    assert(0 <= mant and mant <= 1024);
+                    switch (exp)
+                    {
+                        case 0:
+                            return std::ldexp(mant, -24);
+                        case 31:
+                            return (mant == 0)
+                            ? std::numeric_limits<double>::infinity()
+                            : std::numeric_limits<double>::quiet_NaN();
+                        default:
+                            return std::ldexp(mant + 1024, exp - 25);
+                    }
+                }();
+                return sax->number_float((half & 0x8000) != 0
+                                         ? static_cast<number_float_t>(-val)
+                                         : static_cast<number_float_t>(val), "");
             }
 
             case 0xFA: // Single-Precision Float (four-byte IEEE 754)
             {
                 float number;
-                return get_number(number) and sax->number_float(static_cast<double>(number), "");
+                return get_number(number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
             case 0xFB: // Double-Precision Float (eight-byte IEEE 754)
             {
                 double number;
-                return get_number(number) and sax->number_float(number, "");
+                return get_number(number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
             default: // anything else (0xFF is handled inside the other types)
@@ -6311,13 +6400,13 @@ class binary_reader
             case 0xCA: // float 32
             {
                 float number;
-                return get_number(number) and sax->number_float(static_cast<double>(number), "");
+                return get_number(number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
             case 0xCB: // float 64
             {
                 double number;
-                return get_number(number) and sax->number_float(number, "");
+                return get_number(number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
             case 0xCC: // uint 8
@@ -7099,13 +7188,13 @@ class binary_reader
             case 'd':
             {
                 float number;
-                return get_number(number) and sax->number_float(static_cast<double>(number), "");
+                return get_number(number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
             case 'D':
             {
                 double number;
-                return get_number(number) and sax->number_float(number, "");
+                return get_number(number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
             case 'C':  // char
@@ -7299,7 +7388,7 @@ class binary_reader
     std::string get_token_string() const
     {
         char cr[3];
-        snprintf(cr, 3, "%.2X", current);
+        snprintf(cr, 3, "%.2hhX", static_cast<unsigned char>(current));
         return std::string{cr};
     }
 
@@ -9183,7 +9272,7 @@ void grisu2(char* buf, int& len, int& decimal_exponent, FloatType value)
     // numbers, all float's can be recovered using strtod (and strtof). However, the resulting
     // decimal representations are not exactly "short".
     //
-    // The documentation for 'std::to_chars' (http://en.cppreference.com/w/cpp/utility/to_chars)
+    // The documentation for 'std::to_chars' (https://en.cppreference.com/w/cpp/utility/to_chars)
     // says "value is converted to a string as if by std::sprintf in the default ("C") locale"
     // and since sprintf promotes float's to double's, I think this is exactly what 'std::to_chars'
     // does.
@@ -10857,42 +10946,42 @@ and `from_json()` (@ref adl_serializer by default)
 
 @requirement The class satisfies the following concept requirements:
 - Basic
- - [DefaultConstructible](http://en.cppreference.com/w/cpp/concept/DefaultConstructible):
+ - [DefaultConstructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible):
    JSON values can be default constructed. The result will be a JSON null
    value.
- - [MoveConstructible](http://en.cppreference.com/w/cpp/concept/MoveConstructible):
+ - [MoveConstructible](https://en.cppreference.com/w/cpp/named_req/MoveConstructible):
    A JSON value can be constructed from an rvalue argument.
- - [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible):
+ - [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible):
    A JSON value can be copy-constructed from an lvalue expression.
- - [MoveAssignable](http://en.cppreference.com/w/cpp/concept/MoveAssignable):
+ - [MoveAssignable](https://en.cppreference.com/w/cpp/named_req/MoveAssignable):
    A JSON value van be assigned from an rvalue argument.
- - [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable):
+ - [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable):
    A JSON value can be copy-assigned from an lvalue expression.
- - [Destructible](http://en.cppreference.com/w/cpp/concept/Destructible):
+ - [Destructible](https://en.cppreference.com/w/cpp/named_req/Destructible):
    JSON values can be destructed.
 - Layout
- - [StandardLayoutType](http://en.cppreference.com/w/cpp/concept/StandardLayoutType):
+ - [StandardLayoutType](https://en.cppreference.com/w/cpp/named_req/StandardLayoutType):
    JSON values have
-   [standard layout](http://en.cppreference.com/w/cpp/language/data_members#Standard_layout):
+   [standard layout](https://en.cppreference.com/w/cpp/language/data_members#Standard_layout):
    All non-static data members are private and standard layout types, the
    class has no virtual functions or (virtual) base classes.
 - Library-wide
- - [EqualityComparable](http://en.cppreference.com/w/cpp/concept/EqualityComparable):
+ - [EqualityComparable](https://en.cppreference.com/w/cpp/named_req/EqualityComparable):
    JSON values can be compared with `==`, see @ref
    operator==(const_reference,const_reference).
- - [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable):
+ - [LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable):
    JSON values can be compared with `<`, see @ref
    operator<(const_reference,const_reference).
- - [Swappable](http://en.cppreference.com/w/cpp/concept/Swappable):
+ - [Swappable](https://en.cppreference.com/w/cpp/named_req/Swappable):
    Any JSON lvalue or rvalue of can be swapped with any lvalue or rvalue of
    other compatible types, using unqualified function call @ref swap().
- - [NullablePointer](http://en.cppreference.com/w/cpp/concept/NullablePointer):
+ - [NullablePointer](https://en.cppreference.com/w/cpp/named_req/NullablePointer):
    JSON values can be compared against `std::nullptr_t` objects which are used
    to model the `null` value.
 - Container
- - [Container](http://en.cppreference.com/w/cpp/concept/Container):
+ - [Container](https://en.cppreference.com/w/cpp/named_req/Container):
    JSON values can be used like STL containers and provide iterator access.
- - [ReversibleContainer](http://en.cppreference.com/w/cpp/concept/ReversibleContainer);
+ - [ReversibleContainer](https://en.cppreference.com/w/cpp/named_req/ReversibleContainer);
    JSON values can be used like STL containers and provide reverse iterator
    access.
 
@@ -12351,7 +12440,7 @@ class basic_json
     @warning A precondition is enforced with a runtime assertion that will
              result in calling `std::abort` if this precondition is not met.
              Assertions can be disabled by defining `NDEBUG` at compile time.
-             See http://en.cppreference.com/w/cpp/error/assert for more
+             See https://en.cppreference.com/w/cpp/error/assert for more
              information.
 
     @throw invalid_iterator.201 if iterators @a first and @a last are not
@@ -12491,7 +12580,7 @@ class basic_json
     changes to any JSON value.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is linear.
     - As postcondition, it holds: `other == basic_json(other)`.
@@ -12576,7 +12665,7 @@ class basic_json
     exceptions.
 
     @requirement This function helps `basic_json` satisfying the
-    [MoveConstructible](http://en.cppreference.com/w/cpp/concept/MoveConstructible)
+    [MoveConstructible](https://en.cppreference.com/w/cpp/named_req/MoveConstructible)
     requirements.
 
     @liveexample{The code below shows the move constructor explicitly called
@@ -12610,7 +12699,7 @@ class basic_json
     @complexity Linear.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is linear.
 
@@ -12647,7 +12736,7 @@ class basic_json
     @complexity Linear.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is linear.
     - All stored elements are destroyed and all memory is freed.
@@ -13278,8 +13367,8 @@ class basic_json
     @brief get a value (explicit)
 
     Explicit type conversion between the JSON value and a compatible value
-    which is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
-    and [DefaultConstructible](http://en.cppreference.com/w/cpp/concept/DefaultConstructible).
+    which is [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible)
+    and [DefaultConstructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible).
     The value is converted by calling the @ref json_serializer<ValueType>
     `from_json()` method.
 
@@ -13339,8 +13428,8 @@ class basic_json
     @brief get a value (explicit); special case
 
     Explicit type conversion between the JSON value and a compatible value
-    which is **not** [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
-    and **not** [DefaultConstructible](http://en.cppreference.com/w/cpp/concept/DefaultConstructible).
+    which is **not** [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible)
+    and **not** [DefaultConstructible](https://en.cppreference.com/w/cpp/named_req/DefaultConstructible).
     The value is converted by calling the @ref json_serializer<ValueType>
     `from_json()` method.
 
@@ -13585,9 +13674,9 @@ class basic_json
                    not detail::is_basic_json<ValueType>::value
 #ifndef _MSC_VER  // fix for issue #167 operator<< ambiguity under VS2015
                    and not std::is_same<ValueType, std::initializer_list<typename string_t::value_type>>::value
-#endif
-#if defined(JSON_HAS_CPP_17)
+#if defined(JSON_HAS_CPP_17) && _MSC_VER <= 1914
                    and not std::is_same<ValueType, typename std::string_view>::value
+#endif
 #endif
                    , int >::type = 0 >
     operator ValueType() const
@@ -14704,7 +14793,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
 
@@ -14743,7 +14832,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
     - Has the semantics of `const_cast<const basic_json&>(*this).begin()`.
@@ -14775,7 +14864,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
 
@@ -14814,7 +14903,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
     - Has the semantics of `const_cast<const basic_json&>(*this).end()`.
@@ -14844,7 +14933,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [ReversibleContainer](http://en.cppreference.com/w/cpp/concept/ReversibleContainer)
+    [ReversibleContainer](https://en.cppreference.com/w/cpp/named_req/ReversibleContainer)
     requirements:
     - The complexity is constant.
     - Has the semantics of `reverse_iterator(end())`.
@@ -14881,7 +14970,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [ReversibleContainer](http://en.cppreference.com/w/cpp/concept/ReversibleContainer)
+    [ReversibleContainer](https://en.cppreference.com/w/cpp/named_req/ReversibleContainer)
     requirements:
     - The complexity is constant.
     - Has the semantics of `reverse_iterator(begin())`.
@@ -14918,7 +15007,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [ReversibleContainer](http://en.cppreference.com/w/cpp/concept/ReversibleContainer)
+    [ReversibleContainer](https://en.cppreference.com/w/cpp/named_req/ReversibleContainer)
     requirements:
     - The complexity is constant.
     - Has the semantics of `const_cast<const basic_json&>(*this).rbegin()`.
@@ -14947,7 +15036,7 @@ class basic_json
     @complexity Constant.
 
     @requirement This function helps `basic_json` satisfying the
-    [ReversibleContainer](http://en.cppreference.com/w/cpp/concept/ReversibleContainer)
+    [ReversibleContainer](https://en.cppreference.com/w/cpp/named_req/ReversibleContainer)
     requirements:
     - The complexity is constant.
     - Has the semantics of `const_cast<const basic_json&>(*this).rend()`.
@@ -15088,7 +15177,7 @@ class basic_json
 
     @complexity Constant.
 
-    @since version 3.x.x.
+    @since version 3.1.0.
     */
     iteration_proxy<iterator> items() noexcept
     {
@@ -15145,7 +15234,7 @@ class basic_json
     false in the case of a string.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
     - Has the semantics of `begin() == end()`.
@@ -15216,7 +15305,7 @@ class basic_json
     the case of a string.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
     - Has the semantics of `std::distance(begin(), end())`.
@@ -15286,7 +15375,7 @@ class basic_json
     @exceptionsafety No-throw guarantee: this function never throws exceptions.
 
     @requirement This function helps `basic_json` satisfying the
-    [Container](http://en.cppreference.com/w/cpp/concept/Container)
+    [Container](https://en.cppreference.com/w/cpp/named_req/Container)
     requirements:
     - The complexity is constant.
     - Has the semantics of returning `b.size()` where `b` is the largest
@@ -18393,11 +18482,10 @@ namespace std
 @since version 1.0.0
 */
 template<>
-inline void swap(nlohmann::json& j1,
-                 nlohmann::json& j2) noexcept(
-                     is_nothrow_move_constructible<nlohmann::json>::value and
-                     is_nothrow_move_assignable<nlohmann::json>::value
-                 )
+inline void swap<nlohmann::json>(nlohmann::json& j1, nlohmann::json& j2) noexcept(
+    is_nothrow_move_constructible<nlohmann::json>::value and
+    is_nothrow_move_assignable<nlohmann::json>::value
+)
 {
     j1.swap(j2);
 }
