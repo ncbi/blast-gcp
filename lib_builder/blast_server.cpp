@@ -102,6 +102,13 @@ static void log(const char * loglevel, const char * fmt, ...)
     }
 }
 
+static void whack_hsp_lists(std::vector< BlastHSPList * > & hsp_lists)
+{
+    size_t i, count = hsp_lists.size();
+    for (i = 0; i < count; ++i)
+        Blast_HSPListFree(hsp_lists[i]);
+}
+
 static std::vector< ncbi::blast::SFlatHSP >
 iterate_HSPs(std::vector< BlastHSPList * > & vBlastHSPList, int top_n)
 {
@@ -189,6 +196,7 @@ iterate_HSPs(std::vector< BlastHSPList * > & vBlastHSPList, int top_n)
             }
         }
     }
+
     return retarray;
 }
 
@@ -209,7 +217,7 @@ void process(int fdsocket)
     write(fdsocket, buf, strlen(buf));
     while ((rc = read(fdsocket, buf, sizeof(buf))) > 0)
     {
-        log("INFO", "Read %zu bytes %c...", rc, buf[0]);
+        log("INFO", " Read %zu bytes.", rc);
         buffer.write(buf, rc);
     }
 
@@ -297,6 +305,8 @@ void process(int fdsocket)
     std::vector< struct ncbi::blast::SFlatHSP > vSFlatHSP
         = iterate_HSPs(vBlastHSPList, top_n_prelim);
 
+    whack_hsp_lists(vBlastHSPList);
+
     log("INFO", "Ignoring top_n_traceback=%d", top_n_traceback);
 
 
@@ -314,9 +324,7 @@ void process(int fdsocket)
     finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
     log("INFO",
         "blast_server called  TracebackSearch, took %lu ms returned %d, "
-        "got "
-        "%zu "
-        "alignments",
+        "got %zu alignments",
         (finishtime - starttime) / 1000, result, alignments.size());
 
     std::vector< struct blast_tb_list > tbl;
@@ -348,11 +356,11 @@ void process(int fdsocket)
         jtbs.push_back(jtbl);
     }
     json jtblist;
-    jtblist["protocol"]      = "prelim-traceback-2.0";
+    jtblist["protocol"]      = "traceback-results-1.0";
     jtblist["blast_tb_list"] = jtbs;
     std::string out          = jtblist.dump(2);
     ssize_t     ret          = write(fdsocket, out.data(), out.size());
-    if (ret < out.size())
+    if (ret < (ssize_t)out.size())
         log("WARN", "Couldn't write everything");
 
     if (ret < 0)
@@ -363,14 +371,14 @@ int main(int argc, char * argv[])
 {
     if (argc != 2)
     {
-        std::cerr << "Usage: " << argv[0] << "socket\n";
+        std::cerr << "Usage: " << argv[0] << " {TCP port}\n";
         return 1;
     }
 
     int tcp_port = strtol(argv[1], NULL, 10);
     if (tcp_port < 1024 || tcp_port > 65535)
     {
-        std::cerr << "Socket must be between 1024..65535\n";
+        std::cerr << "TCP port must be between 1024..65535\n";
         return 1;
     }
 
@@ -405,6 +413,17 @@ int main(int argc, char * argv[])
             return 0;
         }
         perror("bind");
+        return 2;
+    }
+
+    if (listen(tcp_socket, 64) != 0)
+    {
+        if (errno == EADDRINUSE)
+        {
+            std::cerr << "Another server already running\n";
+            return 0;
+        }
+        log("ERROR", "listen returned %d: %s", errno, strerror(errno));
         return 2;
     }
 
@@ -449,15 +468,9 @@ int main(int argc, char * argv[])
 
     // FIX: Terminate child if time exceeded? (alarm() trigger SIGALRM)
 
-    if (listen(tcp_socket, 64) != 0)
-    {
-        log("ERROR", "listen returned %d: %s", errno, strerror(errno));
-        return 2;
-    }
-
     while (!TERM)
     {
-        log("INFO", "Daemon listening");
+        log("INFO", "Parent daemon listening");
         int fdsocket = accept(tcp_socket, NULL, NULL);
         if (fdsocket == -1)
         {
@@ -477,14 +490,14 @@ int main(int argc, char * argv[])
             continue;
         }
         // We're the child
-        log("INFO", "Handling request");
+        log("INFO", "Child handling request");
         process(fdsocket);
-        log("INFO", "Request handled, exiting");
+        log("INFO", "Request handled, child exiting\n");
         shutdown(fdsocket, SHUT_RDWR);
         exit(0);
     }
 
-    log("INFO", "Daemon terminating");
+    log("INFO", "Parent daemon terminating");
 
     return 0;
 }
