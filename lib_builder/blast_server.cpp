@@ -358,7 +358,7 @@ void process(int fdsocket)
     json jtblist;
     jtblist["protocol"]      = "traceback-results-1.0";
     jtblist["blast_tb_list"] = jtbs;
-    std::string out          = jtblist.dump(2);
+    std::string out          = jtblist.dump();
     ssize_t     ret          = write(fdsocket, out.data(), out.size());
     if (ret < (ssize_t)out.size())
         log("WARN", "Couldn't write everything");
