@@ -6,8 +6,7 @@ usage: $0 <ini.json>
 Required environment variables:
     project
     region
-    deploy_id
-    deploy_user
+    labels
     blast_dataproc_cluster_name
 "
 
@@ -18,15 +17,14 @@ INI_JSON_FILENAME=${1##*/}
 
 checkvar=${project?"${usage}"}
 checkvar=${region?"${usage}"}
-checkvar=${deploy_id?"${usage}"}
-checkvar=${deploy_user?"${usage}"}
 checkvar=${blast_dataproc_cluster_name?"${usage}"}
+checkvar=${labels?"${usage}"}
 
 SPARK_BLAST_JAR="sparkblast.jar"
 SPARK_BLAST_CLASS="gov.nih.nlm.ncbi.blastjni.BLAST_MAIN"
 
 gcloud dataproc jobs submit spark --project ${project} --region ${region} --cluster "${blast_dataproc_cluster_name}" \
-    --labels owner=${deploy_user},deploy_id=${deploy_id} \
+    --labels ${labels} \
     --jars ${SPARK_BLAST_JAR} --class ${SPARK_BLAST_CLASS} \
     --files /etc/blast/dbs.json,libblastjni.so,${INI_JSON} -- ${INI_JSON_FILENAME}
 
