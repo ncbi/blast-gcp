@@ -256,8 +256,18 @@ void process(int fdsocket)
 
     log("INFO", "blast_server calling PrelimSearch");
 
-    ncbi::blast::TBlastHSPStream * hsp_stream
-        = ncbi::blast::PrelimSearch(query, db_location, program, params);
+
+    ncbi::blast::TBlastHSPStream * hsp_stream = NULL;
+    try
+    {
+        hsp_stream
+            = ncbi::blast::PrelimSearch(query, db_location, program, params);
+    }
+    catch (std::exception & x)
+    {
+        log("ERROR", "PrelimSearch threw %s", x.what());
+        return;
+    }
 
     gettimeofday(&tv_cur, NULL);
     unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
@@ -266,7 +276,8 @@ void process(int fdsocket)
 
     if (!hsp_stream)
     {
-        log("INFO", "NULL hsp_stream");
+        log("ERROR", "NULL hsp_stream");
+        return;
     }
 
     std::vector< BlastHSPList * > vBlastHSPList;
@@ -315,10 +326,19 @@ void process(int fdsocket)
     starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
 
     log("INFO", "blast_server calling TracebackSearch with %zu flat HSPs",
-
         vSFlatHSP.size());
-    int result = ncbi::blast::TracebackSearch(query, db_location, program,
+
+    int result = 1;
+    try
+    {
+        result = ncbi::blast::TracebackSearch(query, db_location, program,
                                               params, vSFlatHSP, alignments);
+    }
+    catch (std::exception & x)
+    {
+        log("ERROR", "Traceback threw %s", x.what());
+        return;
+    }
 
     gettimeofday(&tv_cur, NULL);
     finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
@@ -326,6 +346,12 @@ void process(int fdsocket)
         "blast_server called  TracebackSearch, took %lu ms returned %d, "
         "got %zu alignments",
         (finishtime - starttime) / 1000, result, alignments.size());
+
+    if (result != 0)
+    {
+        log("ERROR", "TracebackSearch returned non-zero");
+        alignments.clear();
+    }
 
     std::vector< struct blast_tb_list > tbl;
     if (alignments.size() >= 1000)
