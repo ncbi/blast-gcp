@@ -81,6 +81,21 @@ struct blast_tb_list
 void sighandler(int signum);
 void process(int fdsocket);
 
+static void json_throw(int socket, const char * type, const char * what)
+{
+    json j, k;
+    j["type"]            = type;
+    j["what"]            = what;
+    k["protocol"]        = "blast_exception_1.0";
+    k["blast_exception"] = j;
+
+    std::string out = k.dump(2);
+    write(socket, out.data(), out.size());
+    shutdown(socket, SHUT_RDWR);
+    log("ERROR", "Throwing: %s %s", type, what);
+    exit(1);
+}
+
 static void log(const char * loglevel, const char * fmt, ...)
 {
     static FILE * fout = NULL;
@@ -238,8 +253,7 @@ void process(int fdsocket)
     }
     catch (json::parse_error & e)
     {
-        log("ERROR", "JSON Parse error: %s %d at byte %d", e.what(), e.id,
-            e.byte);
+        json_throw(fdsocket, "JSON parse error", e.what());
         return;
     }
 
@@ -265,7 +279,7 @@ void process(int fdsocket)
     }
     catch (std::exception & x)
     {
-        log("ERROR", "PrelimSearch threw %s", x.what());
+        json_throw(fdsocket, "PrelimSearch threw exception", x.what());
         return;
     }
 
@@ -276,7 +290,7 @@ void process(int fdsocket)
 
     if (!hsp_stream)
     {
-        log("ERROR", "NULL hsp_stream");
+        json_throw(fdsocket, "hsp_stream", "returned NULL");
         return;
     }
 
@@ -293,7 +307,7 @@ void process(int fdsocket)
 
             if (status == kBlastHSPStream_Error)
             {
-                log("ERROR", "kBlastHSPStream_Error");
+                json_throw(fdsocket, "kBlastHSPStream", "Error");
                 return;
             }
 
@@ -336,7 +350,7 @@ void process(int fdsocket)
     }
     catch (std::exception & x)
     {
-        log("ERROR", "Traceback threw %s", x.what());
+        json_throw(fdsocket, "Traceback threw exception", x.what());
         return;
     }
 
@@ -349,8 +363,7 @@ void process(int fdsocket)
 
     if (result != 0)
     {
-        log("ERROR", "TracebackSearch returned non-zero");
-        alignments.clear();
+        json_throw(fdsocket, "Traceback", "returned non-zero");
     }
 
     std::vector< struct blast_tb_list > tbl;
