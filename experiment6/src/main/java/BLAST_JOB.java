@@ -258,18 +258,22 @@ class BLAST_JOB extends Thread
         status.inc_running_jobs( request.id );
 
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
+        BLAST_LIB blib = new BLAST_LIB("FIXME PLEASE - provide path to library file");
 
         try
         {
+            blib.log( "INFO", String.format("RID %s start", request.id) );
             final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
             BLAST_TB_LIST_LIST result = reduce_results( RESULTS );
             if ( result != null )
                 elapsed = write_results( request.id, result, started_at );
+            blib.log( "INFO", String.format("RID %s finished", request.id) );
         }
         catch ( Exception e )
         {
             elapsed = System.currentTimeMillis() - started_at;
             System.out.println( String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
+            blib.log( "INFO", String.format( "[ %s ] empty (%,d ms)", request.id, elapsed ) );
         }
         status.dec_running_jobs( request.id );
         return elapsed;
