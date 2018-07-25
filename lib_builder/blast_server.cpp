@@ -66,7 +66,6 @@
 #include <vector>
 
 static const char * LOGPATH = "/tmp/blast_server.log";
-bool volatile TERM          = false;  // updated in signal handler
 static void log(const char * loglevel, const char * fmt, ...);
 
 using json = nlohmann::json;
@@ -80,6 +79,7 @@ struct blast_tb_list
 
 void sighandler(int signum);
 void process(int fdsocket);
+int SOCKET = 2;  // used by sighandler->json_throw
 
 static void json_throw(int socket, const char * type, const char * what)
 {
@@ -217,8 +217,30 @@ iterate_HSPs(std::vector< BlastHSPList * > & vBlastHSPList, int top_n)
 
 void sighandler(int signum)
 {
-    log("ERROR", "Received signal %d", signum);
-    TERM = true;
+    char buf[64];
+    log("ERROR", "Received signal", signum);
+    switch (signum)
+    {
+        case SIGABRT:
+            strcpy(buf, "SIGABRT");
+            break;
+        case SIGBUS:
+            strcpy(buf, "SIGBUS");
+            break;
+        case SIGSEGV:
+            strcpy(buf, "SIGSEGV");
+            break;
+        case SIGINT:
+            strcpy(buf, "SIGINT");
+            break;
+        case SIGTERM:
+            strcpy(buf, "SIGTERM");
+            break;
+        default:
+            snprintf(buf, sizeof(buf), "SIG%d", signum);
+    }
+
+    json_throw(SOCKET, "Received Signal", buf);
 }
 
 void process(int fdsocket)
@@ -227,6 +249,8 @@ void process(int fdsocket)
     std::stringstream buffer;
     char              buf[4096];
     int               rc;
+
+    SOCKET = fdsocket;
 
     sprintf(buf, "Welcome to blast_server\n");
     write(fdsocket, buf, strlen(buf));
@@ -398,7 +422,8 @@ void process(int fdsocket)
     jtblist["protocol"]      = "traceback-results-1.0";
     jtblist["blast_tb_list"] = jtbs;
     std::string out          = jtblist.dump();
-    ssize_t     ret          = write(fdsocket, out.data(), out.size());
+
+    ssize_t ret = write(fdsocket, out.data(), out.size());
     if (ret < (ssize_t)out.size())
         log("WARN", "Couldn't write everything");
 
@@ -507,7 +532,7 @@ int main(int argc, char * argv[])
 
     // FIX: Terminate child if time exceeded? (alarm() trigger SIGALRM)
 
-    while (!TERM)
+    while (true)
     {
         log("INFO", "Parent daemon listening on TCP port %d", tcp_port);
         int fdsocket = accept(tcp_socket, NULL, NULL);
@@ -535,8 +560,6 @@ int main(int argc, char * argv[])
         shutdown(fdsocket, SHUT_RDWR);
         return 0;
     }
-
-    log("INFO", "Parent daemon terminating");
 
     return 0;
 }
