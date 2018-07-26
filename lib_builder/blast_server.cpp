@@ -79,7 +79,7 @@ struct blast_tb_list
 
 static void sighandler(int signum);
 static void process(int fdsocket);
-static size_t                     HARD_CUTOFF = 1000;
+static size_t                     HARD_CUTOFF = 5000;
 static int                        SOCKET = 2;  // used by sighandler->json_throw
 static std::string                RID    = "";
 static std::vector< std::string > LOGLEVELS
@@ -292,13 +292,36 @@ static void process(int fdsocket)
     }
 
     std::string jsontext = buffer.str();
-    log("DEBUG", "Total read of %zu bytes", jsontext.size());
+    log("INFO", "Total read of %zu bytes", jsontext.size());
     log("DEBUG", "JSON read was '%s'", jsontext.data());
 
-    json j;
+    json        j;
+    int         top_n_prelim;
+    int         top_n_traceback;
+    std::string query;
+    std::string db_location;
+    std::string program;
+    std::string params;
+
+    std::vector< std::string > flds
+        = {"db_location", "top_N_prelim", "top_N_traceback", "query_seq",
+           "db_location", "program",      "blast_params"};
     try
     {
         j = json::parse(jsontext);
+
+        for (const auto & f : flds)
+        {
+            if (!j.count(f))
+                json_throw(fdsocket, "Missing JSON field", f.data());
+        }
+
+        top_n_prelim    = j["top_N_prelim"];
+        top_n_traceback = j["top_N_traceback"];
+        query           = j["query_seq"];
+        db_location     = j["db_location"];
+        program         = j["program"];
+        params          = j["blast_params"];
     }
     catch (json::parse_error & e)
     {
@@ -306,12 +329,6 @@ static void process(int fdsocket)
         return;
     }
 
-    int         top_n_prelim    = j["top_N_prelim"];
-    int         top_n_traceback = j["top_N_traceback"];
-    std::string query           = j["query_seq"];
-    std::string db_location     = j["db_location"];
-    std::string program         = j["program"];
-    std::string params          = j["blast_params"];
 
     if (j.count("RID"))
     {
@@ -590,7 +607,7 @@ int main(int argc, char * argv[])
             continue;
         }
         // We're the child
-        log("DEBUG", "Child handling request");
+        log("INFO", "Child handling request");
         process(fdsocket);
         log("DEBUG", "Request handled, child exiting\n");
         shutdown(fdsocket, SHUT_RDWR);
