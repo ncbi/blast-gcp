@@ -79,17 +79,6 @@ class BLAST_REQUEST_READER
         return res;
     }
 
-    private static void set_defaults( BLAST_REQUEST req, final Integer top_n )
-    {
-        if ( req.id.isEmpty() ) req.id = dflt_id;
-        if ( req.query_seq.isEmpty() ) req.query_seq = dflt_query;
-        if ( req.top_n_prelim < 1 ) req.top_n_prelim = top_n;
-        req.top_n_traceback = req.top_n_prelim;
-        if ( req.db.isEmpty() ) req.db = dflt_db;
-        if ( req.program.isEmpty() ) req.program = dflt_program;
-        if ( req.params.isEmpty() ) req.params = dflt_params;
-    }
-
     private static String append_string_param( final String src, JsonObject root, final String key, final String dflt, final String term )
     {
         return src + String.format( "\"%s\": \"%s\"%s ", key, SE_UTILS.get_json_string( root, key, dflt ), term );
@@ -142,43 +131,6 @@ class BLAST_REQUEST_READER
         return res;
     }
 
-
-    private static boolean req_no_protocol( BLAST_REQUEST request, JsonObject root, final Integer top_n )
-    {
-        boolean res = true;
-        request.id = SE_UTILS.get_json_string( root, "RID", dflt_id );
-        request.query_seq = SE_UTILS.get_json_string ( root, "query_seq", "" );
-        JsonElement blast_params_elem = root.get( "blast_params" );
-        if ( blast_params_elem != null )
-        {
-            if ( blast_params_elem.isJsonObject() )
-            {
-                JsonObject blast_params = blast_params_elem.getAsJsonObject();
-                if ( blast_params != null )
-                {
-                    if ( blast_params.isJsonObject() )
-                    {
-                        request.db = SE_UTILS.get_json_string( blast_params, "db", dflt_db );
-                        request.program = SE_UTILS.get_json_string( blast_params, "program", dflt_program );
-                        request.params = extract_params( request, blast_params );
-                        request.top_n_prelim = SE_UTILS.get_json_int( blast_params, "hitlist_size", top_n );
-                        request.top_n_traceback = request.top_n_prelim;
-                        if ( request.query_seq.isEmpty() )
-                        {
-                            List< String > l = new ArrayList<>();
-                            SE_UTILS.get_string_list( blast_params, "queries", null, l );
-                            if ( !l.isEmpty() )
-                                request.query_seq = l.get( 0 );
-                        }
-                    }
-                }
-            }
-        }
-        if ( request.query_seq.isEmpty() )
-            request.query_seq = dflt_query;
-        return res;
-    }
-
     private static boolean req_protocol_1_0( BLAST_REQUEST request, JsonObject root )
     {
         request.id = SE_UTILS.get_json_string( root, "RID", "" );
@@ -221,10 +173,10 @@ class BLAST_REQUEST_READER
         {
             JsonObject root = tree.getAsJsonObject();
             String protocol = SE_UTILS.get_json_string ( root, "protocol", "" );
-            if ( protocol.isEmpty() )
-                res = req_no_protocol( request, root, top_n );
-            else if ( protocol.equals( "1.0" ) )
+            if ( protocol.equals( "1.0" ) )
                 res = req_protocol_1_0( request, root );
+            else
+              System.err.println( "Invalid BLAST request - no protocol field" );
         }
         return res;
     }
@@ -241,7 +193,7 @@ class BLAST_REQUEST_READER
         }
         catch( Exception e )
         {
-            set_defaults( request, top_n );            
+            request = null;
         }
         return request;
     }
