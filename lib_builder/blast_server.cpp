@@ -94,10 +94,10 @@ static void json_throw(int socket, const char * type, const char * what)
     k["protocol"]        = "blast_exception_1.0";
     k["blast_exception"] = j;
 
+    log("ERROR", "Throwing: %s %s", type, what);
     std::string out = k.dump(2);
     write(socket, out.data(), out.size());
     shutdown(socket, SHUT_RDWR);
-    log("ERROR", "Throwing: %s %s", type, what);
     exit(1);
 }
 
@@ -293,7 +293,7 @@ static void process(int fdsocket)
 
     std::string jsontext = buffer.str();
     log("INFO", "Total read of %zu bytes", jsontext.size());
-    log("DEBUG", "JSON read was '%s'", jsontext.data());
+    log("INFO", "JSON read was '%s'", jsontext.data());
 
     json        j;
     int         top_n_prelim;
@@ -329,7 +329,6 @@ static void process(int fdsocket)
         return;
     }
 
-
     if (j.count("RID"))
     {
         RID = " RID=";
@@ -341,12 +340,10 @@ static void process(int fdsocket)
         set_loglevel(j["jni_log_level"]);
     }
 
-
     gettimeofday(&tv_cur, NULL);
     unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
 
     log("INFO", "blast_server calling PrelimSearch");
-
 
     ncbi::blast::TBlastHSPStream * hsp_stream = NULL;
     try
@@ -609,7 +606,7 @@ int main(int argc, char * argv[])
         // We're the child
         log("INFO", "Child handling request");
         process(fdsocket);
-        log("DEBUG", "Request handled, child exiting\n");
+        log("INFO", "Request handled, child exiting\n");
         shutdown(fdsocket, SHUT_RDWR);
         return 0;
     }
