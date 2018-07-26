@@ -32,7 +32,8 @@
         "num_executors" : 32,
         "num_executor_cores" : 1,
 		"locality_mode" : 1,
-		"parallel_jobs" : 12
+		"parallel_jobs" : 12,
+		"transfer_files" : [ "libblastjni.so" ]
     },
 
     "log" :
