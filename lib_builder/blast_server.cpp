@@ -467,10 +467,11 @@ static void process(int fdsocket)
         jtbl["ties"] = tbl[i].ties;
 
         std::string asn1_hex;
+        asn1_hex.reserve(tbl[i].asn1_blob.size() * 2 + 1);
         for (auto b : tbl[i].asn1_blob)
         {
-            char hexbyte[3];
-            snprintf(hexbyte, sizeof(hexbyte), "%02x", b);
+            char hexbyte[32];
+            snprintf(hexbyte, sizeof(hexbyte), "%02x", (unsigned char)b);
             asn1_hex.append(hexbyte);
         }
         jtbl["asn1_blob"] = asn1_hex;  // tbl[i].asn1_blob;
