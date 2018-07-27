@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.net.UnknownHostException;
 
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
@@ -235,5 +239,66 @@ class json_utils
                 lst.add( dflt );
         }
     }
+
+	public static String readFileAsString( final String filePath )
+	{
+		if ( filePath == null ) return "";
+		try
+		{
+		    StringBuffer fileData = new StringBuffer();
+		    BufferedReader reader = new BufferedReader( new FileReader( filePath ) );
+			char[] buf = new char[ 1024 ];
+		    int numRead = 0;
+		    while ( ( numRead = reader.read( buf ) ) != -1 )
+			{
+		        String readData = String.valueOf( buf, 0, numRead );
+		        fileData.append( readData );
+		    }
+		    reader.close();
+		    return fileData.toString();
+		}
+        catch( Exception e )
+        {
+            System.out.println( String.format( "readFileAsString : %s", e ) );
+        }
+		return "";
+    }
+
+	public static void writeStringToFile( final String filePath, final String content )
+	{
+		if ( filePath == null ) return;
+		if ( content == null ) return;
+		try
+		{
+			PrintWriter out = new PrintWriter( filePath );
+			out.print( content );
+			out.close();
+		}
+        catch( Exception e )
+        {
+            System.out.println( String.format( "writeStringToFile : %s", e ) );
+        }
+	}
+
+	public static String get_last_part( final String filename )
+	{
+        if ( filename == null ) return null;
+        int pos = filename.lastIndexOf( "/" );
+        if ( pos < 0 ) return filename;
+        return filename.substring( pos + 1 );
+    }
+
+	public static byte[] hexStringToByteArray( String s )
+	{
+    	int len = s.length();
+    	byte[] data = new byte[ len / 2 ];
+    	for ( int i = 0; i < len; i += 2 )
+		{
+        	data[ i / 2 ] = (byte) ( ( Character.digit( s.charAt( i ), 16 ) << 4 )
+                                     + Character.digit( s.charAt( i + 1 ), 16 ) );
+    	}
+    	return data;
+	}
+
 }
 

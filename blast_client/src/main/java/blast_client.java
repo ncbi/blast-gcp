@@ -38,7 +38,7 @@ import java.net.Socket;
 public final class blast_client
 {
 
-	public static String process( String query, int port )
+	public static String call_server( int port, final String query )
 	{
 		String res = "";
         try
@@ -48,16 +48,13 @@ public final class blast_client
 		 	PrintStream ps = new PrintStream( socket.getOutputStream() );
             BufferedReader br = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
 
-			System.out.println( "reading" );
 			res = br.readLine();
-			System.out.println( String.format( "rec: %s", res ) );
+			//System.out.println( String.format( "rec: %s", res ) );
 
 			ps.printf( query );
 			socket.shutdownOutput();
 
 			res = br.readLine();
-			System.out.println( String.format( "reading\nrec: %s", res ) );
-
             socket.close();
 		}
         catch( Exception e )
@@ -89,51 +86,78 @@ public final class blast_client
 		return res;
 	}
 
-	private static String readFileAsString( String filePath )
+	public static void process_db_list( int port, request_obj ro, final String db_locations )
 	{
 		try
 		{
-		    StringBuffer fileData = new StringBuffer();
-		    BufferedReader reader = new BufferedReader( new FileReader( filePath ) );
-			char[] buf = new char[ 1024 ];
-		    int numRead = 0;
-		    while ( ( numRead = reader.read( buf ) ) != -1 )
+		    BufferedReader reader = new BufferedReader( new FileReader( db_locations ) );
+			String db_location;
+			while ( ( db_location = reader.readLine() ) != null )
 			{
-		        String readData = String.valueOf( buf, 0, numRead );
-		        fileData.append( readData );
-		    }
+				if ( !db_location.isEmpty() && !db_location.startsWith( "#" ) )
+				{
+					String reply = call_server( port, ro.toJson( db_location ) );
+
+					String result_filename = String.format( "%s-%s.res", ro.RID, json_utils.get_last_part( db_location ) );
+					int l = reply.length();
+					if ( l > 0 )
+					{
+						json_utils.writeStringToFile( result_filename, reply );
+						tb_list tbl = new tb_list( reply );
+						tbl.write_to_file( String.format( "%s.asn1", result_filename ) );
+					}
+					System.out.println( String.format( "'%s' written ( l = %d )", result_filename, l ) );
+				}
+			}
 		    reader.close();
-		    return fileData.toString();
 		}
         catch( Exception e )
         {
-            System.out.println( String.format( "readFileAsString : %s", e ) );
+            System.out.println( String.format( "process_db_list : %s", e ) );
         }
-		return "";
-    }
+	}
+
+	public static void process_request_list( int port, final String request_list_path, final String db_locations )
+	{
+		try
+		{
+		    BufferedReader reader = new BufferedReader( new FileReader( request_list_path ) );
+			String request_path;
+			while ( ( request_path = reader.readLine() ) != null )
+			{
+				if ( !request_path.isEmpty() && !request_path.startsWith( "#" ) )
+				{
+					String org_query = json_utils.readFileAsString( request_path );
+					if ( !org_query.isEmpty() )
+						process_db_list( port, new request_obj( org_query ), db_locations );
+					else
+						System.out.println( String.format( "request: '%s' not found or empty", request_path ) );
+				}
+			}
+		    reader.close();
+		}
+        catch( Exception e )
+        {
+            System.out.println( String.format( "process_request_list : %s", e ) );
+        }
+
+	}
 
     public static void main( String[] args )
     {
-        if ( args.length < 1 )
-            System.out.println( "port-number missing" );
+        if ( args.length < 3 )
+            System.out.println( "port-number, request-list, and db_location are missing" );
         else
         {
             String s_port = args[ 0 ];
 			int port = Integer.parseInt( s_port.trim() );
+			String s_request_list_path = args[ 1 ];
+			String s_db_locations = args[ 2 ];
 
 			int res = run_cmd( "./blast_server", port );
 			System.out.println( String.format( "return-code: %d", res ) );
 			if ( res == 0 )
-			{
-				String query = readFileAsString( "blast_json.test.json" );
-				if ( !query.isEmpty() )
-				{
-					String db_location = "/home/raetzw/BLAST_DB/nr_50M.01/nr_50M.01";
-					request_obj ro = new request_obj( query, db_location );
-					String reply = process( ro.toJson(), port );
-					System.out.println( String.format( "reply: %s", reply ) );
-				}
-			}
+				process_request_list( port, s_request_list_path, s_db_locations );
         }
    }
 

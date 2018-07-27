@@ -34,17 +34,29 @@ import com.google.gson.JsonElement;
 class request_obj
 {
 	public String RID;
-	public String UserID;
+	public String UserID;	// not needed
 	public String db_location;
     public String blast_params;
-	public String db_tag;
+	public String db_tag;	// not needed
 	public String program;
-	public String protocol;
+	public String protocol;	// not needed
 	public String query_seq;
 	public String top_N_prelim;
 	public String top_N_traceback;
 
-    public request_obj( final String src, final String db_location )
+	private String escape_quotes( final String src )
+	{
+		StringWriter sw = new StringWriter();
+		for ( char c: src.toCharArray() )
+		{
+			if ( c == '"' )
+				sw.write( '\\' );
+			sw.write( c );
+		}
+		return sw.toString();
+	}
+
+    public request_obj( final String src )
     {
         JsonParser parser = new JsonParser();
         try
@@ -54,8 +66,7 @@ class request_obj
 
 	        this.RID          = json_utils.get_json_string( root, "RID", "" );
 			this.UserID       = json_utils.get_json_string( root, "UserID", "" );
-			this.db_location  = db_location; // insert !!
-            this.blast_params = json_utils.get_sub_as_string( root, "blast_params" );	// get the orig. text!
+            this.blast_params = escape_quotes( json_utils.get_sub_as_string( root, "blast_params" ) );	// get the orig. text!
     		this.db_tag       = json_utils.get_json_string( root, "db_tag", "" );
     		this.program      = json_utils.get_json_string( root, "program", "" );
     		this.protocol     = json_utils.get_json_string( root, "protocol", "" );
@@ -69,15 +80,17 @@ class request_obj
         }
     }
 
-	public String toJson()
+	public String toJson( final String db_location )
 	{
+		this.db_location  = db_location; // insert !!
+
 		// we cannot use the 'classic way' of Gson.toJson( obj ), because downstream parser does not understand proper escaping!
 		StringWriter sw = new StringWriter();
 		sw.write( "{\n" );
 		sw.write( String.format( "\t\"RID\": \"%s\",\n", RID ) );
 		sw.write( String.format( "\t\"UserID\": \"%s\",\n", UserID ) );
 		sw.write( String.format( "\t\"db_location\": \"%s\",\n", db_location ) );
-		sw.write( String.format( "\t\"blast_params\": %s,\n", blast_params ) ); // quotation already in self.blast_params !!!
+		sw.write( String.format( "\t\"blast_params\": \"%s\",\n", blast_params ) ); // quotation already in self.blast_params !!!
 		sw.write( String.format( "\t\"db_tag\": \"%s\",\n", db_tag ) );
 		sw.write( String.format( "\t\"program\": \"%s\",\n", program ) );
 		sw.write( String.format( "\t\"protocol\": \"%s\",\n", protocol ) );
