@@ -16,7 +16,7 @@ for test in $TESTS; do
 done
 wait
 
-FIXED=$(/bin/ls -1 $TMP/*fix | head)
+FIXED=$(/bin/ls -1 $TMP/*fix)
 
 ./blast_worker 16 800 $FIXED > blast_worker.log 2>&1 &
 
