@@ -463,9 +463,17 @@ static void process(int fdsocket)
     for (size_t i = 0; i != tbl.size(); ++i)
     {
         json jtbl;
-        jtbl["oid"]       = tbl[i].oid;
-        jtbl["ties"]      = tbl[i].ties;
-        jtbl["asn1_blob"] = tbl[i].asn1_blob;
+        jtbl["oid"]  = tbl[i].oid;
+        jtbl["ties"] = tbl[i].ties;
+
+        std::string asn1_hex;
+        for (auto b : tbl[i].asn1_blob)
+        {
+            char hexbyte[3];
+            snprintf(hexbyte, sizeof(hexbyte), "%02x", b);
+            asn1_hex.append(hexbyte);
+        }
+        jtbl["asn1_blob"] = asn1_hex;  // tbl[i].asn1_blob;
         jtbs.push_back(jtbl);
     }
     json jtblist;
