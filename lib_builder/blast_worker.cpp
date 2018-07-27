@@ -47,7 +47,7 @@ using json = nlohmann::json;
 
 std::mutex                QUERIES_MUTEX;
 std::queue< std::string > QUERIES;
-int NUM_PARTS;
+int                       NUM_PARTS;
 
 void start_thread(int threadnum);
 
@@ -147,13 +147,13 @@ int main(int argc, char * argv[])
 {
     if (argc < 3)
     {
-        std::cerr << "Usage: " << argv[0] << " #threads #partitions query.json ...\n";
+        std::cerr << "Usage: " << argv[0]
+                  << " #threads #partitions query.json ...\n";
         return 1;
     }
 
     int num_threads = atoi(argv[1]);
-    NUM_PARTS = atoi(argv[2]);
-
+    NUM_PARTS       = atoi(argv[2]);
 
     {
         std::lock_guard< std::mutex > guard(QUERIES_MUTEX);
@@ -176,6 +176,8 @@ int main(int argc, char * argv[])
     {
         thrd->join();
     }
+
+    fprintf(stderr, "Process finished\n");
 
     return 0;
 }
