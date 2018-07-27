@@ -2,21 +2,19 @@
 
 renice +6 -p $$
 
-MAXJOBS=24
-
-export LD_LIBRARY_PATH="$LD_LIBARAY_PATH:/home/vartanianmh/blast-gcp/lib_builder/:."
-
-TESTS=$(/bin/ls -1 $TMP/tests/A*.json | sort -R)
+export LD_LIBRARY_PATH="$LD_LIBARAY_PATH:."
+TESTS=$(/bin/ls -1 $TMP/A*.json | head )
 for test in $TESTS; do
-    ~/blast-gcp/experiment_dataset2/fixjson.py "$test"
-    OUT="$TMP/$(basename $test).out.2"
-    echo "$OUT"
-    echo "Running $test -> $OUT"
-    echo "$test" >> "$OUT"
-    ~/blast-gcp/lib_builder/blast_worker "$test.fix" >> "$OUT" 2>&1 &
-    j=`jobs | wc -l`
-    while [ $j -ge $MAXJOBS ]; do
-        j=`jobs | wc -l`
-        sleep 1
-    done
+    if [ ! -f "$test.fix" ]; then
+        ~/blast-gcp/experiment_dataset2/fixjson.py "$test" &
+        sleep 0.01
+    fi
 done
+wait
+
+FIXED=$(/bin/ls -1 $TMP/*fix)
+
+./blast_worker 16 10 $FIXED > blast_worker.log 2>&1
+
+valgrind -v --log-file=vg --leak-check=full \
+./blast_worker 16 10 $FIXED > blast_worker_vg.log 2>&1

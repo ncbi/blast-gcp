@@ -1023,6 +1023,8 @@ ncbi::blast::TIntermediateAlignments searchandtb(std::string query,
 
     std::vector<ncbi::blast::SFlatHSP> flat_hsp_list= iterate_HSPs_nojni(hsp_lists, top_n_prelim);
 
+    whack_hsp_lists( hsp_lists );
+
     for (size_t i=0; i!= flat_hsp_list.size(); ++i)
     {
         fprintf(stderr, "Flat HSP #%zu ", i);
