@@ -73,18 +73,8 @@ class tb_res
 	{
 		try
 		{
-			JsonArray a = jo.getAsJsonArray( "asn1_blob" );
-			int n = a.size();
-			this.blob = new byte[ n ];
-			for ( int i = 0; i < n; i++ )
-			{
-				JsonElement e = a.get( i );
-				if ( e != null )
-				{
-					int value = e.getAsInt();
-					this.blob[ i ] = ( byte )value;
-				}
-			}
+			String hex = json_utils.get_json_string( jo, "asn1_blob", "" );
+			this.blob = json_utils.hexStringToByteArray( hex );
 		}
         catch( Exception e )
         {

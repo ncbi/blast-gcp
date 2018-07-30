@@ -52,7 +52,6 @@ class tb_list
 			{
 				JsonArray a = root.getAsJsonArray( "blast_tb_list" );
 				int n = a.size();
-				System.out.println( String.format( "tb_list n=%d", n ) );
 				this.results = new tb_res[ n ];
 				for ( int i = 0; i < n; i++ )
 					this.results[ i ] = new tb_res( a.get( i ) );
