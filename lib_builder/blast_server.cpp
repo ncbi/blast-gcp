@@ -79,7 +79,10 @@ struct blast_tb_list
 
 static void sighandler(int signum);
 static void process(int fdsocket);
-static size_t                     HARD_CUTOFF = 5000;
+
+static size_t HARD_CUTOFF = 10000;
+// Can be higher since we're not creating so many Java objects for JSON and
+// ASN1 bytes.
 static int                        SOCKET = 2;  // used by sighandler->json_throw
 static std::string                RID    = "";
 static std::vector< std::string > LOGLEVELS
