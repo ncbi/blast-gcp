@@ -55,7 +55,7 @@ void start_thread(int threadnum)
 {
     struct timeval tv_cur;
 
-    fprintf(stderr, "Starting thread # %d\n", threadnum);
+    fprintf(stderr, "pid %d Starting thread # %d\n", getpid(), threadnum);
 
     while (true)
     {
@@ -73,7 +73,8 @@ void start_thread(int threadnum)
                     QUERIES.size());
         }
 
-        fprintf(stderr, "Thread %d, loading %s\n", threadnum, jsonfname.data());
+        fprintf(stderr, "pid %d Thread %d, loading %s\n", getpid(), threadnum,
+                jsonfname.data());
         std::ifstream     jsonfile(jsonfname);
         std::stringstream buffer;
         buffer << jsonfile.rdbuf();
@@ -126,8 +127,8 @@ void start_thread(int threadnum)
                 std::cerr << "Unknown db:" << db << "\n";
                 return;
             }
-            fprintf(stderr, "Thread %d, RID %s, dbloc is %s\n", threadnum,
-                    RID.data(), dbloc);
+            fprintf(stderr, "pid %d Thread %d, RID %s, dbloc is %s\n", getpid(),
+                    threadnum, RID.data(), dbloc);
             auto alignments
                 = searchandtb(query, std::string(dbloc), program, params,
                               top_n_prelim, top_n_traceback);
@@ -136,10 +137,12 @@ void start_thread(int threadnum)
 
             gettimeofday(&tv_cur, NULL);
             unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
-            fprintf(stderr,
-                    "Thread %d, RID %s, blast_worker called  PrelimSearch, "
-                    "took %lu ms\n",
-                    threadnum, RID.data(), (finishtime - starttime) / 1000);
+            fprintf(
+                stderr,
+                "pid %d Thread %d, RID %s, blast_worker called  PrelimSearch, "
+                "took %lu ms\n",
+                getpid(), threadnum, RID.data(),
+                (finishtime - starttime) / 1000);
         }
     }
 }

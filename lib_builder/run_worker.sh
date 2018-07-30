@@ -20,8 +20,11 @@ wait
 
 FIXED=$(/bin/ls -1 $TMP/*fix)
 
+rm -f blast_worker.log
+
 for PARTITION in $(seq 1 800); do
-    ./blast_worker 16 $PARTITION $FIXED > blast_worker.log 2>&1 &
+    echo "Starting blast_worker for partition $PARTITION"
+    ./blast_worker 16 $PARTITION $FIXED >> blast_worker.log 2>&1 &
     j=`jobs | wc -l`
     while [ $j -ge $MAXJOBS ]; do
         j=`jobs | wc -l`
