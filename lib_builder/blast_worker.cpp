@@ -47,7 +47,7 @@ using json = nlohmann::json;
 
 std::mutex                QUERIES_MUTEX;
 std::queue< std::string > QUERIES;
-int                       NUM_PARTS;
+int                       PARTITION_NUM;
 
 void start_thread(int threadnum);
 
@@ -105,7 +105,8 @@ void start_thread(int threadnum)
             = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/"
               "50M/";
 
-        for (int i = 0; i != NUM_PARTS; ++i)
+        // for (int i = 0; i != PARTITION_NUM; ++i)
+        int i = PARTITION_NUM;
         {
             gettimeofday(&tv_cur, NULL);
             unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
@@ -148,12 +149,12 @@ int main(int argc, char * argv[])
     if (argc < 3)
     {
         std::cerr << "Usage: " << argv[0]
-                  << " #threads #partitions query.json ...\n";
+                  << " #threads partition# query.json ...\n";
         return 1;
     }
 
     int num_threads = atoi(argv[1]);
-    NUM_PARTS       = atoi(argv[2]);
+    PARTITION_NUM   = atoi(argv[2]);
 
     {
         std::lock_guard< std::mutex > guard(QUERIES_MUTEX);
