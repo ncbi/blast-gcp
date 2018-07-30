@@ -1,14 +1,13 @@
 #############################################################################
 # Support for building shared library for github blast-gcp project
 # Works at NCBI only
-# experiment6 directory may change to pipeline
 SPARK_HOME=/usr/local/spark/2.2.0/
 BLASTBYDATE=/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/
 JAVA_INC=-I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux
-MAIN_JAR="../experiment6/target/sparkblast-1-jar-with-dependencies.jar"
+MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="${SPARK_HOME}/jars/*:${MAIN_JAR}:."
 
-gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h: ../experiment6/src/main/java/BLAST_LIB.java
+gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h: ../pipeline/src/main/java/BLAST_LIB.java
 	javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "${DEPENDS}":. -d . -h . $^
 
 libblastjni.so: blastjni.cpp gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h

@@ -77,9 +77,14 @@ struct blast_tb_list
     std::vector< int > asn1_blob;
 };
 
-void sighandler(int signum);
-void process(int fdsocket);
-int SOCKET = 2;  // used by sighandler->json_throw
+static void sighandler(int signum);
+static void process(int fdsocket);
+static size_t                     HARD_CUTOFF = 5000;
+static int                        SOCKET = 2;  // used by sighandler->json_throw
+static std::string                RID    = "";
+static std::vector< std::string > LOGLEVELS
+    = {"DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+static int LOGLEVEL = 1;
 
 static void json_throw(int socket, const char * type, const char * what)
 {
@@ -89,23 +94,43 @@ static void json_throw(int socket, const char * type, const char * what)
     k["protocol"]        = "blast_exception_1.0";
     k["blast_exception"] = j;
 
+    log("ERROR", "Throwing: %s %s", type, what);
     std::string out = k.dump(2);
     write(socket, out.data(), out.size());
     shutdown(socket, SHUT_RDWR);
-    log("ERROR", "Throwing: %s %s", type, what);
     exit(1);
+}
+
+static int loglevel_to_int(std::string loglevel)
+{
+    for (size_t i = 0; i != LOGLEVELS.size(); ++i)
+    {
+        if (LOGLEVELS[i] == loglevel)
+            return i;
+    }
+
+    log("ERROR", "Unknown loglevel %s", loglevel.data());
+    return -1;
+}
+
+static void set_loglevel(std::string loglevel)
+{
+    LOGLEVEL = loglevel_to_int(loglevel);
 }
 
 static void log(const char * loglevel, const char * fmt, ...)
 {
     static FILE * fout = NULL;
 
+    if (LOGLEVEL > loglevel_to_int(std::string(loglevel)))
+        return;
+
     if (fout == NULL)
         fout = fopen(LOGPATH, "a");
 
     if (fout)
     {
-        fprintf(fout, "%s (%d) : ", loglevel, getpid());
+        fprintf(fout, "%s (%d) :%s ", loglevel, getpid(), RID.data());
 
         va_list args;
         va_start(args, fmt);
@@ -203,7 +228,7 @@ iterate_HSPs(std::vector< BlastHSPList * > & vBlastHSPList, int top_n)
                 flathsp.subject_gapped_start
                     = pBlastHSPList->hsp_array[h]->subject.gapped_start;
 
-                if (retarray.size() < 1000)
+                if (retarray.size() < HARD_CUTOFF)
                     retarray.push_back(flathsp);
                 else
                     log("WARN", "  Cutting off large vector %zu",
@@ -215,10 +240,10 @@ iterate_HSPs(std::vector< BlastHSPList * > & vBlastHSPList, int top_n)
     return retarray;
 }
 
-void sighandler(int signum)
+static void sighandler(int signum)
 {
     char buf[64];
-    log("ERROR", "Received signal", signum);
+    log("ERROR", "Received signal %d", signum);
     switch (signum)
     {
         case SIGABRT:
@@ -243,7 +268,7 @@ void sighandler(int signum)
     json_throw(SOCKET, "Received Signal", buf);
 }
 
-void process(int fdsocket)
+static void process(int fdsocket)
 {
     struct timeval    tv_cur;
     std::stringstream buffer;
@@ -256,7 +281,7 @@ void process(int fdsocket)
     write(fdsocket, buf, strlen(buf));
     while ((rc = read(fdsocket, buf, sizeof(buf))) > 0)
     {
-        log("INFO", " Read %zu bytes.", rc);
+        log("DEBUG", " Read %zu bytes.", rc);
         buffer.write(buf, rc);
     }
 
@@ -270,10 +295,33 @@ void process(int fdsocket)
     log("INFO", "Total read of %zu bytes", jsontext.size());
     log("INFO", "JSON read was '%s'", jsontext.data());
 
-    json j;
+    json        j;
+    int         top_n_prelim;
+    int         top_n_traceback;
+    std::string query;
+    std::string db_location;
+    std::string program;
+    std::string params;
+
+    std::vector< std::string > flds
+        = {"db_location", "top_N_prelim", "top_N_traceback", "query_seq",
+           "db_location", "program",      "blast_params"};
     try
     {
         j = json::parse(jsontext);
+
+        for (const auto & f : flds)
+        {
+            if (!j.count(f))
+                json_throw(fdsocket, "Missing JSON field", f.data());
+        }
+
+        top_n_prelim    = j["top_N_prelim"];
+        top_n_traceback = j["top_N_traceback"];
+        query           = j["query_seq"];
+        db_location     = j["db_location"];
+        program         = j["program"];
+        params          = j["blast_params"];
     }
     catch (json::parse_error & e)
     {
@@ -281,19 +329,21 @@ void process(int fdsocket)
         return;
     }
 
-    int         top_n_prelim    = j["top_N_prelim"];
-    int         top_n_traceback = j["top_N_traceback"];
-    std::string query           = j["query_seq"];
-    std::string db_location     = j["db_location"];
-    std::string program         = j["program"];
-    std::string params          = j["blast_params"];
+    if (j.count("RID"))
+    {
+        RID = " RID=";
+        RID += j["RID"];
+    }
 
+    if (j.count("jni_log_level"))
+    {
+        set_loglevel(j["jni_log_level"]);
+    }
 
     gettimeofday(&tv_cur, NULL);
     unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
 
     log("INFO", "blast_server calling PrelimSearch");
-
 
     ncbi::blast::TBlastHSPStream * hsp_stream = NULL;
     try
@@ -532,9 +582,9 @@ int main(int argc, char * argv[])
 
     // FIX: Terminate child if time exceeded? (alarm() trigger SIGALRM)
 
+    log("INFO", "Parent daemon listening on TCP port %d", tcp_port);
     while (true)
     {
-        log("INFO", "Parent daemon listening on TCP port %d", tcp_port);
         int fdsocket = accept(tcp_socket, NULL, NULL);
         if (fdsocket == -1)
         {

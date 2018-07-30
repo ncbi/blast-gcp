@@ -92,10 +92,10 @@ export MALLOC_CHECK_=2
     -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
     -llmdb-static -lpthread -lz -lbz2 \
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
-    -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
+    -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -pthread \
     -o ./libblastjni.so"
 
-    if [ "1" == "1" ]; then
+    if [ "0" == "1" ]; then
         echo "Running static analysis on C++ code"
         cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp blast_worker.cpp
         scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"

@@ -16,6 +16,7 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/ncbi/gcc/4.9.3/lib64/"
 export BLASTDB=/net/frosty/vol/blast/db/blast
 BLASTBYDATE="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/"
 export SPARK_HOME=/usr/local/spark/2.2.0/
+export TCP_PORT=12953
 
 echo "Building at $BUILDENV on $DISTRO"
 
@@ -79,6 +80,7 @@ BLAST_SERVER_GPP_COMMAND="
     -llmdb-static -lpthread -lz -lbz2 \
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
+    -lmcheck \
     -o blast_server"
 
 echo "Running static analysis on C++ code"
@@ -92,8 +94,8 @@ cp blast_server ../pipeline
 line
 set +errexit
 echo "Running tests..."
-./blast_server 12345
-cat blast_server.test.json | nc localhost 12345 > blast_server.test.result
+./blast_server $TCP_PORT
+cat blast_server.test.json | nc localhost $TCP_PORT > blast_server.test.result
 killall blast_server
 cmp blast_server.test.result blast_server.test.expected
 if [[ $? -ne 0 ]]; then
