@@ -31,7 +31,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
-public final class BLAST_CONSOLE  extends Thread
+public final class BLAST_CONSOLE extends Thread
 {
     private final BLAST_STATUS status;
 

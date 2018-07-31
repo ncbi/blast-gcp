@@ -36,8 +36,11 @@ class BLAST_LIST_SUBMIT extends Thread
 {
     private final BLAST_STATUS status;
     private final CMD_Q_ENTRY cmd;
+	private final String list_filename;
+	private final String list_filter;
     private final int top_n;
     private final AtomicBoolean running;
+	private final Boolean exit_on_end;
 
     public BLAST_LIST_SUBMIT( BLAST_STATUS a_status,
                               CMD_Q_ENTRY a_cmd,
@@ -47,6 +50,43 @@ class BLAST_LIST_SUBMIT extends Thread
         this.cmd = a_cmd;        
         this.top_n = a_top_n;
         this.running = new AtomicBoolean( true );
+
+		String[] cmd_parts = this.cmd.line.substring( 1 ).split( " " );
+		if ( cmd_parts.length > 0 )
+		{
+			this.list_filename = cmd_parts[ 0 ];
+
+			if ( cmd_parts.length > 1 )
+			{
+				if ( cmd_parts[ 1 ].equals( "exit" ) )
+				{
+					this.exit_on_end = true;
+					if ( cmd_parts.length > 2 )
+						this.list_filter = cmd_parts[ 2 ];
+					else
+						this.list_filter = "";
+				}
+				else
+				{
+					this.list_filter = cmd_parts[ 1 ];
+					if ( cmd_parts.length > 2 )
+						this.exit_on_end = cmd_parts[ 2 ].equals( "exit" );
+					else
+						this.exit_on_end = false;
+				}
+			}
+			else
+			{
+				this.list_filter = "";
+				this.exit_on_end = false;
+			}
+		}
+		else
+		{
+			this.list_filename = "";
+			this.list_filter = "";
+			this.exit_on_end = false;
+		}
     }
 
     private  void sleep_now( Integer ms )
@@ -67,8 +107,7 @@ class BLAST_LIST_SUBMIT extends Thread
     {
         try
         {
-            String list_filename = cmd.line.substring( 1 );
-            cmd.stream.println( String.format( "starting list : %s", list_filename ) );
+            cmd.stream.println( String.format( "starting list : '%s', filter:'%s'", list_filename, list_filter ) );
             FileInputStream fs = new FileInputStream( list_filename );
             BufferedReader br = new BufferedReader( new InputStreamReader( fs ) );
             String line;
@@ -93,12 +132,19 @@ class BLAST_LIST_SUBMIT extends Thread
                         boolean done = false;
                         while( !done )
                         {
-                            done = status.add_request_file( req_file, cmd.stream, top_n );
-                            if ( !done )
+							int res = status.add_request_file( req_file, cmd.stream, top_n, list_filter );
+							if ( res == 0 )
                                 sleep_now( 500 );
+							else
+							{
+								done = true;
+								if ( res == 1 )
+								{
+                        			cmd.stream.println( String.format( "REQUEST-FILE '%s' added", req_file ) );
+                        			submitted++;
+								}
+							}
                         }
-                        cmd.stream.println( String.format( "REQUEST-FILE '%s' added", req_file ) );
-                        submitted++;
                     }
                 }
             }
@@ -110,6 +156,12 @@ class BLAST_LIST_SUBMIT extends Thread
 
             long elapsed = System.currentTimeMillis() - started_at;
             cmd.stream.println( String.format( "done with list : %s in %,d ms", list_filename, elapsed ) );
+
+			if ( exit_on_end )
+			{
+				cmd.stream.println( "exit at end of list." );
+				status.stop();
+			}
         }
         catch( Exception e )
         {

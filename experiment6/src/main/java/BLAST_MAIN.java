@@ -122,7 +122,7 @@ public final class BLAST_MAIN
                     else if ( e.line.startsWith( "R" ) )
                         status.add_request_string( e.line.substring( 1 ), e.stream, top_n );
                     else if ( e.line.startsWith( "F" ) )
-                        status.add_request_file( e.line.substring( 1 ), e.stream, top_n );
+                        status.add_request_file( e.line.substring( 1 ), e.stream, top_n, "" );
                     else if ( e.line.startsWith( "L" ) )
                     {
                         if ( submitter == null )
@@ -167,7 +167,7 @@ public final class BLAST_MAIN
         return res;
     }
 
-    public static String main_spark( final String ini_file )
+    public static String main_spark( final String ini_file, final String script_file )
     {
         String res = "";
         final String appName = BLAST_MAIN.class.getSimpleName();
@@ -229,9 +229,12 @@ public final class BLAST_MAIN
 
                 System.out.println( "spark-blast started..." );
 
-                /* ************************************************ */
+				SCRIPT_PLAYER player = new SCRIPT_PLAYER( script_file, status );
+				player.start();
+
+                /* ********************************************************************** */
                 res = main_spark_loop( status, log_writer, jobs, settings.top_n, ini_file );
-                /* ************************************************ */
+                /* ********************************************************************** */
 
                 jobs.stop_all_jobs();
 				log_receiver.join();
@@ -261,9 +264,12 @@ public final class BLAST_MAIN
         else
         {
             String ini = args[ 0 ];
+			String script = "";
+			if ( args.length > 1 )
+				script = args[ 1 ];
             while ( !ini.isEmpty() )
             {
-                ini = main_spark( ini );
+                ini = main_spark( ini, script );
             }
         }
    }

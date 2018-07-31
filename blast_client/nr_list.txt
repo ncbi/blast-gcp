@@ -1,0 +1,5 @@
+../../BLAST_DB/nr_50M.01/nr_50M.01
+../../BLAST_DB/nr_50M.04/nr_50M.04
+../../BLAST_DB/nr_50M.05/nr_50M.05
+../../BLAST_DB/nr_50M.08/nr_50M.08
+

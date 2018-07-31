@@ -44,7 +44,7 @@
         "transfer_files" : [ "libblastjni.so" ],
         "log_level" : "ERROR",
         "locality_wait" : "3s",
-        "with_locality" : true,
+        "locality_mode" : 0,
         "with_dyn_alloc" : false,
         "executor_memory" : "",
         "shuffle_reduceLocality_enabled" : false,

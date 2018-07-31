@@ -175,16 +175,44 @@ class BLAST_STATUS
         return res;
     }
 
-    public boolean add_request_file( final String filename, final PrintStream ps, int top_n )
+	// return 0 ... not enouth space in queue
+    // return 1 ... added
+	// return 2 ... filtered out
+	// return 3 ... error adding
+	// return 4 ... invalid request
+    public int add_request_file( final String filename, final PrintStream ps, int top_n, final String program_filter )
     {
-        boolean res = false;
+        int res = 0;
         if ( can_take() > 0 )
         {
             REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_file( filename, top_n, get_skip_jni() );
             if ( re != null )
-                res = add_request( re, ps );
+			{
+				if ( program_filter.isEmpty() )
+				{
+                	if ( add_request( re, ps ) )
+						res = 1;
+					else
+						res = 3;
+				}
+				else if ( re.request.db.startsWith( program_filter ) )
+				{
+                	if ( add_request( re, ps ) )
+						res = 1;
+					else
+						res = 3;
+				}
+				else
+				{
+                	ps.printf( "'%s' filtered out by progam '%s'<>'%s'\n", filename, program_filter, re.request.db );
+					res = 2;
+				}
+			}
             else if ( ps != null )
+			{
                 ps.printf( "invalid request in '%s'\n", filename );
+				res = 4;
+			}
         }
         return res;
     }

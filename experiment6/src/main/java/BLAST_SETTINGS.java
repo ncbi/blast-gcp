@@ -71,7 +71,7 @@ public class BLAST_SETTINGS implements Serializable
     public List< String > transfer_files;
     public String  spark_log_level;
     public String  locality_wait;
-    public Boolean with_locality;
+    public Integer locality_mode;	/* 0...perfered loc, 1...partitioned, 2...none */
     public Boolean with_dyn_alloc;
     public Integer num_executors;
     public Integer num_executor_cores;
@@ -170,6 +170,16 @@ public class BLAST_SETTINGS implements Serializable
         return S;
     }
 
+	private String locality_mode_string()
+	{
+		if ( locality_mode == 0 )
+			return "perfered locality";
+		else if ( locality_mode == 1 )
+			return "partitioned";
+		else
+			return "none";
+	}
+
     @Override public String toString()
     {
         String S = "SOURCE:\n";
@@ -200,7 +210,7 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\ttransfer files ..... %s\n", transfer_files );
         S = S + String.format( "\tspark log level .... '%s'\n", spark_log_level );
         S = S + String.format( "\tlocality.wait ...... %s\n", locality_wait );
-        S = S + String.format( "\twith_locality ...... %s\n", Boolean.toString( with_locality ) );
+        S = S + String.format( "\tlocality.mode ...... %s\n", locality_mode_string() );
         S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
         S = S + String.format( "\texecutors .......... %d ( %d cores )\n", num_executors, num_executor_cores );
         S = S + String.format( "\treduce_loc_enabled . %s\n", Boolean.toString( shuffle_reduceLocality_enabled ) );

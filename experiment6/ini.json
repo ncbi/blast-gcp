@@ -11,7 +11,7 @@
 
     "blastjni" :
     {
-        "num_db_limit" : 15,
+        "num_db_limit" : 16,
         "manifest_root" : "dbs_50M.json"
     },
 
@@ -29,8 +29,11 @@
 
     "spark" :
     {
-        "num_executors" : 15,
-        "num_executor_cores" : 2
+        "num_executors" : 32,
+        "num_executor_cores" : 1,
+		"locality_mode" : 1,
+		"parallel_jobs" : 12,
+		"transfer_files" : [ "libblastjni.so" ]
     },
 
     "log" :

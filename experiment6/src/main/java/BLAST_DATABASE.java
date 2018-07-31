@@ -53,10 +53,12 @@ class BLAST_DATABASE
                     final BLAST_YARN_NODES nodes,
                     final BLAST_DB_SETTING a_db_setting )
     {
-        if ( settings.with_locality )
-            DB_SECS = make_db_partitions_with_locality( settings, LOG_SETTING, sc, nodes, a_db_setting );
-        else
-            DB_SECS = make_db_partitions_no_locality( settings, LOG_SETTING, sc, a_db_setting );
+		if ( settings.locality_mode == 0 )
+            DB_SECS = make_db_with_prefered_localition( settings, LOG_SETTING, sc, nodes, a_db_setting );
+		else if ( settings.locality_mode == 1 )
+            DB_SECS = make_db_with_partitions( settings, LOG_SETTING, sc, nodes, a_db_setting );
+		else
+			DB_SECS = make_db_without_locality( settings, LOG_SETTING, sc, a_db_setting );
 
         final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
         total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
@@ -76,7 +78,37 @@ class BLAST_DATABASE
     /* ===========================================================================================
             create database-partitions
        =========================================================================================== */
-    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_no_locality(
+    private JavaRDD< BLAST_DATABASE_PART > make_db_with_partitions(
+                                final BLAST_SETTINGS settings,
+                                final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
+                                final JavaSparkContext sc,
+                                final BLAST_YARN_NODES nodes,
+                                final BLAST_DB_SETTING db )
+    {
+        final List< Tuple2< Integer, BLAST_DATABASE_PART > > db_list = new ArrayList<>();
+
+        Integer i = 0;
+        for ( CONF_VOLUME volume : db.volumes )
+        {
+            BLAST_DATABASE_PART part = new BLAST_DATABASE_PART( i, volume, db.location );
+            db_list.add( new Tuple2<>( i++, part ) );
+        }
+
+        //Integer n = db.volumes.size();
+        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( nodes.count() );
+        return sc.parallelizePairs( db_list, nodes.count() ).partitionBy( p ).map( item ->
+        {
+            BLAST_DATABASE_PART part = item._2();
+
+            BLAST_LOG_SETTING log = LOG_SETTING.getValue();
+            if ( log.part_prep )
+                BLAST_SEND.send( log, String.format( "preparing %s", part ) );
+
+            return BLAST_LIB_SINGLETON.prepare( part, log );
+        } ).cache();
+    }
+
+    private JavaRDD< BLAST_DATABASE_PART > make_db_without_locality(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,
@@ -92,8 +124,7 @@ class BLAST_DATABASE
         }
 
         Integer n = db.volumes.size();
-        BLAST_PARTITIONER0 p = new BLAST_PARTITIONER0( n );
-        return sc.parallelizePairs( db_list, n ).partitionBy( p ).map( item ->
+        return sc.parallelizePairs( db_list, n ).map( item ->
         {
             BLAST_DATABASE_PART part = item._2();
 
@@ -105,7 +136,7 @@ class BLAST_DATABASE
         } ).cache();
     }
 
-    private JavaRDD< BLAST_DATABASE_PART > make_db_partitions_with_locality(
+    private JavaRDD< BLAST_DATABASE_PART > make_db_with_prefered_localition(
                                 final BLAST_SETTINGS settings,
                                 final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                 final JavaSparkContext sc,

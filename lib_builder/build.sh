@@ -42,7 +42,7 @@ rm -f ./*.class
 rm -rf gov
 rm -f ./*test.result
 rm -f ./*.jar
-rm -f /tmp/blastjni."$USER".log
+rm -f /tmp/blastjni."$USER".log /tmp/blast_server.log
 rm -f ./signatures
 rm -f ./core.* ./hs_err_* ./output.*
 rm -rf /tmp/scan-build-* /tmp/vartanianmh/scan-build-* > /dev/null 2>&1
@@ -183,22 +183,12 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
 
-    if [ "1" == "1" ]; then
-        echo "Running static analysis on C++ code"
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
-        echo "Static analysis on C++ code complete"
-    fi
-
-    echo "Compiling and linking blastjni.cpp"
-    $GPPCOMMAND
-    cp libblastjni.so ../pipeline
-
+    BLAST_SERVER_GPP_COMMAND="
     g++ \
-    blast_json.cpp \
+    blast_server.cpp \
     -std=gnu++11 \
-    -Wall -O -I . \
+    -march=sandybridge \
+    -Wall -O3 -I . \
     -Wextra -pedantic \
     -Wlogical-op \
     -Wshadow \
@@ -250,8 +240,87 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -llmdb-static -lpthread -lz -lbz2 \
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
-    -o blast_json
+    -o blast_server"
+
+    BLAST_JSON_GPP_COMMAND="
+    g++ \
+    blast_json.cpp \
+    -std=gnu++11 \
+    -march=sandybridge \
+    -Wall -O3 -I . \
+    -Wextra -pedantic \
+    -Wlogical-op \
+    -Wshadow \
+    -Wformat=2 \
+    -Wformat-security \
+    -Woverloaded-virtual \
+    -Wcast-align \
+    -Wno-ctor-dtor-privacy \
+    -Wdisabled-optimization \
+    -Winit-self \
+    -Wmissing-declarations \
+    -Wmissing-include-dirs \
+    -Wredundant-decls \
+    -Wsign-promo \
+    -Wstrict-overflow=5 \
+    -Wswitch \
+    -Wno-unused \
+    -Wnon-virtual-dtor \
+    -Wreorder \
+    -Wdeprecated \
+    -Wno-float-equal \
+    -fPIC \
+    -L./int/blast/libs \
+    -I $BLASTBYDATE/include \
+    $JAVA_INC \
+    -I $BLASTBYDATE/ReleaseMT/inc \
+    -L $BLASTBYDATE/ReleaseMT/lib \
+    -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 \
+    -L . \
+    -L ext \
+    -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+    -fopenmp -lxblastformat -lalign_format -ltaxon1 -lblastdb_format \
+    -lgene_info -lxformat -lxcleanup -lgbseq -lmlacli \
+    -lmla -lmedlars -lpubmed -lvalid -ltaxon3 -lxalnmgr \
+    -lblastxml -lblastxml2 -lxcgi -lxhtml -lproteinkmer \
+    -lxblast -lxalgoblastdbindex -lcomposition_adjustment \
+    -lxalgodustmask -lxalgowinmask -lseqmasks_io -lseqdb \
+    -lblast_services -lxalnmgr -lxobjutil -lxobjread \
+    -lvariation -lcreaders -lsubmit -lxnetblastcli \
+    -lxnetblast -lblastdb -lscoremat -ltables -lxregexp \
+    -lncbi_xloader_genbank -lncbi_xreader_id1 \
+    -lncbi_xreader \
+    -lncbi_xreader_id2 \
+    -lxconnect -lid1 -lid2 -lxobjmgr \
+    -lgenome_collection -lseqedit -lseqsplit -lsubmit \
+    -lseqset -lseq -lseqcode -lsequtil -lpub -lmedline \
+    -lbiblio -lgeneral -lxser -lxutil -lxncbi -lxcompress \
+    -llmdb-static -lpthread -lz -lbz2 \
+    -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
+    -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
+    -o blast_json"
+
+
+    if [ "1" == "1" ]; then
+        echo "Running static analysis on C++ code"
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
+        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$BLAST_JSON_GPP_COMMAND"
+        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$BLAST_SERVER_GPP_COMMAND"
+        echo "Static analysis on C++ code complete"
+    fi
+
+    echo "Compiling and linking blastjni.cpp"
+    $GPPCOMMAND
+    cp libblastjni.so ../pipeline
+
+    $BLAST_JSON_GPP_COMMAND
     cp blast_json ../pipeline
+
+    $BLAST_SERVER_GPP_COMMAND
+    cp blast_server ../pipeline
 
 
 fi
@@ -335,13 +404,16 @@ line
     gsutil cp blast_json \
         "gs://ncbi-build-artifacts/blast_json.$BUILDTAG"
 
+    gsutil cp blast_server \
+        "gs://ncbi-build-artifacts/blast_server.$BUILDTAG"
+
     gsutil cp ../pipeline/target/sparkblast-1-jar-with-dependencies.jar \
         "gs://ncbi-build-artifacts/sparkblast-1-jar-with-dependencies.$BUILDTAG.jar"
 
     gcloud container builds submit \
         --project ncbi-sandbox-blast \
         --config ../pipeline/cloudbuild.yaml \
-        --substitutions=_PATH=.,_TAG=dev-$BUILDTAG .
+        --substitutions=_PATH=.,_TAG=dev-$BUILDTAG,_VERSION=$BUILDTAG .
 
 #fi
 

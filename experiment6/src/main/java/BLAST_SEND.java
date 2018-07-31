@@ -79,7 +79,7 @@ public class BLAST_SEND
             if ( ps != null )
 			{
 				long milliseconds = System.currentTimeMillis();
-				ps.printf( "%d,%s,%s,%s\n", milliseconds, localName, executorName, msg );
+				ps.printf( "%d %s %s %s\n", milliseconds, localName, executorName, msg );
 			}
         }
         catch ( Exception e )
