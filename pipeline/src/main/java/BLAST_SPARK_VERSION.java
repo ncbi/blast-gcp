@@ -1,2 +1,2 @@
 package gov.nih.nlm.ncbi.blastjni;
-public final class BLAST_SPARK_VERSION { public static final String SRC_DATE = "Wed Aug  1 16:29:20 EDT 2018"; }
+public final class BLAST_SPARK_VERSION { public static final String SRC_DATE = "Thu Aug  2 14:06:41 EDT 2018"; }

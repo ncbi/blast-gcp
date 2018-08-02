@@ -50,6 +50,7 @@ class BLAST_STATUS
     private final ConcurrentLinkedQueue< String > ack_q;
     private final ConcurrentLinkedQueue< CMD_Q_ENTRY > cmd_q;
     private BLAST_JOBS jobs;
+    private final CustomLogger job_stats_logger;
 
     public BLAST_STATUS( final BLAST_SETTINGS a_settings )
     {
@@ -67,6 +68,12 @@ class BLAST_STATUS
         request_q = new ConcurrentLinkedQueue<>();
         ack_q = new ConcurrentLinkedQueue<>();
         cmd_q = new ConcurrentLinkedQueue<>();
+
+		String job_stats_log = "projects/ncbi-sandbox-blast/logs/dataproc-job-stats";
+		String job_stats_app = "blast-gcp";
+		String job_stats_resource = "global";
+
+		job_stats_logger = new CustomLogger( job_stats_log, job_stats_app, job_stats_resource, null );
         jobs = null;
     }
 
@@ -90,16 +97,39 @@ class BLAST_STATUS
     public boolean get_skip_search_and_tb() { return skip_search_and_tb.get(); }
     public void set_skip_search_and_tb( boolean value ) { skip_search_and_tb.set( value ); }
 
+	private void custom_log( final String id,
+							 final String action,
+							 final String cnt_type,
+							 int cnt,
+							 final String event )
+	{
+		int currentTime = ( int )( System.currentTimeMillis() / 1000L );
+
+        String logmsg = String.format( "rid=%s;action=%s;%s=%d;%s=%d",
+									   id, action, cnt_type, cnt, event, currentTime );
+        job_stats_logger.info( logmsg );
+	}
+
     public int inc_running_jobs( final String id )
     {
         running_ids.put( id, 1 );
-        return running_jobs.incrementAndGet();
+		int running_cnt = running_jobs.incrementAndGet();
+
+		// log to stack-driver to drive analytics
+		custom_log( id, "Starting Spark Run", "running_count", running_cnt, "spark_start_time" );
+
+        return running_cnt;
     }
 
     public int dec_running_jobs( final String id )
     {
         running_ids.remove( id );
-        return running_jobs.decrementAndGet();
+        int running_cnt = running_jobs.decrementAndGet();
+
+		// log to stack-driver to drive analytics
+		custom_log( id, "Endiing Spark Run", "running_count", running_cnt, "spark_end_time" );
+
+		return running_cnt;
     }
 
     private boolean is_a_running_id( final String id )
@@ -119,10 +149,16 @@ class BLAST_STATUS
         boolean res = !contains( re );
         if ( res )
         {
-            inc_backlog();
+            int backlog_sz = inc_backlog();
             request_q.offer( re );
+
             if ( ps != null )
+			{
                 ps.printf( "REQUEST '%s' added\n", re.request.id );
+
+				// log to stack-driver to drive analytics
+				custom_log( re.request.id, "Queuing to Backlog", "backlog_size", backlog_sz, "backlog_queue_time" );
+			}
         }
         else
         {
@@ -192,7 +228,12 @@ class BLAST_STATUS
     {
         REQUESTQ_ENTRY res = request_q.poll();
         if ( res != null )
-            dec_backlog();
+		{
+            int backlog_sz = dec_backlog();
+
+			// log to stack-driver to drive analytics
+			custom_log( res.request.id, "Queuing to Spark", "backlog_size", backlog_sz, "spark_queue_time" );
+		}
         return res;
     }
 
