@@ -42,6 +42,9 @@ public class BLAST_LOG_SETTING_READER
     public static final String key_worker_shift = "worker_shift";
     public static final String key_pref_loc = "pref_loc";
     public static final String key_db_copy = "db_copy";
+    public static final String key_stkdrv_stats_log = "stkdrv_stats_log";
+    public static final String key_stkdrv_stats_app = "stkdrv_stats_app";
+    public static final String key_stkdrv_stats_res = "stkdrv_stats_res";
 
     public static final String  dflt_host = "";
     public static final Integer dflt_port = 10011;
@@ -54,6 +57,9 @@ public class BLAST_LOG_SETTING_READER
     public static final Boolean dflt_worker_shift = false;
     public static final Boolean dflt_pref_loc = false;
     public static final Boolean dflt_db_copy = false;
+    public static final String  dflt_stkdrv_stats_log = "projects/ncbi-sandbox-blast/logs/dataproc-job-stats";
+    public static final String  dflt_stkdrv_stats_app = "blast-gcp";
+    public static final String  dflt_stkdrv_stats_res = "global";
 
     public static void defaults( BLAST_LOG_SETTING setting )
     {
@@ -69,6 +75,9 @@ public class BLAST_LOG_SETTING_READER
         setting.worker_shift   = dflt_worker_shift;
         setting.pref_loc       = dflt_pref_loc;
         setting.db_copy        = dflt_db_copy;
+		setting.stkdrv_stats_log	= dflt_stkdrv_stats_log;
+		setting.stkdrv_stats_app	= dflt_stkdrv_stats_app;
+		setting.stkdrv_stats_res	= dflt_stkdrv_stats_res;
     }
 
     public static void from_json( JsonObject obj, BLAST_LOG_SETTING setting, final String a_jni_log_level )
@@ -89,6 +98,10 @@ public class BLAST_LOG_SETTING_READER
             setting.db_copy      = SE_UTILS.get_json_bool( obj, key_db_copy, dflt_db_copy );
 
             setting.jni_log_level = a_jni_log_level;
+
+            setting.stkdrv_stats_log	= SE_UTILS.get_json_string( obj, dflt_stkdrv_stats_log, dflt_stkdrv_stats_log );
+            setting.stkdrv_stats_app	= SE_UTILS.get_json_string( obj, dflt_stkdrv_stats_app, dflt_stkdrv_stats_app );
+            setting.stkdrv_stats_res	= SE_UTILS.get_json_string( obj, dflt_stkdrv_stats_res, dflt_stkdrv_stats_res );
         }
         else
         {

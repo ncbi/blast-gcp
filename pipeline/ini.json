@@ -35,7 +35,7 @@
 		"parallel_jobs" : 12,
 		"transfer_files" : [ "libblastjni.so", "blast_server" ],
 		"info_tag" : "with 2 possible blast-executors",
-		"use_jni" : false
+		"use_jni" : true
     },
 
     "log" :

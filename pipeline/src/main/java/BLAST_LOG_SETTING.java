@@ -42,6 +42,9 @@ public class BLAST_LOG_SETTING implements Serializable
     public boolean pref_loc;
     public boolean db_copy;
     public String jni_log_level;
+	public String stkdrv_stats_log;
+	public String stkdrv_stats_app;
+	public String stkdrv_stats_res;
 
     @Override public String toString()
     {
@@ -58,6 +61,11 @@ public class BLAST_LOG_SETTING implements Serializable
         if ( pref_loc )  S_log = S_log + "pref_log ";
         if ( db_copy )   S_log = S_log + "db-copy ";
         S = S + String.format( "\tjni log level ...... %s\n", jni_log_level );
-        return S + String.format( "\tlog ................ %s\n", S_log );
+        S = S + String.format( "\tstk-drv-stats-log... %s\n", stkdrv_stats_log );
+        S = S + String.format( "\tstk-drv-stats-app... %s\n", stkdrv_stats_app );
+        S = S + String.format( "\tstk-drv-stats-res... %s\n", stkdrv_stats_res );
+        S = S + String.format( "\tlog ................ %s\n", S_log );
+
+		return S;
     }
 }

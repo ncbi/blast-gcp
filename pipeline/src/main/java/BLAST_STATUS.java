@@ -69,11 +69,11 @@ class BLAST_STATUS
         ack_q = new ConcurrentLinkedQueue<>();
         cmd_q = new ConcurrentLinkedQueue<>();
 
-		String job_stats_log = "projects/ncbi-sandbox-blast/logs/dataproc-job-stats";
-		String job_stats_app = "blast-gcp";
-		String job_stats_resource = "global";
+		String job_stats_log = settings.log.stkdrv_stats_log; // dflt:"projects/ncbi-sandbox-blast/logs/dataproc-job-stats"
+		String job_stats_app = settings.log.stkdrv_stats_app; // dflt: "blast-gcp"
+		String job_stats_res = settings.log.stkdrv_stats_res; // dflt: "global"
 
-		job_stats_logger = new CustomLogger( job_stats_log, job_stats_app, job_stats_resource, null );
+		job_stats_logger = new CustomLogger( job_stats_log, job_stats_app, job_stats_res, null );
         jobs = null;
     }
 
