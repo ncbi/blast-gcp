@@ -29,11 +29,13 @@
 
     "spark" :
     {
-        "num_executors" : 32,
-        "num_executor_cores" : 1,
+        "num_executors" : 15,
+        "num_executor_cores" : 2,
 		"locality_mode" : 1,
 		"parallel_jobs" : 12,
-		"transfer_files" : [ "libblastjni.so" ]
+		"transfer_files" : [ "libblastjni.so", "blast_server" ],
+		"info_tag" : "with 2 possible blast-executors",
+		"use_jni" : false
     },
 
     "log" :

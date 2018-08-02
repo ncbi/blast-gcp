@@ -96,7 +96,6 @@ class BLASTJNI_SETTINGS_READER
 {
     public static final String key = "blastjni";
     public static final String key_db = "db";
-    public static final String key_top_n = "top_n";
     public static final String key_num_db_limit = "num_db_limit";
     public static final String key_jni_log_level = "jni_log_level";
     public static final String key_manifest_root = "manifest_root";
@@ -104,7 +103,6 @@ class BLASTJNI_SETTINGS_READER
     public static final String key_num_locations = "num_locations";
     public static final String key_lib_name = "lib_name";
 
-    public static final Integer dflt_top_n = 10;
     public static final Integer dflt_num_db_limit = 0;
     public static final String  dflt_jni_log_level = "INFO";
     public static final String  dflt_manifest_root = "";
@@ -145,7 +143,6 @@ class BLASTJNI_SETTINGS_READER
         JsonObject obj = SE_UTILS.get_sub( root, key );
         if ( obj != null )
         {
-            settings.top_n         = SE_UTILS.get_json_int( obj, key_top_n, dflt_top_n );
             settings.num_db_limit  = SE_UTILS.get_json_int( obj, key_num_db_limit, dflt_num_db_limit );
             settings.num_locations = SE_UTILS.get_json_int( obj, key_num_locations, dflt_num_locations );
             settings.jni_log_level = SE_UTILS.get_json_string( obj, key_jni_log_level, dflt_jni_log_level );
@@ -167,7 +164,6 @@ class BLASTJNI_SETTINGS_READER
         }
         else
         {
-            settings.top_n         = dflt_top_n;
             settings.num_db_limit  = dflt_num_db_limit;
             settings.num_locations = dflt_num_locations;
             settings.jni_log_level = dflt_jni_log_level;
@@ -257,6 +253,8 @@ class SPARK_SETTINGS_READER
     public static final String key_scheduler_fair = "scheduler_fair";
     public static final String key_parallel_jobs = "parallel_jobs";
     public static final String key_comm_port = "comm_port";
+    public static final String key_info_tag = "info_tag";
+    public static final String key_use_jni = "use_jni";
 
     public static final String  dflt_transfer_file = "libblastjni.so";
     public static final String  dflt_spark_log_level = "ERROR";
@@ -270,6 +268,8 @@ class SPARK_SETTINGS_READER
     public static final Boolean dflt_scheduler_fair = false;
     public static final Integer dflt_parallel_jobs = 6;
     public static final Integer dflt_comm_port = 10013;
+    public static final String  dflt_info_tag = "none";
+    public static final Boolean dflt_use_jni = true;
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
@@ -288,6 +288,8 @@ class SPARK_SETTINGS_READER
         settings.scheduler_fair     = SE_UTILS.get_json_bool( obj, key_scheduler_fair, dflt_scheduler_fair );
         settings.parallel_jobs      = SE_UTILS.get_json_int( obj, key_parallel_jobs, dflt_parallel_jobs );
         settings.comm_port          = SE_UTILS.get_json_int( obj, key_comm_port, dflt_comm_port );
+        settings.info_tag           = SE_UTILS.get_json_string( obj, key_info_tag, dflt_info_tag );
+        settings.use_jni            = SE_UTILS.get_json_bool( obj, key_use_jni, dflt_use_jni );
     }
 }
 

@@ -146,7 +146,7 @@ public final class BLAST_PUBSUB  extends Thread
                         if ( msg_string != null )
                         {
                             ack = msg.getAckId();
-                            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string_and_ack( msg_string, ack, settings.top_n, false );
+                            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string_and_ack( msg_string, ack );
                             if ( re == null )
                             {
                                 System.out.println( "REQUEST from PUBSUB invalid" );

@@ -33,7 +33,23 @@ class BLAST_REQUEST implements Serializable
     public String id, db, query_seq, program, params;
     public Integer top_n_prelim;
     public Integer top_n_traceback;
-    public Boolean skip_jni;
+
+	public Boolean valid()
+	{
+    	if ( id == null ) return false;
+		if ( id.isEmpty() ) return false;
+		if ( db == null ) return false;
+		if ( db.isEmpty() ) return false;
+		if ( program == null ) return false;
+		if ( program.isEmpty() ) return false;
+		if ( top_n_prelim == null ) return false;
+		if ( top_n_prelim == 0 ) return false;
+		if ( top_n_traceback == null ) return false;
+		if ( top_n_traceback == 0 ) return false;
+		if ( query_seq == null ) return false;
+		if ( query_seq.isEmpty() ) return false;
+		return true;
+	}
 
     @Override public String toString()
     {

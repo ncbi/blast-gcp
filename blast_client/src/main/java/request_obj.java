@@ -34,12 +34,9 @@ import com.google.gson.JsonElement;
 class request_obj
 {
 	public String RID;
-	public String UserID;	// not needed
 	public String db_location;
     public String blast_params;
-	public String db_tag;	// not needed
 	public String program;
-	public String protocol;	// not needed
 	public String query_seq;
 	public String top_N_prelim;
 	public String top_N_traceback;
@@ -65,11 +62,8 @@ class request_obj
             JsonObject root  = tree.getAsJsonObject();
 
 	        this.RID          = json_utils.get_json_string( root, "RID", "" );
-			this.UserID       = json_utils.get_json_string( root, "UserID", "" );
             this.blast_params = escape_quotes( json_utils.get_sub_as_string( root, "blast_params" ) );	// get the orig. text!
-    		this.db_tag       = json_utils.get_json_string( root, "db_tag", "" );
     		this.program      = json_utils.get_json_string( root, "program", "" );
-    		this.protocol     = json_utils.get_json_string( root, "protocol", "" );
 			this.query_seq    = json_utils.get_sub_as_string( root, "query_seq" ); // get the orig. text!
     		this.top_N_prelim = json_utils.get_json_string( root, "top_N_prelim", "" );
     		this.top_N_traceback = json_utils.get_json_string( root, "top_N_traceback", "" );
@@ -88,12 +82,9 @@ class request_obj
 		StringWriter sw = new StringWriter();
 		sw.write( "{\n" );
 		sw.write( String.format( "\t\"RID\": \"%s\",\n", RID ) );
-		sw.write( String.format( "\t\"UserID\": \"%s\",\n", UserID ) );
 		sw.write( String.format( "\t\"db_location\": \"%s\",\n", db_location ) );
 		sw.write( String.format( "\t\"blast_params\": \"%s\",\n", blast_params ) ); // quotation already in self.blast_params !!!
-		sw.write( String.format( "\t\"db_tag\": \"%s\",\n", db_tag ) );
 		sw.write( String.format( "\t\"program\": \"%s\",\n", program ) );
-		sw.write( String.format( "\t\"protocol\": \"%s\",\n", protocol ) );
 		sw.write( String.format( "\t\"query_seq\": %s,\n", query_seq ) ); // quotation already in self.query_seq !!!
 		sw.write( String.format( "\t\"top_N_prelim\": %s,\n", top_N_prelim ) );
 		sw.write( String.format( "\t\"top_N_traceback\": %s\n", top_N_traceback ) );

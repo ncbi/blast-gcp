@@ -46,7 +46,6 @@ public class BLAST_SETTINGS implements Serializable
     HashMap< String, BLAST_DB_SETTING > dbs; // configured via ini.json section
 
     /* BLASTJNI */
-    public Integer top_n;
     public Integer num_db_limit;
     public Integer num_locations;
     public String  jni_log_level;
@@ -80,6 +79,8 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean scheduler_fair;
     public Integer parallel_jobs;
     public Integer comm_port;
+	public String  info_tag;
+	public Boolean use_jni;
 
     /* LOG */
     BLAST_LOG_SETTING log;
@@ -88,6 +89,7 @@ public class BLAST_SETTINGS implements Serializable
     {
         log = new BLAST_LOG_SETTING();
         dbs = new HashMap<>();
+
     }
 
     public Boolean src_pubsub_valid()
@@ -120,8 +122,6 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean valid()
     {
         if ( !dbs_valid() ) return false;
-        if ( top_n == 0 ) return false;
-
         if ( !src_valid() ) return false;
 
         if ( gs_result_bucket.isEmpty() ) return false;
@@ -140,25 +140,42 @@ public class BLAST_SETTINGS implements Serializable
     public String missing()
     {
         String S = dbs_missing();
-        if ( top_n == 0 ) S = S + "top_n is 0\n";
 
-        if ( !use_pubsub_source && !use_hdfs_source )
+		if ( use_pubsub_source == null || use_hdfs_source == null )
             S = S + "no source is defined";
-        else
-        {
-            if ( use_pubsub_source && !src_pubsub_valid() )
-            {
-                if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
-                if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
-            }
-            if ( use_hdfs_source && !src_hdfs_valid() ) 
-            {
-                if ( hdfs_source_dir.isEmpty() ) S = S + "hdfs-source-dir is missing\n";
-            }
-        }
+		else
+		{
+		    if ( !use_pubsub_source && !use_hdfs_source )
+		        S = S + "no source is defined";
+		    else
+		    {
+		        if ( use_pubsub_source && !src_pubsub_valid() )
+		        {
+		            if ( project_id.isEmpty() ) S = S + "project_id is missing\n";
+		            if ( subscript_id.isEmpty() ) S = S + "subscript_id is missing\n";
+		        }
+		        if ( use_hdfs_source && !src_hdfs_valid() ) 
+		        {
+		            if ( hdfs_source_dir.isEmpty() ) S = S + "hdfs-source-dir is missing\n";
+		        }
+		    }
+		}
 
-        if ( gs_result_bucket.isEmpty() ) S = S + "gs_result_bucket is missing\n";
-        if ( gs_status_bucket.isEmpty() ) S = S + "gs_status_bucket is missing\n";
+		if ( gs_result_bucket == null )
+			S = S + "gs_result_bucket is missing\n";
+		else
+		{
+        	if ( gs_result_bucket.isEmpty() )
+				S = S + "gs_result_bucket is missing\n";
+		}
+
+		if ( gs_status_bucket == null )
+			S = S + "gs_status_bucket is missing\n";
+		else
+		{
+        	if ( gs_status_bucket.isEmpty() )
+				S = S + "gs_status_bucket is missing\n";
+		}
         return S;
     }
 
@@ -190,7 +207,6 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\tmax. backlog ........... %d requests\n", max_backlog );
 
         S = S + "\nBLASTJNI:\n";
-        S = S + String.format( "\tdflt top_n ......... %d\n", top_n );
         S = S + String.format( "\tnum_db_limit ....... %d\n", num_db_limit );
         S = S + String.format( "\tjni-log-level ...... %s\n", jni_log_level );
         S = S + String.format( "\tmanifest root ...... %s\n", manifest_root );
@@ -217,6 +233,8 @@ public class BLAST_SETTINGS implements Serializable
         S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         S = S + String.format( "\tcommunication port . %d\n", comm_port );
+        S = S + String.format( "\tinfo-tag ........... '%s'\n", info_tag );
+        S = S + String.format( "\tuse jni ............ %s\n", Boolean.toString( use_jni ) );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
 

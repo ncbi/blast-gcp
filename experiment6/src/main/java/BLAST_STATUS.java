@@ -44,7 +44,7 @@ class BLAST_STATUS
     private final AtomicInteger running_jobs;
     private final AtomicInteger backlog;
     private final AtomicBoolean running;
-    private final AtomicBoolean skip_jni;
+    private final AtomicBoolean skip_search_and_tb;
     private final ConcurrentHashMap< String, Integer > running_ids;
     private final ConcurrentLinkedQueue< REQUESTQ_ENTRY > request_q;
     private final ConcurrentLinkedQueue< String > ack_q;
@@ -61,7 +61,7 @@ class BLAST_STATUS
         running_jobs = new AtomicInteger( 0 );
         backlog = new AtomicInteger( 0 );
         running = new AtomicBoolean( true );
-        skip_jni = new AtomicBoolean( false );
+        skip_search_and_tb = new AtomicBoolean( false );
         running_ids = new ConcurrentHashMap<>();
 
         request_q = new ConcurrentLinkedQueue<>();
@@ -87,8 +87,8 @@ class BLAST_STATUS
     public void set_parallel_jobs( int n ) { parallel_jobs.set( n ); }
     public int get_running_jobs() { return running_jobs.get(); }
     public long get_total_requests() { return total_requests.get(); }
-    public boolean get_skip_jni() { return skip_jni.get(); }
-    public void set_skip_jni( boolean value ) { skip_jni.set( value ); }
+    public boolean get_skip_search_and_tb() { return skip_search_and_tb.get(); }
+    public void set_skip_search_and_tb( boolean value ) { skip_search_and_tb.set( value ); }
 
     public int inc_running_jobs( final String id )
     {
@@ -132,12 +132,12 @@ class BLAST_STATUS
         return res;
     }
 
-    public boolean add_request_string( final String req_string, final PrintStream ps, int top_n )
+    public boolean add_request_string( final String req_string, final PrintStream ps )
     {
         boolean res = false;
         if ( can_take() > 0 )
         {
-            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string( req_string, top_n, get_skip_jni() );
+            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_string( req_string );
             if ( re != null )
                 res = add_request( re, ps );
             else if ( ps != null )
@@ -151,12 +151,12 @@ class BLAST_STATUS
 	// return 2 ... filtered out
 	// return 3 ... error adding
 	// return 4 ... invalid request
-    public int add_request_file( final String filename, final PrintStream ps, int top_n, final String program_filter )
+    public int add_request_file( final String filename, final PrintStream ps, final String program_filter )
     {
         int res = 0;
         if ( can_take() > 0 )
         {
-            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_file( filename, top_n, get_skip_jni() );
+            REQUESTQ_ENTRY re = BLAST_REQUEST_READER.parse_from_file( filename );
             if ( re != null )
 			{
 				if ( program_filter.isEmpty() )
@@ -230,7 +230,7 @@ class BLAST_STATUS
     {
         String S = String.format( "avg=%,d ms, parallel=%d, running=%d, backlog=%d n=%d",
             get_avg(), parallel_jobs.get(), running_jobs.get(), backlog.get(), total_requests.get() );
-        S = S + String.format( "\nskip-jni: '%s'", Boolean.toString( get_skip_jni() ) );
+        S = S + String.format( "\nskip-search-and-tb: '%s'", Boolean.toString( get_skip_search_and_tb() ) );
         for ( String id : running_ids.keySet() )
             S = S + String.format( "\nrunning: %s", id );
         REQUESTQ_ENTRY[] waiting = request_q.toArray( new REQUESTQ_ENTRY[ request_q.size() ] );

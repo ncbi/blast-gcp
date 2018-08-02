@@ -120,7 +120,7 @@ public final class blast_client
 				String request_list_path = args[ 1 ];
 				String db_locations = args[ 2 ];
 
-				for ( int i = 0; i < 5; ++i )
+				for ( int i = 0; i < 1; ++i )
 					( new runner( conn, request_list_path, db_locations ) ).start();
 
 				conn.close();

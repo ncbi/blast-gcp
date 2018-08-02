@@ -39,13 +39,13 @@ public final class BLAST_MAIN
         String[] splited = e.line.split( "\\s+" );
         if ( splited[ 1 ].equals( "on" ) )
         {
-            status.set_skip_jni( true );
-            e.stream.println( "skip-jni: on" );
+            status.set_skip_search_and_tb( true );
+            e.stream.println( "skip_search_and_tb: on" );
         }
         else if ( splited[ 1 ].equals( "off" ) )
         {
-            status.set_skip_jni( false );
-            e.stream.println( "skip-jni: off" );
+            status.set_skip_search_and_tb( false );
+            e.stream.println( "skip_search_and_tb: off" );
         }
         else
         {
@@ -84,11 +84,17 @@ public final class BLAST_MAIN
         }
 	}
 
+	private static void produce_info( CMD_Q_ENTRY e, final BLAST_SETTINGS settings )
+	{
+		e.stream.println( settings.toString() );
+		e.stream.printf( "src from '%s'\n", BLAST_SPARK_VERSION.SRC_DATE );
+	}
+
     /* the handling of all user-interface ( console as well as socket-communication is centralized here */
     public static String main_spark_loop( final BLAST_STATUS status,
 										  final BLAST_LOG_WRITER log_writer,
                                           final BLAST_JOBS jobs,
-                                          int top_n,
+										  final BLAST_SETTINGS settings,
                                           final String ini_file )
     {
         String res = "";
@@ -110,6 +116,8 @@ public final class BLAST_MAIN
                         e.stream.printf( "%s\n", status );
                     else if ( e.line.equals( "backlog" ) )
                         e.stream.printf( "%d\n", status.get_backlog() );
+					else if ( e.line.equals( "info" ) )
+						produce_info( e, settings );
                     else if ( e.line.startsWith( "reset" ) )
                     {
                         status.stop();
@@ -120,14 +128,14 @@ public final class BLAST_MAIN
                             res = ini_file;
                     }
                     else if ( e.line.startsWith( "R" ) )
-                        status.add_request_string( e.line.substring( 1 ), e.stream, top_n );
+                        status.add_request_string( e.line.substring( 1 ), e.stream );
                     else if ( e.line.startsWith( "F" ) )
-                        status.add_request_file( e.line.substring( 1 ), e.stream, top_n, "" );
+                        status.add_request_file( e.line.substring( 1 ), e.stream, "" );
                     else if ( e.line.startsWith( "L" ) )
                     {
                         if ( submitter == null )
                         {
-                            submitter = new BLAST_LIST_SUBMIT( status, e, top_n );
+                            submitter = new BLAST_LIST_SUBMIT( status, e );
                             submitter.start();
                         }
                         else
@@ -219,7 +227,7 @@ public final class BLAST_MAIN
                 sc.addFile( fn );
 
             Broadcast< BLAST_LOG_SETTING > LOG_SETTING = sc.broadcast( settings.log );
-            Broadcast< String > LIB_NAME = sc.broadcast( settings.lib_name );
+            Broadcast< String > LIB_NAME = sc.broadcast( settings.lib_name ); // name of the jni-so to use
 
             try
             {
@@ -232,9 +240,9 @@ public final class BLAST_MAIN
 				SCRIPT_PLAYER player = new SCRIPT_PLAYER( script_file, status );
 				player.start();
 
-                /* ********************************************************************** */
-                res = main_spark_loop( status, log_writer, jobs, settings.top_n, ini_file );
-                /* ********************************************************************** */
+                /* ***************************************************************** */
+                res = main_spark_loop( status, log_writer, jobs, settings, ini_file );
+                /* ***************************************************************** */
 
                 jobs.stop_all_jobs();
 				log_receiver.join();

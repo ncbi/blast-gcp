@@ -38,17 +38,14 @@ class BLAST_LIST_SUBMIT extends Thread
     private final CMD_Q_ENTRY cmd;
 	private final String list_filename;
 	private final String list_filter;
-    private final int top_n;
     private final AtomicBoolean running;
 	private final Boolean exit_on_end;
 
     public BLAST_LIST_SUBMIT( BLAST_STATUS a_status,
-                              CMD_Q_ENTRY a_cmd,
-                              int a_top_n )
+                              CMD_Q_ENTRY a_cmd )
     {
         this.status = a_status;
         this.cmd = a_cmd;        
-        this.top_n = a_top_n;
         this.running = new AtomicBoolean( true );
 
 		String[] cmd_parts = this.cmd.line.substring( 1 ).split( " " );
@@ -132,7 +129,7 @@ class BLAST_LIST_SUBMIT extends Thread
                         boolean done = false;
                         while( !done )
                         {
-							int res = status.add_request_file( req_file, cmd.stream, top_n, list_filter );
+							int res = status.add_request_file( req_file, cmd.stream, list_filter );
 							if ( res == 0 )
                                 sleep_now( 500 );
 							else
