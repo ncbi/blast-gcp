@@ -43,6 +43,13 @@ class BLAST_TB_LIST_LIST implements Serializable
         list = new ArrayList<>();
         list.add( elem1 );
     }
+
+    public BLAST_TB_LIST_LIST( final tb_list elem1 )
+    {
+        list = new ArrayList<>();
+		/* and now we have to walk elem1 and create a BLAST_TB_LIST instance from it and store it here */
+
+    }
     
     public BLAST_TB_LIST_LIST( final BLAST_TB_LIST_LIST l1, BLAST_TB_LIST_LIST l2 )
     {

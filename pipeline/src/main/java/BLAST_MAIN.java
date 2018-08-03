@@ -53,6 +53,25 @@ public final class BLAST_MAIN
         }
 	}
 
+	private static void handle_use_jni( final BLAST_STATUS status, final CMD_Q_ENTRY e )
+	{
+        String[] splited = e.line.split( "\\s+" );
+        if ( splited[ 1 ].equals( "on" ) )
+        {
+            status.set_use_jni( true );
+            e.stream.println( "use_jni: on" );
+        }
+        else if ( splited[ 1 ].equals( "off" ) )
+        {
+            status.set_use_jni( false );
+            e.stream.println( "use_jni: off" );
+        }
+        else
+        {
+            e.stream.printf( "unknown: '%s'\n", e.line );
+        }
+	}
+
 	private static void handle_log( final BLAST_LOG_WRITER log_writer, final CMD_Q_ENTRY e )
 	{
         String[] splited = e.line.split( "\\s+" );
@@ -145,6 +164,8 @@ public final class BLAST_MAIN
 						handle_skip( status, e );
 					else if ( e.line.startsWith( "log" ) )
 						handle_log( log_writer, e );
+					else if ( e.line.startsWith( "use_jni" ) )
+						handle_use_jni( status, e );
                 }
                 else
                 {

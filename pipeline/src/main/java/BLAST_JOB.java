@@ -198,7 +198,8 @@ class BLAST_JOB extends Thread
         } ).cache();
     }
 
-    private JavaRDD< BLAST_TB_LIST_LIST > perform_server_prelim_search_and_traceback(
+
+    private JavaRDD< tb_list > perform_server_prelim_search_and_traceback(
                     final JavaRDD< BLAST_DATABASE_PART > SRC,	// array of blast-db's to operate on
                     Broadcast< BLAST_LOG_SETTING > SE,			// log settings
                     Broadcast< String > LIB_N,					// name of the jni-so to use
@@ -207,7 +208,7 @@ class BLAST_JOB extends Thread
     {
         return SRC.flatMap( item ->
         {
-            ArrayList< BLAST_TB_LIST_LIST > res = new ArrayList<>(); // the list of traceback-lists ( result )
+            ArrayList< tb_list > res = new ArrayList<>(); // the list of traceback-lists ( result )
             BLAST_LOG_SETTING log = SE.getValue();
             BLAST_DATABASE_PART part = item;
             BLAST_REQUEST req = REQ.getValue();
@@ -221,27 +222,44 @@ class BLAST_JOB extends Thread
                                      String.format( "pre worker-shift for %d: %s -> %s", part.nr, part.worker_name, curr_worker_name ) );
             }
 
-			String server_executable = SparkFiles.get( "blast_server" );
-			blast_server_connection conn = new blast_server_connection( server_executable, 12345 );
-			if ( conn != null )
-			{
-                if ( !part.present() )
-                {
-                    if ( part.copy() == 0 )
-                        BLAST_SEND.send( log, String.format( "copy-failed,%s", part ) );
-                    else if ( !part.present() )
-                        BLAST_SEND.send( log, String.format( "still-not-present,%s", part ) );
-                }
+			Boolean present = part.present();
+            if ( !present )
+            {
+                if ( part.copy() == 0 )
+                    BLAST_SEND.send( log, String.format( "copy-failed,%s", part ) );
+                else
+				{
+					present = part.present();
+					if ( !present )
+                    	BLAST_SEND.send( log, String.format( "still-not-present,%s", part ) );
+				}
+            }
 
+			if ( present )
+			{
+				int n_results = 0;
 				if ( log.job_start )
 					BLAST_SEND.send( log, String.format( "S 0 %s %s", part.volume.name, req.id ) );
 
-				server_request_obj ro = new server_request_obj( req );
-				String reply = conn.call_server( ro.toJson( part.db_spec ) );
+				String server_executable = SparkFiles.get( "blast_server" );
+				blast_server_connection conn = BLAST_SERVER_SINGLETON.get( server_executable, 12345 );
+				if ( conn != null )
+				{
+					server_request_obj ro = new server_request_obj( req );
+					String reply = conn.call_server( ro.toJson( part.db_spec ) );
 
+					if ( reply.length() > 5 )
+					{
+						tb_list reply_list = new tb_list( reply, req.top_n_traceback );
+						if ( reply_list != null )
+						{
+				        	res.add( reply_list );
+							n_results = reply_list.count();
+						}
+					}
+				}
 				if ( log.job_done )
-					BLAST_SEND.send( log, String.format( "D %d %s %s", reply.length(), part.volume.name, req.id ) );
-
+					BLAST_SEND.send( log, String.format( "D %d %s %s", n_results, part.volume.name, req.id ) );
 			}
 
             return res.iterator();
@@ -254,7 +272,7 @@ class BLAST_JOB extends Thread
             IN  :   SRC: JavaPairDStream < REQ.ID, BLAST_TB_LIST >
             OUT :   JavaPairDStream < NR REQ.ID, Iterable< BLAST_TB_LIST > >
        =========================================================================================== */
-    private BLAST_TB_LIST_LIST reduce_results( final JavaRDD< BLAST_TB_LIST_LIST > SRC )
+    private BLAST_TB_LIST_LIST reduce_results_BLAST_TB_LIST_LIST( final JavaRDD< BLAST_TB_LIST_LIST > SRC )
     {
         return SRC.reduce( ( item1, item2 ) ->
         {
@@ -266,7 +284,34 @@ class BLAST_JOB extends Thread
         } );
     }
 
-    private int write_results( final String req_id, final BLAST_TB_LIST_LIST ll )
+    private tb_list reduce_results_tb_list( final JavaRDD< tb_list > SRC )
+    {
+        return SRC.reduce( ( item1, item2 ) ->
+        {
+            if ( item1 == null )
+                return item2;
+            if ( item2 == null )
+                return item1;
+            return new tb_list( item1, item2 );
+        } );
+    }
+
+	private void write_result_bytebuffer( final String req_id, final ByteBuffer buf )
+	{
+        if ( settings.gs_or_hdfs.contains( "hdfs" ) )
+        {
+            String fn = String.format( settings.hdfs_result_file, req_id );
+            String path = String.format( "%s/%s", settings.hdfs_result_dir, fn );
+            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
+        }
+        if ( settings.gs_or_hdfs.contains( "gs" ) )
+        {
+            String gs_result_key = String.format( settings.gs_result_file, req_id );
+            Integer uploaded = BLAST_GS_UPLOADER.upload( settings.gs_result_bucket, gs_result_key, buf );
+        }
+	}
+
+    private int write_results_BLAST_TB_LIST_LIST( final String req_id, final BLAST_TB_LIST_LIST ll )
     {
         int sum = 0;
 
@@ -283,32 +328,44 @@ class BLAST_JOB extends Thread
             buf.put( e.asn1_blob );
         buf.put( seq_annot_suffix );
 
-        if ( settings.gs_or_hdfs.contains( "hdfs" ) )
-        {
-            String fn = String.format( settings.hdfs_result_file, req_id );
-            String path = String.format( "%s/%s", settings.hdfs_result_dir, fn );
-            Integer uploaded = BLAST_HADOOP_UPLOADER.upload( path, buf );
-        }
-        if ( settings.gs_or_hdfs.contains( "gs" ) )
-        {
-            String gs_result_key = String.format( settings.gs_result_file, req_id );
-            Integer uploaded = BLAST_GS_UPLOADER.upload( settings.gs_result_bucket, gs_result_key, buf );
-        }
+		write_result_bytebuffer( req_id, buf );
         return sum;
     }
 
+    private int write_results_tb_list( final String req_id, final tb_list list )
+    {
+        int sum = 0;
+
+        for ( int i = 0; i < list.count(); ++i )
+            sum += list.results[ i ].length();
+
+        byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+        byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        sum = sum + seq_annot_prefix.length + seq_annot_suffix.length;
+        ByteBuffer buf = ByteBuffer.allocate( sum );
+
+        buf.put( seq_annot_prefix );
+        for ( int i = 0; i < list.results.length; ++i )
+            list.results[ i ].put_to_ByteBuffer( buf );
+        buf.put( seq_annot_suffix );
+
+		write_result_bytebuffer( req_id, buf );
+		return sum;
+	}
+
 	private int handle_request_without_search_and_traceback( final BLAST_REQUEST request,
-                                 							  BLAST_DATABASE blast_db,														    
+                                 							  BLAST_DATABASE blast_db,
                                  							  LongAccumulator ERRORS )
 	{
 		int res = 0;
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
         try
         {
-            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = perform_dummpy_prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
-            BLAST_TB_LIST_LIST result = reduce_results( RESULTS );
+            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = perform_dummpy_prelim_search_and_traceback(
+										blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
+            BLAST_TB_LIST_LIST result = reduce_results_BLAST_TB_LIST_LIST( RESULTS );
             if ( result != null )
-                res = write_results( request.id, result );
+                res = write_results_BLAST_TB_LIST_LIST( request.id, result );
         }
         catch ( Exception e )
         {
@@ -324,10 +381,11 @@ class BLAST_JOB extends Thread
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
         try
         {
-            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = perform_jni_prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
-            BLAST_TB_LIST_LIST result = reduce_results( RESULTS );
+            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = perform_jni_prelim_search_and_traceback(
+										blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
+            BLAST_TB_LIST_LIST result = reduce_results_BLAST_TB_LIST_LIST( RESULTS );
             if ( result != null )
-                res = write_results( request.id, result );
+                res = write_results_BLAST_TB_LIST_LIST( request.id, result );
         }
         catch ( Exception e )
         {
@@ -343,12 +401,13 @@ class BLAST_JOB extends Thread
         final Broadcast< BLAST_REQUEST > REQ = sc.broadcast( request );
         try
         {
-            final JavaRDD< BLAST_TB_LIST_LIST > RESULTS = perform_server_prelim_search_and_traceback( blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
+            final JavaRDD< tb_list > RESULTS = perform_server_prelim_search_and_traceback(
+										blast_db.DB_SECS, LOG_SETTING, LIB_NAME, REQ, ERRORS );
 
 			/* !!! there will be a different result-java-class, because of the list of integer-tie-brackers */
-            BLAST_TB_LIST_LIST result = reduce_results( RESULTS );
+            tb_list result = reduce_results_tb_list( RESULTS );
             if ( result != null )
-                res = write_results( request.id, result );
+                res = write_results_tb_list( request.id, result );
         }
         catch ( Exception e )
         {
@@ -397,7 +456,7 @@ class BLAST_JOB extends Thread
 					}
 					else
 					{
-						if ( settings.use_jni )
+						if ( status.get_use_jni() )
 						{
                     		sum = handle_request_with_jni( entry.request, blast_db, ERRORS );
 						}
@@ -406,6 +465,7 @@ class BLAST_JOB extends Thread
                     		sum = handle_request_with_server( entry.request, blast_db, ERRORS );
 						}
 					}
+
 					long elapsed = System.currentTimeMillis() - started_at;
 				    if ( settings.log.log_final )
 				        System.out.println( String.format( "[%s] %d bytes summed up (%,d ms)", entry.request.id, sum, elapsed ) );

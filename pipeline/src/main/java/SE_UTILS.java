@@ -236,5 +236,18 @@ class SE_UTILS
         }
     }
 
+	public static byte[] hexStringToByteArray( String s )
+	{
+    	int len = s.length();
+    	byte[] data = new byte[ len / 2 ];
+    	for ( int i = 0; i < len; i += 2 )
+		{
+			int c0 = Character.digit( s.charAt( i ), 16 );
+			int c1 = Character.digit( s.charAt( i + 1 ), 16 );
+        	data[ i / 2 ] = (byte) ( ( c0 << 4 ) + c1 );
+    	}
+    	return data;
+	}
+
 }
 

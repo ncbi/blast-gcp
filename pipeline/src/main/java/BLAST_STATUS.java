@@ -45,6 +45,7 @@ class BLAST_STATUS
     private final AtomicInteger backlog;
     private final AtomicBoolean running;
     private final AtomicBoolean skip_search_and_tb;
+    private final AtomicBoolean use_jni;
     private final ConcurrentHashMap< String, Integer > running_ids;
     private final ConcurrentLinkedQueue< REQUESTQ_ENTRY > request_q;
     private final ConcurrentLinkedQueue< String > ack_q;
@@ -63,6 +64,7 @@ class BLAST_STATUS
         backlog = new AtomicInteger( 0 );
         running = new AtomicBoolean( true );
         skip_search_and_tb = new AtomicBoolean( false );
+        use_jni = new AtomicBoolean( settings.use_jni );
         running_ids = new ConcurrentHashMap<>();
 
         request_q = new ConcurrentLinkedQueue<>();
@@ -72,8 +74,11 @@ class BLAST_STATUS
 		String job_stats_log = settings.log.stkdrv_stats_log; // dflt:"projects/ncbi-sandbox-blast/logs/dataproc-job-stats"
 		String job_stats_app = settings.log.stkdrv_stats_app; // dflt: "blast-gcp"
 		String job_stats_res = settings.log.stkdrv_stats_res; // dflt: "global"
+		if ( job_stats_log.isEmpty() || job_stats_app.isEmpty() || job_stats_res.isEmpty() )
+			job_stats_logger = null;
+		else
+			job_stats_logger = new CustomLogger( job_stats_log, job_stats_app, job_stats_res, null );
 
-		job_stats_logger = new CustomLogger( job_stats_log, job_stats_app, job_stats_res, null );
         jobs = null;
     }
 
@@ -96,6 +101,8 @@ class BLAST_STATUS
     public long get_total_requests() { return total_requests.get(); }
     public boolean get_skip_search_and_tb() { return skip_search_and_tb.get(); }
     public void set_skip_search_and_tb( boolean value ) { skip_search_and_tb.set( value ); }
+    public boolean get_use_jni() { return use_jni.get(); }
+    public void set_use_jni( boolean value ) { use_jni.set( value ); }
 
 	private void custom_log( final String id,
 							 final String action,
@@ -103,11 +110,14 @@ class BLAST_STATUS
 							 int cnt,
 							 final String event )
 	{
-		int currentTime = ( int )( System.currentTimeMillis() / 1000L );
+		if ( job_stats_logger != null )
+		{
+			int currentTime = ( int )( System.currentTimeMillis() / 1000L );
 
-        String logmsg = String.format( "rid=%s;action=%s;%s=%d;%s=%d",
-									   id, action, cnt_type, cnt, event, currentTime );
-        job_stats_logger.info( logmsg );
+        	String logmsg = String.format( "rid=%s;action=%s;%s=%d;%s=%d",
+									   	    id, action, cnt_type, cnt, event, currentTime );
+        	job_stats_logger.info( logmsg );
+		}
 	}
 
     public int inc_running_jobs( final String id )

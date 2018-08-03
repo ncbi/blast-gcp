@@ -85,7 +85,7 @@ class blast_server_connection
 		return res;
 	}
 
-	private int terminate_server( int pid )
+	public int terminate_server( int pid )
 	{
 		int res = -1;
 		try
@@ -106,6 +106,40 @@ class blast_server_connection
 		return res;
 	}
 
+	public int get_pid_of( final String executable )
+	{
+		int res = -1;
+		try
+		{
+			Process p = new ProcessBuilder( "ps", String.format( "-C %s -o pid=", executable ) ).start();
+			BufferedReader br = new BufferedReader( new InputStreamReader( p.getErrorStream() ) );
+			String line;
+			int pid = -1;
+			while ( ( line = br.readLine()) != null )
+			{
+				pid = Integer.parseInt( line.trim() );
+			}
+			p.waitFor();
+			int exit_value = p.exitValue();
+			if ( exit_value == 0 )
+				res = pid;
+		}
+        catch( Exception e )
+        {
+            System.out.println( String.format( "blast_server_connection.get_pid_of : %s", e ) );
+        }
+		return res;
+
+	}
+
+	public int force_close( final String executable )
+	{
+		int pid = get_pid_of( executable );
+		if ( pid > 1 )
+			return terminate_server( pid );
+		return pid;
+	}
+	
 	public void close()
 	{
 		if ( pid > 1 )
