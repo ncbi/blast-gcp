@@ -100,15 +100,7 @@ static void json_throw(int socket, const char * type, const char * what)
     log("ERROR", "Throwing: %s %s", type, what);
     std::string out = k.dump(2);
     write(socket, out.data(), out.size());
-    shutdown(socket, SHUT_WR);
-	// TBD - must wait until everything is written before exiting
-	while ( 1 )
-	{
-		char buf [ 16 ];
-		if ( read ( socket, buf, sizeof buf ) < 0 )
-			break;
-	}
-    shutdown(socket, SHUT_RD);
+    shutdown(socket, SHUT_RDWR);
     exit(1);
 }
 
@@ -253,7 +245,6 @@ iterate_HSPs(std::vector< BlastHSPList * > & vBlastHSPList, int top_n)
 
 static void sighandler(int signum)
 {
-	int status;
     char buf[64];
     log("ERROR", "Received signal %d", signum);
     switch (signum)
@@ -273,9 +264,6 @@ static void sighandler(int signum)
         case SIGTERM:
             strcpy(buf, "SIGTERM");
             break;
-		case SIGCHILD:
-			waitpid ( -1, & status, 0 );
-            return;
         default:
             snprintf(buf, sizeof(buf), "SIG%d", signum);
     }
@@ -513,15 +501,7 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-	char * end;
-    const char * port_num = argv [ 1 ];
-    long int tcp_port = strtol(port_num, & end, 10);
-	if ( port_num == ( const char * ) end || end [ 0 ] != 0 )
-    {
-        std::cerr << "TCP port is invalid\n";
-        return 1;
-    }
- 
+    int tcp_port = strtol(argv[1], NULL, 10);
     if (tcp_port < 1024 || tcp_port > 65535)
     {
         std::cerr << "TCP port must be between 1024..65535\n";
@@ -529,17 +509,17 @@ int main(int argc, char * argv[])
     }
 
     int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if ( tcp_socket < 0 )
+    if (tcp_socket == -1)
     {
         perror("socket");
         return 2;
     }
 
     struct sockaddr_in addr;
-    memset( &addr, 0, sizeof( addr ) );
+    memset(&addr, 0, sizeof(addr));
     addr.sin_family      = AF_INET;
-    addr.sin_port        = htons( ( short ) tcp_port );
-    addr.sin_addr.s_addr = htonl( INADDR_LOOPBACK );
+    addr.sin_port        = htons(tcp_port);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     int enable = 1;
     if (setsockopt(tcp_socket, SOL_SOCKET, SO_REUSEADDR, &enable,
@@ -586,41 +566,31 @@ int main(int argc, char * argv[])
     sigaction(SIGSYS, &new_action, NULL);
     sigaction(SIGINT, &new_action, NULL);
     sigaction(SIGTERM, &new_action, NULL);
-    sigaction(SIGCHLD, &new_action, NULL);
+    signal(SIGCHLD, SIG_IGN);
 
-	pid_t pid, sid;
-    while ( getppid () != 1 )
+    pid_t pid = fork();
+    if (pid < 0)
     {
-        pid = fork();
-        if (pid < 0)
-        {
-            perror("Fork");
-            return 2;
-        }
-        else if (pid > 0)  // Parent
-        {
-            fprintf(stderr,
-                    "blast_server daemon started (pid=%d)\n"
-                    "Listening on TCP port %d\n"
-                    "See %s for logs\n",
-                    pid, tcp_port, LOGPATH);
-            return 0;
-		}
-
- 	   	close(STDIN_FILENO);
-    	close(STDOUT_FILENO);
-    	close(STDERR_FILENO);
-
-	    umask(0);
-
-		// become group leader
-	    sid = setsid();
-		if ( sid < 0 )
-		{
-			// nothing we can do about it here
-			exit ( errno );
-		}
+        perror("Fork");
+        return 2;
     }
+    else if (pid > 0)  // Parent
+    {
+        fprintf(stderr,
+                "blast_server daemon started (pid=%d)\n"
+                "Listening on TCP port %d\n"
+                "See %s for logs\n",
+                pid, tcp_port, LOGPATH);
+        return 0;
+    }
+
+    // Child
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    umask(0);
+    setsid();
 
     // FIX: Terminate child if time exceeded? (alarm() trigger SIGALRM)
 
@@ -628,7 +598,7 @@ int main(int argc, char * argv[])
     while (true)
     {
         int fdsocket = accept(tcp_socket, NULL, NULL);
-        if (fdsocket < 0)
+        if (fdsocket == -1)
         {
             log("ERROR", "accept returned %d: %s", errno, strerror(errno));
             continue;
@@ -638,23 +608,20 @@ int main(int argc, char * argv[])
         if (pid < 0)
         {
             log("ERROR", "fork returned %d: %s", errno, strerror(errno));
-            exit ( errno );
+            return 2;
         }
-        else if (pid == 0)
+        else if (pid > 0)
         {
-	        // We're the child
-    	    log("INFO", "Child handling request");
-			// TBD - more signal handlers?
-        	process(fdsocket);
-        	log("INFO", "Request handled, child exiting\n");
-        	shutdown(fdsocket, SHUT_RDWR);
-        	exit ( 0 );
+            log("INFO", "Forked child %d to handle request", pid);
+            continue;
         }
-
-        log("INFO", "Forked child %d to handle request", pid);
-		close ( fdsocket );
-	}
+        // We're the child
+        log("INFO", "Child handling request");
+        process(fdsocket);
+        log("INFO", "Request handled, child exiting\n");
+        shutdown(fdsocket, SHUT_RDWR);
+        return 0;
+    }
 
     return 0;
 }
-
