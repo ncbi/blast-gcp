@@ -40,11 +40,23 @@ class blast_server_connection
 {
 	private int pid;
 	private int port;
+	private boolean available;
 
     public blast_server_connection( final String executable, int port )
     {
+		this.pid = -1;
 		this.port = port;
-		pid = start_server( executable );
+		if ( probe_server( port ) )
+		{
+			available = true;
+			// i do not have to start the executable here!
+		}
+		else
+		{
+			// cannot open socket, have to start executable
+			pid = start_server( executable );
+			available = ( pid > 1 );
+		}
 	}
 
 	private int extract_pid( final String s )
@@ -112,10 +124,26 @@ class blast_server_connection
 			terminate_server( pid );
 	}
 
+	public boolean probe_server( int port )
+	{
+		boolean res = false;
+	    try
+	    {
+			Socket socket = new Socket( "localhost", port );
+			socket.setTcpNoDelay( true );
+			res = true;
+	        socket.close();
+		}
+	    catch( Exception e )
+	    {
+	    }
+		return res;
+	}
+
 	public String call_server( final String query )
 	{
 		String res = "";
-		if ( pid > 0 )
+		if ( available )
 		{
 		    try
 		    {
