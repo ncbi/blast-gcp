@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blastjni;
+package gov.nih.nlm.ncbi.blast_client;
 
 import static java.lang.Math.*;
 import java.nio.ByteBuffer;
@@ -48,7 +48,7 @@ class tb_res implements Serializable, Comparable< tb_res >
 			if ( jo != null )
 			{
 				populate_blob( jo );
-				oid = SE_UTILS.get_json_int( jo, "oid", 0 );
+				oid = json_utils.get_json_int( jo, "oid", 0 );
 				populate_ties( jo );
 			}
 		}
@@ -75,8 +75,8 @@ class tb_res implements Serializable, Comparable< tb_res >
 	{
 		try
 		{
-			String hex = SE_UTILS.get_json_string( jo, "asn1_blob", "" );
-			this.blob = SE_UTILS.hexStringToByteArray( hex );
+			String hex = json_utils.get_json_string( jo, "asn1_blob", "" );
+			this.blob = json_utils.hexStringToByteArray( hex );
 		}
         catch( Exception e )
         {

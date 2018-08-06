@@ -50,7 +50,7 @@ class db_list extends for_each_line
 		if ( l > 0 )
 		{
 			json_utils.writeStringToFile( result_filename, reply );
-			tb_list tbl = new tb_list( reply );
+			tb_list tbl = new tb_list( reply, 100 );
 			tbl.write_to_file( String.format( "%s.asn1", result_filename ) );
 		}
 		System.out.println( String.format( "'%s' written ( l = %d )", result_filename, l ) );
@@ -120,10 +120,8 @@ public final class blast_client
 				String request_list_path = args[ 1 ];
 				String db_locations = args[ 2 ];
 
-				for ( int i = 0; i < 1; ++i )
+				for ( int i = 0; i < 3; ++i )
 					( new runner( conn, request_list_path, db_locations ) ).start();
-
-				conn.close();
 			}
         }
    }

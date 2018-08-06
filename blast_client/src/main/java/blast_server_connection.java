@@ -38,23 +38,24 @@ import java.util.regex.Matcher;
 
 class blast_server_connection
 {
-	private int pid;
 	private int port;
 	private boolean available;
 
     public blast_server_connection( final String executable, int port )
     {
-		this.pid = -1;
 		this.port = port;
 		if ( probe_server( port ) )
 		{
 			available = true;
 			// i do not have to start the executable here!
+			System.out.println( "probe_server() ---> true" );
 		}
 		else
 		{
 			// cannot open socket, have to start executable
-			pid = start_server( executable );
+			System.out.println( "probe_server() ---> false" );
+			int pid = start_server( executable );
+            System.out.println( String.format( "start_server() ---> %d", pid ) );
 			available = ( pid > 1 );
 		}
 	}
@@ -82,8 +83,6 @@ class blast_server_connection
 			{
 				if ( line.startsWith( "blast_server daemon started" ) )
 					pid = extract_pid( line );
-				else
-					pid = 1;
 			}
 			p.waitFor();
 			int exit_value = p.exitValue();
@@ -95,33 +94,6 @@ class blast_server_connection
             System.out.println( String.format( "blast_server_connection.start_server : %s", e ) );
         }
 		return res;
-	}
-
-	private int terminate_server( int pid )
-	{
-		int res = -1;
-		try
-		{
-			Process p = new ProcessBuilder( "kill", String.format( "%d", pid ) ).start();
-			BufferedReader br = new BufferedReader( new InputStreamReader( p.getErrorStream() ) );
-			String line;
-			while ( ( line = br.readLine()) != null )
-			{
-			}
-			p.waitFor();
-			res = p.exitValue();
-		}
-        catch( Exception e )
-        {
-            System.out.println( String.format( "blast_server_connection.terminate_server : %s", e ) );
-        }
-		return res;
-	}
-
-	public void close()
-	{
-		if ( pid > 1 )
-			terminate_server( pid );
 	}
 
 	public boolean probe_server( int port )

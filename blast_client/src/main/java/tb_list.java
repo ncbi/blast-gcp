@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blastjni;
+package gov.nih.nlm.ncbi.blast_client;
 
 import java.io.Serializable;
 
@@ -52,7 +52,7 @@ class tb_list implements Serializable
 			JsonElement tree = parser.parse( src.trim() );
             JsonObject root  = tree.getAsJsonObject();
 
-	        this.protocol = SE_UTILS.get_json_string( root, "protocol", "" );
+	        this.protocol = json_utils.get_json_string( root, "protocol", "" );
 			try
 			{
 				JsonArray a = root.getAsJsonArray( "blast_tb_list" );
@@ -166,6 +166,39 @@ class tb_list implements Serializable
 		if ( results != null )
 			return results.length;
 		return 0;
+	}
+
+	public void write_to_file( final String filePath )
+	{
+		try
+		{
+		    byte[] seq_annot_prefix = { (byte) 0x30, (byte) 0x80, (byte) 0xa4, (byte) 0x80, (byte) 0xa1, (byte) 0x80, (byte) 0x31, (byte) 0x80 };
+		    byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
+			int sum = seq_annot_prefix.length + seq_annot_suffix.length;
+			if ( this.results != null )
+			{
+				for ( int i = 0; i < this.results.length; ++i )
+					sum += this.results[ i ].length();
+			}
+
+			ByteBuffer buf = ByteBuffer.allocate( sum );
+		    buf.put( seq_annot_prefix );
+			if ( this.results != null )
+			{
+		    	for ( int i = 0; i < this.results.length; ++i )
+					this.results[ i ].put_to_ByteBuffer( buf );
+			}
+		    buf.put( seq_annot_suffix );
+
+			FileOutputStream os = new FileOutputStream( filePath );
+			os.write( buf.array() );
+			os.close();
+		}
+        catch( Exception e )
+        {
+            System.out.println( String.format( "tb_list.write_to_file : %s", e ) );
+        }
+
 	}
 
 }
