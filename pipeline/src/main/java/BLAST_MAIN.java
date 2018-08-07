@@ -154,7 +154,7 @@ public final class BLAST_MAIN
                     {
                         if ( submitter == null )
                         {
-                            submitter = new BLAST_LIST_SUBMIT( status, e );
+                            submitter = new BLAST_LIST_SUBMIT( status, e, settings.log.req_file_added );
                             submitter.start();
                         }
                         else

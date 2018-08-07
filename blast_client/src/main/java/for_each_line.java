@@ -31,12 +31,10 @@ import java.io.BufferedReader;
 
 public class for_each_line
 {
-	protected final blast_server_connection conn;
 	private final String path;
 
-	public for_each_line( final blast_server_connection conn, final String path )
+	public for_each_line( final String path )
 	{
-		this.conn = conn;
 		this.path = path;
 	}
 

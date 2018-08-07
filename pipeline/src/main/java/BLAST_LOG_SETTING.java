@@ -41,6 +41,10 @@ public class BLAST_LOG_SETTING implements Serializable
     public boolean worker_shift;
     public boolean pref_loc;
     public boolean db_copy;
+	public boolean req_file_added;
+	public boolean req_added;
+	public boolean avg_time;
+
     public String jni_log_level;
 	public String stkdrv_stats_log;
 	public String stkdrv_stats_app;
@@ -60,6 +64,10 @@ public class BLAST_LOG_SETTING implements Serializable
         if ( worker_shift )  S_log = S_log + "worker-shift ";
         if ( pref_loc )  S_log = S_log + "pref_log ";
         if ( db_copy )   S_log = S_log + "db-copy ";
+        if ( req_added )   S_log = S_log + "req-file-add ";
+        if ( req_file_added )   S_log = S_log + "req-add";
+        if ( avg_time )   S_log = S_log + "avg-time";
+
         S = S + String.format( "\tjni log level ...... %s\n", jni_log_level );
         S = S + String.format( "\tstk-drv-stats-log... %s\n", stkdrv_stats_log );
         S = S + String.format( "\tstk-drv-stats-app... %s\n", stkdrv_stats_app );

@@ -468,7 +468,7 @@ class BLAST_JOB extends Thread
 
 					long elapsed = System.currentTimeMillis() - started_at;
 				    if ( settings.log.log_final )
-				        System.out.println( String.format( "[%s] %d bytes summed up (%,d ms)", entry.request.id, sum, elapsed ) );
+				        System.out.println( String.format( "%s --> %,d bytes in %,d ms", entry.request.id, sum, elapsed ) );
 
         			status.dec_running_jobs( entry.request.id );
 
@@ -476,7 +476,8 @@ class BLAST_JOB extends Thread
                     status.after_request( elapsed );
 
 					// print the new average...
-                    System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
+					if ( settings.log.avg_time )
+                    	System.out.println( String.format( "avg time = %,d ms", status.get_avg() ) );
 
 					// write status: done or error depending on the error-accumulator...
                     gs_status_key = String.format( settings.gs_status_file, entry.request.id );

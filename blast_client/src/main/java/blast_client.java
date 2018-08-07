@@ -26,84 +26,6 @@
 
 package gov.nih.nlm.ncbi.blast_client;
 
-import java.io.FileReader;
-import java.io.BufferedReader;
-
-class db_list extends for_each_line
-{
-    private final request_obj ro;
-
-	public db_list( final blast_server_connection conn,
-			        request_obj ro,
-					final String db_locations )
-	{
-		super( conn, db_locations );
-		this.ro = ro;			
-	}
-
-	@Override public void on_line( final String line )
-	{
-		String reply = conn.call_server( ro.toJson( line ) );
-
-		String result_filename = String.format( "%s-%s.res", ro.RID, json_utils.get_last_part( line ) );
-		int l = reply.length();
-		if ( l > 0 )
-		{
-			json_utils.writeStringToFile( result_filename, reply );
-			tb_list tbl = new tb_list( reply, 100 );
-			tbl.write_to_file( String.format( "%s.asn1", result_filename ) );
-		}
-		System.out.println( String.format( "'%s' written ( l = %d )", result_filename, l ) );
-	}
-}
-
-class request_list extends for_each_line
-{
-	private final String db_locations;
-
-	public request_list( final blast_server_connection conn,
-						 final String request_list_path,
-						 final String db_locations )
-	{
-		super( conn, request_list_path );
-		this.db_locations = db_locations;
-	}
-
-	@Override public void on_line( final String line )
-	{
-		String org_query = json_utils.readFileAsString( line );
-		if ( !org_query.isEmpty() )
-		{
-			db_list list = new db_list( conn, new request_obj( org_query ), db_locations );
-			list.run();
-		}
-		else
-			System.out.println( String.format( "request: '%s' not found or empty", line ) );
-	}
-}
-
-class runner extends Thread
-{
-	private final blast_server_connection conn;
-	private final String request_list_path;
-	private final String db_locations;
-
-	public runner( final blast_server_connection conn,
-  				   final String request_list_path,
-				   final String db_locations )
-	{
-		this.conn = conn;
-		this.request_list_path = request_list_path;
-		this.db_locations = db_locations;
-	}
-	
-	public void run()
-	{
-		request_list list = new request_list( conn, request_list_path, db_locations );
-		list.run();
-	}
-}
-
 public final class blast_client
 {
     public static void main( String[] args )
@@ -112,17 +34,13 @@ public final class blast_client
             System.out.println( "port-number, request-list, and db_location are missing" );
         else
         {
+			String executable = "./blast_server";
 			int port = Integer.parseInt( args[ 0 ].trim() );
-			blast_server_connection conn = new blast_server_connection( "./blast_server", port );
+			int num_threads = 3;
+			String request_list_path = args[ 1 ];
+			String db_locations = args[ 2 ];
 
-			if ( conn != null )
-			{
-				String request_list_path = args[ 1 ];
-				String db_locations = args[ 2 ];
-
-				for ( int i = 0; i < 3; ++i )
-					( new runner( conn, request_list_path, db_locations ) ).start();
-			}
+			blast_runner_1.run( executable, port, num_threads, request_list_path, db_locations );
         }
    }
 

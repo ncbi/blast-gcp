@@ -42,6 +42,9 @@ public class BLAST_LOG_SETTING_READER
     public static final String key_worker_shift = "worker_shift";
     public static final String key_pref_loc = "pref_loc";
     public static final String key_db_copy = "db_copy";
+    public static final String key_req_file_add = "req_file_add";
+    public static final String key_req_add = "req_add";
+    public static final String key_avg_time = "avg_time";
     public static final String key_stkdrv_stats_log = "stkdrv_stats_log";
     public static final String key_stkdrv_stats_app = "stkdrv_stats_app";
     public static final String key_stkdrv_stats_res = "stkdrv_stats_res";
@@ -57,6 +60,10 @@ public class BLAST_LOG_SETTING_READER
     public static final Boolean dflt_worker_shift = false;
     public static final Boolean dflt_pref_loc = false;
     public static final Boolean dflt_db_copy = false;
+    public static final Boolean dflt_req_file_add = false;
+    public static final Boolean dflt_req_add = false;
+    public static final Boolean dflt_avg_time = false;
+
     public static final String  dflt_stkdrv_stats_log = "projects/ncbi-sandbox-blast/logs/dataproc-job-stats";
     public static final String  dflt_stkdrv_stats_app = "blast-gcp";
     public static final String  dflt_stkdrv_stats_res = "global";
@@ -75,6 +82,10 @@ public class BLAST_LOG_SETTING_READER
         setting.worker_shift   = dflt_worker_shift;
         setting.pref_loc       = dflt_pref_loc;
         setting.db_copy        = dflt_db_copy;
+        setting.req_file_added = dflt_req_file_add;
+        setting.req_added      = dflt_req_add;
+        setting.avg_time       = dflt_avg_time;
+
 		setting.stkdrv_stats_log	= dflt_stkdrv_stats_log;
 		setting.stkdrv_stats_app	= dflt_stkdrv_stats_app;
 		setting.stkdrv_stats_res	= dflt_stkdrv_stats_res;
@@ -96,6 +107,9 @@ public class BLAST_LOG_SETTING_READER
             setting.worker_shift = SE_UTILS.get_json_bool( obj, key_worker_shift, dflt_worker_shift );
             setting.pref_loc     = SE_UTILS.get_json_bool( obj, key_pref_loc, dflt_pref_loc );
             setting.db_copy      = SE_UTILS.get_json_bool( obj, key_db_copy, dflt_db_copy );
+            setting.req_file_added = SE_UTILS.get_json_bool( obj, key_req_file_add, dflt_req_file_add );
+            setting.req_added      = SE_UTILS.get_json_bool( obj, key_req_add, dflt_req_add );
+            setting.avg_time       = SE_UTILS.get_json_bool( obj, key_avg_time, dflt_avg_time );
 
             setting.jni_log_level = a_jni_log_level;
 

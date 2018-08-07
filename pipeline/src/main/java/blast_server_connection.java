@@ -38,13 +38,26 @@ import java.util.regex.Matcher;
 
 class blast_server_connection
 {
-	private int pid;
 	private int port;
+	private boolean available;
 
     public blast_server_connection( final String executable, int port )
     {
 		this.port = port;
-		pid = start_server( executable );
+		if ( probe_server( port ) )
+		{
+			available = true;
+			// i do not have to start the executable here!
+			System.out.println( "probe_server() ---> true" );
+		}
+		else
+		{
+			// cannot open socket, have to start executable
+			System.out.println( "probe_server() ---> false" );
+			int pid = start_server( executable );
+            System.out.println( String.format( "start_server() ---> %d", pid ) );
+			available = ( pid > 1 );
+		}
 	}
 
 	private int extract_pid( final String s )
@@ -70,8 +83,6 @@ class blast_server_connection
 			{
 				if ( line.startsWith( "blast_server daemon started" ) )
 					pid = extract_pid( line );
-				else
-					pid = 1;
 			}
 			p.waitFor();
 			int exit_value = p.exitValue();
@@ -85,71 +96,36 @@ class blast_server_connection
 		return res;
 	}
 
-	public int terminate_server( int pid )
+	public boolean probe_server( int port )
 	{
-		int res = -1;
-		try
-		{
-			Process p = new ProcessBuilder( "kill", String.format( "%d", pid ) ).start();
-			BufferedReader br = new BufferedReader( new InputStreamReader( p.getErrorStream() ) );
-			String line;
-			while ( ( line = br.readLine()) != null )
-			{
-			}
-			p.waitFor();
-			res = p.exitValue();
+		boolean res = false;
+	    try
+	    {
+			Socket socket = new Socket( "localhost", port );
+			socket.setTcpNoDelay( true );
+			PrintStream ps = new PrintStream( socket.getOutputStream() );
+	        BufferedReader br = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
+
+			String s = br.readLine();
+
+			ps.printf( "{}" );
+			socket.shutdownOutput();
+
+			s = br.readLine();
+
+			res = true;
+	        socket.close();
 		}
-        catch( Exception e )
-        {
-            System.out.println( String.format( "blast_server_connection.terminate_server : %s", e ) );
-        }
+	    catch( Exception e )
+	    {
+	    }
 		return res;
-	}
-
-	public int get_pid_of( final String executable )
-	{
-		int res = -1;
-		try
-		{
-			Process p = new ProcessBuilder( "ps", String.format( "-C %s -o pid=", executable ) ).start();
-			BufferedReader br = new BufferedReader( new InputStreamReader( p.getErrorStream() ) );
-			String line;
-			int pid = -1;
-			while ( ( line = br.readLine()) != null )
-			{
-				pid = Integer.parseInt( line.trim() );
-			}
-			p.waitFor();
-			int exit_value = p.exitValue();
-			if ( exit_value == 0 )
-				res = pid;
-		}
-        catch( Exception e )
-        {
-            System.out.println( String.format( "blast_server_connection.get_pid_of : %s", e ) );
-        }
-		return res;
-
-	}
-
-	public int force_close( final String executable )
-	{
-		int pid = get_pid_of( executable );
-		if ( pid > 1 )
-			return terminate_server( pid );
-		return pid;
-	}
-	
-	public void close()
-	{
-		if ( pid > 1 )
-			terminate_server( pid );
 	}
 
 	public String call_server( final String query )
 	{
 		String res = "";
-		if ( pid > 0 )
+		if ( available )
 		{
 		    try
 		    {

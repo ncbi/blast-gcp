@@ -44,7 +44,8 @@
         "request" : true,
         "start" : true,
         "done" : true,
-        "final" : true
+        "final" : true,
+		"stkdrv_stats_log" : ""
     }
 
 }

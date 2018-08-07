@@ -164,7 +164,8 @@ class BLAST_STATUS
 
             if ( ps != null )
 			{
-                ps.printf( "REQUEST '%s' added\n", re.request.id );
+				if ( settings.log.req_added )
+                	ps.printf( "REQUEST '%s' added\n", re.request.id );
 
 				// log to stack-driver to drive analytics
 				custom_log( re.request.id, "Queuing to Backlog", "backlog_size", backlog_sz, "backlog_queue_time" );
