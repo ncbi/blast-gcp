@@ -40,7 +40,7 @@ public final class blast_client
 			String request_list_path = args[ 1 ];
 			String db_locations = args[ 2 ];
 
-			blast_runner_1.run( executable, port, num_threads, request_list_path, db_locations );
+			blast_runner_2.run( executable, port, num_threads, request_list_path, db_locations );
         }
    }
 

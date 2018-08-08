@@ -33,16 +33,19 @@ class db_list_2 extends for_each_line
 	private final String executable;
 	private int port;
     private final request_obj ro;
+	private int idx;
 
 	public db_list_2( final String executable,
 					  int port,
 			          request_obj ro,
-					  final String db_locations )
+					  final String db_locations,
+					  int idx )
 	{
 		super( db_locations );
 		this.executable = executable;
 		this.port = port;
-		this.ro = ro;			
+		this.ro = ro;
+		this.idx = idx;
 	}
 
 	@Override public void on_line( final String line )
@@ -60,7 +63,7 @@ class db_list_2 extends for_each_line
 				tb_list tbl = new tb_list( reply, 100 );
 				tbl.write_to_file( String.format( "%s.asn1", result_filename ) );
 			}
-			System.out.println( String.format( "'%s' written ( l = %d )", result_filename, l ) );
+			System.out.println( String.format( "[%d] '%s' written ( l = %d )", idx, result_filename, l ) );
 		}
 		else
 			System.out.println( String.format( "BLAST_SERVER_SINGLETON.get( %s, %d ) failed", executable, port ) );
@@ -72,16 +75,19 @@ class request_list_2 extends for_each_line
 	private final String executable;
 	private int port;
 	private final String db_locations;
+	private int idx;
 
 	public request_list_2( final String executable,
 						   int port,
 						   final String request_list_path,
-						   final String db_locations )
+						   final String db_locations,
+						   int idx )
 	{
 		super( request_list_path );
 		this.executable = executable;
 		this.port = port;
 		this.db_locations = db_locations;
+		this.idx = idx;
 	}
 
 	@Override public void on_line( final String line )
@@ -89,7 +95,7 @@ class request_list_2 extends for_each_line
 		String org_query = json_utils.readFileAsString( line );
 		if ( !org_query.isEmpty() )
 		{
-			db_list_2 list = new db_list_2( executable, port, new request_obj( org_query ), db_locations );
+			db_list_2 list = new db_list_2( executable, port, new request_obj( org_query ), db_locations, idx );
 			list.run();
 		}
 		else
@@ -103,21 +109,24 @@ class runner_2 extends Thread
 	private int port;
 	private final String request_list_path;
 	private final String db_locations;
+	private int idx;
 
 	public runner_2( final String executable,
 				     int port,
   				     final String request_list_path,
-				     final String db_locations )
+				     final String db_locations,
+				     int idx )
 	{
 		this.executable = executable;
 		this.port = port;
 		this.request_list_path = request_list_path;
 		this.db_locations = db_locations;
+		this.idx = idx;
 	}
 	
 	public void run()
 	{
-		request_list_2 list = new request_list_2( executable, port, request_list_path, db_locations );
+		request_list_2 list = new request_list_2( executable, port, request_list_path, db_locations, idx );
 		list.run();
 	}
 }
@@ -128,6 +137,6 @@ public class blast_runner_2
 					   	    final String request_list_path, final String db_locations )
 	{
 		for ( int i = 0; i < num_threads; ++i )
-			( new runner_2( executable, port, request_list_path, db_locations ) ).start();
+			( new runner_2( executable, port, request_list_path, db_locations, i ) ).start();
 	}
 }

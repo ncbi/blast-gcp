@@ -32,12 +32,65 @@ import java.nio.file.Files;
 class BLAST_SERVER_SINGLETON
 {
     private static blast_server_connection conn = null;
+    private static String lock_file_name = "/tmp/blast_server.lock";
 
-    public static blast_server_connection get( final String executable, int port )
+	private static boolean file_exists( final String filename )
+	{
+		boolean res = false;
+		try
+		{
+			File f = new File( filename );
+			res = ( f.exists() && !f.isDirectory() );
+		}
+        catch( Exception e )
+        {
+        }
+		return res;
+	}
+
+	private static boolean create_file( final String filename )
+	{
+		boolean res = false;
+		try
+		{
+			File f = new File( filename );
+			f.createNewFile();
+			res = true;
+		}
+        catch( Exception e )
+        {
+        }
+		return res;
+	}
+
+	private static boolean delete_file( final String filename )
+	{
+		boolean res = false;
+		try
+		{
+			File f = new File( filename );
+			res = f.delete();
+		}
+        catch( Exception e )
+        {
+        }
+		return res;
+	}
+
+	/* We have to use 'synchronized' to protect this method from beeing executed in parallel by multiple threads.
+	   But we have to also protect from beeing executed in parallel by multiple jvm's!
+	   We can only do that by using a lock-file!
+	*/
+	synchronized private static blast_server_connection create_connection( final String executable, int port )
 	{
         if ( conn == null )
             conn = new blast_server_connection( executable, port );
         return conn;
+	}
+
+    public static blast_server_connection get( final String executable, int port )
+	{
+		return create_connection( executable, port );
 	}
 
 }

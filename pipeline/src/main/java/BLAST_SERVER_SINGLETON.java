@@ -40,11 +40,16 @@ class BLAST_SERVER_SINGLETON
 {
     private static blast_server_connection conn = null;
 
-    public static blast_server_connection get( final String executable, int port )
+	synchronized private static blast_server_connection create_connection( final String executable, int port )
 	{
         if ( conn == null )
             conn = new blast_server_connection( executable, port );
         return conn;
+	}
+
+    public static blast_server_connection get( final String executable, int port )
+	{
+        return create_connection( executable, port );
 	}
 
 }
