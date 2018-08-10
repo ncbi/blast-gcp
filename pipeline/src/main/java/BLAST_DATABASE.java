@@ -60,6 +60,7 @@ class BLAST_DATABASE
 		else
 			DB_SECS = make_db_without_locality( settings, LOG_SETTING, sc, a_db_setting );
 
+		// do not precompute, this has the side-effect of initializing each node with the chunks it has assigned to
         final JavaRDD< Long > DB_SIZES = DB_SECS.map( item -> BLAST_LIB_SINGLETON.get_size( item ) ).cache();
         total_size = DB_SIZES.reduce( ( x, y ) -> x + y );
         key = a_db_setting.key;
