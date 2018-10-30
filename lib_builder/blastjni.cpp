@@ -693,6 +693,10 @@ Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_1search(
     }
     catch ( std::exception & x )
     {
+        jenv->ReleaseStringUTFChars( jquery, query );
+        jenv->ReleaseStringUTFChars( jdb_spec, db_spec );
+        jenv->ReleaseStringUTFChars( jprogram, program );
+        jenv->ReleaseStringUTFChars( jparams, params );
         jni_throw( jenv, xtype = xc_java_exception, "%s", x.what() );
     }
     // FIX -
@@ -707,6 +711,10 @@ Java_gov_nih_nlm_ncbi_blastjni_BLAST_1LIB_prelim_1search(
        */
     catch ( ... )
     {
+        jenv->ReleaseStringUTFChars( jquery, query );
+        jenv->ReleaseStringUTFChars( jdb_spec, db_spec );
+        jenv->ReleaseStringUTFChars( jprogram, program );
+        jenv->ReleaseStringUTFChars( jparams, params );
         jni_throw( jenv, xtype = xc_java_runtime_exception,
                    "%s - unknown exception", __func__ );
     }
