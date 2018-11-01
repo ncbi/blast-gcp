@@ -5,8 +5,9 @@
         {
             "project_id" : "ncbi-sandbox-blast",
             "subscript_id" : "spark-test-subscript",
-            "use" : "true"
-        }
+            "use" : false
+        },
+		"testing" : true
     },
 
     "blastjni" :
@@ -35,11 +36,14 @@
 
     "log" :
     {
-        "port" : 10011,
+        "port" : 10017,
+		"on_start" : true,
         "request" : true,
         "start" : true,
         "done" : true,
-        "final" : true
+        "final" : true,
+		"db_copy" : true,
+		"part_prep" : true
     }
 
 }

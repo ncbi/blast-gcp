@@ -29,6 +29,8 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.io.PrintStream;
+
 import scala.Tuple2;
 import scala.collection.Seq;
 import scala.collection.JavaConversions;
@@ -64,6 +66,20 @@ class BLAST_DATABASE
 
         System.out.println( String.format( "[ %s ] total database size: %,d bytes", key, total_size ) );
     }
+
+	public void clean( final PrintStream ps, final Broadcast< BLAST_LOG_SETTING > LOG_SETTING  )
+	{
+		ps.printf( "start cleaning: '%s'\n", key );
+
+		JavaRDD< Integer > CLEANED = DB_SECS.map( item ->
+		{
+			BLAST_LOG_SETTING log = LOG_SETTING.getValue();
+			return item.clean( log );
+		} ).cache();
+		Integer cleaned = CLEANED.reduce( ( x, y ) -> x + y );
+
+		ps.printf( "done cleaning: '%s' : %d\n", key, cleaned );
+	}
 
     private Integer node_count( final BLAST_SETTINGS settings, final BLAST_YARN_NODES nodes )
     {

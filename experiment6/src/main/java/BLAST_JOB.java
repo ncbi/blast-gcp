@@ -121,7 +121,7 @@ class BLAST_JOB extends Thread
                     {
                         if ( !part.present() )
                         {
-                            if ( part.copy() == 0 )
+                            if ( part.copy( log ) == 0 )
                                 BLAST_SEND.send( log, String.format( "copy-failed,%s", part ) );
                             else if ( !part.present() )
                                 BLAST_SEND.send( log, String.format( "still-not-present,%s", part ) );

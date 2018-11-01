@@ -82,6 +82,8 @@ class SOURCE_SETTINGS_READER
     public static final String key = "source";
     public static final String key_max_backlog = "max_backlog";
     public static final Integer dflt_max_backlog = 10;
+    public static final String key_testing = "testing";
+    public static final Boolean dflt_testing = false;
 
     public static void from_json( JsonObject root, BLAST_SETTINGS settings )
     {
@@ -89,6 +91,7 @@ class SOURCE_SETTINGS_READER
         SOURCE_PUBSUB_SETTINGS_READER.from_json( obj, settings );
         SOURCE_HDFS_SETTINGS_READER.from_json( obj, settings );
         settings.max_backlog = SE_UTILS.get_json_int( obj, key_max_backlog, dflt_max_backlog );
+		settings.testing = SE_UTILS.get_json_bool( obj, key_testing, dflt_testing );
     }
 }
 

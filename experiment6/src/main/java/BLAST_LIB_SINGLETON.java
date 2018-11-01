@@ -51,6 +51,18 @@ class PART_INST
         prepared = false;
     }
 
+	/*
+	private Boolean protected_download( final Storage storage, final String bucket,
+									    final String src_file, final String dst_file,
+										final BLAST_LOG_SETTING log )
+	{
+        if ( log.db_copy )
+            BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", bucket, src_file, dst_file ) );
+
+        return BLAST_GS_DOWNLOADER.download( storage, bucket, src_file, dst_file );
+	}
+	*/
+
     public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         Boolean res = false;
@@ -60,8 +72,7 @@ class PART_INST
 
             for ( CONF_VOLUME_FILE vf : part.volume.files )
             {
-                File f = new File( vf.f_local );
-                if ( ( !f.exists() ) || ( f.length() == 0 ) )
+                if ( !vf.present() )
                     to_copy.add( vf );
             }
 
@@ -72,15 +83,7 @@ class PART_INST
 
                 for ( CONF_VOLUME_FILE vf : to_copy )
                 {
-                    String dir = vf.f_local.substring( 0, vf.f_local.lastIndexOf( File.separator) );
-                    Files.createDirectories( Paths.get( dir ) );
-
-                    String bucket = part.volume.bucket;
-                    if ( log.db_copy )
-                        BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", bucket, vf.f_name, vf.f_local ) );
-
-                    if ( BLAST_GS_DOWNLOADER.download( storage, bucket, vf.f_name, vf.f_local ) )
-                        copied++;
+					copied += vf.copy( storage, part.volume.bucket, log );
                 }
                 res = ( copied == to_copy.size() );
             }

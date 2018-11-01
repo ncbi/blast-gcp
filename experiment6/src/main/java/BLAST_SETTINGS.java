@@ -41,6 +41,7 @@ public class BLAST_SETTINGS implements Serializable
     public Boolean use_hdfs_source;    
     public String hdfs_source_dir;
     public Integer max_backlog;
+	public Boolean testing;
 
     /* DB */
     HashMap< String, BLAST_DB_SETTING > dbs; // configured via ini.json section
@@ -106,7 +107,7 @@ public class BLAST_SETTINGS implements Serializable
 
     public Boolean src_valid()
     {
-        return src_pubsub_valid() || src_hdfs_valid();
+        return testing || src_pubsub_valid() || src_hdfs_valid();
     }
 
     public Boolean dbs_valid()

@@ -63,14 +63,22 @@ public class CONF_VOLUME implements Serializable
         return true;
     }
 
-    public int copy()
+	public int clean( final BLAST_LOG_SETTING log )
+	{
+		int res = 0;
+        for ( CONF_VOLUME_FILE f : files )
+            res = res + f.clean( log );
+        return res;
+	}
+
+    public int copy( final BLAST_LOG_SETTING log )
     {
         int res = 0;
         try
         {
             Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
             for ( CONF_VOLUME_FILE f : files )
-                res += f.copy( storage, bucket );
+                res += f.copy( storage, bucket, log );
         }
         catch( Exception e )
         {

@@ -56,32 +56,63 @@ public final class BLAST_MAIN
 	private static void handle_log( final BLAST_LOG_WRITER log_writer, final CMD_Q_ENTRY e )
 	{
         String[] splited = e.line.split( "\\s+" );
-        if ( splited[ 1 ].equals( "on" ) )
-        {
-			log_writer.console_out( true );
-            e.stream.println( "log: on" );
-        }
-        else if ( splited[ 1 ].equals( "off" ) )
-        {
-			log_writer.console_out( false );
-            e.stream.println( "log: off" );
-        }
-        else if ( splited[ 1 ].equals( "file" ) )
-        {
-			log_writer.set_filename( splited[ 2 ] );
-            e.stream.println( String.format( "log-file: '%s'", log_writer.get_filename() ) );
-        }
-        else if ( splited[ 1 ].equals( "status" ) )
-        {
-			if ( log_writer.console_status() )
-            	e.stream.println( String.format( "log-console: on, log-file: '%s'", log_writer.get_filename() ) );
+		if ( splited.length > 1 )
+		{
+		    if ( splited[ 1 ].equals( "on" ) )
+		    {
+				log_writer.console_out( true );
+		        e.stream.println( "log: on" );
+		    }
+		    else if ( splited[ 1 ].equals( "off" ) )
+		    {
+				log_writer.console_out( false );
+		        e.stream.println( "log: off" );
+		    }
+		    else if ( splited[ 1 ].equals( "file" ) )
+		    {
+				log_writer.set_filename( splited[ 2 ] );
+		        e.stream.println( String.format( "log-file: '%s'", log_writer.get_filename() ) );
+		    }
+		    else if ( splited[ 1 ].equals( "status" ) )
+		    {
+				if ( log_writer.console_status() )
+		        	e.stream.println( String.format( "log-console: on, log-file: '%s'", log_writer.get_filename() ) );
+				else
+		        	e.stream.println( String.format( "log-console: off, log-file: '%s'", log_writer.get_filename() ) );
+		    }
+		    else
+		    {
+		        e.stream.printf( "unknown: '%s'\n", e.line );
+		    }
+		}
+		else
+		{
+	        e.stream.printf( "argument missing: '%s'\n", e.line );
+		}
+	}
+
+	private static void handle_clean( final CMD_Q_ENTRY e,
+									  final BLAST_DATABASE_MAP db_map,
+									  final Broadcast< BLAST_LOG_SETTING > LOG_SETTING )
+	{
+        String[] splited = e.line.split( "\\s+" );
+		if ( splited.length > 1 )
+		{
+			String db_name = splited[ 1 ];
+			BLAST_DATABASE db = db_map.get( db_name );
+			if ( db == null )
+			{
+				e.stream.printf( "cleaning: '%s' not found\n", db_name );
+			}
 			else
-            	e.stream.println( String.format( "log-console: off, log-file: '%s'", log_writer.get_filename() ) );
-        }
-        else
-        {
-            e.stream.printf( "unknown: '%s'\n", e.line );
-        }
+			{
+				db.clean( e.stream, LOG_SETTING );
+			}
+		}
+		else
+		{
+	        e.stream.printf( "argument missing: '%s'\n", e.line );
+		}
 	}
 
     /* the handling of all user-interface ( console as well as socket-communication is centralized here */
@@ -89,7 +120,9 @@ public final class BLAST_MAIN
 										  final BLAST_LOG_WRITER log_writer,
                                           final BLAST_JOBS jobs,
                                           int top_n,
-                                          final String ini_file )
+                                          final String ini_file,
+										  final BLAST_DATABASE_MAP db_map,
+										  final Broadcast< BLAST_LOG_SETTING > LOG_SETTING )
     {
         String res = "";
         String cmd;
@@ -137,6 +170,10 @@ public final class BLAST_MAIN
 						handle_skip( status, e );
 					else if ( e.line.startsWith( "log" ) )
 						handle_log( log_writer, e );
+					else if ( e.line.startsWith( "clean" ) )
+						handle_clean( e, db_map, LOG_SETTING );
+					else
+						e.stream.printf( "unknow: '%s'", e.line );						
                 }
                 else
                 {
@@ -196,6 +233,7 @@ public final class BLAST_MAIN
             // writer for the log-messages from the workers
 			BLAST_LOG_WRITER log_writer = new BLAST_LOG_WRITER( status );
 			log_writer.start();
+			log_writer.console_out( settings.log.on_start );
 
             // reader for the log-messages from the workers
             BLAST_LOG_RECEIVER log_receiver = new BLAST_LOG_RECEIVER( status, settings.log.port, log_writer );
@@ -229,9 +267,10 @@ public final class BLAST_MAIN
 
                 System.out.println( "spark-blast started..." );
 
-                /* ************************************************ */
-                res = main_spark_loop( status, log_writer, jobs, settings.top_n, ini_file );
-                /* ************************************************ */
+                /* ***************************************************************************** */
+                res = main_spark_loop( status, log_writer, jobs, settings.top_n, ini_file,
+									   db_map, LOG_SETTING );
+                /* ***************************************************************************** */
 
                 jobs.stop_all_jobs();
 				log_receiver.join();

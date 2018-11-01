@@ -28,20 +28,21 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.HashMap;
 import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.api.java.JavaSparkContext;
 
 class BLAST_DATABASE_MAP
 {
-    private final HashMap< String, BLAST_DATABASE > databases;
+    private final ConcurrentHashMap< String, BLAST_DATABASE > databases;
 
     public BLAST_DATABASE_MAP( final BLAST_SETTINGS settings,
                                final Broadcast< BLAST_LOG_SETTING > LOG_SETTING,
                                final JavaSparkContext sc )
     {
 
-        databases = new HashMap<>();
+        databases = new ConcurrentHashMap<>();
 
         BLAST_YARN_NODES nodes = new BLAST_YARN_NODES();
 
@@ -49,8 +50,18 @@ class BLAST_DATABASE_MAP
         for ( BLAST_DB_SETTING db_setting : col )
         {
             BLAST_DATABASE db = new BLAST_DATABASE( settings, LOG_SETTING, sc, nodes, db_setting );
+
+			/* We put the newly created database twice into the map, because we want it to
+               be found by its full name, but also only be its first 2 characters.
+			   This is neccessary because the request may not contain the fully qualified name
+               of the database, it may contain only the first 2 characters.... 
+			   The fully qualified name contains the version in its name, as well as the chunking
+               size. The request may have been created with this long name or just with the
+			   first 2 characters of it... For instance:
+				full name : nt_50M.20180502_1, short name : nt
+			   All test-requests are created with the short name! */
+
             databases.put( db.key, db );
-            /* to make lookup on just the first part possible */
             databases.put( db.key.substring( 0, 2 ), db );            
         }
     }

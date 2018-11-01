@@ -80,10 +80,15 @@ class BLAST_DATABASE_PART implements Serializable
         return volume.present();
     }
 
-    public int copy()
+    public int copy( final BLAST_LOG_SETTING log )
     {
-        return volume.copy();
+        return volume.copy( log );
     }
+
+	public int clean( final BLAST_LOG_SETTING log )
+	{
+		return volume.clean( log );
+	}
 
     public Integer getPartition( Integer num_partitions )
     {

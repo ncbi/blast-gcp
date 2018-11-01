@@ -32,6 +32,7 @@ public class BLAST_LOG_SETTING implements Serializable
 {
     public String host;
     public Integer port;
+	public boolean on_start;
     public boolean request;
     public boolean job_start;
     public boolean job_done;
@@ -46,7 +47,8 @@ public class BLAST_LOG_SETTING implements Serializable
     @Override public String toString()
     {
         String S = "\nLOG:\n";
-        S = S + String.format( "\tlog_host ........... %s:%d\n", host, port );
+        S = S + String.format( "\tlog_host ........... %s:%d(on-start: %s)\n",
+			host, port, Boolean.toString( on_start ) );
         String S_log = "";
         if ( request )   S_log = S_log + "request ";
         if ( job_start ) S_log = S_log + "job_start ";

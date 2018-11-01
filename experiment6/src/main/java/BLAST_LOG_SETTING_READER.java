@@ -33,6 +33,7 @@ public class BLAST_LOG_SETTING_READER
     public static final String key = "log";
     public static final String key_host = "host";
     public static final String key_port = "port";
+    public static final String key_on_start = "on_start";
     public static final String key_request = "request";
     public static final String key_start = "start";
     public static final String key_done = "done";
@@ -45,6 +46,7 @@ public class BLAST_LOG_SETTING_READER
 
     public static final String  dflt_host = "";
     public static final Integer dflt_port = 10011;
+    public static final Boolean dflt_on_start = false;
     public static final Boolean dflt_request = true;
     public static final Boolean dflt_start = false;
     public static final Boolean dflt_done = false;
@@ -59,6 +61,7 @@ public class BLAST_LOG_SETTING_READER
     {
         setting.host           = dflt_host;
         setting.port           = dflt_port;
+        setting.on_start       = dflt_on_start;
 
         setting.request        = dflt_request;
         setting.job_start      = dflt_start;
@@ -77,6 +80,7 @@ public class BLAST_LOG_SETTING_READER
         {
             setting.port         = SE_UTILS.get_json_int( obj, key_port, dflt_port );
             setting.host         = SE_UTILS.get_host( obj, key_host, dflt_host );
+			setting.on_start     = SE_UTILS.get_json_bool( obj, key_on_start, dflt_on_start );
 
             setting.request      = SE_UTILS.get_json_bool( obj, key_request, dflt_request );
             setting.job_start    = SE_UTILS.get_json_bool( obj, key_start, dflt_start );
