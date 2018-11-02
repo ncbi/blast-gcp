@@ -90,6 +90,11 @@ class BLAST_DATABASE_PART implements Serializable
 		return volume.clean( log );
 	}
 
+	public int MD5Check( final BLAST_LOG_SETTING log )
+	{
+		return volume.MD5Check( log );
+	}
+
     public Integer getPartition( Integer num_partitions )
     {
         if ( num_partitions > 0 )

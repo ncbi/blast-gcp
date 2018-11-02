@@ -71,14 +71,46 @@ public class CONF_VOLUME implements Serializable
         return res;
 	}
 
+	public int MD5Check( final BLAST_LOG_SETTING log )
+	{
+		int res = 0;
+        for ( CONF_VOLUME_FILE f : files )
+            res = res + f.MD5Check( log );
+		return res;
+	}
+
     public int copy( final BLAST_LOG_SETTING log )
     {
         int res = 0;
         try
         {
-            Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
+			List< CONF_VOLUME_FILE > to_copy = new ArrayList<>();
             for ( CONF_VOLUME_FILE f : files )
-                res += f.copy( storage, bucket, log );
+			{
+				if (!f.present() )
+	                to_copy.add( f );
+			}
+
+            Storage storage = BLAST_GS_DOWNLOADER.buildStorageService();
+			
+			int try_count = 0;
+			while( try_count < 20 && !to_copy.isEmpty() )
+			{
+            	CONF_VOLUME_FILE f = to_copy.remove( 0 );
+				if ( !f.present() )
+				{
+					int copy_res = f.copy( storage, bucket, log );
+					res += copy_res;
+					if ( copy_res == 0 )
+					{
+						// failure:  try again, wait 1 sec
+						try_count += 1;
+						to_copy.add( f );
+						Thread.sleep( 1000 );
+					}
+				}
+			}
+
         }
         catch( Exception e )
         {

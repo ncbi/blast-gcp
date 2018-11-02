@@ -51,18 +51,6 @@ class PART_INST
         prepared = false;
     }
 
-	/*
-	private Boolean protected_download( final Storage storage, final String bucket,
-									    final String src_file, final String dst_file,
-										final BLAST_LOG_SETTING log )
-	{
-        if ( log.db_copy )
-            BLAST_SEND.send( log, String.format( "'%s:%s' --> '%s'", bucket, src_file, dst_file ) );
-
-        return BLAST_GS_DOWNLOADER.download( storage, bucket, src_file, dst_file );
-	}
-	*/
-
     public Boolean prepare( final BLAST_DATABASE_PART part, final BLAST_LOG_SETTING log )
     {
         Boolean res = false;
@@ -94,8 +82,7 @@ class PART_INST
             {
                 for ( CONF_VOLUME_FILE vf : part.volume.files )
                 {
-                    File f = new File( vf.f_local );
-                    size += f.length();
+                    size += vf.fileSize();
                 }
             }
         }

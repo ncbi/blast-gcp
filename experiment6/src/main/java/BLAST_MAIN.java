@@ -87,7 +87,7 @@ public final class BLAST_MAIN
 		}
 		else
 		{
-	        e.stream.printf( "argument missing: '%s'\n", e.line );
+	        e.stream.printf( "log argument missing: '%s'\n", e.line );
 		}
 	}
 
@@ -111,7 +111,31 @@ public final class BLAST_MAIN
 		}
 		else
 		{
-	        e.stream.printf( "argument missing: '%s'\n", e.line );
+	        e.stream.printf( "clean argument missing: '%s'\n", e.line );
+		}
+	}
+
+	private static void handle_md5( final CMD_Q_ENTRY e,
+									final BLAST_DATABASE_MAP db_map,
+									final Broadcast< BLAST_LOG_SETTING > LOG_SETTING )
+	{
+        String[] splited = e.line.split( "\\s+" );
+		if ( splited.length > 1 )
+		{
+			String db_name = splited[ 1 ];
+			BLAST_DATABASE db = db_map.get( db_name );
+			if ( db == null )
+			{
+				e.stream.printf( "md5: '%s' not found\n", db_name );
+			}
+			else
+			{
+				db.MD5Check( e.stream, LOG_SETTING );
+			}
+		}
+		else
+		{
+	        e.stream.printf( "md5 argument missing: '%s'\n", e.line );
 		}
 	}
 
@@ -172,6 +196,8 @@ public final class BLAST_MAIN
 						handle_log( log_writer, e );
 					else if ( e.line.startsWith( "clean" ) )
 						handle_clean( e, db_map, LOG_SETTING );
+					else if ( e.line.startsWith( "md5" ) )
+						handle_md5( e, db_map, LOG_SETTING );
 					else
 						e.stream.printf( "unknow: '%s'", e.line );						
                 }

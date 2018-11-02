@@ -43,7 +43,11 @@ public class BLAST_DB_SETTING_READER
     public static final String  dflt_bucket = ""; // "nt_50mb_chunks";
     public static final Boolean dflt_flat_layout = false;
 
-    public static BLAST_DB_SETTING from_json( JsonObject obj, Integer volume_limit, final String loc, Integer num_locations )
+	/* synthesizing the names, extensions from the settings-json-file */
+    public static BLAST_DB_SETTING from_json( JsonObject obj,
+											  Integer volume_limit,
+											  final String loc,
+											  Integer num_locations )
     {
         BLAST_DB_SETTING res = new BLAST_DB_SETTING();
         if ( obj != null )
@@ -70,13 +74,13 @@ public class BLAST_DB_SETTING_READER
                     name = String.format( "%s.%d", pattern, i );
         
                 CONF_VOLUME vol = new CONF_VOLUME( name, res.key, res.bucket );
-                for ( String s : extensions )
+                for ( String extension : extensions )
                 {
-                    CONF_VOLUME_FILE vol_f = new CONF_VOLUME_FILE();
-                    vol_f.f_type = s;
-                    vol_f.f_name = String.format( "%s.%s", name, s );
-                    vol_f.f_md5 = "";   // we do not know without manifest-file
-                    vol_f.f_local = String.format( "%s/%s/%s", loc, name, vol_f.f_name );
+					String ext_name = String.format( "%s.%s", name, extension );
+                    CONF_VOLUME_FILE vol_f = new CONF_VOLUME_FILE( 
+                    		ext_name,
+                    		"",   // we do not know without manifest-file
+                    		String.format( "%s/%s/%s", loc, name, ext_name ) );
                     vol.files.add( vol_f );
                 }
                 res.volumes.add( vol );
@@ -85,7 +89,12 @@ public class BLAST_DB_SETTING_READER
         return res;
     }
 
-    public static BLAST_DB_SETTING from_conf( CONF_DATABASE conf, Integer volume_limit, final String loc, Integer num_locations )
+	/* using the manifest-file as a source for the BLAST-DB: extensions, names,
+	   inserting the location */
+    public static BLAST_DB_SETTING from_conf( CONF_DATABASE conf,
+											  Integer volume_limit,
+											  final String loc,
+											  Integer num_locations )
     {
         BLAST_DB_SETTING res = new BLAST_DB_SETTING();
         if ( conf != null )
@@ -108,12 +117,7 @@ public class BLAST_DB_SETTING_READER
                 CONF_VOLUME vol = new CONF_VOLUME( v.name, res.key, res.bucket );
                 for ( CONF_VOLUME_FILE f : v.files )
                 {
-                    CONF_VOLUME_FILE f_new = new CONF_VOLUME_FILE();
-                    f_new.f_type = f.f_type;
-                    f_new.f_name = f.f_name;
-                    f_new.f_md5  = f.f_md5;
-                    f_new.f_local = String.format( "%s/%s/%s", loc, v.name, f.f_name );
-                    vol.files.add( f_new );
+                    vol.files.add( new CONF_VOLUME_FILE( f, loc, v.name ) );
                 }
                 res.volumes.add( vol );
             }

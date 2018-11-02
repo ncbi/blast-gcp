@@ -81,6 +81,20 @@ class BLAST_DATABASE
 		ps.printf( "done cleaning: '%s' : %d\n", key, cleaned );
 	}
 
+	public void MD5Check( final PrintStream ps, final Broadcast< BLAST_LOG_SETTING > LOG_SETTING  )
+	{
+		ps.printf( "start MD5Check: '%s'\n", key );
+
+		JavaRDD< Integer > MD5RES = DB_SECS.map( item ->
+		{
+			BLAST_LOG_SETTING log = LOG_SETTING.getValue();
+			return item.MD5Check( log );
+		} ).cache();
+		Integer correct = MD5RES.reduce( ( x, y ) -> x + y );
+
+		ps.printf( "done MD5Check: '%s' : %d\n", key, correct );
+	}
+
     private Integer node_count( final BLAST_SETTINGS settings, final BLAST_YARN_NODES nodes )
     {
         Integer res = nodes.count();

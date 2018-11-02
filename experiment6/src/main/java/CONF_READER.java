@@ -79,10 +79,10 @@ public class CONF_READER
                 if ( e.isJsonObject() )
                 {
                     JsonObject file_obj = e.getAsJsonObject();
-                    CONF_VOLUME_FILE f = new CONF_VOLUME_FILE();
-                    f.f_type = SE_UTILS.get_json_string( file_obj, key_vol_file_type, "" );
-                    f.f_name = SE_UTILS.get_json_string( file_obj, key_vol_file_name, "" );
-                    f.f_md5 = SE_UTILS.get_json_string( file_obj, key_vol_file_md5, "" );
+					/* String a_type = SE_UTILS.get_json_string( file_obj, key_vol_file_type, "" ); */
+					String a_name = SE_UTILS.get_json_string( file_obj, key_vol_file_name, "" );
+					String a_md5 = SE_UTILS.get_json_string( file_obj, key_vol_file_md5, "" );
+                    CONF_VOLUME_FILE f = new CONF_VOLUME_FILE( a_name, a_md5, "" );
                     vol.files.add( f );
                 }
             }
