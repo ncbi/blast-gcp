@@ -624,10 +624,6 @@ static jobjectArray prelim_search(JNIEnv * jenv, jobject jthis,
     }
 
     hsp_stream_cref cref_hsp(hsp_stream);
-    //    CRef<hsp_stream_cref> cref_hsp(hsp_stream);
-    //    CRef<ncbi::blast::TBlastHSPStream> hsps;
-    //    hsps.Reset(new ncbi::blast::TBlastHSPStream(hsp_stream,
-    //    BlastHSPStreamFree));
 
     std::vector< BlastHSPList * > hsp_lists;
     try
@@ -1000,6 +996,7 @@ searchandtb(std::string query, std::string db_spec, std::string program,
     }
 
     std::vector< BlastHSPList * > hsp_lists;
+    hsp_stream_cref               cref_hsp(hsp_stream);
 
     try
     {
