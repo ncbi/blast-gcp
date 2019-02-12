@@ -15,7 +15,7 @@ distro=$(grep -c Debian /etc/os-release)
 set -o errexit
 export LD_LIBRARY_PATH=".:../pipeline"
 if [ "$distro" -ne 0 ]; then
-    export DISTRO="Debian 8"
+    export DISTRO="Debian 9"
     export BUILDENV="google"
     export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
     export PATH="$JAVA_HOME/bin:$PATH"
@@ -28,7 +28,7 @@ else
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/ncbi/gcc/4.9.3/lib64/"
     export BLASTDB=/net/frosty/vol/blast/db/blast
     BLASTBYDATE="/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/"
-    export SPARK_HOME=/usr/local/spark/2.2.0/
+    export SPARK_HOME=/usr/local/spark/2.3.2/
 
 fi
 
@@ -55,38 +55,41 @@ set -o errexit
 MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="$SPARK_HOME/jars/*:$MAIN_JAR:."
 
-echo "Compiling Java"
-    #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
-    echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >lifecycle.json
-    echo '{ "description": "static_analysis_results", "owner" : "vartanianmh" }' > labels.json
-    #gsutil lifecycle set rule.json gs://blast-builds
-    #gsutil label set labels.json gs://blast-builds
-    TS=$(date +"%Y-%m-%d_%H%M%S")
 pushd ../pipeline > /dev/null
+if [ "0" == "1" ]; then
+    echo "Compiling Java"
+        #gsutil mb -p ncbi-sandbox-blast -c regional -l us-east4 gs://blast-builds
+        echo '{ "rule": [ { "action": {"type": "Delete"}, "condition": {"age": 7} } ] }' >lifecycle.json
+        echo '{ "description": "static_analysis_results", "owner" : "vartanianmh" }' > labels.json
+        #gsutil lifecycle set rule.json gs://blast-builds
+        #gsutil label set labels.json gs://blast-builds
+        TS=$(date +"%Y-%m-%d_%H%M%S")
 
-#../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
-#../lib_builder/protoc -I../specs/ --python_out=../tests/ blast_request.proto
-#mvn compile
+    #../lib_builder/protoc -I../specs/ --java_out=. blast_request.proto
+    #../lib_builder/protoc -I../specs/ --python_out=../tests/ blast_request.proto
+    #mvn compile
 
-./make_jar.sh
+    ./make_jar.sh
+fi
 
-if [ "1" == "1" ]; then
+if [ "0" == "1" ]; then
+    echo
     echo "Running Java linters/static analyzers"
     mvn -q checkstyle:checkstyle > /dev/null 2>&1
     CHECKSTYLE="gs://blast-builds/checkstyle_sun.$TS.html"
-    gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
-    echo "  Output in $CHECKSTYLE"
+#    gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
+#    echo "  Output in $CHECKSTYLE"
 
     #mvn -q site > /dev/null 2>&1
     #PMD="gs://blast-builds/pmd.$TS.html"
     #gsutil cp target/site/pmd.html "$PMD"
 
     CHECKSTYLE="gs://blast-builds/checkstyle_google.$TS.html"
-    gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
-    echo "  Output in $CHECKSTYLE"
+#    gsutil cp target/site/checkstyle.html "$CHECKSTYLE"
+#    echo "  Output in $CHECKSTYLE"
 fi
-
 popd > /dev/null
+
 #NOTE: javah deprecated in Java 9, removed in Java 10
 #JAVASRCDIR="../pipeline/src/main/java"
 #    $JAVASRCDIR/BLAST_REQUEST.java \
@@ -101,6 +104,7 @@ if [ "0" == "1" ]; then
     javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
         ./BLAST_BENCH.java
 fi
+
 echo
 echo "Creating JNI header"
 javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "$DEPENDS":. -d . -h . \
@@ -125,6 +129,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     #-Wundef \
     #-Wswitch-enum \
     #-Wdouble-promotion \
+    g++ --version
     GPPCOMMAND="
     g++ \
     blastjni.cpp \
@@ -182,7 +187,7 @@ if [ "$BUILDENV" = "ncbi" ]; then
     -L/netopt/ncbi_tools64/lzo-2.05/lib64 \
     -llzo2 -ldl -lz -lnsl -lrt -ldl -lm -lpthread \
     -o ./libblastjni.so"
-
+echo $GPPCOMMAND
     BLAST_SERVER_GPP_COMMAND="
     g++ \
     blast_server.cpp \
@@ -303,24 +308,36 @@ if [ "$BUILDENV" = "ncbi" ]; then
 
 
     if [ "1" == "1" ]; then
+        echo
         echo "Running static analysis on C++ code"
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$BLAST_JSON_GPP_COMMAND"
-        scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$BLAST_SERVER_GPP_COMMAND"
+        cppcheck -q --enable=all --platform=unix64 blastjni.cpp
+#        cppcheck -q --enable=all --platform=unix64 --std=c++11 blast_json.cpp
+        scan-build --use-analyzer /usr/local/llvm/7.0.0/bin/clang "$GPPCOMMAND"
+#        scan-build --use-analyzer /usr/local/llvm/7.0.0/bin/clang "$BLAST_JSON_GPP_COMMAND"
+#        scan-build --use-analyzer /usr/local/llvm/7.0.0/bin/clang "$BLAST_SERVER_GPP_COMMAND"
         echo "Static analysis on C++ code complete"
     fi
 
+    if [ "1" == "1" ]; then
+        echo
+        echo "Running clang-tidy checkers on C++ code"
+        /usr/local/llvm/7.0.0/bin/clang-tidy -checks='*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-fuchsia-default-arguments,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay' \
+            blastjni.cpp -- \
+            -std=c++14 \
+            -I. -I/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-0.el7_5.x86_64/include -I/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-0.el7_5.x86_64/include/linux -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++//include -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++//ReleaseMT/inc -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 -I/usr/include/c++/4.8.2 -I/usr/include/c++/4.8.2/bits -I/usr/include/c++/4.8.2/x86_64-redhat-linux -I/usr/include/c++/4.8.2/backward
+        echo "Running clang-tidy checkers on C++ code"
+    fi
+
+    echo
     echo "Compiling and linking blastjni.cpp"
     $GPPCOMMAND
     cp libblastjni.so ../pipeline
 
-    $BLAST_JSON_GPP_COMMAND
-    cp blast_json ../pipeline
+#    $BLAST_JSON_GPP_COMMAND
+#    cp blast_json ../pipeline
 
-    $BLAST_SERVER_GPP_COMMAND
-    cp blast_server ../pipeline
+#    $BLAST_SERVER_GPP_COMMAND
+#    cp blast_server ../pipeline
 
 
 fi
@@ -333,25 +350,25 @@ md5sum -c signatures.md5 > /dev/null
 echo "  Testing JNI function signatures OK"
 #md5sum signatures > signatures.md5
 
-echo "  Testing blast_json"
-./blast_json prelim_search blast_json.test.json > blast_json.test.result 2>/dev/null
-cmp blast_json.test.result blast_json.test.expected
-if [[ $? -ne 0 ]]; then
-    sdiff -w 70 blast_json.test.result blast_json.test.expected | head
-    echo "Testing of blast_json failed"
-    exit 1
-fi
-
-./blast_json traceback blast_json.traceback.json > blast_json.traceback.result 2>/dev/null
-cmp blast_json.traceback.result blast_json.traceback.expected
-if [[ $? -ne 0 ]]; then
-    sdiff -s -w 70 blast_json.traceback.result blast_json.traceback.expected | head
-    echo "Testing of blast_json failed"
+#echo "  Testing blast_json"
+#./blast_json prelim_search blast_json.test.json > blast_json.test.result 2>/dev/null
+#cmp blast_json.test.result blast_json.test.expected
+#if [[ $? -ne 0 ]]; then
+#    sdiff -w 70 blast_json.test.result blast_json.test.expected | head
+#    echo "Testing of blast_json failed"
 #    exit 1
-fi
+#fi
 
-echo "  Testing blast_json OK"
-set -o errexit
+#./blast_json traceback blast_json.traceback.json > blast_json.traceback.result 2>/dev/null
+#cmp blast_json.traceback.result blast_json.traceback.expected
+#if [[ $? -ne 0 ]]; then
+#    sdiff -s -w 70 blast_json.traceback.result blast_json.traceback.expected | head
+#    echo "Testing of blast_json failed"
+##    exit 1
+#fi
+#
+#echo "  Testing blast_json OK"
+#set -o errexit
 
 
 #if [ "$BUILDENV" = "google" ]; then
@@ -366,7 +383,7 @@ fi
 echo "  Testing for unresolved libraries OK"
 
 echo "  Testing JNI"
-if [ "0" == "1" ]; then
+if [ "1" == "1" ]; then
 #-verbose:jni \
     #-Djava.library.path="../pipeline" \
     java \
@@ -375,8 +392,8 @@ if [ "0" == "1" ]; then
     gov.nih.nlm.ncbi.blastjni.BLAST_TEST \
     > output.$$ 2>&1
     sort -u output.$$ | grep -e "^HSP: " -e "^TB: " > test.result
-    cmp test.result test.expected
-    if [[ $? -ne 0 ]]; then
+    if ! cmp test.result test.expected
+    then
         cat -tn output.$$
         #rm -f output.$$
         sdiff -w 70 test.result test.expected
@@ -392,6 +409,7 @@ line
 #fi
 
 #if [ "$BUILDENV" = "google" ]; then
+if [ "1" == "0" ]; then
     BUILDTAG=$(date "+dev-%Y%m%d")
     echo "Copying to Cloud Storage Bucket"
     gsutil cp \
@@ -413,9 +431,8 @@ line
     gcloud container builds submit \
         --project ncbi-sandbox-blast \
         --config ../pipeline/cloudbuild.yaml \
-        --substitutions=_PATH=.,_TAG=dev-$BUILDTAG,_VERSION=$BUILDTAG .
-
-#fi
+        "--substitutions=_PATH=.,_TAG=dev-$BUILDTAG,_VERSION=$BUILDTAG" .
+fi
 
 echo "Build Complete"
 date

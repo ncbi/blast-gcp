@@ -1,7 +1,7 @@
 #############################################################################
 # Support for building shared library for github blast-gcp project
 # Works at NCBI only
-SPARK_HOME=/usr/local/spark/2.2.0/
+SPARK_HOME=/usr/local/spark/2.3.2/
 BLASTBYDATE=/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++/
 JAVA_INC=-I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux
 MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"

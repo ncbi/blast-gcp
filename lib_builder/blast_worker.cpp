@@ -26,7 +26,10 @@
 
 #include "blastjni.hpp"
 #include "json.hpp"
-#include <ctype.h>
+#include <cctype>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -34,8 +37,6 @@
 #include <queue>
 #include <sstream>
 #include <stdexcept>
-#include <stdio.h>
-#include <stdlib.h>
 #include <streambuf>
 #include <string>
 #include <sys/time.h>
@@ -45,15 +46,18 @@
 
 using json = nlohmann::json;
 
-std::mutex                QUERIES_MUTEX;
-std::queue< std::string > QUERIES;
-int                       PARTITION_NUM;
+std::mutex              QUERIES_MUTEX;
+std::queue<std::string> QUERIES;
+int                     PARTITION_NUM;
 
 void start_thread(int threadnum);
 
 void start_thread(int threadnum)
 {
-    struct timeval tv_cur;
+    struct timeval tv_cur
+    {
+        0, 0
+    };
 
     fprintf(stderr, "pid %d Starting thread # %d\n", getpid(), threadnum);
 
@@ -61,7 +65,7 @@ void start_thread(int threadnum)
     {
         std::string jsonfname;
         {
-            std::lock_guard< std::mutex > guard(QUERIES_MUTEX);
+            std::lock_guard<std::mutex> guard(QUERIES_MUTEX);
             if (QUERIES.empty())
             {
                 fprintf(stderr, "Thread %d, QUERIES queue empty\n", threadnum);
@@ -109,8 +113,8 @@ void start_thread(int threadnum)
         // for (int i = 0; i != PARTITION_NUM; ++i)
         int i = PARTITION_NUM;
         {
-            gettimeofday(&tv_cur, NULL);
-            unsigned long starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
+            gettimeofday(&tv_cur, nullptr);
+            uint64_t starttime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
 
             char dbloc[1024];
 
@@ -135,8 +139,8 @@ void start_thread(int threadnum)
             fprintf(stderr, "Thread %d, RID %s, got back %zu for %s\n",
                     threadnum, RID.data(), alignments.size(), dbloc);
 
-            gettimeofday(&tv_cur, NULL);
-            unsigned long finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
+            gettimeofday(&tv_cur, nullptr);
+            uint64_t finishtime = tv_cur.tv_sec * 1000000 + tv_cur.tv_usec;
             fprintf(
                 stderr,
                 "pid %d Thread %d, RID %s, blast_worker called  PrelimSearch, "
@@ -156,23 +160,22 @@ int main(int argc, char * argv[])
         return 1;
     }
 
-    int num_threads = atoi(argv[1]);
-    PARTITION_NUM   = atoi(argv[2]);
+    int num_threads = strtol(argv[1], nullptr, 10);
+    PARTITION_NUM   = strtol(argv[2], nullptr, 10);
 
     {
-        std::lock_guard< std::mutex > guard(QUERIES_MUTEX);
+        std::lock_guard<std::mutex> guard(QUERIES_MUTEX);
         for (int arg = 3; arg != argc; ++arg)
         {
-            const char * jsonfname = argv[arg];
             QUERIES.push(std::string(argv[arg]));
         }
     }
     fprintf(stderr, "QUERIES has %zu\n", QUERIES.size());
 
-    std::vector< std::thread * > threads;
+    std::vector<std::thread *> threads;
     for (int i = 0; i != num_threads; ++i)
     {
-        std::thread * thrd = new std::thread(start_thread, i);
+        auto * thrd = new std::thread(start_thread, i);
         threads.push_back(thrd);
     }
 

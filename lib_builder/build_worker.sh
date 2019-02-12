@@ -40,7 +40,7 @@ export MALLOC_CHECK_=2
     GPPCOMMAND="
     g++ \
     blastjni.cpp \
-    -std=gnu++11 \
+    -std=gnu++14 \
     -Wall -O -I . \
     -Wextra -pedantic \
     -Wlogical-op \
@@ -97,9 +97,18 @@ export MALLOC_CHECK_=2
 
     if [ "0" == "1" ]; then
         echo "Running static analysis on C++ code"
-        cppcheck -q --enable=all --platform=unix64 --std=c++11 blastjni.cpp blast_worker.cpp
+        cppcheck -q --enable=all --platform=unix64 --std=c++14 blastjni.cpp blast_worker.cpp
         scan-build --use-analyzer /usr/local/llvm/3.8.0/bin/clang "$GPPCOMMAND"
         echo "Static analysis on C++ code complete"
+    fi
+
+    if [ "1" == "1" ]; then
+        echo "Running clang-tidy checkers on C++ code"
+        /usr/local/llvm/7.0.0/bin/clang-tidy -checks='*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-fuchsia-default-arguments,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay' \
+            blast_worker.cpp -- \
+            -std=c++11 \
+            -I. -I/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-0.el7_5.x86_64/include -I/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-0.el7_5.x86_64/include/linux -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++//include -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/c++//ReleaseMT/inc -I/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/blast_build/lmdb-0.9.21 -I/usr/include/c++/4.8.2 -I/usr/include/c++/4.8.2/bits -I/usr/include/c++/4.8.2/x86_64-redhat-linux -I/usr/include/c++/4.8.2/backward
+        echo "Running clang-tidy checkers on C++ code"
     fi
 
     echo "Compiling and linking blastjni.cpp"
@@ -108,7 +117,7 @@ export MALLOC_CHECK_=2
 
     g++ \
     blast_worker.cpp \
-    -std=gnu++11 \
+    -std=gnu++14 \
     -Wall -O -I . \
     -Wextra -pedantic \
     -Wlogical-op \

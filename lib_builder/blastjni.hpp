@@ -26,16 +26,14 @@
 
 #ifndef _blastjni_hpp
 #define _blastjni_hpp
-#include <ncbi_pch.hpp>
 #include <algo/blast/api/blast4spark.hpp>
+#include <ncbi_pch.hpp>
 #include <string>
 #include <vector>
 
-ncbi::blast::TIntermediateAlignments searchandtb(std::string query,
-                                                  std::string db_spec,
-                                                  std::string program,
-                                                  std::string params,
-                                                  int top_n_prelim,
-                                                  int top_n_traceback);
+ncbi::blast::TIntermediateAlignments
+searchandtb(const std::string & query, const std::string & db_spec,
+            const std::string & program, const std::string & params,
+            int top_n_prelim, int top_n_traceback);
 
 #endif
