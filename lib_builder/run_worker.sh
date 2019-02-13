@@ -2,7 +2,7 @@
 
 renice +19 -p $$
 
-MAXJOBS=8
+MAXJOBS=2
 
 pushd "$TMP" || exit
 gsutil -m cp -n gs://blast-test-requests-sprint6/*json .
@@ -24,7 +24,8 @@ rm -f blast_worker.log
 
 for PARTITION in $(seq 1 800); do
     echo "Starting blast_worker for partition $PARTITION"
-    ./blast_worker 16 "$PARTITION" "$FIXED" >> "$TMP/blast_worker.log" 2>&1 &
+    valgrind -v "--log-file=blast_worker.vg.$RANDOM" --leak-check=full \
+        ./blast_worker 16 "$PARTITION" "$FIXED" >> "$TMP/blast_worker.log" 2>&1 &
     j=$(jobs | wc -l)
     while [ "$j" -ge "$MAXJOBS" ]; do
         j=$(jobs | wc -l)
@@ -33,7 +34,6 @@ for PARTITION in $(seq 1 800); do
 
 done
 
-#valgrind -v --log-file=blast_worker.vg --leak-check=full ./blast_worker 16 800 $FIXED > blast_worker_vg.log 2>&1 &
 
 wait
 date

@@ -4,7 +4,7 @@ renice +19 -p $$
 
 MAXJOBS=24
 
-export LD_LIBRARY_PATH="$LD_LIBARAY_PATH:/home/vartanianmh/blast-gcp/lib_builder/:."
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/vartanianmh/blast-gcp/lib_builder/:."
 
 TESTS=$(/bin/ls -1 $TMP/tests/A*.json | sort -R)
 for test in $TESTS; do
