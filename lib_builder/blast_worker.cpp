@@ -172,16 +172,18 @@ int main(int argc, char * argv[])
     }
     fprintf(stderr, "QUERIES has %zu\n", QUERIES.size());
 
-    std::vector<std::thread *> threads;
+    std::vector<std::thread> threads;
     for (int i = 0; i != num_threads; ++i)
     {
-        auto * thrd = new std::thread(start_thread, i);
-        threads.push_back(thrd);
+        threads.emplace_back(std::thread(start_thread, i));
     }
 
-    for (auto thrd : threads)
+    for (auto & thrd : threads)
     {
-        thrd->join();
+        if (thrd.joinable())
+        {
+            thrd.join();
+        }
     }
 
     fprintf(stderr, "Process finished\n");
