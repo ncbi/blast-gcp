@@ -395,7 +395,7 @@ static jobjectArray iterate_HSPs(JNIEnv * jenv, jobject jthis,
             log(jenv, jthis, jlog_method, "INFO", "iterate_HSPs, zero hspcnt");
         }
 
-        max_scores.push_back(max_score);
+        max_scores.emplace_back(max_score);
         score_set.insert(max_score);
 
         log(jenv, jthis, jlog_method, "DEBUG", "  have %lu max_scores",
@@ -680,7 +680,7 @@ static jobjectArray prelim_search(JNIEnv * jenv, jobject jthis,
 
             if (hsp_list->oid != -1)
             {
-                hsp_lists.push_back(hsp_list);
+                hsp_lists.emplace_back(hsp_list);
             }
             else
             {
@@ -835,7 +835,7 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         for (size_t i = 0; i != elements; ++i)
         {
             ncbi::blast::SFlatHSP flathsp = flathsps[i];
-            flat_hsp_list.push_back(flathsp);
+            flat_hsp_list.emplace_back(flathsp);
         }
         jenv->ReleaseByteArrayElements(blobarr, be,
                                        JNI_ABORT);  // Didn't update the array
@@ -974,7 +974,7 @@ iterate_HSPs_nojni(const std::vector<BlastHSPList *> & hsp_lists, int topn)
             }
         }
 
-        max_scores.push_back(max_score);
+        max_scores.emplace_back(max_score);
         score_set.insert(max_score);
     }
 
@@ -1035,7 +1035,7 @@ iterate_HSPs_nojni(const std::vector<BlastHSPList *> & hsp_lists, int topn)
                 flathsp.subject_gapped_start
                     = hsp_list->hsp_array[h]->subject.gapped_start;
 
-                retarray.push_back(flathsp);
+                retarray.emplace_back(flathsp);
             }
         }
     }
@@ -1087,7 +1087,7 @@ searchandtb(const std::string & query, const std::string & db_spec,
 
             if (hsp_list->oid != -1)
             {
-                hsp_lists.push_back(hsp_list);
+                hsp_lists.emplace_back(hsp_list);
             }
         }
     }
