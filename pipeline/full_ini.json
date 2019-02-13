@@ -30,7 +30,7 @@
         },
         "status" :
         {
-            "bucket"  : "blastgcp-pipeline-test"
+            "bucket"  : "blastgcp-pipeline-test",
             "file" : "status/%s/status.txt",
             "running" : "RUNNING",
             "done" : "DONE",
@@ -52,7 +52,7 @@
         "comm_port" : 10013,
         "num_executors" : 15,
         "num_executor_cores" : 2
-    }
+    },
 
     "log" :
     {

@@ -5,8 +5,13 @@
         {
             "project_id" : "ncbi-sandbox-blast",
             "subscript_id" : "spark-test-subscript",
-            "use" : "true"
-        }
+            "use" : "false"
+        },
+		"hdfs" :
+		{
+			"dir" : "hdfs:///user/%s/jobs/",
+			"use" : "true"
+		}
     },
 
     "blastjni" :
