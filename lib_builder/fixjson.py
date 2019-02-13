@@ -14,4 +14,4 @@ j["blast_params"] = json.dumps(j["blast_params"])
 j["protocol"] = "1.0"
 
 with open(FNAME + ".fix", "w") as fout:
-    fout.write(json.dumps(j), indent=4)
+    fout.write(json.dumps(j, indent=4))
