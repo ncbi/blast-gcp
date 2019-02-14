@@ -45,9 +45,18 @@ public final class BC_MAIN
             String settings_file_name = args[ 0 ];
 			if ( file_exists( settings_file_name ) )
 			{
-				String appName = BC_MAIN.class.getSimpleName();
-				BC_SETTINGS settings = BC_SETTINGS_READER.read_from_json( settings_file_name, appName );
-            	System.out.println( settings );
+				System.out.println( String.format( "reading settings from file: '%s'", settings_file_name ) );
+				BC_SETTINGS settings = BC_SETTINGS_READER.read_from_json( settings_file_name, BC_MAIN.class.getSimpleName() );
+        		System.out.println( settings );
+				if ( !settings.valid() )
+				{
+					System.out.println( "settings are invalid!, exiting..." );
+				}
+				else
+				{
+					System.out.println( "settings are valid! preparing cluster" );
+					SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
+				}
 			}
 			else
 			{

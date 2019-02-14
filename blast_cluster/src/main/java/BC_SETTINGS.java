@@ -36,38 +36,40 @@ public class BC_SETTINGS implements Serializable
     public String appName = "";
     
     /* REQUESTS */
-    public Boolean req_use_pubsub = false;
+    public boolean req_use_pubsub = false;
     public String req_pubsub_project_id = "";
     public String req_pubsub_subscript_id = "";
-    public Boolean req_use_files = false;
+    public boolean req_use_files = false;
     public String req_files_dir = "";
-    public Boolean req_use_socket = false;
-	public Integer req_socket_nr = 0;
+    public boolean req_use_socket = false;
+	public Integer req_port_nr = 0;
     public Integer req_max_backlog = 10;
 
     /* DATABASES */
     HashMap< String, BC_DATABASE_SETTING > dbs; // configured via ini.json section
 
     /* RESULTS */
-	public Boolean res_use_gs_bucket = false;
+	public boolean res_use_gs_bucket = false;
     public String res_gs_bucket = "";
-    public String res_gs_file_pattern = "";
-	public Boolean res_use_files = false;
+    public String res_gs_pattern = "";
+	public boolean res_use_files = false;
     public String res_files_dir = "";
-    public String res_file_pattern = "";
+    public String res_files_pattern = "";
 
     /* CLUSTER */
     public List< String > transfer_files;
-    public String  spark_log_level = "";
+    public String  spark_log_level = "ERROR";
     public String  locality_wait = "";
-    public Boolean with_dyn_alloc = false;
-    public Integer num_executors = 0;
-    public Integer num_executor_cores = 0;
+    public boolean set_dyn_alloc = false;
+    public boolean with_dyn_alloc = false;
     public String  executor_memory = "";
-    public Boolean shuffle_reduceLocality_enabled = false;
-    public Boolean scheduler_fair = false;
+    public boolean set_shuffle_reduceLocality = false;
+    public boolean shuffle_reduceLocality = false;
+    public boolean scheduler_fair = false;
+	public Integer num_executors = 0;
+	public Integer num_executor_cores = 0;
     public Integer parallel_jobs = 1;
-    public String  jni_log_level = "";
+    public String  jni_log_level = "INFO";
 
     /* DEBUG */
     BC_DEBUG_SETTINGS debug;
@@ -75,43 +77,43 @@ public class BC_SETTINGS implements Serializable
     public BC_SETTINGS()
     {
         dbs = new HashMap<>();
-		transfer_files = new ArrayList();
+		transfer_files = new ArrayList<>();
         debug = new BC_DEBUG_SETTINGS();
     }
 
 	/* are the */
-    private Boolean req_valid()
+    private boolean req_valid()
     {
-		Boolean res = req_use_pubsub || req_use_files || req_use_socket;
+		boolean res = req_use_pubsub || req_use_files || req_use_socket;
         if ( req_use_pubsub )
 			res = !req_pubsub_project_id.isEmpty() &&  !req_pubsub_subscript_id.isEmpty();
 		if ( res && req_use_pubsub )
 			res = !req_files_dir.isEmpty();
 		if ( res && req_use_socket )
-			res = req_socket_nr != 0;
+			res = req_port_nr != 0;
 		return res;
     }
 
-    private Boolean dbs_valid()
+    private boolean dbs_valid()
     {
 		if ( dbs.isEmpty() ) return false;
-        Boolean res = true;
+        boolean res = true;
         for ( BC_DATABASE_SETTING e : dbs.values() )
             if ( !e.valid() ) res = false;
         return res;
     }
 
-	private Boolean res_valid()
+	private boolean res_valid()
 	{
-		Boolean res = res_use_gs_bucket || res_use_files;
+		boolean res = res_use_gs_bucket || res_use_files;
 		if ( res_use_gs_bucket )
-    		res = !res_gs_bucket.isEmpty() && !res_gs_file_pattern.isEmpty();
+    		res = !res_gs_bucket.isEmpty() && !res_gs_pattern.isEmpty();
 		if ( res && res_use_files )
-    		res = !res_files_dir.isEmpty() && !res_file_pattern.isEmpty();
+    		res = !res_files_dir.isEmpty() && !res_files_pattern.isEmpty();
 		return res;
 	}
 
-    public Boolean valid()
+    public boolean valid()
     {
         return ( req_valid() && dbs_valid() && res_valid() );
     }
@@ -128,34 +130,41 @@ public class BC_SETTINGS implements Serializable
     {
         String S = "REQUESTS:\n";
         if ( req_use_pubsub )
-            S = S + String.format( "\tpubsub-subscript ... '%s' : '%s'\n", req_pubsub_project_id, req_pubsub_subscript_id );
+            S = S + String.format( "\tpubsub-subscript ... '%s':'%s'\n", req_pubsub_project_id, req_pubsub_subscript_id );
         if ( req_use_files )
             S = S + String.format( "\tfiles-dir .......... '%s'\n", req_files_dir );
         if ( req_use_socket )
-            S = S + String.format( "\tsocket ............. %d\n", req_socket_nr );
+            S = S + String.format( "\tport ............... %d\n", req_port_nr );
         S = S + String.format( "\tmax. backlog ....... %d requests\n", req_max_backlog );
 
         S = S + "\nDATABASES:\n" + dbs_toString();
 
         S = S + "\nRESULTS:\n";
 		if ( res_use_gs_bucket )
-            S = S + String.format( "\tbucket ............. %s/%s\n", res_gs_bucket, res_gs_file_pattern );
+            S = S + String.format( "\tbucket ............. %s/%s\n", res_gs_bucket, res_gs_pattern );
 		if ( res_use_files )
-            S = S + String.format( "\tfiles .............. %s/%s\n", res_files_dir, res_file_pattern );
+            S = S + String.format( "\tfiles .............. %s/%s\n", res_files_dir, res_files_pattern );
 
         S = S + "\nCLUSTER:\n";
         S = S + String.format( "\tappName ............ '%s'\n", appName );
         S = S + String.format( "\ttransfer files ..... %s\n", transfer_files );
         S = S + String.format( "\tspark log level .... '%s'\n", spark_log_level );
-        S = S + String.format( "\tlocality.wait ...... '%s'\n", locality_wait );
-        S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
-        S = S + String.format( "\texecutors .......... %d ( %d cores )\n", num_executors, num_executor_cores );
-        S = S + String.format( "\treduce_loc_enabled . %s\n", Boolean.toString( shuffle_reduceLocality_enabled ) );
-        S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
-        S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
-        S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
+		if ( !locality_wait.isEmpty() )
+	        S = S + String.format( "\tlocality.wait ...... '%s'\n", locality_wait );
+		if ( set_dyn_alloc )
+        	S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
+		if ( set_shuffle_reduceLocality )
+        S = S + String.format( "\treduce_loc ......... %s\n", Boolean.toString( shuffle_reduceLocality ) );
+
+        S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
+		if ( num_executors > 0 )
+	        S = S + String.format( "\tnum-executors ...... %d\n", num_executors );
+		if ( num_executor_cores > 0 )
+	        S = S + String.format( "\tnum-executor-cores . %d\n", num_executor_cores );
+        S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
+        S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
 
         S = S + "\nDEBUG:\n";
         S = S + debug.toString();

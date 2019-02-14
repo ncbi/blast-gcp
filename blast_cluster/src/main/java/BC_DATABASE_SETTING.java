@@ -36,8 +36,6 @@ public class BC_DATABASE_SETTING implements Serializable
     public String worker_location = "/tmp/blast/db"; /* where is the location root on the worker? dflt: '/tmp/blast/db' */
 	public String source_location = "";	/* bucket or filesystem-path */
     public Boolean flat_layout = false; /* do we use a subdir for each volume under the location on the worker? */
-    public Integer volume_count = 0;    /* how many volumes/chunks does this database have,
-                                       		has to be discovered after settings have been read */
 	public List< String > extensions;	/* for nt: nsq, nin, nhr / nr: psq, pin, phr */
 
     public BC_DATABASE_SETTING()
@@ -55,7 +53,6 @@ public class BC_DATABASE_SETTING implements Serializable
         String S = String.format( "\t(%s).worker-loc ...... '%s'\n", key, worker_location );
         S =  S  +  String.format( "\t(%s).source-loc ...... '%s'\n", key, source_location );
         S =  S  +  String.format( "\t(%s).flat layout ..... %s\n", key, Boolean.toString( flat_layout ) );
-        S =  S  +  String.format( "\t(%s).volumes ......... %d\n", key, volume_count );
         S =  S  +  String.format( "\t(%s).extensions ...... %s\n", key, extensions );
         return S;
     }

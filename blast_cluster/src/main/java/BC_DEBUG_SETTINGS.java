@@ -31,7 +31,8 @@ import java.io.Serializable;
 public class BC_DEBUG_SETTINGS implements Serializable
 {
     public String host = "";
-    public Integer port = 0;
+    public Integer port = 10011;
+    public String jni_log_level = "INFO";
     public boolean request = false;
     public boolean job_start = false;
     public boolean job_done = false;
