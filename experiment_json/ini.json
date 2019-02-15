@@ -1,0 +1,35 @@
+{
+    "source" :
+    {
+        "pubsub" :
+        {
+            "project_id" : "ncbi-sandbox-blast",
+            "subscript_id" : "spark-test-subscript",
+            "use" : "true"
+        }
+    },
+
+    "blastjni" :
+    {
+        "num_db_limit" : 15,
+        "manifest_root" : "dbs_50M.json"
+    },
+
+    "result" :
+    {
+        "asn1" :
+        {
+            "bucket" : "blastgcp-pipeline-test"
+        },
+        "status" :
+        {
+            "bucket"  : "blastgcp-pipeline-test"
+        }
+    },
+
+    "spark" :
+    {
+        "num_executors" : 15,
+        "num_executor_cores" : 2
+    }
+}

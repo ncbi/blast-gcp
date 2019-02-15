@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="8.5in"
+   height="11in"
+   viewBox="0 0 215.9 279.4"
+   version="1.1"
+   id="svg10178"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   sodipodi:docname="BLAST_CMD.svg">
+  <defs
+     id="defs10172" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.3407258"
+     inkscape:cx="448.57143"
+     inkscape:cy="840"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="in" />
+  <metadata
+     id="metadata10175">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-17.6)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:12px;line-height:125%;font-family:Consolas;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.61449903px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="117.14286"
+       y="285.3768"
+       id="text10182"
+       transform="matrix(0.323834,0,0,0.57247965,-21.979507,-111.937)"><tspan
+         sodipodi:role="line"
+         id="tspan10180"
+         x="117.14286"
+         y="285.3768"
+         style="stroke-width:0.61449903px">exit ................. exit the application</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="300.3768"
+         id="tspan10184"
+         style="stroke-width:0.61449903px">backlog .............. request the size of the backlog</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="315.3768"
+         id="tspan10186"
+         style="stroke-width:0.61449903px">status ............... print status of backlog, jobs and previous requests info</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="330.3768"
+         id="tspan10188"
+         style="stroke-width:0.61449903px">bye .................. close session on communication socket</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="345.3768"
+         id="tspan10190"
+         style="stroke-width:0.61449903px"></tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="360.3768"
+         id="tspan10192"
+         style="stroke-width:0.61449903px">JN ...................... change number of parallel jobs ( N: 1..??? )</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="375.3768"
+         id="tspan10194"
+         style="stroke-width:0.61449903px">Fgs://bucket/file.json .. add this job to the backlog ( directly from gs-bucket )</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="390.3768"
+         id="tspan10196"
+         style="stroke-width:0.61449903px">Ffile.json .............. add this job to the backlog ( from local fs on master )</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="405.3768"
+         id="tspan10198"
+         style="stroke-width:0.61449903px">Llist.txt ............... process and time this list of requests</tspan><tspan
+         sodipodi:role="line"
+         x="117.14286"
+         y="420.3768"
+         id="tspan10200"
+         style="stroke-width:0.61449903px" /></text>
+  </g>
+</svg>
