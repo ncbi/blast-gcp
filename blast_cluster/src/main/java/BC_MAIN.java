@@ -27,6 +27,12 @@
 package gov.nih.nlm.ncbi.blast_spark_cluster;
 
 import java.io.File;
+import java.util.List;
+
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.api.java.JavaRDD;
 
 public final class BC_MAIN
 {
@@ -36,32 +42,73 @@ public final class BC_MAIN
 		return f.exists();
 	}
 
+	private static void run( final BC_SETTINGS settings )
+	{
+		/* create and configure the spark-context */
+		SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
+		JavaSparkContext jsc = new JavaSparkContext( sc );
+		jsc.setLogLevel( settings.spark_log_level );
+
+		/* broadcast the Debug-settings */
+		Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS = jsc.broadcast( settings.debug );
+
+		HashMap< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
+
+		/* populate db_dict */
+		for ( String key : settings.dbs.keySet() )
+		{
+			BC_DATABASE_SETTING db_setting = settings.dbs.get( key );
+
+			/* get a list of entries from the source ( bucket ) */
+			List< String > files = BC_GCP_TOOLS.list( db_setting.source_location );
+
+			/* get a list of unique names ( without the extension ) */
+			List< String > names = BC_GCP_TOOLS.unique_without_extension( files, db_setting.extensions );
+			System.out.println( String.format( "%s has %d chunks", key, names.size() ) );
+
+			/* create a list of Database-RDD-entries using a static method of this class */
+			List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, names );
+
+			/* ask the spark-context to distribute the RDD to the workers */
+			JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = sc.parallelize( entries );
+
+			/* put the RDD in the database-dictionary */
+			db_dict.put( key, rdd );
+		}
+
+		/* for each RDD in the database-dictionary run a simple map-reduce operation */
+		for ( String key : db_dict.keySet() )
+		{
+			JavaRDD< BC_DATABASE_RDD_ENTRY rdd = db_dict.get( key );
+
+		}
+	}
+
     public static void main( String[] args ) throws Exception
     {
         if ( args.length < 1 )
             System.out.println( "settings-file not specified" );
         else
         {
-            String settings_file_name = args[ 0 ];
+			String settings_file_name = args[ 0 ];
 			if ( file_exists( settings_file_name ) )
 			{
 				System.out.println( String.format( "reading settings from file: '%s'", settings_file_name ) );
+				/* parse the settings-file */
 				BC_SETTINGS settings = BC_SETTINGS_READER.read_from_json( settings_file_name, BC_MAIN.class.getSimpleName() );
-        		System.out.println( settings );
+				System.out.println( settings );
 				if ( !settings.valid() )
-				{
 					System.out.println( "settings are invalid!, exiting..." );
-				}
 				else
 				{
 					System.out.println( "settings are valid! preparing cluster" );
-					SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
+
+					/* === run the application === */
+					run( settings );
 				}
 			}
 			else
-			{
 				System.out.println( String.format( "settings-file '%s' not found", settings_file_name ) );
-			}
         }
    }
 }

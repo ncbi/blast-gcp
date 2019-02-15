@@ -31,8 +31,7 @@
 		{
 			"key" : "nt",
 			"worker_location" : "/tmp/blast/db",
-			"source_location" : "/panfs/somewhere",
-			"flat" : true,
+			"source_location" : "gs://nt_50mb_chunks",
 			"extensions" : [ "nsq", "nin", "nhr" ]
 		}
 	],
