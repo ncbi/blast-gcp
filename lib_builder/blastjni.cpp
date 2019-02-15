@@ -72,18 +72,6 @@ enum
     xc_java_runtime_exception
 };
 
-/* Utility Functions */
-struct HSPStreamDeleter
-{
-    void operator()(ncbi::blast::TBlastHSPStream * hsp_stream)
-    {
-        if (hsp_stream != nullptr)
-        {
-            BlastHSPStreamFree(hsp_stream->GetPointer());
-        }
-    }
-};
-
 static void jni_throw(JNIEnv * jenv, jclass jexcept_cls, const char * fmt,
                       va_list args)
 {
@@ -642,8 +630,7 @@ static jobjectArray prelim_search(JNIEnv * jenv, jobject jthis,
         jquery, jdb_spec, jprogram, topn);
     //      "  params  : %s"
 
-    // Smart pointer will ensure HSPStreamDeleter() is called
-    std::unique_ptr<ncbi::blast::TBlastHSPStream, HSPStreamDeleter> hsp_stream(
+    std::unique_ptr<ncbi::blast::TBlastHSPStream> hsp_stream(
         ncbi::blast::PrelimSearch(std::string(jquery), std::string(jdb_spec),
                                   std::string(jprogram), std::string(jparams)));
 
@@ -1051,8 +1038,7 @@ searchandtb(const std::string & query, const std::string & db_spec,
             int top_n_prelim, int top_n_traceback)
 {
     fprintf(stderr, "Calling PrelimSearch\n");
-    // Smart pointer will ensure HSPStreamDeleter() is called
-    std::unique_ptr<ncbi::blast::TBlastHSPStream, HSPStreamDeleter> hsp_stream(
+    std::unique_ptr<ncbi::blast::TBlastHSPStream> hsp_stream(
         ncbi::blast::PrelimSearch(query, db_spec, program, params));
     fprintf(stderr, "Called  PrelimSearch\n");
 
