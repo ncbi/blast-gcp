@@ -27,7 +27,14 @@
 package gov.nih.nlm.ncbi.blast_spark_cluster;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -36,11 +43,6 @@ import org.apache.spark.api.java.JavaRDD;
 
 public final class BC_MAIN
 {
-	private static Boolean file_exists( String filename )
-	{
-		File f = new File( filename );
-		return f.exists();
-	}
 
 	private static void run( final BC_SETTINGS settings )
 	{
@@ -49,10 +51,23 @@ public final class BC_MAIN
 		JavaSparkContext jsc = new JavaSparkContext( sc );
 		jsc.setLogLevel( settings.spark_log_level );
 
+		int num_executors = jsc.getConf().getInt( "spark.executor.instances", 0 );
+		System.out.println( String.format( "we have %d executors", num_executors ) );
+
+		/* create the application-context, lives only on the master */
+		BC_CONTEXT context = new BC_CONTEXT( settings );
+
+        // reader thread for console commands
+        BC_CONSOLE console = new BC_CONSOLE( context, 200 );
+        console.start();
+
+		BC_DEBUG_RECEIVER debug_receiver = new BC_DEBUG_RECEIVER( context );
+		debug_receiver.start();
+
 		/* broadcast the Debug-settings */
 		Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS = jsc.broadcast( settings.debug );
 
-		HashMap< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
+		Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict = new HashMap<>();
 
 		/* populate db_dict */
 		for ( String key : settings.dbs.keySet() )
@@ -64,24 +79,69 @@ public final class BC_MAIN
 
 			/* get a list of unique names ( without the extension ) */
 			List< String > names = BC_GCP_TOOLS.unique_without_extension( files, db_setting.extensions );
-			System.out.println( String.format( "%s has %d chunks", key, names.size() ) );
+			if ( db_setting.limit > 0 )
+				System.out.println( String.format( "%s has %d chunks, using %d of them", key, names.size(), db_setting.limit ) );				
+			else
+				System.out.println( String.format( "%s has %d chunks", key, names.size() ) );
 
 			/* create a list of Database-RDD-entries using a static method of this class */
-			List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, names );
+			List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting,
+				db_setting.limit > 0 ? names.subList( 0, db_setting.limit ) : names );
 
 			/* ask the spark-context to distribute the RDD to the workers */
-			JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = sc.parallelize( entries );
+			JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, num_executors * 4 );
 
 			/* put the RDD in the database-dictionary */
 			db_dict.put( key, rdd );
 		}
 
-		/* for each RDD in the database-dictionary run a simple map-reduce operation */
-		for ( String key : db_dict.keySet() )
+		/* for each RDD in the database-dictionary run a simple map-operation to trigger the download*/
+		BufferedWriter writer = null;
+		try
 		{
-			JavaRDD< BC_DATABASE_RDD_ENTRY rdd = db_dict.get( key );
-
+			writer = new BufferedWriter( new FileWriter( new File( "downloaded.txt" ) ) );
+			for ( String key : db_dict.keySet() )
+			{
+				System.out.println( String.format( "downloading '%s' on the workers", key ) );
+				JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( key );
+				JavaRDD< String > DOWNLOADS = chunks.flatMap( item -> { return item.download(); } );
+				for ( String item : DOWNLOADS.collect() )
+					writer.write( String.format( "%s\n", item ) );
+			}
 		}
+		catch( Exception e ) { e.printStackTrace(); }
+		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
+
+		System.out.println( "ready" );
+
+		/* we are handling commands, which originate form the master-console or from a socket */
+		while ( context.is_running() )
+		{
+            try
+            {
+                BC_COMMAND cmd = context.pull_cmd();
+                if ( cmd != null )
+                {
+                    if ( cmd.is_exit() ) context.stop();
+					else if ( cmd.is_file_request() ) context.add_request_file( cmd.line.substring( 1 ), cmd.stream );
+				}
+                else
+                {
+                    Thread.sleep( 250 );
+				}
+			}
+            catch ( InterruptedException e ) {}
+		}
+
+		/* join the different threads we have created... */
+		try
+		{
+			console.join();
+			debug_receiver.join();
+		}
+		catch( Exception e ) { e.printStackTrace(); }
+
+		System.out.println( "done" );
 	}
 
     public static void main( String[] args ) throws Exception
@@ -91,7 +151,7 @@ public final class BC_MAIN
         else
         {
 			String settings_file_name = args[ 0 ];
-			if ( file_exists( settings_file_name ) )
+			if ( BC_UTILS.file_exists( settings_file_name ) )
 			{
 				System.out.println( String.format( "reading settings from file: '%s'", settings_file_name ) );
 				/* parse the settings-file */

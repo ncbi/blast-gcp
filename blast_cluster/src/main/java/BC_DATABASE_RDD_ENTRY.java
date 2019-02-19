@@ -27,13 +27,20 @@
 package gov.nih.nlm.ncbi.blast_spark_cluster;
 
 import java.io.Serializable;
+import java.io.File;
+
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
+
+import java.net.InetAddress;
+
+import org.apache.spark.SparkEnv;
 
 public class BC_DATABASE_RDD_ENTRY implements Serializable
 {
-    public final BC_DATABASE_SETTING setting;
-    public final String name;
+    private final BC_DATABASE_SETTING setting;
+    private final String name;
 
     public BC_DATABASE_RDD_ENTRY( final BC_DATABASE_SETTING a_setting, final String a_name )
     {
@@ -47,6 +54,46 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 		for ( String a_name : names )
 			res.add( new BC_DATABASE_RDD_ENTRY( a_setting, a_name ) );
 		return res;
+	}
+
+	public String build_source_path( final String extension )
+	{
+		return String.format( "%s/%s.%s", setting.source_location, name, extension );
+	}
+
+	public String build_worker_path( final String extension )
+	{
+		return String.format( "%s/%s/%s.%s", setting.worker_location, name, name, extension );
+	}
+
+	public String workername()
+	{
+		String w;
+		try { w = java.net.InetAddress.getLocalHost().getHostName(); }
+		catch( Exception e ) { w = "?"; }
+		return String.format( "%s/%s", w, SparkEnv.get().executorId() );
+	}
+
+	public Iterator download()
+	{
+		List< String > lst = new ArrayList<>();
+		String wn = workername();
+		for ( String extension : setting.extensions )
+		{
+			String src = build_source_path( extension );
+			String dst = build_worker_path( extension );
+			File f_dst = new File( dst );
+			if ( f_dst.exists() )
+				lst.add( String.format( "%s : %s -> %s (exists)", wn, src, dst ) );
+			else
+			{
+				long started_at = System.currentTimeMillis();
+				boolean success = BC_GCP_TOOLS.download( src, dst );
+				long elapsed = System.currentTimeMillis() - started_at;
+			 	lst.add( String.format( "%s : %s -> %s (%s in %,d ms)", wn, src, dst, Boolean.toString( success ), elapsed ) );
+			}
+		}
+		return lst.iterator();
 	}
 }
 
