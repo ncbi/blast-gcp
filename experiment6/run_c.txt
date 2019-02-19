@@ -1,3 +1,0 @@
-log file f4.log
-Lc.txt nt exit
-

@@ -1,35 +1,71 @@
 {
-    "source" :
+    "requests" :
     {
         "pubsub" :
         {
             "project_id" : "ncbi-sandbox-blast",
             "subscript_id" : "spark-test-subscript",
             "use" : "true"
-        }
-    },
-
-    "blastjni" :
-    {
-        "num_db_limit" : 15,
-        "manifest_root" : "dbs_50M.json"
-    },
-
-    "result" :
-    {
-        "asn1" :
-        {
-            "bucket" : "blastgcp-pipeline-test"
         },
-        "status" :
+		"files" :
+		{
+			"dir" : "/panfs/somewhere",
+			"use" : "true"
+		},
+		"socket" :
+		{
+			"port" : 12345,
+			"use" : "false"
+		},
+		"max_backlog" : 12
+    },
+
+    "databases" :
+    [
+		{
+			"key" : "nr",
+			"worker_location" : "/tmp/blast/db",
+			"source_location" : "gs://nr_50mb_chunks",
+			"extensions" : [ "psq", "pin", "phr" ]
+		},
+		{
+			"key" : "nt",
+			"worker_location" : "/tmp/blast/db",
+			"source_location" : "gs://nt_50mb_chunks",
+			"extensions" : [ "nsq", "nin", "nhr" ]
+		}
+	],
+
+    "results" :
+    {
+        "bucket" :
         {
-            "bucket"  : "blastgcp-pipeline-test"
+	    	"bucket" : "blastgcp-pipeline-test/%s",
+			"pattern" : "seq-annot.asn",
+			"use" : true
+        },
+        "files" :
+        {
+            "dir"  : "/panfs/somewhere",
+			"pattern" : "%s.asn",
+			"use" : true
         }
     },
 
-    "spark" :
+    "cluster" :
     {
-        "num_executors" : 15,
-        "num_executor_cores" : 2
+		"transfer_files" : [ "libblastjni.so" ],
+		"parallel_jobs" : 12
+    },
+
+    "debug" :
+    {
+        "port" : 10011,
+        "request" : true,
+        "start" : true,
+        "done" : true,
+        "final" : true,
+		"stkdrv_stats_log" : ""
     }
+
 }
