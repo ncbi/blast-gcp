@@ -10,7 +10,7 @@ DEPENDS="${SPARK_HOME}/jars/*:${MAIN_JAR}:."
 gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h: ../pipeline/src/main/java/BLAST_LIB.java
 	javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "${DEPENDS}":. -d . -h . $^
 
-libblastjni.so: blastjni.cpp gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h
+libblastjni.so: blastjni.cpp blastjni.hpp
 	g++ \
     $< \
     -std=gnu++11 \
