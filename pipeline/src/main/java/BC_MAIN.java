@@ -28,6 +28,7 @@ package gov.nih.nlm.ncbi.blast_spark_cluster;
 
 import java.io.File;
 import java.util.List;
+import java.util.HashMap;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -52,7 +53,7 @@ public final class BC_MAIN
 		/* broadcast the Debug-settings */
 		Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS = jsc.broadcast( settings.debug );
 
-		HashMap< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
+		HashMap< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict = new HashMap<>();
 
 		/* populate db_dict */
 		for ( String key : settings.dbs.keySet() )
@@ -70,7 +71,7 @@ public final class BC_MAIN
 			List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, names );
 
 			/* ask the spark-context to distribute the RDD to the workers */
-			JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = sc.parallelize( entries );
+			JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries );
 
 			/* put the RDD in the database-dictionary */
 			db_dict.put( key, rdd );
@@ -79,7 +80,7 @@ public final class BC_MAIN
 		/* for each RDD in the database-dictionary run a simple map-reduce operation */
 		for ( String key : db_dict.keySet() )
 		{
-			JavaRDD< BC_DATABASE_RDD_ENTRY rdd = db_dict.get( key );
+			JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = db_dict.get( key );
 
 		}
 	}
