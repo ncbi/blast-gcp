@@ -26,43 +26,49 @@
 
 package gov.nih.nlm.ncbi.blast_spark_cluster;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-
-import java.time.ZonedDateTime;
-
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class BC_UTILS
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.api.java.JavaRDD;
+
+public class BC_JOBS
 {
-	public static boolean file_exists( final String filename )
-	{
-		File f = new File( filename );
-		return f.exists();
-	}
+    private final BC_CONTEXT context;
+    private final JavaSparkContext jsc;
+    private Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS;
+	private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
+    private final List< BC_JOB > jobs;
 
-	public static boolean save_to_file( final List< String > lines, final String filename )
-	{
-		boolean res = false;
-		BufferedWriter writer = null;
-		try
+    public BC_JOBS( final BC_CONTEXT a_context,
+                    final JavaSparkContext a_jsc,
+                    Broadcast< BC_DEBUG_SETTINGS > a_DEBUG_SETTINGS,
+					final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > a_db_dict )
+    {
+		context = a_context;
+		jsc = a_jsc;
+		DEBUG_SETTINGS = a_DEBUG_SETTINGS;
+		db_dict = a_db_dict;
+
+        jobs = new ArrayList<>();
+        for ( int i = 0; i < context.settings.parallel_jobs; ++i )
 		{
-			writer = new BufferedWriter( new FileWriter( new File( filename ) ) );
-			if ( writer != null )
-			{
-				for ( String line : lines )
-						writer.write( String.format( "%s\n", line ) );
-				res = true;
-			}
+			BC_JOB job = new BC_JOB( context, jsc, DEBUG_SETTINGS, db_dict, i );
+            jobs.add( job );
+			job.start();
 		}
-		catch( Exception e ) { e.printStackTrace(); }
-		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
-		return res;
-	}
+    }
 
-	public static String datetime()
-	{
-		return String.format( "%s", ZonedDateTime.now() );
-	}
+    public void join()
+    {
+        for ( BC_JOB job : jobs )
+		{
+		    try { job.join(); }
+		    catch( InterruptedException e ) { }
+		}
+    }
 }
+

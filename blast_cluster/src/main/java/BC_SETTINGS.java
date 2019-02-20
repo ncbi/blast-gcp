@@ -42,8 +42,9 @@ public class BC_SETTINGS implements Serializable
     public boolean req_use_files = false;
     public String req_files_dir = "";
     public boolean req_use_socket = false;
-	public Integer req_port_nr = 0;
-    public Integer req_max_backlog = 10;
+	public int req_port_nr = 0;
+    public int req_max_backlog = 10;
+	public int job_sleep_time = 100;
 
     /* DATABASES */
     HashMap< String, BC_DATABASE_SETTING > dbs; // configured via ini.json section
@@ -66,9 +67,9 @@ public class BC_SETTINGS implements Serializable
     public boolean set_shuffle_reduceLocality = false;
     public boolean shuffle_reduceLocality = false;
     public boolean scheduler_fair = false;
-	public Integer num_executors = 0;
-	public Integer num_executor_cores = 0;
-    public Integer parallel_jobs = 1;
+	public int num_executors = 0;
+	public int num_executor_cores = 0;
+    public int parallel_jobs = 1;
     public String  jni_log_level = "INFO";
 
     /* DEBUG */

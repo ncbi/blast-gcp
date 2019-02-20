@@ -27,8 +27,6 @@
 package gov.nih.nlm.ncbi.blast_spark_cluster;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -96,21 +94,20 @@ public final class BC_MAIN
 		}
 
 		/* for each RDD in the database-dictionary run a simple map-operation to trigger the download*/
-		BufferedWriter writer = null;
-		try
+		List< String > lines = new ArrayList<>();
+		for ( String key : db_dict.keySet() )
 		{
-			writer = new BufferedWriter( new FileWriter( new File( "downloaded.txt" ) ) );
-			for ( String key : db_dict.keySet() )
+			System.out.println( String.format( "downloading '%s' on the workers", key ) );
+			JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( key );
+			if ( chunks != null )
 			{
-				System.out.println( String.format( "downloading '%s' on the workers", key ) );
-				JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( key );
-				JavaRDD< String > DOWNLOADS = chunks.flatMap( item -> { return item.download(); } );
-				for ( String item : DOWNLOADS.collect() )
-					writer.write( String.format( "%s\n", item ) );
+				JavaRDD< String > DOWNLOADS = chunks.flatMap( item -> { return item.download().iterator(); } );
+				lines.addAll( DOWNLOADS.collect() );
 			}
 		}
-		catch( Exception e ) { e.printStackTrace(); }
-		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
+		BC_UTILS.save_to_file( lines, "downloads.txt" );
+
+		BC_JOBS jobs = new BC_JOBS( context, jsc, DEBUG_SETTINGS, db_dict );
 
 		System.out.println( "ready" );
 
@@ -121,14 +118,9 @@ public final class BC_MAIN
             {
                 BC_COMMAND cmd = context.pull_cmd();
                 if ( cmd != null )
-                {
-                    if ( cmd.is_exit() ) context.stop();
-					else if ( cmd.is_file_request() ) context.add_request_file( cmd.line.substring( 1 ), cmd.stream );
-				}
+					cmd.handle( context );
                 else
-                {
                     Thread.sleep( 250 );
-				}
 			}
             catch ( InterruptedException e ) {}
 		}
@@ -136,6 +128,7 @@ public final class BC_MAIN
 		/* join the different threads we have created... */
 		try
 		{
+			jobs.join();
 			console.join();
 			debug_receiver.join();
 		}

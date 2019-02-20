@@ -40,7 +40,7 @@ import org.apache.spark.SparkEnv;
 public class BC_DATABASE_RDD_ENTRY implements Serializable
 {
     private final BC_DATABASE_SETTING setting;
-    private final String name;
+    public final String name;
 
     public BC_DATABASE_RDD_ENTRY( final BC_DATABASE_SETTING a_setting, final String a_name )
     {
@@ -74,7 +74,19 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 		return String.format( "%s/%s", w, SparkEnv.get().executorId() );
 	}
 
-	public Iterator download()
+	public boolean present()
+	{
+		int found = 0;
+		for ( String extension : setting.extensions )
+		{
+			File f_dst = new File( build_worker_path( extension ) );
+			if ( f_dst.exists() )
+				found += 1;
+		}
+		return ( found == setting.extensions.size() );
+	}
+
+	public List< String > download()
 	{
 		List< String > lst = new ArrayList<>();
 		String wn = workername();
@@ -93,7 +105,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 			 	lst.add( String.format( "%s : %s -> %s (%s in %,d ms)", wn, src, dst, Boolean.toString( success ), elapsed ) );
 			}
 		}
-		return lst.iterator();
+		return lst;
 	}
 }
 

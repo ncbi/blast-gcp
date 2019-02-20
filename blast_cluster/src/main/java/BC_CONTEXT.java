@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BC_CONTEXT
 {
-	private final BC_SETTINGS settings;
+	public final BC_SETTINGS settings;
     private final AtomicBoolean running;
     private final ConcurrentLinkedQueue< BC_COMMAND > command_queue;
     private final ConcurrentLinkedQueue< BC_REQUEST > request_queue;
@@ -112,5 +112,11 @@ public class BC_CONTEXT
         }
         return res;
     }
+
+	public BC_REQUEST get_request()
+	{
+        BC_REQUEST request = request_queue.poll();
+        return request;
+	}
 
 }

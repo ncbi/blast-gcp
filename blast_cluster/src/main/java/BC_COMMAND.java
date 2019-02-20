@@ -29,8 +29,8 @@ import java.io.PrintStream;
 
 public class BC_COMMAND
 {
-    public final PrintStream stream;
-    public final String line;
+    private final PrintStream stream;
+    private final String line;
 
     BC_COMMAND( final PrintStream a_stream, final String a_line )
     {
@@ -40,5 +40,13 @@ public class BC_COMMAND
 
 	public boolean is_exit() { return line.equals( "exit" ); }
 	public boolean is_file_request() { return line.startsWith( "F" ); }
+	public boolean is_list_request() { return line.startsWith( "L" ); }
+
+	public void handle( BC_CONTEXT context )
+	{
+        if ( is_exit() ) context.stop();
+		else if ( is_file_request() ) context.add_request_file( line.substring( 1 ).trim(), stream );
+
+	}
 }
 
