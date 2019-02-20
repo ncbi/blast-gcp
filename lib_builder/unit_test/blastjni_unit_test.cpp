@@ -48,13 +48,15 @@ public:
     string m_NuclQuery;
     string m_ProtDb;
     string m_NuclDb;
-
+    int m_TopNPrelim;
+    int m_TopNTraceback;
 
     CBlast4SparkFixture() : m_ProtQuery(ReadFile("data/prot_query.asn")),
                             m_NuclQuery(ReadFile("data/nucl_query.asn")),
                             m_ProtDb("data/prot_w_aux"),
-                            m_NuclDb("data/nucl_w_aux")
-
+                            m_NuclDb("data/nucl_w_aux"),
+                            m_TopNPrelim(100),
+                            m_TopNTraceback(100)
     {}
 
     // Read a whole text file into a string
@@ -76,8 +78,6 @@ BOOST_AUTO_TEST_CASE(ProteinSearch)
 {
     string program = "blastp";
     string params = "";
-    int top_n_prelim = 100;
-    int top_n_traceback = 100;
 
     // expected alignment scores
     vector<int> expected_scores = {908, 285, 275};
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ProteinSearch)
     ncbi::blast::TIntermediateAlignments results;
     BOOST_REQUIRE_NO_THROW(
        results = searchandtb(m_ProtQuery, m_ProtDb, program, params,
-                             top_n_prelim, top_n_traceback));
+                             m_TopNPrelim, m_TopNTraceback));
 
     // test number of results
     BOOST_REQUIRE_EQUAL(3u, results.size());
@@ -121,8 +121,6 @@ BOOST_AUTO_TEST_CASE(NucleotideSearch)
 {
     string program = "blastn";
     string params = "";
-    int top_n_prelim = 100;
-    int top_n_traceback = 100;
 
     // expected alignment scores
     vector<int> expected_scores = {2630, 2038, 170, 113, 1341, 278,
@@ -136,7 +134,7 @@ BOOST_AUTO_TEST_CASE(NucleotideSearch)
     ncbi::blast::TIntermediateAlignments results;
     BOOST_REQUIRE_NO_THROW(
        results = searchandtb(m_NuclQuery, m_NuclDb, program, params,
-                             top_n_prelim, top_n_traceback));
+                             m_TopNPrelim, m_TopNTraceback));
 
     // test number of search results
     BOOST_REQUIRE_EQUAL(12u, results.size());
@@ -161,8 +159,60 @@ BOOST_AUTO_TEST_CASE(NucleotideSearch)
         // may fail when this changes.
         BOOST_REQUIRE_CLOSE(evalue, expected_evalues[i], 0.01);
     }
-
 }
+
+
+BOOST_AUTO_TEST_CASE(BadQuery)
+{
+    string program = "blastp";
+    string params = "";
+
+    ncbi::blast::TIntermediateAlignments results;
+    BOOST_REQUIRE_THROW(
+       results = searchandtb("aaa", m_ProtDb, program, params,
+                             m_TopNPrelim, m_TopNTraceback),
+                             CException);
+}
+
+
+BOOST_AUTO_TEST_CASE(BadDatabase)
+{
+    string program = "blastp";
+    string params = "";
+
+    ncbi::blast::TIntermediateAlignments results;
+    BOOST_REQUIRE_THROW(
+       results = searchandtb(m_ProtQuery, "somedb", program, params,
+                             m_TopNPrelim, m_TopNTraceback),
+                             CException);
+}
+
+
+BOOST_AUTO_TEST_CASE(BadProgram)
+{
+    string program = "someprogram";
+    string params = "";
+
+    ncbi::blast::TIntermediateAlignments results;
+    BOOST_REQUIRE_THROW(
+       results = searchandtb(m_ProtQuery, m_ProtDb, program, params,
+                             m_TopNPrelim, m_TopNTraceback),
+                             CException);
+}
+
+
+BOOST_AUTO_TEST_CASE(MismatchedProgram)
+{
+    string program = "blastn";
+    string params = "";
+
+    ncbi::blast::TIntermediateAlignments results;
+    BOOST_REQUIRE_THROW(
+       results = searchandtb(m_ProtQuery, m_ProtDb, program, params,
+                             m_TopNPrelim, m_TopNTraceback),
+                             CException);
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()
