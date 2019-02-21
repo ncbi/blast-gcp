@@ -7,10 +7,10 @@ JAVA_INC=-I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux
 MAIN_JAR="../pipeline/target/sparkblast-1-jar-with-dependencies.jar"
 DEPENDS="${SPARK_HOME}/jars/*:${MAIN_JAR}:."
 
-gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h: ../pipeline/src/main/java/BLAST_LIB.java
-	javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "${DEPENDS}":. -d . -h . $^
+#gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h: ../pipeline/src/main/java/BLAST_LIB.java
+#	javac -Xlint:all -Xlint:-path -Xlint:-serial -cp "${DEPENDS}":. -d . -h . $^
 
-libblastjni.so: blastjni.cpp gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h
+libblastjni.so: blastjni.cpp blastjni.hpp gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h
 	g++ \
     $< \
     -std=gnu++11 \
