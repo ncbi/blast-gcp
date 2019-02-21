@@ -23,7 +23,7 @@
 * ===========================================================================
 *
 */
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -124,19 +124,6 @@ class BC_GCP_TOOLS
         return res;
     }
 
-	private boolean create_paths_if_neccessary( final String filename )
-	{
-		File f = new File( filename );
-		File d = new File( f.getParent() );
-		boolean res = d.exists();
-		if ( !res )
-		{
-			d.mkdir();
-			res = d.exists();
-		}
-		return res;
-	}
-
 	private Integer list_bucket( final String bucket, List< String > lst )
 	{
 		Integer res = 0; 
@@ -185,7 +172,7 @@ class BC_GCP_TOOLS
 
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
-        boolean res = create_paths_if_neccessary( dst_filename );
+        boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
 		if ( res )
 		{
 			File f_lock = new File( String.format( "%s.lock", dst_filename ) );

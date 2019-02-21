@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BC_CLASS="gov.nih.nlm.ncbi.blast_spark_cluster.BC_MAIN"
+BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini.json"
 

@@ -23,7 +23,7 @@
  * ===========================================================================
  *
  */
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 

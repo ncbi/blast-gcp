@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>gov.nih.nlm.ncbi.blast_spark_cluster</groupId>
+  <groupId>gov.nih.nlm.ncbi.blastjni</groupId>
   <artifactId>sparkblast</artifactId>
   <version>1</version>
 

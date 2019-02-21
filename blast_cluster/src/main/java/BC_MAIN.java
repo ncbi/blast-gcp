@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
 
@@ -129,8 +129,9 @@ public final class BC_MAIN
 		try
 		{
 			jobs.join();
+			debug_receiver.join_clients();
 			console.join();
-			debug_receiver.join();
+			context.join();		/* because context owns request-list-threads */
 		}
 		catch( Exception e ) { e.printStackTrace(); }
 

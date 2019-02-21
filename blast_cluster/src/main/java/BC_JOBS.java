@@ -24,16 +24,105 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import java.nio.ByteBuffer;
+
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.rdd.RDD;
+import org.apache.spark.util.LongAccumulator;
+import org.apache.spark.SparkFiles;
+
+class BC_JOB extends Thread
+{
+    private final BC_CONTEXT context;
+    private final JavaSparkContext jsc;
+    private Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS;
+	private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
+	private final int id;
+
+    public BC_JOB( final BC_CONTEXT a_context,
+                   final JavaSparkContext a_jsc,
+                   Broadcast< BC_DEBUG_SETTINGS > a_DEBUG_SETTINGS,
+                   final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > a_db_dict,
+				   final int a_id )
+    {
+        context = a_context;
+        DEBUG_SETTINGS = a_DEBUG_SETTINGS;
+        jsc = a_jsc;
+        db_dict = a_db_dict;
+		id = a_id;
+    }
+
+    private void sleepFor( long milliseconds )
+    {
+        try { Thread.sleep( milliseconds ); }
+        catch ( InterruptedException e ) { }
+    }
+
+	/* Attention: the Broadcast-Variable DBG has to be in the parameter-list, even
+       if it is available as a field of the BC_JOB-class! If instead the class-field
+       is referenced from within the closure, SPARK tries to serialize
+       the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
+       It will compile, but it will fail at runtime. */
+	private void handle_request( Broadcast< BC_DEBUG_SETTINGS > DBG, BC_REQUEST request )
+	{
+		System.out.println( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
+
+		JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
+		if ( chunks == null )
+			chunks = db_dict.get( request.db.substring( 0, 2 ) );
+
+		if ( chunks != null )
+		{
+			final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
+			List< String > lines = new ArrayList<>();
+			lines.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
+
+			JavaRDD< String > RESULTS = chunks.flatMap( item ->
+			{
+				BC_DEBUG_SETTINGS debug = DBG.getValue();
+
+				List< String > lst = new ArrayList<>();
+				if ( !item.present() )
+					lst.addAll( item.download() );
+				BC_REQUEST req = REQUEST.getValue();
+				lst.add( String.format( "%s: %s x %s", item.workername(), item.name, req.id ) );
+				
+				BC_SEND.send( debug, "hallo" );
+
+				return lst.iterator();
+			});
+			lines.addAll( RESULTS.collect() );
+
+			lines.add( String.format( "request '%s' done at '%s'", request.id, BC_UTILS.datetime() ) );
+			BC_UTILS.save_to_file( lines, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
+
+			System.out.println( String.format( "JOB[%d] REQUEST[%s] done", id, request.id ) );
+		}
+		else
+			System.out.println( String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
+	}
+
+    @Override public void run()
+	{
+        while( context.is_running() )
+        {
+            BC_REQUEST request = context.get_request();
+            if ( request != null )
+				handle_request( DEBUG_SETTINGS, request );
+			else
+				sleepFor( context.settings.job_sleep_time );
+		}
+	}
+}
 
 public class BC_JOBS
 {

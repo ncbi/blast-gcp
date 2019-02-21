@@ -23,30 +23,72 @@
  * ===========================================================================
  *
  */
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.PrintStream;
 
 public class BC_COMMAND
 {
     private final PrintStream stream;
-    private final String line;
+    private String[] parts;
+    private final int num_parts;
 
-    BC_COMMAND( final PrintStream a_stream, final String a_line )
+    BC_COMMAND( final PrintStream a_stream, final String line )
     {
         stream = a_stream;
-        line = a_line;
+		parts = line.trim().split( "\\s+" );	/* split on whitespace */
+		num_parts = parts.length;
     }
 
-	public boolean is_exit() { return line.equals( "exit" ); }
-	public boolean is_file_request() { return line.startsWith( "F" ); }
-	public boolean is_list_request() { return line.startsWith( "L" ); }
+	public boolean is_exit() { return parts[ 0 ].equals( "exit" ); }
+	public boolean is_stop() { return parts[ 0 ].equals( "stop" ); }
+	public boolean is_file_request() { return parts[ 0 ].equals( "F" ); }
+	public boolean is_list_request() { return parts[ 0 ].equals( "L" ); }
+	public boolean is_bucket_request() { return parts[ 0 ].equals( "B" ); }
+
+	public int toInt( String s )
+	{
+		int res = 0;
+		try	{ res = Integer.parseInt( s ); }
+		catch ( NumberFormatException e ) { res = 0; }
+		return res;
+	}
+
+	public void handle_file_request( BC_CONTEXT context )
+	{
+		if ( num_parts > 1 )
+			context.add_request_file( parts[ 1 ], stream );			
+	}
+
+	public void handle_list_request( BC_CONTEXT context )
+	{
+		if ( num_parts > 1 )
+		{
+			if ( num_parts > 2 )
+				context.addRequestList( parts[ 1 ], stream, toInt( parts[ 2 ] ) );
+			else
+				context.addRequestList( parts[ 1 ], stream, 0 );
+		}
+	}
+
+	public void handle_bucket_request( BC_CONTEXT context )
+	{
+		if ( num_parts > 1 )
+		{
+			if ( num_parts > 2 )
+				context.addRequestBucket( parts[ 1 ], stream, toInt( parts[ 2 ] ) );
+			else
+				context.addRequestBucket( parts[ 1 ], stream, 0 );
+		}
+	}
 
 	public void handle( BC_CONTEXT context )
 	{
         if ( is_exit() ) context.stop();
-		else if ( is_file_request() ) context.add_request_file( line.substring( 1 ).trim(), stream );
-
+        else if ( is_stop() ) context.stop_lists();
+		else if ( is_file_request() ) handle_file_request( context );
+		else if ( is_list_request() ) handle_list_request( context );
+		else if ( is_bucket_request() ) handle_bucket_request( context );
 	}
 }
 

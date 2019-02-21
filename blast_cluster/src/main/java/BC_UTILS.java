@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -42,22 +42,47 @@ public class BC_UTILS
 		return f.exists();
 	}
 
+	public static boolean create_paths_if_neccessary( final String filename )
+	{
+		File f = new File( filename );
+		boolean	res = f.exists();
+		if ( !res )
+		{
+			String parent = f.getParent();
+			if ( parent != null )
+			{
+				File d = new File( parent );
+				res = d.exists();
+				if ( !res )
+				{
+					d.mkdir();
+					res = d.exists();
+				}
+			}
+			else
+				res = true;
+		}
+		return res;
+	}
+
 	public static boolean save_to_file( final List< String > lines, final String filename )
 	{
-		boolean res = false;
-		BufferedWriter writer = null;
-		try
+		boolean res = create_paths_if_neccessary( filename );
+		if ( res )
 		{
-			writer = new BufferedWriter( new FileWriter( new File( filename ) ) );
-			if ( writer != null )
+			BufferedWriter writer = null;
+			try
 			{
-				for ( String line : lines )
-						writer.write( String.format( "%s\n", line ) );
-				res = true;
+				writer = new BufferedWriter( new FileWriter( new File( filename ) ) );
+				if ( writer != null )
+				{
+					for ( String line : lines )
+							writer.write( String.format( "%s\n", line ) );
+				}
 			}
+			catch( Exception e ) { e.printStackTrace(); res = false; }
+			finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
 		}
-		catch( Exception e ) { e.printStackTrace(); }
-		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
 		return res;
 	}
 

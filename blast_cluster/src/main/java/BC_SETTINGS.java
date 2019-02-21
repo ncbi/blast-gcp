@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 import java.util.List;
@@ -56,6 +56,7 @@ public class BC_SETTINGS implements Serializable
 	public boolean res_use_files = false;
     public String res_files_dir = "";
     public String res_files_pattern = "";
+	public String report_dir = "report";
 
     /* CLUSTER */
     public List< String > transfer_files;

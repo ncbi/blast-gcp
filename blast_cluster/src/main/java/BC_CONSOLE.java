@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Console;
 import java.io.BufferedReader;
@@ -34,23 +34,18 @@ import java.io.IOException;
 public final class BC_CONSOLE extends Thread
 {
     private final BC_CONTEXT context;
-    private final Integer sleep_time;
+    private final long sleep_time;
 
-    public BC_CONSOLE( final BC_CONTEXT a_context, final Integer a_sleep_time )
+    public BC_CONSOLE( final BC_CONTEXT a_context, final long a_sleep_time )
     {
         context = a_context;
         sleep_time = a_sleep_time;
     }
 
-    private void sleep_now()
+    private void sleepFor( long milliseconds )
     {
-        try
-        {
-            Thread.sleep( sleep_time );
-        }
-        catch ( InterruptedException e )
-        {
-        }
+        try { Thread.sleep( milliseconds ); }
+        catch ( InterruptedException e ) { }
     }
 
     private String get_line( BufferedReader br )
@@ -81,7 +76,8 @@ public final class BC_CONSOLE extends Thread
                 do_sleep = false;
             }
 
-            if ( context.is_running() && do_sleep ) sleep_now();
+            if ( context.is_running() && do_sleep )
+				sleepFor( sleep_time );
         }
     }
 }

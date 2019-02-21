@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.PrintStream;
 
@@ -40,6 +40,7 @@ public class BC_CONTEXT
     private final AtomicBoolean running;
     private final ConcurrentLinkedQueue< BC_COMMAND > command_queue;
     private final ConcurrentLinkedQueue< BC_REQUEST > request_queue;
+	private final BC_LISTS lists;
 
     public BC_CONTEXT( final BC_SETTINGS a_settings )
 	{
@@ -47,12 +48,14 @@ public class BC_CONTEXT
         running = new AtomicBoolean( true );
         command_queue = new ConcurrentLinkedQueue<>();
         request_queue = new ConcurrentLinkedQueue<>();
+		lists = new BC_LISTS( this );
 	}
 
     public int can_take() { return ( settings.req_max_backlog - request_queue.size() ); }
 
     public boolean is_running() { return running.get(); }
     public void stop() { running.set( false ); }
+	public void stop_lists() { lists.stop(); }	
 
     public void push_command( final BC_COMMAND command ) { command_queue.offer( command ); }
     public BC_COMMAND pull_cmd() { return command_queue.poll(); }
@@ -99,16 +102,24 @@ public class BC_CONTEXT
         return res;
     }
 
-    public boolean add_request_file( final String filename, final PrintStream ps )
+	/* return 1..done, 0..not-done, -1..invalid*/
+    public int add_request_file( final String filename, final PrintStream ps )
     {
-        boolean res = false;
+        int res = 0;
         if ( can_take() > 0 )
         {
             BC_REQUEST request = BC_REQUEST_READER.parse_from_file( filename );
-            if ( request != null )
-            	res = add_request( request, ps );
-            else if ( ps != null )
-                ps.printf( "invalid request in file '%s'\n", filename );
+			if ( request != null )
+			{
+            	if ( add_request( request, ps ) )
+					res = 1;
+			}
+            else
+			{
+				if ( ps != null )
+	                ps.printf( "invalid request in file '%s'\n", filename );
+				res = -1;
+			}
         }
         return res;
     }
@@ -119,4 +130,18 @@ public class BC_CONTEXT
         return request;
 	}
 
+	public void addRequestList( final String filename, final PrintStream ps, int limit )
+	{
+		lists.addFile( filename, ps, limit );
+	}
+
+	public void addRequestBucket( final String filename, final PrintStream ps, int limit )
+	{
+		lists.addBucket( filename, ps, limit );
+	}
+
+	public void join()
+	{
+		lists.join();
+	}
 }

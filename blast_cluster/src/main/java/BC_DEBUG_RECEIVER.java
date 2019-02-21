@@ -24,18 +24,89 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
+
+import java.util.List;
+import java.util.ArrayList;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+class BC_DEBUG_RECEIVER_CLIENT extends Thread
+{
+    private final BC_CONTEXT context;
+    private final Socket socket;
+
+    public BC_DEBUG_RECEIVER_CLIENT( BC_CONTEXT a_context, Socket a_socket )
+    {
+        context = a_context;
+        socket = a_socket;
+    }
+
+    private void sleepFor( long milliseconds )
+    {
+        try { Thread.sleep( milliseconds ); }
+        catch ( InterruptedException e ) { }
+    }
+
+    private String get_line( BufferedReader br )
+    {
+        try
+        {
+            if ( br.ready() )
+                return br.readLine().trim();
+        }
+        catch ( IOException e )
+        {
+        }
+        return null;
+    }
+
+    @Override public void run()
+    {
+        try
+        {
+            socket.setTcpNoDelay( true );
+            BufferedReader br = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
+            String input;
+
+            while( context.is_running() && br != null )
+			{
+		        boolean do_sleep = true;
+
+		        String line = get_line( br );
+		        if ( line != null && !line.isEmpty() )
+		        {
+					System.out.println( line.trim() );
+		            do_sleep = false;
+		        }
+
+            	if ( context.is_running() && do_sleep )
+					sleepFor( 100 );
+            }
+            socket.close();
+        }
+        catch ( Exception e )
+        {
+            System.out.println( String.format( "BC_DEBUG_RECEIVER_CLIENT: %s", e ) );
+        }
+    }
+}
+
 
 class BC_DEBUG_RECEIVER extends Thread
 {
     private final BC_CONTEXT context;
+	private List< BC_DEBUG_RECEIVER_CLIENT > clients;
 
     public BC_DEBUG_RECEIVER( BC_CONTEXT a_context )
     {
         context = a_context;
+		clients = new ArrayList<>();
     }
 
     @Override public void run()
@@ -53,6 +124,7 @@ class BC_DEBUG_RECEIVER extends Thread
                     ss.setSoTimeout( 500 );
                     Socket client_socket = ss.accept();
                     BC_DEBUG_RECEIVER_CLIENT client = new BC_DEBUG_RECEIVER_CLIENT( context, client_socket );
+					clients.add( client );
                     client.start();
                 }
                 catch ( Exception e )
@@ -60,7 +132,6 @@ class BC_DEBUG_RECEIVER extends Thread
                     // do nothing if the loop times out...
                 }
             }
-
             ss.close();
         }
         catch ( Exception e )
@@ -68,5 +139,16 @@ class BC_DEBUG_RECEIVER extends Thread
             System.out.println( String.format( "BC_DEBUG_RECEIVER: %s", e ) );
         }
     }
+
+	public void join_clients()
+	{
+		for( BC_DEBUG_RECEIVER_CLIENT client : clients )
+		{
+		    try { client.join(); }
+		    catch( InterruptedException e ) { }
+		}
+		try { join(); }
+		catch( InterruptedException e ) { }
+	}
 }
 
