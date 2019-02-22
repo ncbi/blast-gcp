@@ -34,10 +34,8 @@ public class Test_BC_DATABASE_RDD_ENTRY {
             assertTrue ("entryList must not be empty", !entryList.isEmpty());
             for (BC_DATABASE_RDD_ENTRY entry : entryList ) {
                 assertTrue ("list entry is not NULL", entry != null);
-                assertTrue ("BC_DATABASE_SETTING is not NULL", entry.setting != null);
                 assertTrue ("Name is not empty", !entry.name.isEmpty());
                 System.out.println(entry.name);
-                System.out.println(entry.setting.toString());
             }
         }
 
