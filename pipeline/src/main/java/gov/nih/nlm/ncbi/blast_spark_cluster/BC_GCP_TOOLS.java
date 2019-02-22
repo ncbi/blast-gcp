@@ -23,12 +23,14 @@
 * ===========================================================================
 *
 */
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +61,7 @@ class BC_GCP_TOOLS
     private static BC_GCP_TOOLS instance = null;
     private Storage storage = null;
 
-    private static Storage buildStorageService( final String AppName ) throws GeneralSecurityException, IOException
+    public static Storage buildStorageService( final String AppName ) throws GeneralSecurityException, IOException
     {
         HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
         JsonFactory jsonFactory = new JacksonFactory();
@@ -150,53 +152,85 @@ class BC_GCP_TOOLS
 		return res;
 	}
 
-    private Boolean download_to_file( final String bucket, final String key, final String dst_filename )
+	private void write_lock( File f )
+	{
+		BufferedWriter writer = null;
+		try
+		{
+			writer = new BufferedWriter( new FileWriter( f ) );
+			writer.write( "locked" );
+		}
+		catch( Exception e ) { e.printStackTrace(); }	
+		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
+	}
+
+	private void delete_lock( File f )
+	{
+		try	{ f.delete(); }	
+		catch( Exception e ) { e.printStackTrace(); }
+	}
+
+    private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
-        Boolean res = false;
-        try
-        {
-            Storage.Objects.Get obj = storage.objects().get( bucket, key );
-            if ( obj != null )
-            {
-                obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+        boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
+		if ( res )
+		{
+			File f_lock = new File( String.format( "%s.lock", dst_filename ) );
+			res = ( !f_lock.exists() );
+			if ( res )
+			{
+				write_lock( f_lock );
+				try
+				{
+				    Storage.Objects.Get obj = storage.objects().get( bucket, key );
+				    if ( obj != null )
+				    {
+				        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
-                File f = new File( dst_filename );
-                FileOutputStream f_out = new FileOutputStream( f );
+				        File f = new File( dst_filename );
+				        FileOutputStream f_out = new FileOutputStream( f );
 
-                obj.executeMediaAndDownloadTo( f_out );
+				        obj.executeMediaAndDownloadTo( f_out );
 
-                f_out.flush();
-                f_out.close();
-                res = true;
-            }
-        }
-        catch( Exception e )
-        {
-        }
+				        f_out.flush();
+				        f_out.close();
+				    }
+					else
+						res = false;
+				}
+				catch( Exception e ) { res = false; }
+				finally { delete_lock( f_lock ); }
+			}
+
+		}
         return res;
     }
 
-    private InputStream download_as_stream( final String bucket, final String key )
+    public static InputStream download_as_stream( final String bucket, final String key )
     {
         InputStream res = null;
-        try
-        {
-            Storage.Objects.Get obj = storage.objects().get( bucket, key );
-            if ( obj != null )
-            {
-                obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
-                return obj.executeMediaAsInputStream(); 
-            }
-        }
-        catch( Exception e )
-        {
-        }
+        BC_GCP_TOOLS inst = getInstance();
+        if ( inst != null )
+		{
+		    try
+		    {
+		        Storage.Objects.Get obj = inst.storage.objects().get( bucket, key );
+		        if ( obj != null )
+		        {
+		            obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+		            return obj.executeMediaAsInputStream(); 
+		        }
+		    }
+		    catch( Exception e )
+		    {
+		    }
+		}
         return res;
     }
 
-    public static Boolean download( final String gs_uri, final String dst_filename )
+    public static boolean download( final String gs_uri, final String dst_filename )
     {
-        Boolean res = false;
+        boolean res = false;
         BC_GCP_TOOLS inst = getInstance();
         if ( inst != null )
 		{
@@ -281,7 +315,7 @@ class BC_GCP_TOOLS
 		return res;
 	}
 
-	private static Boolean ends_with_any( final String s, final List< String > extensions )
+	private static boolean ends_with_any( final String s, final List< String > extensions )
 	{
 		for ( String ext : extensions )
 		{

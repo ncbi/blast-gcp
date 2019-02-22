@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -126,6 +126,7 @@ class DATABASES_SETTINGS_READER
     private static final String key_s_loc = "source_location";
     private static final String key_ext = "extensions";
     private static final String key_flat = "flat";
+    private static final String key_limit = "limit";
 
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
@@ -149,6 +150,8 @@ class DATABASES_SETTINGS_READER
 						db_settings.extensions );
         			db_settings.flat_layout = BC_JSON_UTILS.get_json_bool( obj,
 						key_flat, db_settings.flat_layout );
+        			db_settings.limit = BC_JSON_UTILS.get_json_int( obj,
+						key_limit, db_settings.limit );
 
 					if ( !db_settings.key.isEmpty() )
 						settings.dbs.put( db_settings.key, db_settings );
