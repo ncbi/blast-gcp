@@ -1,4 +1,4 @@
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import org.junit.*;
 import static org.junit.Assert.*;
