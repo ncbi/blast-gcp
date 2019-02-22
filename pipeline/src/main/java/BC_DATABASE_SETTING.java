@@ -24,7 +24,7 @@
 *
 */
 
-package gov.nih.nlm.ncbi.blast_spark_cluster;
+package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 import java.util.List;
@@ -36,6 +36,7 @@ public class BC_DATABASE_SETTING implements Serializable
     public String worker_location = "/tmp/blast/db"; /* where is the location root on the worker? dflt: '/tmp/blast/db' */
 	public String source_location = "";	/* bucket or filesystem-path */
     public Boolean flat_layout = false; /* do we use a subdir for each volume under the location on the worker? */
+	public int limit = 0;				/* in case we want to limit the number of db-chunks */
 	public List< String > extensions;	/* for nt: nsq, nin, nhr / nr: psq, pin, phr */
 
     public BC_DATABASE_SETTING()
@@ -54,6 +55,8 @@ public class BC_DATABASE_SETTING implements Serializable
         S =  S  +  String.format( "\t(%s).source-loc ...... '%s'\n", key, source_location );
         S =  S  +  String.format( "\t(%s).flat layout ..... %s\n", key, Boolean.toString( flat_layout ) );
         S =  S  +  String.format( "\t(%s).extensions ...... %s\n", key, extensions );
+		if ( limit > 0 )
+        	S =  S  +  String.format( "\t(%s).limit ........... %d\n", key, limit );
         return S;
     }
 }
