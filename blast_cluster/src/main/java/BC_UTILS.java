@@ -29,9 +29,11 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
 
+import java.nio.ByteBuffer;
 import java.time.ZonedDateTime;
-
 import java.util.List;
 
 public class BC_UTILS
@@ -81,7 +83,28 @@ public class BC_UTILS
 				}
 			}
 			catch( Exception e ) { e.printStackTrace(); res = false; }
-			finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
+			finally { try { writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
+		}
+		return res;
+	}
+
+	public static boolean write_to_file( final ByteBuffer buf, final String filename )
+	{
+		boolean res = create_paths_if_neccessary( filename );
+		if ( res )
+		{
+			BufferedOutputStream os = null;
+			try
+			{
+				os = new BufferedOutputStream( new FileOutputStream( filename ) );
+				if ( os != null )
+				{
+					os.write( buf.array() );
+					res = true;
+				}
+			}
+			catch( Exception e ) { e.printStackTrace(); res = false; }
+			finally { try { os.close(); } catch( Exception e ) { e.printStackTrace(); } }
 		}
 		return res;
 	}

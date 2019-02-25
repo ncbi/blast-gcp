@@ -377,6 +377,8 @@ public class BC_SETTINGS_READER
 
         if ( settings.num_executors > 0 )
             conf.set( "spark.executor.instances", String.format( "%d", settings.num_executors ) );
+		else
+            conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( true ) );
 
         if ( settings.num_executor_cores > 0 )
             conf.set( "spark.executor.cores", String.format( "%d", settings.num_executor_cores ) );

@@ -37,6 +37,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.rdd.RDD;
+import scala.Tuple2;
 import org.apache.spark.util.LongAccumulator;
 import org.apache.spark.SparkFiles;
 
@@ -75,6 +76,7 @@ class BC_JOB extends Thread
 	private void handle_request( Broadcast< BC_DEBUG_SETTINGS > DBG, BC_REQUEST request )
 	{
 		System.out.println( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
+		long job_starttime = System.currentTimeMillis();
 
 		JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
 		if ( chunks == null )
@@ -86,13 +88,15 @@ class BC_JOB extends Thread
 			List< String > lines = new ArrayList<>();
 			lines.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
 
-			JavaRDD< String > RESULTS = chunks.flatMap( item ->
+			/* ***** perform the map-operation on the worker-nodes ***** */
+			JavaRDD< Tuple2< List< String >, List< BLAST_TB_LIST > > > RESULTS = chunks.map( item ->
 			{
 				BC_DEBUG_SETTINGS debug = DBG.getValue();
 
-				List< String > lst = new ArrayList<>();
+				List< String > str_lst = new ArrayList<>();
+				List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
 				if ( !item.present() )
-					lst.addAll( item.download() );
+					str_lst.addAll( item.download() );
 				BC_REQUEST req = REQUEST.getValue();
 
             	BLAST_LIB lib = new BLAST_LIB( "libblastjni.so" );
@@ -103,34 +107,50 @@ class BC_JOB extends Thread
 					long finishtime = System.currentTimeMillis();
 
 					if ( hsps == null )
-						lst.add( String.format( "%s: %s x %s - search: returned null", item.workername(), item.name, req.id ) );
+						str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.name ) );
 					else
 					{
-						lst.add( String.format( "%s: %s x %s - search: %d items ( %d ms )",
-											    item.workername(), item.name, req.id, hsps.length, ( finishtime - starttime ) ) );
+						str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
+											    item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
 						
 						starttime = System.currentTimeMillis();
 						BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
 						finishtime = System.currentTimeMillis();
 
 						if ( tbs == null )
-							lst.add( String.format( "%s: %s x %s - traceback: returned null", item.workername(), item.name, req.id ) );
+							str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.name ) );
 						else
 						{
-							lst.add( String.format( "%s: %s x %s - traceback: %d items ( %d ms )",
-												    item.workername(), item.name, req.id, tbs.length, ( finishtime - starttime ) ) );
+							str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
+												    item.workername(), item.name, tbs.length, ( finishtime - starttime ) ) );
+
+							for ( BLAST_TB_LIST tb : tbs )
+								tp_lst.add( tb );
 						}
 					}
 				}
 				else
-					lst.add( String.format( "%s: %s x %s - lib not initialized", item.workername(), item.name, req.id ) );
+					str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.name ) );
 
-				return lst.iterator();
+				return new Tuple2<>( str_lst, tp_lst );
 			});
-			lines.addAll( RESULTS.collect() );
 
-			lines.add( String.format( "request '%s' done at '%s'", request.id, BC_UTILS.datetime() ) );
+			List< Tuple2< List< String >, List< BLAST_TB_LIST > > > l_res = RESULTS.collect();
+			BC_RESULTS results = new BC_RESULTS();
+
+			/* collect and write the report... */
+			for ( Tuple2< List< String >, List< BLAST_TB_LIST > > item : l_res )
+			{
+				lines.addAll( item._1 );
+				results.add( item._2 );
+			}
+			long job_finishtime = System.currentTimeMillis();
+			lines.add( String.format( "request '%s' done at '%s' ( %d ms )", request.id, BC_UTILS.datetime(),
+										( job_finishtime - job_starttime ) ) );
 			BC_UTILS.save_to_file( lines, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
+
+			String asn1_file = String.format( "%s/REQ_%s.asn1", context.settings.report_dir, request.id );
+			BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file );
 
 			System.out.println( String.format( "JOB[%d] REQUEST[%s] done", id, request.id ) );
 		}
