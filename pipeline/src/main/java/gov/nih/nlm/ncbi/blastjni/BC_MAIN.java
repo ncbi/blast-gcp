@@ -47,6 +47,7 @@ public final class BC_MAIN
 		/* create and configure the spark-context */
 		SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
 		JavaSparkContext jsc = new JavaSparkContext( sc );
+        jsc.addFile( "libblastjni.so" );
 		jsc.setLogLevel( settings.spark_log_level );
 
 		int num_executors = jsc.getConf().getInt( "spark.executor.instances", 0 );
