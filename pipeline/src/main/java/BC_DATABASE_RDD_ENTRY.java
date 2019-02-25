@@ -66,6 +66,11 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 		return String.format( "%s/%s/%s.%s", setting.worker_location, name, name, extension );
 	}
 
+	public String worker_location()
+	{
+		return String.format( "%s/%s/%s", setting.worker_location, name, name );
+	}
+
 	public String workername()
 	{
 		String w;

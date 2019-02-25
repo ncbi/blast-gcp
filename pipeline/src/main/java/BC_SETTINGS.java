@@ -71,7 +71,7 @@ public class BC_SETTINGS implements Serializable
 	public int num_executors = 0;
 	public int num_executor_cores = 0;
     public int parallel_jobs = 1;
-    public String  jni_log_level = "INFO";
+    public String jni_log_level = "INFO";
 
     /* DEBUG */
     BC_DEBUG_SETTINGS debug;

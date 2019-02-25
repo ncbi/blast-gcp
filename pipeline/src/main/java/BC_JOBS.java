@@ -94,9 +94,36 @@ class BC_JOB extends Thread
 				if ( !item.present() )
 					lst.addAll( item.download() );
 				BC_REQUEST req = REQUEST.getValue();
-				lst.add( String.format( "%s: %s x %s", item.workername(), item.name, req.id ) );
-				
-				BC_SEND.send( debug, "hallo" );
+
+            	BLAST_LIB lib = new BLAST_LIB( "libblastjni.so" );
+            	if ( lib != null )
+            	{
+					long starttime = System.currentTimeMillis();
+					BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
+					long finishtime = System.currentTimeMillis();
+
+					if ( hsps == null )
+						lst.add( String.format( "%s: %s x %s - search: returned null", item.workername(), item.name, req.id ) );
+					else
+					{
+						lst.add( String.format( "%s: %s x %s - search: %d items ( %d ms )",
+											    item.workername(), item.name, req.id, hsps.length, ( finishtime - starttime ) ) );
+						
+						starttime = System.currentTimeMillis();
+						BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+						finishtime = System.currentTimeMillis();
+
+						if ( tbs == null )
+							lst.add( String.format( "%s: %s x %s - traceback: returned null", item.workername(), item.name, req.id ) );
+						else
+						{
+							lst.add( String.format( "%s: %s x %s - traceback: %d items ( %d ms )",
+												    item.workername(), item.name, req.id, tbs.length, ( finishtime - starttime ) ) );
+						}
+					}
+				}
+				else
+					lst.add( String.format( "%s: %s x %s - lib not initialized", item.workername(), item.name, req.id ) );
 
 				return lst.iterator();
 			});
