@@ -6,3 +6,9 @@ bigdata-interop/
 gov/
 env/
 ini_docker.json
+
+*.png
+*.ucls
+
+# Debugging output
+downloads.txt
