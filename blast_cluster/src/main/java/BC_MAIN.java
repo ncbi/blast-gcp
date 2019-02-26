@@ -39,9 +39,36 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.api.java.JavaRDD;
 
+
 public final class BC_MAIN
 {
 
+/**
+ * run the Blast-Spark-Application :
+ * - create the SparkContext
+ * - create instances of infrastructure-classes
+ *	   ( BC_CONTEXT, BC_CONSOLE, BC_DEBUG_RECEIVER, BC_JOBS )
+ * - broadcast the debug-settings to all workers
+ * - create and populate the dictionary of database-chunks
+ * - parallelize ( send to workers ) the database-chunks
+ * - perform a simple map-reduce operation on the database-chunks
+ *     to force downloading them to the workers
+ * - collect a container of strings reporting the download and
+ *     save this report to the file 'downloads.txt' on the master
+ * - run in a loop until termination requested ( from commandline )
+ * - in the loop handle commands from input like process single
+ *     requests, list of requests, buckets of requests, quit
+ * - join threads in BC_JOBS, BC_DEBUG_RECEICER, BC_CONSOLE and BC_CONTEXT
+ *
+ * @param args command-line arguments, 1st arg is name of settings-file
+ * @return     void
+ * @see		   BC_SETTINGS
+ * @see        BC_SETTINGS_READER
+ * @see        BC_CONTEXT
+ * @see        BC_CONSOLE
+ * @see        BC_DEBUG_RECEIVER
+ * @see        DEBUG_SETTINGS
+*/
 	private static void run( final BC_SETTINGS settings )
 	{
 		/* create and configure the spark-context */
@@ -52,12 +79,13 @@ public final class BC_MAIN
 
 		int num_executors = jsc.getConf().getInt( "spark.executor.instances", 0 );
 		System.out.println( String.format( "we have %d executors", num_executors ) );
+		System.out.println( String.format( "running on Spark-version: '%s'", jsc.sc().version() ) );
 
 		/* create the application-context, lives only on the master */
 		BC_CONTEXT context = new BC_CONTEXT( settings );
 
         // reader thread for console commands
-        BC_CONSOLE console = new BC_CONSOLE( context, 200 );
+        BC_CONSOLE console = new BC_CONSOLE( context );
         console.start();
 
 		BC_DEBUG_RECEIVER debug_receiver = new BC_DEBUG_RECEIVER( context );
@@ -139,6 +167,19 @@ public final class BC_MAIN
 		System.out.println( "done" );
 	}
 
+/**
+ * Main-method of the Blast-Spark-Application :
+ * - reads and parses the settings-file into an instance of BC_SETTINGS
+ * - prints the settings
+ * - checks if the settings are valid ( nothing essential is missing )
+ * - calls the static run-method of this class
+ *
+ * @param args command-line arguments, 1st arg is name of settings-file
+ * @return     void
+ * @see        run
+ * @see		   BC_SETTINGS
+ * @see        BC_SETTINGS_READER
+*/
     public static void main( String[] args ) throws Exception
     {
         if ( args.length < 1 )

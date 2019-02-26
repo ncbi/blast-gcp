@@ -31,35 +31,29 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
+/**
+ * Infrastructure-Class to read from the console
+ * - stores reference to application-context
+ * @see        BC_CONTEXT
+*/
 public final class BC_CONSOLE extends Thread
 {
     private final BC_CONTEXT context;
     private final long sleep_time;
 
-    public BC_CONSOLE( final BC_CONTEXT a_context, final long a_sleep_time )
+/**
+ * create instance of BC_CONSOLE
+ * - store reference application-context
+ *
+ * @param a_context    application-context
+ * @see        BC_CONTEXT
+*/
+    public BC_CONSOLE( final BC_CONTEXT a_context )
     {
         context = a_context;
-        sleep_time = a_sleep_time;
+        sleep_time = context.get_settings().console_sleep_time;
     }
 
-    private void sleepFor( long milliseconds )
-    {
-        try { Thread.sleep( milliseconds ); }
-        catch ( InterruptedException e ) { }
-    }
-
-    private String get_line( BufferedReader br )
-    {
-        try
-        {
-            if ( br.ready() )
-                return br.readLine().trim();
-        }
-        catch ( IOException e )
-        {
-        }
-        return null;
-    }
 
     @Override public void run()
     {
@@ -67,17 +61,27 @@ public final class BC_CONSOLE extends Thread
 
         while( context.is_running() && br != null )
         {
-            boolean do_sleep = true;
 
-            String line = get_line( br );
+            String line = null;
+		    try
+		    {
+		        if ( br.ready() )
+		            line = br.readLine().trim();
+		    }
+		    catch ( IOException e ) { }
+
             if ( line != null && !line.isEmpty() )
             {
                 context.push_command( new BC_COMMAND( System.out, line ) );
-                do_sleep = false;
             }
-
-            if ( context.is_running() && do_sleep )
-				sleepFor( sleep_time );
+			else if ( context.is_running() )
+			{
+        		try
+				{
+					Thread.sleep( sleep_time );
+				}
+        		catch ( InterruptedException e ) { }
+			}
         }
     }
 }

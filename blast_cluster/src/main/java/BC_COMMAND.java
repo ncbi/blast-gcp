@@ -27,26 +27,75 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.PrintStream;
 
+/**
+ * command-class
+ * - has reference to store the origin of the command
+*/
 public class BC_COMMAND
 {
-    private final PrintStream stream;
+    private final PrintStream origin_stream;
     private String[] parts;
     private final int num_parts;
 
-    BC_COMMAND( final PrintStream a_stream, final String line )
+/**
+ * create instance of BC_COMMAND from a String
+ * - store the origin of the command
+ * - preparse the command by splitting on whitespace
+ *
+ * @param origin console or tcp-socket where the command originated
+ * @param line   String obtained from console or tcp-socket
+ * @return     instance
+ * @see        BC_CONTEXT
+*/
+    BC_COMMAND( final PrintStream origin, final String line )
     {
-        stream = a_stream;
+        origin_stream = origin;
 		parts = line.trim().split( "\\s+" );	/* split on whitespace */
 		num_parts = parts.length;
     }
 
-	public boolean is_exit() { return parts[ 0 ].equals( "exit" ); }
-	public boolean is_stop() { return parts[ 0 ].equals( "stop" ); }
-	public boolean is_file_request() { return parts[ 0 ].equals( "F" ); }
-	public boolean is_list_request() { return parts[ 0 ].equals( "L" ); }
-	public boolean is_bucket_request() { return parts[ 0 ].equals( "B" ); }
+/**
+ * test for exit command ( exit the application )
+ *
+ * @return     is it a exit command ?
+*/
+	private boolean is_exit() { return parts[ 0 ].equals( "exit" ); }
 
-	public int toInt( String s )
+/**
+ * test for stop command ( stop processing pending lists )
+ *
+ * @return     is it a stop command ?
+*/
+	private boolean is_stop() { return parts[ 0 ].equals( "stop" ); }
+
+/**
+ * test for file command ( process a single request-file )
+ *
+ * @return     is it a file command ?
+*/
+	private boolean is_file_request() { return parts[ 0 ].equals( "F" ); }
+
+/**
+ * test for list command ( process a list of request-files )
+ *
+ * @return     is it a list command ?
+*/
+	private boolean is_list_request() { return parts[ 0 ].equals( "L" ); }
+
+/**
+ * test for bucket command ( process a bucket of request-files )
+ *
+ * @return     is it a bucket command ?
+*/
+	private boolean is_bucket_request() { return parts[ 0 ].equals( "B" ); }
+
+/**
+ * helper-function to convert String to int
+ *
+ * @param s  String to be converted to int
+ * @return result of conversion
+*/
+	private int toInt( String s )
 	{
 		int res = 0;
 		try	{ res = Integer.parseInt( s ); }
@@ -54,34 +103,61 @@ public class BC_COMMAND
 		return res;
 	}
 
-	public void handle_file_request( BC_CONTEXT context )
+/**
+ * handle the file-command, by delegating it to the global context
+ *
+ * @param context the global application-context
+ * @see        BC_CONTEXT
+*/
+	private void handle_file_request( BC_CONTEXT context )
 	{
 		if ( num_parts > 1 )
-			context.add_request_file( parts[ 1 ], stream );			
+			context.add_request_file( parts[ 1 ], origin_stream );
+		else
+			origin_stream.printf( "filename is missing\n" );
 	}
 
-	public void handle_list_request( BC_CONTEXT context )
+/**
+ * handle the list-command, by delegating it to the global context
+ *
+ * @param context the global application-context
+ * @see        BC_CONTEXT
+*/
+	private void handle_list_request( BC_CONTEXT context )
 	{
 		if ( num_parts > 1 )
 		{
-			if ( num_parts > 2 )
-				context.addRequestList( parts[ 1 ], stream, toInt( parts[ 2 ] ) );
-			else
-				context.addRequestList( parts[ 1 ], stream, 0 );
+			int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
+			context.addRequestList( parts[ 1 ], origin_stream, limit );
 		}
+		else
+			origin_stream.printf( "filename is missing\n" );
 	}
 
-	public void handle_bucket_request( BC_CONTEXT context )
+/**
+ * handle the bucket-command, by delegating it to the global context
+ *
+ * @param context the global application-context
+ * @see        BC_CONTEXT
+*/
+	private void handle_bucket_request( BC_CONTEXT context )
 	{
 		if ( num_parts > 1 )
 		{
-			if ( num_parts > 2 )
-				context.addRequestBucket( parts[ 1 ], stream, toInt( parts[ 2 ] ) );
-			else
-				context.addRequestBucket( parts[ 1 ], stream, 0 );
+			int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
+			context.addRequestBucket( parts[ 1 ], origin_stream, limit );
 		}
+		else
+			origin_stream.printf( "bucket-url is missing\n" );
 	}
 
+/**
+ * handle a preparsed command using the given context
+ *
+ * @param context application-context needed to handle the command
+ * @return     void
+ * @see        BC_CONTEXT
+*/
 	public void handle( BC_CONTEXT context )
 	{
         if ( is_exit() ) context.stop();
@@ -89,6 +165,7 @@ public class BC_COMMAND
 		else if ( is_file_request() ) handle_file_request( context );
 		else if ( is_list_request() ) handle_list_request( context );
 		else if ( is_bucket_request() ) handle_bucket_request( context );
+		else origin_stream.printf( "unknown: %s\n", parts );
 	}
 }
 
