@@ -35,6 +35,7 @@ import java.io.BufferedOutputStream;
 import java.nio.ByteBuffer;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.net.UnknownHostException;
 
 public class BC_UTILS
 {
@@ -113,4 +114,26 @@ public class BC_UTILS
 	{
 		return String.format( "%s", ZonedDateTime.now() );
 	}
+
+/**
+ * helper-method the return the dns-name of the local machine
+ *
+ * @param dflt			the default return value in case of an exception
+ * @return 				the dns-name of the local machine or the default-value
+*/
+	public static String get_local_host( final String dflt )
+	{
+        String res = dflt;
+        try
+        {
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+            res = localMachine.getHostName();
+        }
+        catch ( UnknownHostException e )
+        {
+            res = dflt;
+        }
+		return res;
+	}
+
 }

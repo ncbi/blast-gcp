@@ -31,20 +31,42 @@ import java.util.ArrayList;
 
 import java.nio.ByteBuffer;
 
+/**
+ * utility-class to collect BLAST_TB_LIST classes and join them into a ByteBuffer
+ * @see BLAST_TB_LIST
+*/
 public class BC_RESULTS
 {
 	private List< BLAST_TB_LIST > l;
 
+/**
+ * create instance of BC_RESULTS
+ * - create empty list of BLAST_TB_LIST references
+ *
+ * @see        BLAST_TB_LIST
+*/
     public BC_RESULTS()
     {
 		l = new ArrayList<>();
     }
 
+/**
+ * add all instance in the given list to the internal list
+ *
+ * @param      items       list of BLAST_TB_LIST-instance to be added
+ * @see        BLAST_TB_LIST
+*/
 	public void add( List< BLAST_TB_LIST > items )
 	{
 		l.addAll( items );
 	}
 
+/**
+ * convert internal list of BLAST_TB_LIST-instances into a ByteBuffer
+ *
+ * @return 		ByteBuffer containing valid asn1 to be written to file
+ * @see         BLAST_TB_LIST
+*/
     public ByteBuffer to_bytebuffer()
     {
         int sum = 0;

@@ -28,7 +28,6 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.net.UnknownHostException;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
@@ -37,8 +36,21 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.stream.JsonReader;
 
+/**
+ * utility class to extract values from json using google's parser
+ *
+*/
 class BC_JSON_UTILS
 {
+
+/**
+ * extract a String-value from a JsonObject, use dflt-value if key not found
+ *
+ * @param root			the JsonObject to extract the value from
+ * @param key			the key of the value
+ * @param dflt          the default-value to use if key not found
+ * @return 				found value or default-value
+*/
     public static String get_json_string( JsonObject root, final String key, final String dflt )
     {
         String res = dflt;
@@ -60,6 +72,14 @@ class BC_JSON_UTILS
         return res;
     }
 
+/**
+ * extract a Integer-value from a JsonObject, use dflt-value if key not found
+ *
+ * @param root			the JsonObject to extract the value from
+ * @param key			the key of the value
+ * @param dflt          the default-value to use if key not found
+ * @return 				found value or default-value
+*/
     public static Integer get_json_int( JsonObject root, final String key, final Integer dflt )
     {
         Integer res = dflt;
@@ -81,6 +101,14 @@ class BC_JSON_UTILS
         return res;
     }
 
+/**
+ * extract a Long-value from a JsonObject, use dflt-value if key not found
+ *
+ * @param root			the JsonObject to extract the value from
+ * @param key			the key of the value
+ * @param dflt          the default-value to use if key not found
+ * @return 				found value or default-value
+*/
     public static Long get_json_long( JsonObject root, final String key, final Long dflt )
     {
         Long res = dflt;
@@ -102,6 +130,14 @@ class BC_JSON_UTILS
         return res;
     }
 
+/**
+ * extract a Double-value from a JsonObject, use dflt-value if key not found
+ *
+ * @param root			the JsonObject to extract the value from
+ * @param key			the key of the value
+ * @param dflt          the default-value to use if key not found
+ * @return 				found value or default-value
+*/
     public static Double get_json_double( JsonObject root, final String key, final Double dflt )
     {
         Double res = dflt;
@@ -123,6 +159,14 @@ class BC_JSON_UTILS
         return res;
     }
 
+/**
+ * extract a Boolean-value from a JsonObject, use dflt-value if key not found
+ *
+ * @param root			the JsonObject to extract the value from
+ * @param key			the key of the value
+ * @param dflt          the default-value to use if key not found
+ * @return 				found value or default-value
+*/
     public static Boolean get_json_bool( JsonObject root, final String key, final Boolean dflt )
     {
         Boolean res = dflt;
@@ -144,6 +188,13 @@ class BC_JSON_UTILS
         return res;
     }
 
+/**
+ * extract a sub-object from a JsonObject
+ *
+ * @param root			the JsonObject to extract the object from
+ * @param key			the key of the object
+ * @return 				found object or null
+*/
     public static JsonObject get_sub( JsonObject root, final String key )
     {
         if ( root != null )
@@ -158,6 +209,13 @@ class BC_JSON_UTILS
         return null;
     }
 
+/**
+ * extract a sub-object from a JsonObject as a string
+ *
+ * @param root			the JsonObject to extract the object from
+ * @param key			the key of the object
+ * @return 				string-representation of found object or empty string
+*/
     public static String get_sub_as_string( JsonObject root, final String key )
     {
         String res = "";
@@ -170,6 +228,13 @@ class BC_JSON_UTILS
         return res;
     }
 
+/**
+ * extract an array of JsonObjects from a JsonObject
+ *
+ * @param root			the JsonObject to extract the array from
+ * @param key			the key of the object
+ * @return 				the found array or null
+*/
     public static JsonArray get_sub_array( JsonObject root, final String key )
     {
         if ( root != null )
@@ -184,32 +249,14 @@ class BC_JSON_UTILS
         return null;
     }
 
-	public static String get_local_host( final String dflt )
-	{
-        String res = dflt;
-        try
-        {
-            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-            res = localMachine.getHostName();
-        }
-        catch ( UnknownHostException e )
-        {
-            res = dflt;
-        }
-		return res;
-	}
-
-    public static String get_host( JsonObject root, final String key, final String dflt )
-    {
-        return get_json_string( root, key, get_local_host( dflt ) );
-    }
-
-    public static String insert_username( final String pattern )
-    {
-        final String username = System.getProperty( "user.name" );
-        return String.format( pattern, username );
-    }
-
+/**
+ * extract a list of strings from a JsonObject
+ *
+ * @param root			the JsonObject to extract the list from
+ * @param key			the key of the object
+ * @param dflt		    the single dflt entry if key not found
+ * @param lst		    list of strings to be filled with found values
+*/
     public static void get_string_list( JsonObject root, final String key, final String dflt, List< String > lst )
     {
         try
@@ -239,19 +286,6 @@ class BC_JSON_UTILS
                 lst.add( dflt );
         }
     }
-
-	public static byte[] hexStringToByteArray( String s )
-	{
-    	int len = s.length();
-    	byte[] data = new byte[ len / 2 ];
-    	for ( int i = 0; i < len; i += 2 )
-		{
-			int c0 = Character.digit( s.charAt( i ), 16 );
-			int c1 = Character.digit( s.charAt( i + 1 ), 16 );
-        	data[ i / 2 ] = (byte) ( ( c0 << 4 ) + c1 );
-    	}
-    	return data;
-	}
 
 }
 

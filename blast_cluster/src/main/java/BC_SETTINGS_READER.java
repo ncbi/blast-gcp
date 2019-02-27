@@ -125,7 +125,7 @@ class DATABASES_SETTINGS_READER
     private static final String key_w_loc = "worker_location";
     private static final String key_s_loc = "source_location";
     private static final String key_ext = "extensions";
-    private static final String key_flat = "flat";
+    private static final String key_direct = "direct";
     private static final String key_limit = "limit";
 
     public static void from_json( JsonObject root, BC_SETTINGS settings )
@@ -148,8 +148,8 @@ class DATABASES_SETTINGS_READER
 						key_s_loc, db_settings.source_location );
     				BC_JSON_UTILS.get_string_list( obj, key_ext, "",
 						db_settings.extensions );
-        			db_settings.flat_layout = BC_JSON_UTILS.get_json_bool( obj,
-						key_flat, db_settings.flat_layout );
+        			db_settings.direct = BC_JSON_UTILS.get_json_bool( obj,
+						key_direct, db_settings.direct );
         			db_settings.limit = BC_JSON_UTILS.get_json_int( obj,
 						key_limit, db_settings.limit );
 
@@ -277,7 +277,6 @@ class CLUSTER_SETTINGS_READER
 class DEBUG_SETTINGS_READER
 {
     private static final String key = "debug";
-    private static final String key_host = "host";
     private static final String key_port = "port";
     private static final String key_request = "request";
     private static final String key_start = "start";
@@ -297,7 +296,7 @@ class DEBUG_SETTINGS_READER
         if ( obj != null )
         {
             setting.port         = BC_JSON_UTILS.get_json_int( obj, key_port, setting.port );
-            setting.host         = BC_JSON_UTILS.get_host( obj, key_host, setting.host );
+            setting.host         = BC_UTILS.get_local_host( setting.host );
 
             setting.request      = BC_JSON_UTILS.get_json_bool( obj, key_request, setting.request );
             setting.job_start    = BC_JSON_UTILS.get_json_bool( obj, key_start, setting.job_start);
@@ -315,7 +314,7 @@ class DEBUG_SETTINGS_READER
         }
 		else
 		{
-            setting.host = BC_JSON_UTILS.get_local_host( setting.host );
+            setting.host = BC_UTILS.get_local_host( setting.host );
 		}
     }
 }

@@ -28,6 +28,12 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 
+/**
+ * Infrastructure-Class to store manage the debugging of the application
+ * - stores host ( aka the master ) and port for a worker to connect to
+ * - stores the log-level for the jni-interface to BLAST
+ * - stores flags for different events to report via the debug-interface
+*/
 public class BC_DEBUG_SETTINGS implements Serializable
 {
     public String host = "";
@@ -45,6 +51,11 @@ public class BC_DEBUG_SETTINGS implements Serializable
 	public boolean req_added = false;
 	public boolean avg_time = false;
 
+/**
+ * convert debug-settings to multiline string for debug-purpose
+ *
+ * @return     multiline string, printing all values of the debug-settings
+*/
     @Override public String toString()
     {
         String S = String.format( "\tdebug_host ......... %s:%d\n", host, port );

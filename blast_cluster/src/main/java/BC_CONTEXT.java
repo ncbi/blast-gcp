@@ -57,7 +57,6 @@ public class BC_CONTEXT
  * - create private queues and BC_LISTS-instance
  *
  * @param a_settings application-settings
- * @return     instance
  * @see        BC_SETTINGS
 */
     public BC_CONTEXT( final BC_SETTINGS a_settings )
@@ -247,3 +246,4 @@ public class BC_CONTEXT
 		list_manager.join();
 	}
 }
+

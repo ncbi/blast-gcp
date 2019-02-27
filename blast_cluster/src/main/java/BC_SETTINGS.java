@@ -26,12 +26,11 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class BC_SETTINGS implements Serializable
+public class BC_SETTINGS
 {
     public String appName = "";
     
@@ -73,6 +72,7 @@ public class BC_SETTINGS implements Serializable
     public int parallel_jobs = 1;
     public String jni_log_level = "INFO";
 	public int console_sleep_time = 200;
+	public int debug_receiver_sleep_time = 200;
 
     /* DEBUG */
     BC_DEBUG_SETTINGS debug;

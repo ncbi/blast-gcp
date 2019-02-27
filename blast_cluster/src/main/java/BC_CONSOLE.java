@@ -54,7 +54,16 @@ public final class BC_CONSOLE extends Thread
         sleep_time = context.get_settings().console_sleep_time;
     }
 
-
+/**
+ * overwritten run method of Thread-BC_CONSOLE
+ * - create a buffered-reader for the system-input ( aka stdin )
+ * - loop until application closed
+ * - if the reader is ready to produce a line, read the line,
+ *   convert the line into a command, store the command in
+ *   application-context
+ *
+ * @see        BC_CONTEXT
+*/
     @Override public void run()
     {
         BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );

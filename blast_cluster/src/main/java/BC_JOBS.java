@@ -41,6 +41,16 @@ import scala.Tuple2;
 import org.apache.spark.util.LongAccumulator;
 import org.apache.spark.SparkFiles;
 
+/**
+ * internal class to process one job at a time
+ * - stores reference to application-context
+ * - stores reference to JavaSparkContext
+ * - stores reference to broadcasted debug-settings
+ * - stores reference to database-dictionary
+ * - stores id of job-thread
+ *
+ * @see        BC_CONTEXT
+*/
 class BC_JOB extends Thread
 {
     private final BC_CONTEXT context;
@@ -49,6 +59,19 @@ class BC_JOB extends Thread
 	private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
 	private final int id;
 
+/**
+ * create instance of BC_JOB
+ *
+ * @param a_context    			application-context
+ * @param a_jsc        			JavaSparkContext
+ * @param a_DEBUG_SETTINGS      broadcasted debug-settings
+ * @param a_db_dict             dictionary of blast-database-RDDs
+ * @param a_id                  Id of the thread
+ *
+ * @see        BC_CONTEXT
+ * @see        BC_DEBUG_SETTINGS
+ * @see        BC_DATABASE_RDD_ENTRY
+*/
     public BC_JOB( final BC_CONTEXT a_context,
                    final JavaSparkContext a_jsc,
                    Broadcast< BC_DEBUG_SETTINGS > a_DEBUG_SETTINGS,
@@ -62,19 +85,38 @@ class BC_JOB extends Thread
 		id = a_id;
     }
 
-    private void sleepFor( long milliseconds )
-    {
-        try { Thread.sleep( milliseconds ); }
-        catch ( InterruptedException e ) { }
-    }
-
-	/* Attention: the Broadcast-Variable DBG has to be in the parameter-list, even
-       if it is available as a field of the BC_JOB-class! If instead the class-field
-       is referenced from within the closure, SPARK tries to serialize
-       the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
-       It will compile, but it will fail at runtime. */
+/**
+ * perform the mapping-operation on the request: this is the important call via jni to Blast
+ * - find the correct database, based on the request.db field
+ * - broadcast the request to the cluster
+ * - perform the map-operation against the chunks-RDD via closure:
+ *       > download chunk if neccessary
+ *       > find instance of BLAST_LIB ( singleton )
+ *       > perform lib.jni_prelim_search()
+ *       > perform lib.jni_traceback()
+ *       > return result-tuples
+ * - collect container of result-tuples on master
+ * - write results to local filesystem
+ * - write report to local filesystem
+ *
+ * @param DBG    		broadcast-variable to be used for debug-interface
+ * @param request  		request to be 'blasted' against one database-chunk
+ * @see        BC_DEBUG_SETTINGS
+ * @see        BC_REQUEST
+ * @see        BC_DATABASE_RDD_ENTRY
+ * @see        BC_UTILS
+ * @see        BLAST_TB_LIST
+ * @see        BLAST_LIB
+ * @see        BLAST_HSP_LIST
+*/
 	private void handle_request( Broadcast< BC_DEBUG_SETTINGS > DBG, BC_REQUEST request )
 	{
+		/* Attention: the Broadcast-Variable DBG has to be in the parameter-list, even
+		   if it is available as a field of the BC_JOB-class! If instead the class-field
+		   is referenced from within the closure, SPARK tries to serialize
+		   the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
+		   It will compile, but it will fail at runtime. */
+
 		System.out.println( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
 		long job_starttime = System.currentTimeMillis();
 
@@ -158,6 +200,15 @@ class BC_JOB extends Thread
 			System.out.println( String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
 	}
 
+/**
+ * overwritten run method of Thread-BC_JOB
+ * - loop until application closed
+ * - pull request from application-context
+ * - handle request if request is not null, or sleep otherwise
+ *
+ * @see        BC_CONTEXT
+ * @see        BC_REQUEST
+*/
     @Override public void run()
 	{
         while( context.is_running() )
@@ -166,29 +217,45 @@ class BC_JOB extends Thread
             if ( request != null )
 				handle_request( DEBUG_SETTINGS, request );
 			else
-				sleepFor( context.settings.job_sleep_time );
+			{
+				try
+				{
+					Thread.sleep( context.settings.job_sleep_time );
+				}
+				catch ( InterruptedException e ) { }
+			}
 		}
 	}
 }
 
+/**
+ * class to process multiple jobs in parallel
+ * - has list of jobs
+ *
+ * @see        BC_JOB
+*/
 public class BC_JOBS
 {
-    private final BC_CONTEXT context;
-    private final JavaSparkContext jsc;
-    private Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS;
-	private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
     private final List< BC_JOB > jobs;
 
-    public BC_JOBS( final BC_CONTEXT a_context,
-                    final JavaSparkContext a_jsc,
-                    Broadcast< BC_DEBUG_SETTINGS > a_DEBUG_SETTINGS,
-					final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > a_db_dict )
+/**
+ * create instance of BC_JOBS
+ * - create as much job-instances as requested in application-settings
+ *
+ * @param context    			application-context
+ * @param jsc        			JavaSparkContext
+ * @param DEBUG_SETTINGS        broadcasted debug-settings
+ * @param db_dict               dictionary of blast-database-RDDs
+ *
+ * @see        BC_CONTEXT
+ * @see        BC_DEBUG_SETTINGS
+ * @see        BC_DATABASE_RDD_ENTRY
+*/
+    public BC_JOBS( final BC_CONTEXT context,
+                    final JavaSparkContext jsc,
+                    Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS,
+					final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict )
     {
-		context = a_context;
-		jsc = a_jsc;
-		DEBUG_SETTINGS = a_DEBUG_SETTINGS;
-		db_dict = a_db_dict;
-
         jobs = new ArrayList<>();
         for ( int i = 0; i < context.settings.parallel_jobs; ++i )
 		{
@@ -198,6 +265,10 @@ public class BC_JOBS
 		}
     }
 
+/**
+ * wait for all jobs to finish
+ *
+*/
     public void join()
     {
         for ( BC_JOB job : jobs )

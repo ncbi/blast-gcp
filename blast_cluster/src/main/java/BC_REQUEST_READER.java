@@ -43,9 +43,18 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 
+/**
+ * utility-class to parse JSON into a BC_REQUEST object
+ * @see BC_REQUEST
+*/
 class BC_REQUEST_READER
 {
-	// helper: parse a string into a json-tree
+/**
+ * parse a String into a Json-Element using the google-json parser
+ *
+ * @param line		string to be parsed
+ * @return          json-element representing the input
+*/
 	private static JsonElement parse_string_2_tree( final String line )
 	{
 		JsonElement res = null;
@@ -61,7 +70,12 @@ class BC_REQUEST_READER
 		return res;
 	}
 
-	// helper: parse the file ( pointed to by path ) into a json-tree
+/**
+ * parse a file into a Json-Element using the google-json parser
+ *
+ * @param path		path of file to be parsed
+ * @return          json-element representing the input
+*/
 	private static JsonElement parse_file_2_tree( final String path )
 	{
 		JsonElement res = null;
@@ -77,7 +91,12 @@ class BC_REQUEST_READER
 		return res;
 	}
 
-	// helper: parse the gs_file ( pointed to by uri ) into a json-tree
+/**
+ * parse a gs:// uri into a Json-Element using the google-json parser
+ *
+ * @param path		uri of file to be parsed
+ * @return          json-element representing the input
+*/
 	private static JsonElement parse_gs_file_2_tree( final URI uri )
 	{
 		JsonElement res = null;
@@ -101,7 +120,12 @@ class BC_REQUEST_READER
 		return res;
 	}
 
-	// helper: parse file pointed to by path ( can be file or gs-uri ) into a json-tree
+/**
+ * parse a file in the local filesystem or in a google-bucket using the google-json parser
+ *
+ * @param path		uri of file or filesystem-path to be parsed
+ * @return          json-element representing the input
+*/
 	private static JsonElement parse_path_2_tree( final String path )
 	{
 		JsonElement res = null;
@@ -120,7 +144,13 @@ class BC_REQUEST_READER
 		return res;
 	}
 
-	// helper: transform a json-tree into a BC_REQUEST-obj / according to protocol '1.0'
+/**
+ * transform a JsonObject into a BC_REQUEST instance
+ *    according to protocol '1.0'
+ *
+ * @param root		JsonObject to be transformed
+ * @return          instance of BC_REQUEST-class or null
+*/
     private static BC_REQUEST req_protocol_1_0( final JsonObject root )
     {
 		BC_REQUEST res = new BC_REQUEST();
@@ -137,7 +167,13 @@ class BC_REQUEST_READER
         return res;
     }
 
-	// helper: transform a json-tree into a BC_REQUEST-obj / fork by protocol-version
+/**
+ * transform a JsonElement into a BC_REQUEST instance
+ *   checking if the protocol - entry exists and is equal to '1.0'
+ *
+ * @param tree		JsonElement to be transformed
+ * @return          instance of BC_REQUEST-class or null
+*/
     private static BC_REQUEST parse_tree( final JsonElement tree )
     {
 		BC_REQUEST request = null;
@@ -153,7 +189,13 @@ class BC_REQUEST_READER
         return request;
     }
 
-	// used to get request-entry from socket / cmd-line
+/**
+ * transform a String into a BC_REQUEST instance
+ *   checking if the created instance is valid
+ *
+ * @param line		String to be transformed
+ * @return          instance of BC_REQUEST-class or null
+*/
     public static BC_REQUEST parse_from_string( final String line )
     {
 		BC_REQUEST request = null;
@@ -170,7 +212,14 @@ class BC_REQUEST_READER
 		return request;
     }
 
-	// used to get request-entry from pubsub as string
+/**
+ * transform a String into a BC_REQUEST instance, enter the pubsub-ack id
+ *   checking if the created instance is valid
+ *
+ * @param line		String to be transformed
+ * @param ack		ack-id to be inserted into the request
+ * @return          instance of BC_REQUEST-class or null
+*/
     public static BC_REQUEST parse_from_string_and_ack( final String line, final String ack )
     {
 		BC_REQUEST request = null;
@@ -180,14 +229,22 @@ class BC_REQUEST_READER
     		request = parse_tree( tree );
 			if ( request != null )
 			{
-				if ( !request.valid() )
+				if ( request.valid() )
+					request.ack_id = ack;
+				else
 					request = null;
 			}
 		}
 		return request;
     }
 
-	// used to get the request-entry from a file ( local or in a bucket )
+/**
+ * transform a file given as path/uri into a BC_REQUEST instance
+ *   checking if the created instance is valid
+ *
+ * @param path		path/uri of request-file to be transformed
+ * @return          instance of BC_REQUEST-class or null
+*/
     public static BC_REQUEST parse_from_file( final String path )
     {
 		BC_REQUEST request = null;

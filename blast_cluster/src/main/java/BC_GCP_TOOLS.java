@@ -56,12 +56,23 @@ import com.google.api.services.storage.StorageScopes;
 import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
 
+/**
+ * utility-class to read from / write to GCP-buckets
+ * - has a static instance of itself, to function as singleton
+ *
+*/
 class BC_GCP_TOOLS
 {
     private static BC_GCP_TOOLS instance = null;
     private Storage storage = null;
 
-    public static Storage buildStorageService( final String AppName ) throws GeneralSecurityException, IOException
+/**
+ * private helper-function to create Storage-instance, needed for access to buckets
+ *
+ * @param AppName  name of the application to be given to the storage-instance
+ * @return         Storage-instance
+*/
+    private static Storage buildStorageService( final String AppName ) throws GeneralSecurityException, IOException
     {
         HttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
         JsonFactory jsonFactory = new JacksonFactory();
@@ -75,7 +86,11 @@ class BC_GCP_TOOLS
         return new Storage.Builder( transport, jsonFactory, credential ).setApplicationName( AppName ).build();
     }
 
-	/* constructor made private to prevent instantiation, this class is a singleton! */
+/**
+ * private constructor to prevent accidental instantiation
+ *
+ * @param AppName  name of the application to be given to the storage-instance
+*/
     private BC_GCP_TOOLS( final String AppName )
     {
         try
@@ -88,6 +103,12 @@ class BC_GCP_TOOLS
         }
     }
 
+/**
+ * static method to either return an existing instance or create a new instance
+ * of the BC_GCP_TOOLS-class
+ *
+ * @return         instance of BC_GCP_TOOLS
+*/
     public static BC_GCP_TOOLS getInstance()
     {
         if ( instance == null )
@@ -97,6 +118,15 @@ class BC_GCP_TOOLS
         return instance;
     }
 
+/**
+ * private method to upload a ByteBuffer into a bucket
+ *
+ * @param  bucket  url of the bucket
+ * @param  key     name of the 'file' in the bucket to be created or overwritten
+ * @param  content bytes to be uploaded
+ *
+ * @return         number of bytes uploaded
+*/
     private Integer uploadContent( final String bucket, final String key, final ByteBuffer content )
     {
         Integer res = 0;
@@ -124,6 +154,14 @@ class BC_GCP_TOOLS
         return res;
     }
 
+/**
+ * private method list all entries of a bucket
+ *
+ * @param  bucket  url of the bucket
+ * @param  lst     reference of list of strings, to insert entry-names into
+ *
+ * @return         number of entries found
+*/
 	private Integer list_bucket( final String bucket, List< String > lst )
 	{
 		Integer res = 0; 
@@ -152,6 +190,12 @@ class BC_GCP_TOOLS
 		return res;
 	}
 
+/**
+ * private helper-method to create a lock-file
+ *
+ * @param  f    file to be created
+ *
+*/
 	private void write_lock( File f )
 	{
 		BufferedWriter writer = null;
@@ -164,12 +208,27 @@ class BC_GCP_TOOLS
 		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
 	}
 
+/**
+ * private helper-method to delete a lock-file
+ *
+ * @param  f    file to be deleted
+ *
+*/
 	private void delete_lock( File f )
 	{
 		try	{ f.delete(); }	
 		catch( Exception e ) { e.printStackTrace(); }
 	}
 
+/**
+ * private method to download a file from a bucket to the local filesystem, protected by a lock-file
+ *
+ * @param  bucket        url of the bucket
+ * @param  key           name of the 'file' in the bucket to be downloaded
+ * @param  dst_filename  absolute path of destination-file to be created
+ *
+ * return  success of operation
+*/
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
         boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
@@ -206,6 +265,14 @@ class BC_GCP_TOOLS
         return res;
     }
 
+/**
+ * public static method to download a file from a bucket as stream
+ *
+ * @param  bucket        url of the bucket
+ * @param  key           name of the 'file' in the bucket to be downloaded
+ *
+ * return  InputStream to be read from
+*/
     public static InputStream download_as_stream( final String bucket, final String key )
     {
         InputStream res = null;
@@ -228,6 +295,15 @@ class BC_GCP_TOOLS
         return res;
     }
 
+/**
+ * public static method to download a file from a bucket to the local filesystem
+ *
+ * @param  bucket        url of the bucket
+ * @param  key           name of the 'file' in the bucket to be downloaded
+ * @param  dst_filename  absolute path of destination-file to be created
+ *
+ * return  success of operation
+*/
     public static boolean download( final String gs_uri, final String dst_filename )
     {
         boolean res = false;
@@ -253,6 +329,13 @@ class BC_GCP_TOOLS
         return res;
     }
 
+/**
+ * public static method to download a bucket-url as stream
+ *
+ * @param  bucket        url of the bucket-item
+ *
+ * return  InputStream to be read from
+*/
     public static InputStream download( final String gs_uri )
     {
         InputStream res = null;
@@ -278,6 +361,15 @@ class BC_GCP_TOOLS
         return res;
     }
 
+/**
+ * public static method to upload a ByteBuffer into a bucket
+ *
+ * @param  bucket  url of the bucket
+ * @param  key     name of the 'file' in the bucket to be created or overwritten
+ * @param  content bytes to be uploaded
+ *
+ * @return         number of bytes uploaded
+*/
     public static Integer upload( final String bucket, final String key, final ByteBuffer content )
     {
         Integer res = 0;
@@ -287,13 +379,29 @@ class BC_GCP_TOOLS
         return res;
     }
 
+/**
+ * public static method to upload a String into a bucket
+ *
+ * @param  bucket  url of the bucket
+ * @param  key     name of the 'file' in the bucket to be created or overwritten
+ * @param  content String to be uploaded
+ *
+ * @return         number of bytes uploaded
+*/
     public static Integer upload( final String bucket, final String key, final String content )
     {
         ByteBuffer bb = ByteBuffer.wrap( content.getBytes() );
         return upload( bucket, key, bb );
     }
 
-	public static List< String > list( final String gs_uri )
+/**
+ * public static method to list all items in a bucket
+ *
+ * @param  bucket  url of the bucket
+ *
+ * @return         List of Strings, names of items in the bucket
+*/
+	public static List< String > list( final String bucket )
 	{
 		List< String > res = new ArrayList<>();
         BC_GCP_TOOLS inst = getInstance();
@@ -301,12 +409,9 @@ class BC_GCP_TOOLS
 		{
 		    try
 		    {
-		        URI uri = new URI( gs_uri );
+		        URI uri = new URI( bucket );
 		        if ( uri.getScheme().equals( "gs" ) )
-		        {
-		            String bucket = uri.getAuthority();
-					inst.list_bucket( bucket, res );
-		        }
+					inst.list_bucket( uri.getAuthority(), res );
 		    }
 		    catch( URISyntaxException e )
 		    {
@@ -315,6 +420,14 @@ class BC_GCP_TOOLS
 		return res;
 	}
 
+/**
+ * private static helper-method to test if a String ends in any of the given extensions
+ *
+ * @param  s           string to be tested
+ * @param  extensions  extensions to be probed
+ *
+ * @return         does the string end in any of the given extensions ?
+*/
 	private static boolean ends_with_any( final String s, final List< String > extensions )
 	{
 		for ( String ext : extensions )
@@ -324,6 +437,14 @@ class BC_GCP_TOOLS
 		return false;
 	}
 
+/**
+ * public static helper-method filter a list of Strings, based on a list of given extensions
+ *
+ * @param  all         list of strings to be filtered
+ * @param  extensions  extensions to be used as filter
+ *
+ * @return         list of strings that do end in any of the given extensions
+*/
 	public static List< String > unique_without_extension( final List< String > all, final List< String > extensions )
 	{
 		List< String > res = new ArrayList<>();
@@ -340,3 +461,4 @@ class BC_GCP_TOOLS
 	}
 
 }
+

@@ -175,8 +175,6 @@ public final class BC_MAIN
  * - calls the static run-method of this class
  *
  * @param args command-line arguments, 1st arg is name of settings-file
- * @return     void
- * @see        run
  * @see		   BC_SETTINGS
  * @see        BC_SETTINGS_READER
 */
