@@ -37,11 +37,11 @@ public class BC_DATABASE_SETTING implements Serializable
 	public String source_location = "";	/* bucket or filesystem-path */
     public Boolean flat_layout = false; /* do we use a subdir for each volume under the location on the worker? */
 	public int limit = 0;				/* in case we want to limit the number of db-chunks */
-	public List< String > extensions;	/* for nt: nsq, nin, nhr / nr: psq, pin, phr */
+	public ArrayList< String > extensions;	/* for nt: nsq, nin, nhr / nr: psq, pin, phr */
 
     public BC_DATABASE_SETTING()
     {
-		extensions = new ArrayList();
+		extensions = new ArrayList<>();
     }
 
     public Boolean valid()

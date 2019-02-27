@@ -50,6 +50,7 @@ class BC_REQUEST implements Serializable
 		return true;
 	}
 
+    // @TODO: Need HashCode
     @Override public boolean equals( Object other )
     {
         if ( other == null ) return false;

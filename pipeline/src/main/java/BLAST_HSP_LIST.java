@@ -27,46 +27,43 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 
-class BLAST_HSP_LIST implements Serializable
-{
-    //public BLAST_DATABASE_PART part;
-    //public BLAST_REQUEST req;
-    public int oid;
-    public int max_score;
-    public byte[] hsp_blob;
+// Warning: C++ JNI code expects this to be name BLAST_HSP_LIST
+class BLAST_HSP_LIST implements Serializable {
+  private int oid;
+  private int max_score;
+  private byte[] hsp_blob;
 
-    public BLAST_HSP_LIST( int oid, int max_score, byte[] hsp_blob )
-    {
-        this.oid = oid;
-        this.max_score = max_score;
-        this.hsp_blob = hsp_blob;
-    }
+  BLAST_HSP_LIST(final int oid, final int max_score, final byte[] hsp_blob) {
+    this.oid = oid;
+    this.max_score = max_score;
+    this.hsp_blob = hsp_blob;
+  }
 
-    public Boolean isEmpty()
-    {
-        if (hsp_blob == null) return true;
-        return (hsp_blob.length == 0);
+  public Boolean isEmpty() {
+    if (hsp_blob == null) {
+      return true;
     }
+    return hsp_blob.length == 0;
+  }
 
-    /*
-    @Override public String toString()
-    {
-        String res = "";
-        res += String.format("  HSPLIST( partition=%s request=%s )", part.toString(), req.toString());
-        res += "\n         oid = " + oid;
-        res += "\n   max_score = " + max_score;
-        res += "\n" + String.format("        blob = %d bytes:", hsp_blob.length);
-        res += "\n      ";
-        int brk = 0;
-        for (int i = 0; i != hsp_blob.length; ++i) {
-          byte b = hsp_blob[i];
-          res += String.format("%02x", b);
-          ++brk;
-          if ((brk % 4) == 0) res += " ";
-        }
-        res += "\n";
-        return res;
+  @Override
+  public String toString() {
+    String res = "";
+    res += "  HSPLIST";
+    res += "\n         oid = " + oid;
+    res += "\n   max_score = " + max_score;
+    res += "\n" + String.format("        blob = %d bytes:", hsp_blob.length);
+    res += "\n      ";
+    int brk = 0;
+    for (int i = 0; i != hsp_blob.length; ++i) {
+      final byte b = hsp_blob[i];
+      res += String.format("%02x", b);
+      ++brk;
+      if (brk % 4 == 0) {
+        res += " ";
+      }
     }
-    */
+    res += "\n";
+    return res;
+  }
 }
-
