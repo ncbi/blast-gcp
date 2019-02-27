@@ -42,6 +42,9 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
 
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;
+
+  public java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
 }
 Compiled from "BLAST_TB_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Serializable, java.lang.Comparable<gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST> {
@@ -66,6 +69,12 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Serializable, j
 
   public int compareTo(gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST);
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;)I
+
+  public static java.lang.String toHex(byte[]);
+    descriptor: ([B)Ljava/lang/String;
+
+  public java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
 
   public int compareTo(java.lang.Object);
     descriptor: (Ljava/lang/Object;)I
