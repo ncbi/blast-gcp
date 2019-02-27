@@ -6,23 +6,22 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
     descriptor: Ljava/lang/ExceptionInInitializerError;
   private static org.apache.log4j.Level logLevel;
     descriptor: Lorg/apache/log4j/Level;
+  private static final int WARNLONGMS;
+    descriptor: I
   public gov.nih.nlm.ncbi.blastjni.BLAST_LIB(java.lang.String);
     descriptor: (Ljava/lang/String;)V
 
-  final void throwIfBad();
+  private void throwIfInvalid();
     descriptor: ()V
 
   private void log(java.lang.String, java.lang.String);
     descriptor: (Ljava/lang/String;Ljava/lang/String;)V
 
-  final java.lang.String get_blob(java.lang.String);
-    descriptor: (Ljava/lang/String;)Ljava/lang/String;
+  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BC_DATABASE_RDD_ENTRY, gov.nih.nlm.ncbi.blastjni.BC_REQUEST, java.lang.String) throws java.lang.Exception;
+    descriptor: (Lgov/nih/nlm/ncbi/blastjni/BC_DATABASE_RDD_ENTRY;Lgov/nih/nlm/ncbi/blastjni/BC_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
 
-  final gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] jni_prelim_search(gov.nih.nlm.ncbi.blastjni.BLAST_DATABASE_PART, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String) throws java.lang.Exception;
-    descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_DATABASE_PART;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
-
-  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BLAST_DATABASE_PART, gov.nih.nlm.ncbi.blastjni.BLAST_REQUEST, java.lang.String);
-    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BLAST_DATABASE_PART;Lgov/nih/nlm/ncbi/blastjni/BLAST_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
+  final gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST[] jni_traceback(gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[], gov.nih.nlm.ncbi.blastjni.BC_DATABASE_RDD_ENTRY, gov.nih.nlm.ncbi.blastjni.BC_REQUEST, java.lang.String);
+    descriptor: ([Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;Lgov/nih/nlm/ncbi/blastjni/BC_DATABASE_RDD_ENTRY;Lgov/nih/nlm/ncbi/blastjni/BC_REQUEST;Ljava/lang/String;)[Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;
 
   private native gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST[] prelim_search(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int);
     descriptor: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)[Lgov/nih/nlm/ncbi/blastjni/BLAST_HSP_LIST;
@@ -32,13 +31,13 @@ public class gov.nih.nlm.ncbi.blastjni.BLAST_LIB {
 }
 Compiled from "BLAST_HSP_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
-  public int oid;
+  private int oid;
     descriptor: I
-  public int max_score;
+  private int max_score;
     descriptor: I
-  public byte[] hsp_blob;
+  private byte[] hsp_blob;
     descriptor: [B
-  public gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST(int, int, byte[]);
+  gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST(int, int, byte[]);
     descriptor: (II[B)V
 
   public java.lang.Boolean isEmpty();
@@ -46,17 +45,17 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
 }
 Compiled from "BLAST_TB_LIST.java"
 class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Serializable, java.lang.Comparable<gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST> {
-  static double epsilon;
+  private static final double EPSILON;
     descriptor: D
-  public int oid;
+  private int oid;
     descriptor: I
-  public double evalue;
+  private double evalue;
     descriptor: D
   public byte[] asn1_blob;
     descriptor: [B
   public int top_n;
     descriptor: I
-  public gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST(int, double, byte[]);
+  gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST(int, double, byte[]);
     descriptor: (ID[B)V
 
   public java.lang.Boolean isEmpty();
@@ -70,7 +69,4 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Serializable, j
 
   public int compareTo(java.lang.Object);
     descriptor: (Ljava/lang/Object;)I
-
-  static {};
-    descriptor: ()V
 }

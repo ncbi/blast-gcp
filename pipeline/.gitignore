@@ -12,3 +12,7 @@ ini_docker.json
 
 # Debugging output
 downloads.txt
+pmd.txt
+labels.json
+lifecycle.json
+checkstyle.html

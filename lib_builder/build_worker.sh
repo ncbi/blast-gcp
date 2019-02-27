@@ -111,10 +111,11 @@ export MALLOC_CHECK_=2
         echo "Running clang-tidy checkers on C++ code"
     fi
 
+if [ "1" == "1" ]; then
     echo "Compiling and linking blastjni.cpp"
     $GPPCOMMAND
     cp libblastjni.so ../pipeline
-
+fi
     g++ \
     blast_worker.cpp \
     -std=gnu++14 \

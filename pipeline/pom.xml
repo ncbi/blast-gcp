@@ -4,15 +4,20 @@
   <groupId>gov.nih.nlm.ncbi.blast_spark_cluster</groupId>
   <artifactId>sparkblast</artifactId>
   <version>1</version>
-
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
   <dependencies>
-
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.2.4</version>
     </dependency>
-
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
@@ -21,14 +26,12 @@
       <!--scope>system</scope>
             <systemPath>/usr/lib/spark/jars/scala-library-2.11.8.jar</systemPath-->
     </dependency>
-
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_2.11</artifactId>
       <version>2.2.0</version>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_2.11</artifactId>
@@ -37,7 +40,6 @@
       <!--scope>system</scope>
             <systemPath>/usr/lib/spark/jars/spark-core_2.11-2.2.0.jar</systemPath-->
     </dependency>
-
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-streaming_2.11</artifactId>
@@ -46,7 +48,6 @@
       <!--scope>system</scope>
             <systemPath>/usr/lib/spark/jars/spark-streaming_2.11-2.2.0.jar</systemPath-->
     </dependency>
-
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
@@ -55,94 +56,90 @@
       <!--scope>system</scope>
             <systemPath>/usr/lib/hadoop/hadoop-common-2.8.2.jar</systemPath-->
     </dependency>
-
     <!--dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pom</artifactId>
       <version>0.37.0-alpha</version>
       <type>pom</type>
     </dependency-->
-
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
       <version>1.12.0</version>
     </dependency>
-
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-pubsub</artifactId>
       <version>v1-rev385-1.22.0</version>
     </dependency>
-
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-storage</artifactId>
       <version>v1-rev129-1.22.0</version>
     </dependency>
-
     <dependency>
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client</artifactId>
       <version>1.22.0</version>
     </dependency>
-
     <dependency>
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client-jackson2</artifactId>
       <version>1.22.0</version>
     </dependency>
-
     <dependency>
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client</artifactId>
       <version>1.22.0</version>
     </dependency>
-
     <dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-api-services-logging</artifactId>
-        <version>v2-rev587-1.21.0</version>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-logging</artifactId>
+      <version>v2-rev587-1.21.0</version>
     </dependency>
-
     <dependency>
-        <groupId>com.googlecode.json-simple</groupId>
-        <artifactId>json-simple</artifactId>
-        <version>1.1.1</version>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
     </dependency>
-
     <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.11</version>
-        <scope>test</scope>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
     </dependency>
-
   </dependencies>
-
   <build>
     <plugins>
+      <!--
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.9</version>
+        </plugin>
+        -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.8.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+          <compilerArgument>-Xlint:all,unchecked</compilerArgument>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.21.0</version>
-	<configuration>
-	  <useSystemClassLoader>false</useSystemClassLoader>
+        <version>2.22.1</version>
+        <configuration>
+          <useSystemClassLoader>false</useSystemClassLoader>
           <skipTests>${skipTests}</skipTests>
         </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.1.1</version>
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
