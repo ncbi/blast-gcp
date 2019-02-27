@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef gov_nih_nlm_ncbi_blastjni_BLAST_LIB_WARNLONGMS
+#define gov_nih_nlm_ncbi_blastjni_BLAST_LIB_WARNLONGMS 50000L
 /*
  * Class:     gov_nih_nlm_ncbi_blastjni_BLAST_LIB
  * Method:    prelim_search

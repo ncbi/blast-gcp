@@ -8,3 +8,4 @@ target
 cscope.*
 vim.*
 tags
+.git-credentials
