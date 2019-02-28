@@ -73,7 +73,7 @@ public final class BC_MAIN
 		/* create and configure the spark-context */
 		SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
 		JavaSparkContext jsc = new JavaSparkContext( sc );
-        jsc.addFile( "libblastjni.so" );
+		jsc.addFile( "libblastjni.so" );
 		jsc.setLogLevel( settings.spark_log_level );
 
 		int num_executors = jsc.getConf().getInt( "spark.executor.instances", 0 );
@@ -83,9 +83,9 @@ public final class BC_MAIN
 		/* create the application-context, lives only on the master */
 		BC_CONTEXT context = new BC_CONTEXT( settings );
 
-        // reader thread for console commands
-        BC_CONSOLE console = new BC_CONSOLE( context );
-        console.start();
+		// reader thread for console commands
+		BC_CONSOLE console = new BC_CONSOLE( context );
+		console.start();
 
 		BC_DEBUG_RECEIVER debug_receiver = new BC_DEBUG_RECEIVER( context );
 		debug_receiver.start();
@@ -142,15 +142,15 @@ public final class BC_MAIN
 		/* we are handling commands, which originate form the master-console or from a socket */
 		while ( context.is_running() )
 		{
-            try
-            {
-                BC_COMMAND cmd = context.pull_cmd();
-                if ( cmd != null )
+			try
+			{
+				BC_COMMAND cmd = context.pull_cmd();
+				if ( cmd != null )
 					cmd.handle( context );
-                else
-                    Thread.sleep( 250 );
+				else
+					Thread.sleep( 250 );
 			}
-            catch ( InterruptedException e ) {}
+			catch ( InterruptedException e ) {}
 		}
 
 		/* join the different threads we have created... */
