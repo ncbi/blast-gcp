@@ -32,7 +32,7 @@ import java.io.PrintStream;
  * command-class
  * - has reference to store the origin of the command
 */
-public class BC_COMMAND
+public final class BC_COMMAND
 {
     private final PrintStream origin_stream;
     private String[] parts;
@@ -45,7 +45,6 @@ public class BC_COMMAND
  *
  * @param origin console or tcp-socket where the command originated
  * @param line   String obtained from console or tcp-socket
- * @return     instance
 */
     BC_COMMAND( final PrintStream origin, final String line )
     {
@@ -155,7 +154,6 @@ public class BC_COMMAND
  * handle a preparsed command using the given context
  *
  * @param context application-context needed to handle the command
- * @return     void
  * @see        BC_CONTEXT
 */
 	public void handle( BC_CONTEXT context )

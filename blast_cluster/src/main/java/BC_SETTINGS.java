@@ -30,7 +30,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class BC_SETTINGS
+/**
+ * utility-class to store all application-settings
+ * implemented as a singleton
+ *
+*/
+public final class BC_SETTINGS
 {
     public String appName = "";
     
@@ -77,6 +82,11 @@ public class BC_SETTINGS
     /* DEBUG */
     BC_DEBUG_SETTINGS debug;
 
+/**
+ * create instance of BC_SETTINGS with all values set to default
+ *
+ * @see		BC_DEBUG_SETTINGS
+*/
     public BC_SETTINGS()
     {
         dbs = new HashMap<>();
@@ -84,7 +94,11 @@ public class BC_SETTINGS
         debug = new BC_DEBUG_SETTINGS();
     }
 
-	/* are the */
+/**
+ * test if the request-settings are valid
+ *
+ * @return		are request-settings valid ?
+*/
     private boolean req_valid()
     {
 		boolean res = req_use_pubsub || req_use_files || req_use_socket;
@@ -97,6 +111,11 @@ public class BC_SETTINGS
 		return res;
     }
 
+/**
+ * test if the database-settings are valid
+ *
+ * @return		are database-settings valid ?
+*/
     private boolean dbs_valid()
     {
 		if ( dbs.isEmpty() ) return false;
@@ -106,6 +125,11 @@ public class BC_SETTINGS
         return res;
     }
 
+/**
+ * test if result-settings are valid
+ *
+ * @return		are result-settings valid ?
+*/
 	private boolean res_valid()
 	{
 		boolean res = res_use_gs_bucket || res_use_files;
@@ -116,19 +140,21 @@ public class BC_SETTINGS
 		return res;
 	}
 
+/**
+ * test if all settings are valid
+ *
+ * @return		are all settings valid ?
+*/
     public boolean valid()
     {
         return ( req_valid() && dbs_valid() && res_valid() );
     }
 
-    private String dbs_toString()
-    {
-        String S = "";
-        for ( BC_DATABASE_SETTING e : dbs.values() )
-            S = S + e.toString();
-        return S;
-    }
-
+/**
+ * convert all settings to a string
+ *
+ * @return		string containing all settings
+*/
     @Override public String toString()
     {
         String S = "REQUESTS:\n";
@@ -140,7 +166,9 @@ public class BC_SETTINGS
             S = S + String.format( "\tport ............... %d\n", req_port_nr );
         S = S + String.format( "\tmax. backlog ....... %d requests\n", req_max_backlog );
 
-        S = S + "\nDATABASES:\n" + dbs_toString();
+        S = S + "\nDATABASES:\n";
+        for ( BC_DATABASE_SETTING e : dbs.values() )
+            S = S + e.toString();
 
         S = S + "\nRESULTS:\n";
 		if ( res_use_gs_bucket )
@@ -171,6 +199,7 @@ public class BC_SETTINGS
 
         S = S + "\nDEBUG:\n";
         S = S + debug.toString();
+
         return S;
     }
 }

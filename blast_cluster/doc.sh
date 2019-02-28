@@ -1,2 +1,3 @@
-javadoc -d docs -sourcepath ./src/main/java/*.java
+#javadoc -private -d docs -sourcepath ./src/main/java/*.java
+mvn javadoc:javadoc
 

@@ -28,6 +28,7 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import java.nio.ByteBuffer;
 
@@ -59,6 +60,27 @@ public class BC_RESULTS
 	public void add( List< BLAST_TB_LIST > items )
 	{
 		l.addAll( items );
+	}
+
+/**
+ * sort the internal list, the item-class has an overriden comparison-method
+ *
+ * @see        BLAST_TB_LIST
+*/
+	public void sort()
+	{
+		Collections.sort( l );
+	}
+
+/**
+ * cut the internal list, to leave just the top num_items
+ *
+ * @see        BLAST_TB_LIST
+*/
+	public void cutoff( int num_items )
+	{
+		List< BLAST_TB_LIST > sub = l.subList( 0, num_items );
+		l = sub;
 	}
 
 /**

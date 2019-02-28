@@ -37,17 +37,34 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.net.UnknownHostException;
 
-public class BC_UTILS
+/**
+ * utility-class, collection of static helper-methods
+ *
+*/
+public final class BC_UTILS
 {
+
+/**
+ * helper-method to check if a filename does exist
+ *
+ * @param filename		name of file to be tested
+ * @return 				does a file of this name exist ?
+*/
 	public static boolean file_exists( final String filename )
 	{
 		File f = new File( filename );
 		return f.exists();
 	}
 
-	public static boolean create_paths_if_neccessary( final String filename )
+/**
+ * helper-method to create paths of a filename, if they do not exist
+ *
+ * @param filepath		path of file to be inspected
+ * @return 				does the file exist, or was it possible to create the path ?
+*/
+	public static boolean create_paths_if_neccessary( final String filepath )
 	{
-		File f = new File( filename );
+		File f = new File( filepath );
 		boolean	res = f.exists();
 		if ( !res )
 		{
@@ -68,6 +85,13 @@ public class BC_UTILS
 		return res;
 	}
 
+/**
+ * helper-method to save a list of strings to a file
+ *
+ * @param lines			list of strings to be saved
+ * @param filename		path of file to be written into
+ * @return 				was the operation successful ?
+*/
 	public static boolean save_to_file( final List< String > lines, final String filename )
 	{
 		boolean res = create_paths_if_neccessary( filename );
@@ -89,6 +113,13 @@ public class BC_UTILS
 		return res;
 	}
 
+/**
+ * helper-method to save a ByteBuffer to a file
+ *
+ * @param buf			ByteBuffer to be written
+ * @param filename		path of file to be written into
+ * @return 				was the operation successful ?
+*/
 	public static boolean write_to_file( final ByteBuffer buf, final String filename )
 	{
 		boolean res = create_paths_if_neccessary( filename );

@@ -40,7 +40,7 @@ import com.google.gson.stream.JsonReader;
  * utility class to extract values from json using google's parser
  *
 */
-class BC_JSON_UTILS
+public final class BC_JSON_UTILS
 {
 
 /**

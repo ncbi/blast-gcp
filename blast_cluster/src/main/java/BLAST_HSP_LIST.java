@@ -27,14 +27,26 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 
-class BLAST_HSP_LIST implements Serializable
+/**
+ * storage for the output of blast-search
+ * name and layout is coupled with the BLAST_LIB-class and the C++-code
+ *
+ * @see BLAST_LIB
+*/
+public final class BLAST_HSP_LIST implements Serializable
 {
-    //public BLAST_DATABASE_PART part;
-    //public BLAST_REQUEST req;
     public int oid;
     public int max_score;
     public byte[] hsp_blob;
 
+
+/**
+ * constructor providing values for internal fields
+ *
+ * @param	oid 		OID - value ( object-ID ? )
+ * @param	max_score	highest score for search-results
+ * @param	hsp_blob	opaque HSP-blob
+*/
     public BLAST_HSP_LIST( int oid, int max_score, byte[] hsp_blob )
     {
         this.oid = oid;
@@ -42,31 +54,15 @@ class BLAST_HSP_LIST implements Serializable
         this.hsp_blob = hsp_blob;
     }
 
+/**
+ * test for empty-ness
+ *
+ * @return		is this HSP-list empty ?
+*/
     public Boolean isEmpty()
     {
         if (hsp_blob == null) return true;
         return (hsp_blob.length == 0);
     }
-
-    /*
-    @Override public String toString()
-    {
-        String res = "";
-        res += String.format("  HSPLIST( partition=%s request=%s )", part.toString(), req.toString());
-        res += "\n         oid = " + oid;
-        res += "\n   max_score = " + max_score;
-        res += "\n" + String.format("        blob = %d bytes:", hsp_blob.length);
-        res += "\n      ";
-        int brk = 0;
-        for (int i = 0; i != hsp_blob.length; ++i) {
-          byte b = hsp_blob[i];
-          res += String.format("%02x", b);
-          ++brk;
-          if ((brk % 4) == 0) res += " ";
-        }
-        res += "\n";
-        return res;
-    }
-    */
 }
 

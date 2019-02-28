@@ -246,7 +246,7 @@ class BC_BUCKET_LIST extends BC_LIST
  * @see BC_CONTEXT
  * @see BC_LIST
 */
-public class BC_LISTS
+public final class BC_LISTS
 {
     private final BC_CONTEXT context;
     private final List< BC_LIST > lists;

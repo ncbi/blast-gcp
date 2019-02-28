@@ -31,7 +31,7 @@ import java.io.Serializable;
 /**
  * class to store all parts needed to preform a request
 */
-class BC_REQUEST implements Serializable
+public final class BC_REQUEST implements Serializable
 {
     public String id, db, query_seq, program, params, ack_id;
     public Integer top_n_prelim;

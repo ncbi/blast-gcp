@@ -61,7 +61,7 @@ import com.google.api.services.storage.model.StorageObject;
  * - has a static instance of itself, to function as singleton
  *
 */
-class BC_GCP_TOOLS
+public class BC_GCP_TOOLS
 {
     private static BC_GCP_TOOLS instance = null;
     private Storage storage = null;
@@ -299,12 +299,11 @@ class BC_GCP_TOOLS
  * public static method to download a file from a bucket to the local filesystem
  *
  * @param  bucket        url of the bucket
- * @param  key           name of the 'file' in the bucket to be downloaded
  * @param  dst_filename  absolute path of destination-file to be created
  *
  * return  success of operation
 */
-    public static boolean download( final String gs_uri, final String dst_filename )
+    public static boolean download( final String bucket, final String dst_filename )
     {
         boolean res = false;
         BC_GCP_TOOLS inst = getInstance();
@@ -312,14 +311,13 @@ class BC_GCP_TOOLS
 		{
 		    try
 		    {
-		        URI uri = new URI( gs_uri );
+		        URI uri = new URI( bucket );
 		        if ( uri.getScheme().equals( "gs" ) )
 		        {
-		            String bucket = uri.getAuthority();
 		            String key = uri.getPath();
 		            if ( key.startsWith( "/" ) )
 		                key = key.substring( 1 );
-		            return inst.download_to_file( bucket, key, dst_filename );
+		            return inst.download_to_file( uri.getAuthority(), key, dst_filename );
 		        }
 		    }
 		    catch( URISyntaxException e )
@@ -336,7 +334,7 @@ class BC_GCP_TOOLS
  *
  * return  InputStream to be read from
 */
-    public static InputStream download( final String gs_uri )
+    public static InputStream download( final String bucket )
     {
         InputStream res = null;
         BC_GCP_TOOLS inst = getInstance();
@@ -344,14 +342,13 @@ class BC_GCP_TOOLS
 		{
 		    try
 		    {
-		        URI uri = new URI( gs_uri );
+		        URI uri = new URI( bucket );
 		        if ( uri.getScheme().equals( "gs" ) )
 		        {
-		            String bucket = uri.getAuthority();
 		            String key = uri.getPath();
 		            if ( key.startsWith( "/" ) )
 		                key = key.substring( 1 );
-		            return inst.download_as_stream( bucket, key );
+		            return inst.download_as_stream( uri.getAuthority(), key );
 		        }
 		    }
 		    catch( URISyntaxException e )

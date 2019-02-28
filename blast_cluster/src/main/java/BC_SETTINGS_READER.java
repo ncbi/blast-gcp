@@ -39,6 +39,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.stream.JsonReader;
 
+/**
+ * reads the pubsub-section of the requests-section of the settings-json-file
+ *
+*/
 class REQUESTS_PUBSUB_SETTINGS_READER
 {
     private static final String key = "pubsub";
@@ -46,6 +50,14 @@ class REQUESTS_PUBSUB_SETTINGS_READER
     private static final String key_project_id = "project_id";
     private static final String key_subscript_id = "subscript_id";
 
+/**
+ * extracts all pubsub-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -61,12 +73,24 @@ class REQUESTS_PUBSUB_SETTINGS_READER
     }
 }
 
+/**
+ * reads the files-section of the requests-section of the settings-json-file
+ *
+*/
 class REQUESTS_FILES_SETTINGS_READER
 {
     private static final String key = "files";
     private static final String key_use = "use";
     private static final String key_dir = "dir";
 
+/**
+ * extracts all files-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -78,12 +102,24 @@ class REQUESTS_FILES_SETTINGS_READER
     }
 }
 
+/**
+ * reads the socket-section of the requests-section of the settings-json-file
+ *
+*/
 class REQUESTS_SOCKET_SETTINGS_READER
 {
     private static final String key = "socket";
     private static final String key_use = "use";
     private static final String key_port = "port";
 
+/**
+ * extracts all socket-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -97,13 +133,27 @@ class REQUESTS_SOCKET_SETTINGS_READER
     }
 }
 
-
+/**
+ * reads the requests-section of the settings-json-file
+ *
+*/
 class REQUESTS_SETTINGS_READER
 {
     // ------------------- sections in json-file ----------------------------------
     private static final String key = "requests";
     private static final String key_max_backlog = "max_backlog";
 
+/**
+ * extracts all requests-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+ * @see 	REQUESTS_PUBSUB_SETTINGS_READER
+ * @see 	REQUESTS_FILES_SETTINGS_READER
+ * @see 	REQUESTS_SOCKET_SETTINGS_READER
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -118,6 +168,10 @@ class REQUESTS_SETTINGS_READER
     }
 }
 
+/**
+ * reads the database-section of the settings-json-file
+ *
+*/
 class DATABASES_SETTINGS_READER
 {
     private static final String key = "databases";
@@ -128,6 +182,15 @@ class DATABASES_SETTINGS_READER
     private static final String key_direct = "direct";
     private static final String key_limit = "limit";
 
+/**
+ * extracts all database-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_DATABASE_SETTING
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
 		JsonArray db_list_array = BC_JSON_UTILS.get_sub_array( root, key );
@@ -161,6 +224,10 @@ class DATABASES_SETTINGS_READER
     }
 }
 
+/**
+ * reads the result-bucket-section of the settings-json-file
+ *
+*/
 class RESULTS_BUCKET_SETTINGS_READER
 {
     private static final String key = "bucket";
@@ -168,6 +235,14 @@ class RESULTS_BUCKET_SETTINGS_READER
     private static final String key_bucket = "bucket";
     private static final String key_pattern = "pattern";
 
+/**
+ * extracts all bucket-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -183,6 +258,10 @@ class RESULTS_BUCKET_SETTINGS_READER
     }
 }
 
+/**
+ * reads the result-files-section of the settings-json-file
+ *
+*/
 class RESULTS_FILES_SETTINGS_READER
 {
     private static final String key = "files";
@@ -190,6 +269,14 @@ class RESULTS_FILES_SETTINGS_READER
     private static final String key_dir = "dir";
     private static final String key_pattern = "pattern";
 
+/**
+ * extracts all files-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -205,11 +292,24 @@ class RESULTS_FILES_SETTINGS_READER
     }
 }
 
+/**
+ * reads the result-section of the settings-json-file
+ *
+*/
 class RESULTS_SETTINGS_READER
 {
     private static final String key = "results";
 
-
+/**
+ * extracts all result-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+ * @see 	RESULTS_BUCKET_SETTINGS_READER
+ * @see 	RESULTS_FILES_SETTINGS_READER
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -221,6 +321,10 @@ class RESULTS_SETTINGS_READER
     }
 }
 
+/**
+ * reads the cluster-section of the settings-json-file
+ *
+*/
 class CLUSTER_SETTINGS_READER
 {
     private static final String key = "cluster";
@@ -239,6 +343,14 @@ class CLUSTER_SETTINGS_READER
     private static final String key_jni_log_level = "jni_log_level";
     private static final String  dflt_transfer_file = "libblastjni.so";
 
+/**
+ * extracts all cluster-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	settings	BC_SETTINGS-instance to write into
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -274,6 +386,10 @@ class CLUSTER_SETTINGS_READER
     }
 }
 
+/**
+ * reads the debug-section of the settings-json-file
+ *
+*/
 class DEBUG_SETTINGS_READER
 {
     private static final String key = "debug";
@@ -290,6 +406,15 @@ class DEBUG_SETTINGS_READER
     private static final String key_req_add = "req_add";
     private static final String key_avg_time = "avg_time";
 
+/**
+ * extracts all cluster-settings from the JsonObject
+ *
+ * @param	root	    JsonObject to extract values from
+ * @param	setting 	BC_DEBUG_SETTINGS-instance to write into
+ * @param	a_jni_log_level	jni-log-level to be written into the debug-settings
+ * @see 	BC_JSON_UTILS
+ * @see 	BC_SETTINGS
+*/
     public static void from_json( JsonObject root, BC_DEBUG_SETTINGS setting, final String a_jni_log_level )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
@@ -309,21 +434,36 @@ class DEBUG_SETTINGS_READER
             setting.req_file_added = BC_JSON_UTILS.get_json_bool( obj, key_req_file_add, setting.req_file_added );
             setting.req_added      = BC_JSON_UTILS.get_json_bool( obj, key_req_add, setting.req_added );
             setting.avg_time       = BC_JSON_UTILS.get_json_bool( obj, key_avg_time, setting.avg_time  );
-
-            setting.jni_log_level = a_jni_log_level;
         }
 		else
-		{
             setting.host = BC_UTILS.get_local_host( setting.host );
-		}
+
+		setting.jni_log_level = a_jni_log_level;
     }
 }
 
-public class BC_SETTINGS_READER
+/**
+ * reads all sections of the the settings-json-file
+ *
+*/
+public final class BC_SETTINGS_READER
 {
     // ------------------- keys in json-file ---------------------------------------
     public static final String key_appName = "appName";
 
+/**
+ * extracts all settings from the given json-file
+ *
+ * @param	json_file   path of file to be parsed into settings
+ * @param	appName		application name to be written into the settings
+ * @see 	BC_SETTINGS
+ * @see 	BC_JSON_UTILS
+ * @see 	REQUESTS_SETTINGS_READER
+ * @see 	DATABASES_SETTINGS_READER
+ * @see 	RESULTS_SETTINGS_READER
+ * @see 	CLUSTER_SETTINGS_READER
+ * @see 	DEBUG_SETTINGS_READER
+*/
     public static BC_SETTINGS read_from_json( final String json_file, final String appName )
     {
         BC_SETTINGS res = new BC_SETTINGS();
@@ -351,6 +491,13 @@ public class BC_SETTINGS_READER
         return res;
     }
 
+/**
+ * creates a spark-context and configures it based on the given settings
+ *
+ * @param	settings	BC_SETTINGS-instance to be used to configure the spark-context
+ *
+ * @see 	BC_SETTINGS
+*/
     public static SparkConf createSparkConfAndConfigure( BC_SETTINGS settings )
     {
         SparkConf conf = new SparkConf();
@@ -385,3 +532,4 @@ public class BC_SETTINGS_READER
         return conf;
     }
 }
+

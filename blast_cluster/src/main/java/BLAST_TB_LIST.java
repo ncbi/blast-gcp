@@ -28,20 +28,27 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.io.IOException;
 import java.io.Serializable;
 
-
-class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
+/**
+ * storage for the output of traceback
+ * name and layout is coupled with the BLAST_LIB-class and the C++-code
+ *
+ * @see BLAST_LIB
+*/
+public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
 {
     static double epsilon = 1.0e-6;
-
-    /*
-    public BLAST_DATABASE_PART part;
-    public BLAST_REQUEST req;
-    */
     public int oid;
     public double evalue;
     public byte[] asn1_blob;
     public int top_n;
 
+/**
+ * constructor providing values for internal fields
+ *
+ * @param	oid 		OID - value ( object-ID ? )
+ * @param	evalue		value to be used for sorting
+ * @param	asn1_blob	opaque asn1-blob, the traceback-result
+*/
     public BLAST_TB_LIST( int oid, double evalue, byte[] asn1_blob )
     {
         this.oid = oid;
@@ -49,14 +56,26 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         this.asn1_blob = asn1_blob;
     }
 
+/**
+ * test for empty-ness
+ *
+ * @return		is this traceback-result-list empty ?
+*/
     public Boolean isEmpty()
     {
         return ( asn1_blob.length == 0 );
     }
 
-    /* recommended by BLAST-team */
+/**
+ * fuzzy comparison for sorting
+ *
+ * @param evalue1	first evalue to compare
+ * @param evalue2	second evalue to compare
+ * @return			0...evalue1==evalue2, -1...evalue1<evalue2, +1...evalue1>evalue2
+*/
     static int FuzzyEvalueComp( double evalue1, double evalue2 )
     {
+    	/* recommended by BLAST-team */
         if ( evalue1 < ( 1.0 - epsilon ) * evalue2 )
         {
             return -1;
@@ -71,13 +90,13 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
         }
     }
 
-    /*
-        0  ... equal
-        -1 ... this > other
-        +1 ... this < other
-    */
-    @Override
-    public int compareTo( BLAST_TB_LIST other )
+/**
+ * overriden comparison, for sorting
+ *
+ * @param other		other instance to compare against
+ * @return			0...equal, -1...this > other, +1...this < other
+*/
+    @Override public int compareTo( BLAST_TB_LIST other )
     {
         // ascending order
         double delta = ( this.evalue - other.evalue );
@@ -97,31 +116,6 @@ class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_LIST >
             return -1;
     }
 
-    /*
-    public static String toHex(byte[] blob)
-    {
-        String res = "";
-        res += "\n        ";
-        int brk = 0;
-        for ( byte b : blob )
-        {
-            res += String.format( "%02x", b );
-            ++brk;
-            if ( ( brk % 4 ) == 0 ) res += " ";
-            if ( ( brk % 32 ) == 0 ) res += "\n        ";
-        }
-        res += "\n";
-        return res;
-    }
-
-    @Override public String toString()
-    {
-        String res = String.format("  TBLIST( %s %s )", part.toString(), req.toString() );
-        res += String.format("\n  evalue=%f oid=%d", evalue, oid);
-        if ( asn1_blob != null ) res += "\n  " + asn1_blob.length + " bytes in ASN.1 blob";
-        if ( asn1_blob != null ) res += toHex( asn1_blob );
-        return res;
-    }
-    */
+	
 }
 

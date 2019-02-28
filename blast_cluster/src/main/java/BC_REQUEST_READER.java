@@ -47,7 +47,7 @@ import com.google.gson.JsonArray;
  * utility-class to parse JSON into a BC_REQUEST object
  * @see BC_REQUEST
 */
-class BC_REQUEST_READER
+public final class BC_REQUEST_READER
 {
 /**
  * parse a String into a Json-Element using the google-json parser
@@ -94,7 +94,7 @@ class BC_REQUEST_READER
 /**
  * parse a gs:// uri into a Json-Element using the google-json parser
  *
- * @param path		uri of file to be parsed
+ * @param uri		uri of file to be parsed
  * @return          json-element representing the input
 */
 	private static JsonElement parse_gs_file_2_tree( final URI uri )

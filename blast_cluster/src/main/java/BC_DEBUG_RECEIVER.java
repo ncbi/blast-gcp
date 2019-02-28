@@ -121,7 +121,7 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
  *
  * @see        BC_CONTEXT
 */
-class BC_DEBUG_RECEIVER extends Thread
+public final class BC_DEBUG_RECEIVER extends Thread
 {
     private final BC_CONTEXT context;
 	private List< BC_DEBUG_RECEIVER_CLIENT > clients;

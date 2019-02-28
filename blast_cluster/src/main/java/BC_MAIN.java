@@ -60,14 +60,13 @@ public final class BC_MAIN
  *     requests, list of requests, buckets of requests, quit
  * - join threads in BC_JOBS, BC_DEBUG_RECEICER, BC_CONSOLE and BC_CONTEXT
  *
- * @param args command-line arguments, 1st arg is name of settings-file
- * @return     void
+ * @param settings	parsed and validated application settings
  * @see		   BC_SETTINGS
  * @see        BC_SETTINGS_READER
  * @see        BC_CONTEXT
  * @see        BC_CONSOLE
  * @see        BC_DEBUG_RECEIVER
- * @see        DEBUG_SETTINGS
+ * @see        BC_DEBUG_SETTINGS
 */
 	private static void run( final BC_SETTINGS settings )
 	{
