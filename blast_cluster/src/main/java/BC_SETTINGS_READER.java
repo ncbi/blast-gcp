@@ -53,23 +53,23 @@ class REQUESTS_PUBSUB_SETTINGS_READER
 /**
  * extracts all pubsub-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-        	settings.req_use_pubsub = BC_JSON_UTILS.get_json_bool( obj, key_use,
-				settings.req_use_pubsub);
-        	settings.req_pubsub_project_id = BC_JSON_UTILS.get_json_string( obj, key_project_id,
-				settings.req_pubsub_project_id );
-        	settings.req_pubsub_subscript_id = BC_JSON_UTILS.get_json_string( obj, key_subscript_id,
-				settings.req_pubsub_subscript_id );
-		}
+        if ( obj != null )
+        {
+            settings.req_use_pubsub = BC_JSON_UTILS.get_json_bool( obj, key_use,
+                settings.req_use_pubsub);
+            settings.req_pubsub_project_id = BC_JSON_UTILS.get_json_string( obj, key_project_id,
+                settings.req_pubsub_project_id );
+            settings.req_pubsub_subscript_id = BC_JSON_UTILS.get_json_string( obj, key_subscript_id,
+                settings.req_pubsub_subscript_id );
+        }
     }
 }
 
@@ -86,19 +86,19 @@ class REQUESTS_FILES_SETTINGS_READER
 /**
  * extracts all files-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-        	settings.req_use_files = BC_JSON_UTILS.get_json_bool( obj, key_use, settings.req_use_files );
-        	settings.req_files_dir = BC_JSON_UTILS.get_json_string( obj, key_dir, settings.req_files_dir );
-		}
+        if ( obj != null )
+        {
+            settings.req_use_files = BC_JSON_UTILS.get_json_bool( obj, key_use, settings.req_use_files );
+            settings.req_files_dir = BC_JSON_UTILS.get_json_string( obj, key_dir, settings.req_files_dir );
+        }
     }
 }
 
@@ -115,21 +115,21 @@ class REQUESTS_SOCKET_SETTINGS_READER
 /**
  * extracts all socket-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-        	settings.req_use_socket = BC_JSON_UTILS.get_json_bool( obj, key_use,
-				settings.req_use_socket );
-        	settings.req_port_nr = BC_JSON_UTILS.get_json_int( obj, key_port,
-				settings.req_port_nr );
-		}
+        if ( obj != null )
+        {
+            settings.req_use_socket = BC_JSON_UTILS.get_json_bool( obj, key_use,
+                settings.req_use_socket );
+            settings.req_port_nr = BC_JSON_UTILS.get_json_int( obj, key_port,
+                settings.req_port_nr );
+        }
     }
 }
 
@@ -146,25 +146,25 @@ class REQUESTS_SETTINGS_READER
 /**
  * extracts all requests-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
- * @see 	REQUESTS_PUBSUB_SETTINGS_READER
- * @see 	REQUESTS_FILES_SETTINGS_READER
- * @see 	REQUESTS_SOCKET_SETTINGS_READER
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
+ * @see     REQUESTS_PUBSUB_SETTINGS_READER
+ * @see     REQUESTS_FILES_SETTINGS_READER
+ * @see     REQUESTS_SOCKET_SETTINGS_READER
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-        	REQUESTS_PUBSUB_SETTINGS_READER.from_json( obj, settings );
-        	REQUESTS_FILES_SETTINGS_READER.from_json( obj, settings );
-       		REQUESTS_SOCKET_SETTINGS_READER.from_json( obj, settings );
-        	settings.req_max_backlog = BC_JSON_UTILS.get_json_int( obj, key_max_backlog,
-				settings.req_max_backlog );
-		}
+        if ( obj != null )
+        {
+            REQUESTS_PUBSUB_SETTINGS_READER.from_json( obj, settings );
+            REQUESTS_FILES_SETTINGS_READER.from_json( obj, settings );
+            REQUESTS_SOCKET_SETTINGS_READER.from_json( obj, settings );
+            settings.req_max_backlog = BC_JSON_UTILS.get_json_int( obj, key_max_backlog,
+                settings.req_max_backlog );
+        }
     }
 }
 
@@ -185,42 +185,42 @@ class DATABASES_SETTINGS_READER
 /**
  * extracts all database-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_DATABASE_SETTING
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_DATABASE_SETTING
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
-		JsonArray db_list_array = BC_JSON_UTILS.get_sub_array( root, key );
-		if ( db_list_array != null )
-		{
-			for ( JsonElement e : db_list_array )
-			{
+        JsonArray db_list_array = BC_JSON_UTILS.get_sub_array( root, key );
+        if ( db_list_array != null )
+        {
+            for ( JsonElement e : db_list_array )
+            {
                 if ( e.isJsonObject() )
                 {
                     JsonObject obj = e.getAsJsonObject();
-					BC_DATABASE_SETTING db_settings = new BC_DATABASE_SETTING();
+                    BC_DATABASE_SETTING db_settings = new BC_DATABASE_SETTING();
 
-					db_settings.key = BC_JSON_UTILS.get_json_string( obj, key_db,
-						db_settings.key );
-					db_settings.worker_location = BC_JSON_UTILS.get_json_string( obj,
-						key_w_loc, db_settings.worker_location );
-					db_settings.source_location = BC_JSON_UTILS.get_json_string( obj,
-						key_s_loc, db_settings.source_location );
-    				BC_JSON_UTILS.get_string_list( obj, key_ext, "",
-						db_settings.extensions );
-        			db_settings.direct = BC_JSON_UTILS.get_json_bool( obj,
-						key_direct, db_settings.direct );
-        			db_settings.limit = BC_JSON_UTILS.get_json_int( obj,
-						key_limit, db_settings.limit );
+                    db_settings.key = BC_JSON_UTILS.get_json_string( obj, key_db,
+                        db_settings.key );
+                    db_settings.worker_location = BC_JSON_UTILS.get_json_string( obj,
+                        key_w_loc, db_settings.worker_location );
+                    db_settings.source_location = BC_JSON_UTILS.get_json_string( obj,
+                        key_s_loc, db_settings.source_location );
+                    BC_JSON_UTILS.get_string_list( obj, key_ext, "",
+                        db_settings.extensions );
+                    db_settings.direct = BC_JSON_UTILS.get_json_bool( obj,
+                        key_direct, db_settings.direct );
+                    db_settings.limit = BC_JSON_UTILS.get_json_int( obj,
+                        key_limit, db_settings.limit );
 
-					if ( !db_settings.key.isEmpty() )
-						settings.dbs.put( db_settings.key, db_settings );
-				}
-			}
-		}
+                    if ( !db_settings.key.isEmpty() )
+                        settings.dbs.put( db_settings.key, db_settings );
+                }
+            }
+        }
     }
 }
 
@@ -238,23 +238,23 @@ class RESULTS_BUCKET_SETTINGS_READER
 /**
  * extracts all bucket-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-        	settings.res_use_gs_bucket = BC_JSON_UTILS.get_json_bool( obj,
-				key_use, settings.res_use_gs_bucket  );
-	        settings.res_gs_bucket = BC_JSON_UTILS.get_json_string( obj,
-				key_bucket, settings.res_gs_bucket );
-    	    settings.res_gs_pattern = BC_JSON_UTILS.get_json_string( obj,
-				key_pattern, settings.res_gs_pattern );
-		}
+        if ( obj != null )
+        {
+            settings.res_use_gs_bucket = BC_JSON_UTILS.get_json_bool( obj,
+                key_use, settings.res_use_gs_bucket  );
+            settings.res_gs_bucket = BC_JSON_UTILS.get_json_string( obj,
+                key_bucket, settings.res_gs_bucket );
+            settings.res_gs_pattern = BC_JSON_UTILS.get_json_string( obj,
+                key_pattern, settings.res_gs_pattern );
+        }
     }
 }
 
@@ -272,23 +272,23 @@ class RESULTS_FILES_SETTINGS_READER
 /**
  * extracts all files-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-        	settings.res_use_files = BC_JSON_UTILS.get_json_bool( obj,
-				key_use, settings.res_use_files );
-	        settings.res_files_dir = BC_JSON_UTILS.get_json_string( obj,
-				key_dir, settings.res_files_dir );
-        	settings.res_files_pattern = BC_JSON_UTILS.get_json_string( obj,
-				key_pattern, settings.res_files_pattern );
-		}
+        if ( obj != null )
+        {
+            settings.res_use_files = BC_JSON_UTILS.get_json_bool( obj,
+                key_use, settings.res_use_files );
+            settings.res_files_dir = BC_JSON_UTILS.get_json_string( obj,
+                key_dir, settings.res_files_dir );
+            settings.res_files_pattern = BC_JSON_UTILS.get_json_string( obj,
+                key_pattern, settings.res_files_pattern );
+        }
     }
 }
 
@@ -303,21 +303,21 @@ class RESULTS_SETTINGS_READER
 /**
  * extracts all result-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
- * @see 	RESULTS_BUCKET_SETTINGS_READER
- * @see 	RESULTS_FILES_SETTINGS_READER
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
+ * @see     RESULTS_BUCKET_SETTINGS_READER
+ * @see     RESULTS_FILES_SETTINGS_READER
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-			RESULTS_BUCKET_SETTINGS_READER.from_json( obj, settings );
-			RESULTS_FILES_SETTINGS_READER.from_json( obj, settings );
-		}
+        if ( obj != null )
+        {
+            RESULTS_BUCKET_SETTINGS_READER.from_json( obj, settings );
+            RESULTS_FILES_SETTINGS_READER.from_json( obj, settings );
+        }
     }
 }
 
@@ -346,43 +346,43 @@ class CLUSTER_SETTINGS_READER
 /**
  * extracts all cluster-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	settings	BC_SETTINGS-instance to write into
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   settings    BC_SETTINGS-instance to write into
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_SETTINGS settings )
     {
         JsonObject obj = BC_JSON_UTILS.get_sub( root, key );
-		if ( obj != null )
-		{
-		    BC_JSON_UTILS.get_string_list( obj, key_transfer_files, dflt_transfer_file,
-				settings.transfer_files );
-		    settings.spark_log_level = BC_JSON_UTILS.get_json_string( obj,
-				key_spark_log_level, settings.spark_log_level );
-		    settings.locality_wait = BC_JSON_UTILS.get_json_string( obj,
-				key_locality_wait, settings.locality_wait );
-		    settings.set_dyn_alloc = BC_JSON_UTILS.get_json_bool( obj,
-				key_set_dyn_alloc, settings.set_dyn_alloc );
-		    settings.with_dyn_alloc = BC_JSON_UTILS.get_json_bool( obj,
-				key_with_dyn_alloc, settings.with_dyn_alloc );
-		    settings.executor_memory = BC_JSON_UTILS.get_json_string( obj,
-				key_executor_memory, settings.executor_memory );
-		    settings.set_shuffle_reduceLocality = BC_JSON_UTILS.get_json_bool( obj,
-				key_set_shuffle_reduceLocality, settings.set_shuffle_reduceLocality );
-		    settings.shuffle_reduceLocality = BC_JSON_UTILS.get_json_bool( obj,
-				key_shuffle_reduceLocality, settings.shuffle_reduceLocality );
-		    settings.scheduler_fair = BC_JSON_UTILS.get_json_bool( obj,
-				key_scheduler_fair, settings.scheduler_fair );
-		    settings.num_executors = BC_JSON_UTILS.get_json_int( obj,
-				key_num_executors, settings.num_executors );
-		    settings.num_executor_cores = BC_JSON_UTILS.get_json_int( obj,
-				key_num_executor_cores, settings.num_executor_cores );
-		    settings.parallel_jobs = BC_JSON_UTILS.get_json_int( obj,
-				key_parallel_jobs, settings.parallel_jobs);
-		    settings.jni_log_level = BC_JSON_UTILS.get_json_string( obj,
-				key_jni_log_level, settings.jni_log_level );
-		}
+        if ( obj != null )
+        {
+            BC_JSON_UTILS.get_string_list( obj, key_transfer_files, dflt_transfer_file,
+                settings.transfer_files );
+            settings.spark_log_level = BC_JSON_UTILS.get_json_string( obj,
+                key_spark_log_level, settings.spark_log_level );
+            settings.locality_wait = BC_JSON_UTILS.get_json_string( obj,
+                key_locality_wait, settings.locality_wait );
+            settings.set_dyn_alloc = BC_JSON_UTILS.get_json_bool( obj,
+                key_set_dyn_alloc, settings.set_dyn_alloc );
+            settings.with_dyn_alloc = BC_JSON_UTILS.get_json_bool( obj,
+                key_with_dyn_alloc, settings.with_dyn_alloc );
+            settings.executor_memory = BC_JSON_UTILS.get_json_string( obj,
+                key_executor_memory, settings.executor_memory );
+            settings.set_shuffle_reduceLocality = BC_JSON_UTILS.get_json_bool( obj,
+                key_set_shuffle_reduceLocality, settings.set_shuffle_reduceLocality );
+            settings.shuffle_reduceLocality = BC_JSON_UTILS.get_json_bool( obj,
+                key_shuffle_reduceLocality, settings.shuffle_reduceLocality );
+            settings.scheduler_fair = BC_JSON_UTILS.get_json_bool( obj,
+                key_scheduler_fair, settings.scheduler_fair );
+            settings.num_executors = BC_JSON_UTILS.get_json_int( obj,
+                key_num_executors, settings.num_executors );
+            settings.num_executor_cores = BC_JSON_UTILS.get_json_int( obj,
+                key_num_executor_cores, settings.num_executor_cores );
+            settings.parallel_jobs = BC_JSON_UTILS.get_json_int( obj,
+                key_parallel_jobs, settings.parallel_jobs);
+            settings.jni_log_level = BC_JSON_UTILS.get_json_string( obj,
+                key_jni_log_level, settings.jni_log_level );
+        }
     }
 }
 
@@ -409,11 +409,11 @@ class DEBUG_SETTINGS_READER
 /**
  * extracts all cluster-settings from the JsonObject
  *
- * @param	root	    JsonObject to extract values from
- * @param	setting 	BC_DEBUG_SETTINGS-instance to write into
- * @param	a_jni_log_level	jni-log-level to be written into the debug-settings
- * @see 	BC_JSON_UTILS
- * @see 	BC_SETTINGS
+ * @param   root        JsonObject to extract values from
+ * @param   setting     BC_DEBUG_SETTINGS-instance to write into
+ * @param   a_jni_log_level jni-log-level to be written into the debug-settings
+ * @see     BC_JSON_UTILS
+ * @see     BC_SETTINGS
 */
     public static void from_json( JsonObject root, BC_DEBUG_SETTINGS setting, final String a_jni_log_level )
     {
@@ -435,10 +435,10 @@ class DEBUG_SETTINGS_READER
             setting.req_added      = BC_JSON_UTILS.get_json_bool( obj, key_req_add, setting.req_added );
             setting.avg_time       = BC_JSON_UTILS.get_json_bool( obj, key_avg_time, setting.avg_time  );
         }
-		else
+        else
             setting.host = BC_UTILS.get_local_host( setting.host );
 
-		setting.jni_log_level = a_jni_log_level;
+        setting.jni_log_level = a_jni_log_level;
     }
 }
 
@@ -454,15 +454,15 @@ public final class BC_SETTINGS_READER
 /**
  * extracts all settings from the given json-file
  *
- * @param	json_file   path of file to be parsed into settings
- * @param	appName		application name to be written into the settings
- * @see 	BC_SETTINGS
- * @see 	BC_JSON_UTILS
- * @see 	REQUESTS_SETTINGS_READER
- * @see 	DATABASES_SETTINGS_READER
- * @see 	RESULTS_SETTINGS_READER
- * @see 	CLUSTER_SETTINGS_READER
- * @see 	DEBUG_SETTINGS_READER
+ * @param   json_file   path of file to be parsed into settings
+ * @param   appName     application name to be written into the settings
+ * @see     BC_SETTINGS
+ * @see     BC_JSON_UTILS
+ * @see     REQUESTS_SETTINGS_READER
+ * @see     DATABASES_SETTINGS_READER
+ * @see     RESULTS_SETTINGS_READER
+ * @see     CLUSTER_SETTINGS_READER
+ * @see     DEBUG_SETTINGS_READER
 */
     public static BC_SETTINGS read_from_json( final String json_file, final String appName )
     {
@@ -473,16 +473,16 @@ public final class BC_SETTINGS_READER
             JsonParser parser = new JsonParser();
             JsonElement tree = parser.parse( new FileReader( json_file ) );
             if ( tree.isJsonObject() )
-			{
+            {
                 JsonObject root = tree.getAsJsonObject();
 
-				res.appName = BC_JSON_UTILS.get_json_string( root, key_appName, appName );
-		        REQUESTS_SETTINGS_READER.from_json( root, res );
-		        DATABASES_SETTINGS_READER.from_json( root, res );
-		        RESULTS_SETTINGS_READER.from_json( root, res );
-		        CLUSTER_SETTINGS_READER.from_json( root, res );
-				DEBUG_SETTINGS_READER.from_json( root, res.debug, res.jni_log_level );
-			}
+                res.appName = BC_JSON_UTILS.get_json_string( root, key_appName, appName );
+                REQUESTS_SETTINGS_READER.from_json( root, res );
+                DATABASES_SETTINGS_READER.from_json( root, res );
+                RESULTS_SETTINGS_READER.from_json( root, res );
+                CLUSTER_SETTINGS_READER.from_json( root, res );
+                DEBUG_SETTINGS_READER.from_json( root, res.debug, res.jni_log_level );
+            }
         }           
         catch( Exception e )
         {
@@ -494,26 +494,26 @@ public final class BC_SETTINGS_READER
 /**
  * creates a spark-context and configures it based on the given settings
  *
- * @param	settings	BC_SETTINGS-instance to be used to configure the spark-context
+ * @param   settings    BC_SETTINGS-instance to be used to configure the spark-context
  *
- * @see 	BC_SETTINGS
+ * @see     BC_SETTINGS
 */
     public static SparkConf createSparkConfAndConfigure( BC_SETTINGS settings )
     {
         SparkConf conf = new SparkConf();
         conf.setAppName( settings.appName );
 
-		if ( !settings.locality_wait.isEmpty() )
-	        conf.set( "spark.locality.wait", settings.locality_wait );
+        if ( !settings.locality_wait.isEmpty() )
+            conf.set( "spark.locality.wait", settings.locality_wait );
 
-		if ( settings.set_dyn_alloc )
-	        conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( settings.with_dyn_alloc ) );
+        if ( settings.set_dyn_alloc )
+            conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( settings.with_dyn_alloc ) );
 
         if ( !settings.executor_memory.isEmpty() )
             conf.set( "spark.executor.memory", settings.executor_memory );
 
-		if ( settings.set_shuffle_reduceLocality )
-	        conf.set( "spark.shuffle.reduceLocality.enabled", Boolean.toString( settings.shuffle_reduceLocality ) );
+        if ( settings.set_shuffle_reduceLocality )
+            conf.set( "spark.shuffle.reduceLocality.enabled", Boolean.toString( settings.shuffle_reduceLocality ) );
 
         if ( settings.scheduler_fair )
         {
@@ -523,7 +523,7 @@ public final class BC_SETTINGS_READER
 
         if ( settings.num_executors > 0 )
             conf.set( "spark.executor.instances", String.format( "%d", settings.num_executors ) );
-		else
+        else
             conf.set( "spark.dynamicAllocation.enabled", Boolean.toString( true ) );
 
         if ( settings.num_executor_cores > 0 )

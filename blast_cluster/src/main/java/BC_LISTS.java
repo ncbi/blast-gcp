@@ -52,9 +52,9 @@ class BC_LIST extends Thread
 {
     protected final BC_CONTEXT context;
     protected final String srcName;
-	protected final int limit;
-	protected final PrintStream ps;
-	protected int line_nr = 0;
+    protected final int limit;
+    protected final PrintStream ps;
+    protected int line_nr = 0;
     protected final AtomicBoolean running;
 
 /**
@@ -69,11 +69,11 @@ class BC_LIST extends Thread
     public BC_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
     {
         context = a_context;
-		srcName = a_srcName;
-		limit = a_limit;
-		ps = a_ps;
-		line_nr = 0;
-		running = new AtomicBoolean( true );
+        srcName = a_srcName;
+        limit = a_limit;
+        ps = a_ps;
+        line_nr = 0;
+        running = new AtomicBoolean( true );
     }
 
 /**
@@ -85,12 +85,12 @@ class BC_LIST extends Thread
  *
  * @return is the list still running ?
 */
-	protected boolean is_running()
-	{
-		boolean res = ( context.is_running() && running.get() );
-		if ( res && limit > 0 ) res = ( line_nr <= limit );
-		return res;
-	}
+    protected boolean is_running()
+    {
+        boolean res = ( context.is_running() && running.get() );
+        if ( res && limit > 0 ) res = ( line_nr <= limit );
+        return res;
+    }
 
 /**
  * helper-method to loop until the application-context has accepted
@@ -100,24 +100,24 @@ class BC_LIST extends Thread
  * @param request_filename name/url of request-file to be queued in app.-context
 */
 
-	protected void submitFile( final String request_filename )
-	{
-		boolean done = false;
-		while( context.is_running() && !done )
-		{
-			int res = context.add_request_file( request_filename, ps );
-			done = ( res != 0 );	/* 0...not done( because no space in queue, 1...done, -1...invalid */
-			if ( context.is_running() && !done )
-			{
-				try
-				{
-					Thread.sleep( 250 );
-				}
-				catch ( InterruptedException e ) { }
-			}
-		}
-		line_nr += 1;
-	}
+    protected void submitFile( final String request_filename )
+    {
+        boolean done = false;
+        while( context.is_running() && !done )
+        {
+            int res = context.add_request_file( request_filename, ps );
+            done = ( res != 0 );    /* 0...not done( because no space in queue, 1...done, -1...invalid */
+            if ( context.is_running() && !done )
+            {
+                try
+                {
+                    Thread.sleep( 250 );
+                }
+                catch ( InterruptedException e ) { }
+            }
+        }
+        line_nr += 1;
+    }
 }
 
 /**
@@ -141,7 +141,7 @@ class BC_FILE_LIST extends BC_LIST
 */
     public BC_FILE_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
     {
-		super( a_context, a_srcName, a_ps, a_limit );
+        super( a_context, a_srcName, a_ps, a_limit );
     }
 
 /**
@@ -154,14 +154,14 @@ class BC_FILE_LIST extends BC_LIST
  *
 */
     @Override public void run()
-	{
-		ps.printf( String.format( "request-list '%s' start\n", srcName ) );
-		try
-		{
-		    FileInputStream fs = new FileInputStream( srcName );
-		    BufferedReader br = new BufferedReader( new InputStreamReader( fs ) );
-		    String line;
-		    String src = "";
+    {
+        ps.printf( String.format( "request-list '%s' start\n", srcName ) );
+        try
+        {
+            FileInputStream fs = new FileInputStream( srcName );
+            BufferedReader br = new BufferedReader( new InputStreamReader( fs ) );
+            String line;
+            String src = "";
 
             while ( is_running() && ( ( line = br.readLine() ) != null ) )
             {
@@ -175,19 +175,19 @@ class BC_FILE_LIST extends BC_LIST
                     {
                         if ( !src.isEmpty() )
                             submitFile( String.format( "%s/%s", src, line.trim() ) );
-						else
-							submitFile( line.trim() );
+                        else
+                            submitFile( line.trim() );
                     }
                 }
             }
             br.close();
-		}
+        }
         catch( Exception e )
         {
             ps.printf( String.format( "request-list '%s' : %s", srcName, e ) );
         }
-		ps.printf( String.format( "request-list '%s' done\n", srcName ) );
-	}
+        ps.printf( String.format( "request-list '%s' done\n", srcName ) );
+    }
 }
 
 /**
@@ -211,7 +211,7 @@ class BC_BUCKET_LIST extends BC_LIST
 */
     public BC_BUCKET_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
     {
-		super( a_context, a_srcName, a_ps, a_limit );
+        super( a_context, a_srcName, a_ps, a_limit );
     }
 
 /**
@@ -223,21 +223,21 @@ class BC_BUCKET_LIST extends BC_LIST
  *
 */
     @Override public void run()
-	{
-		ps.printf( String.format( "bucket-list '%s' start\n", srcName ) );
+    {
+        ps.printf( String.format( "bucket-list '%s' start\n", srcName ) );
 
-		List< String > files = BC_GCP_TOOLS.list( srcName );
-		Iterator< String > iter = files.iterator();
-		
+        List< String > files = BC_GCP_TOOLS.list( srcName );
+        Iterator< String > iter = files.iterator();
+        
         while ( is_running() && iter.hasNext() )
-		{
-			String fn = iter.next();
-			if ( fn.endsWith( "json" ) )
-				submitFile( String.format( "%s/%s", srcName, fn ) );
-		}
+        {
+            String fn = iter.next();
+            if ( fn.endsWith( "json" ) )
+                submitFile( String.format( "%s/%s", srcName, fn ) );
+        }
 
-		ps.printf( String.format( "bucket-list '%s' done\n", srcName ) );
-	}
+        ps.printf( String.format( "bucket-list '%s' done\n", srcName ) );
+    }
 }
 
 /**
@@ -259,7 +259,7 @@ public final class BC_LISTS
 */
     public BC_LISTS( final BC_CONTEXT a_context )
     {
-		context = a_context;
+        context = a_context;
         lists = new ArrayList<>();
     }
 
@@ -269,25 +269,25 @@ public final class BC_LISTS
  * @param     list BC_LIST instance to join
  * @see       BC_LIST
 */
-	private void join_list( BC_LIST list )
-	{
-	    try { list.join(); }
-	    catch( InterruptedException e ) { }
-	}
+    private void join_list( BC_LIST list )
+    {
+        try { list.join(); }
+        catch( InterruptedException e ) { }
+    }
 
 /**
  * helper function to join all BC_LIST-instances that are terminated
  *
  * @see       BC_LIST
 */
-	private void join_done_list()
-	{
+    private void join_done_list()
+    {
         for ( BC_LIST list : lists )
-		{
-			if ( list.getState() == Thread.State.TERMINATED )
-				join_list( list );
-		}
-	}
+        {
+            if ( list.getState() == Thread.State.TERMINATED )
+                join_list( list );
+        }
+    }
 
 /**
  * helper function to add a new BC_FILE_LIST
@@ -297,16 +297,16 @@ public final class BC_LISTS
  * @param     limit      limit number of jobs in the list
  * @see       BC_LIST
 */
-	public void addFile( final String filename, final PrintStream ps, int limit )
-	{
-		/* try to join lists that are done */
-		join_done_list();
+    public void addFile( final String filename, final PrintStream ps, int limit )
+    {
+        /* try to join lists that are done */
+        join_done_list();
 
-		/* create a new list, and start it */
-		BC_LIST list = new BC_FILE_LIST( context, filename, ps, limit );
+        /* create a new list, and start it */
+        BC_LIST list = new BC_FILE_LIST( context, filename, ps, limit );
         lists.add( list );
-		list.start();
-	}
+        list.start();
+    }
 
 /**
  * helper function to add a new BC_BUCKET_LIST
@@ -316,16 +316,16 @@ public final class BC_LISTS
  * @param     limit      limit number of jobs in the list
  * @see       BC_LIST
 */
-	public void addBucket( final String bucketName, final PrintStream ps, int limit )
-	{
-		/* try to join lists that are done */
-		join_done_list();
+    public void addBucket( final String bucketName, final PrintStream ps, int limit )
+    {
+        /* try to join lists that are done */
+        join_done_list();
 
-		/* create a new list, and start it */
-		BC_LIST list = new BC_BUCKET_LIST( context, bucketName, ps, limit );
+        /* create a new list, and start it */
+        BC_LIST list = new BC_BUCKET_LIST( context, bucketName, ps, limit );
         lists.add( list );
-		list.start();
-	}
+        list.start();
+    }
 
 /**
  * helper function to join all running and terminated threads
@@ -334,17 +334,17 @@ public final class BC_LISTS
     public void join()
     {
         for ( BC_LIST list : lists )
-		    join_list( list );
+            join_list( list );
     }
 
 /**
  * helper function to stop all running list threads
  *
 */
-	public void stop()
-	{
+    public void stop()
+    {
         for ( BC_LIST list : lists )
-			list.running.set( false );
-	}
+            list.running.set( false );
+    }
 }
 

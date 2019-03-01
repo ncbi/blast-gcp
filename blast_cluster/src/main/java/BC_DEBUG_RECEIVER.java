@@ -83,27 +83,27 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
             String input;
 
             while( context.is_running() && br != null )
-			{
-		        String line = null;
-				try
-				{
-					if ( br.ready() )
-					    line = br.readLine().trim();
-				}
-				catch ( IOException e ) { }
+            {
+                String line = null;
+                try
+                {
+                    if ( br.ready() )
+                        line = br.readLine().trim();
+                }
+                catch ( IOException e ) { }
 
-		        if ( line != null && !line.isEmpty() )
-		        {
-					System.out.println( line.trim() );
-		        }
-				else if ( context.is_running() )
-				{
-					try
-					{
-						Thread.sleep( sleep_time );
-					}
-					catch ( InterruptedException e ) { }
-				}
+                if ( line != null && !line.isEmpty() )
+                {
+                    System.out.println( line.trim() );
+                }
+                else if ( context.is_running() )
+                {
+                    try
+                    {
+                        Thread.sleep( sleep_time );
+                    }
+                    catch ( InterruptedException e ) { }
+                }
             }
             socket.close();
         }
@@ -124,7 +124,7 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
 public final class BC_DEBUG_RECEIVER extends Thread
 {
     private final BC_CONTEXT context;
-	private List< BC_DEBUG_RECEIVER_CLIENT > clients;
+    private List< BC_DEBUG_RECEIVER_CLIENT > clients;
 
 /**
  * create instance of BC_DEBUG_RECEIVER
@@ -137,7 +137,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
     public BC_DEBUG_RECEIVER( BC_CONTEXT a_context )
     {
         context = a_context;
-		clients = new ArrayList<>();
+        clients = new ArrayList<>();
     }
 
 /**
@@ -153,7 +153,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
     {
         try
         {
-			int port = context.get_settings().debug.port;
+            int port = context.get_settings().debug.port;
             System.out.println( String.format( "DEBUG_RECEIVER listening on port: %d", port ) );
 
             ServerSocket ss = new ServerSocket( port );
@@ -164,7 +164,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
                     ss.setSoTimeout( 500 );
                     Socket client_socket = ss.accept();
                     BC_DEBUG_RECEIVER_CLIENT client = new BC_DEBUG_RECEIVER_CLIENT( context, client_socket );
-					clients.add( client );
+                    clients.add( client );
                     client.start();
                 }
                 catch ( Exception e )
@@ -184,15 +184,15 @@ public final class BC_DEBUG_RECEIVER extends Thread
  * wait for all client-socket-threads to finish, then wait for this tread to finish
  *
 */
-	public void join_clients()
-	{
-		for( BC_DEBUG_RECEIVER_CLIENT client : clients )
-		{
-		    try { client.join(); }
-		    catch( InterruptedException e ) { }
-		}
-		try { join(); }
-		catch( InterruptedException e ) { }
-	}
+    public void join_clients()
+    {
+        for( BC_DEBUG_RECEIVER_CLIENT client : clients )
+        {
+            try { client.join(); }
+            catch( InterruptedException e ) { }
+        }
+        try { join(); }
+        catch( InterruptedException e ) { }
+    }
 }
 

@@ -45,9 +45,9 @@ public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_L
 /**
  * constructor providing values for internal fields
  *
- * @param	oid 		OID - value ( object-ID ? )
- * @param	evalue		value to be used for sorting
- * @param	asn1_blob	opaque asn1-blob, the traceback-result
+ * @param   oid         OID - value ( object-ID ? )
+ * @param   evalue      value to be used for sorting
+ * @param   asn1_blob   opaque asn1-blob, the traceback-result
 */
     public BLAST_TB_LIST( int oid, double evalue, byte[] asn1_blob )
     {
@@ -59,7 +59,7 @@ public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_L
 /**
  * test for empty-ness
  *
- * @return		is this traceback-result-list empty ?
+ * @return      is this traceback-result-list empty ?
 */
     public Boolean isEmpty()
     {
@@ -69,13 +69,13 @@ public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_L
 /**
  * fuzzy comparison for sorting
  *
- * @param evalue1	first evalue to compare
- * @param evalue2	second evalue to compare
- * @return			0...evalue1==evalue2, -1...evalue1<evalue2, +1...evalue1>evalue2
+ * @param evalue1   first evalue to compare
+ * @param evalue2   second evalue to compare
+ * @return          0...evalue1==evalue2, -1...evalue1<evalue2, +1...evalue1>evalue2
 */
     static int FuzzyEvalueComp( double evalue1, double evalue2 )
     {
-    	/* recommended by BLAST-team */
+        /* recommended by BLAST-team */
         if ( evalue1 < ( 1.0 - epsilon ) * evalue2 )
         {
             return -1;
@@ -93,8 +93,8 @@ public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_L
 /**
  * overriden comparison, for sorting
  *
- * @param other		other instance to compare against
- * @return			0...equal, -1...this > other, +1...this < other
+ * @param other     other instance to compare against
+ * @return          0...equal, -1...this > other, +1...this < other
 */
     @Override public int compareTo( BLAST_TB_LIST other )
     {
@@ -116,6 +116,6 @@ public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_L
             return -1;
     }
 
-	
+    
 }
 

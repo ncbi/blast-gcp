@@ -38,7 +38,7 @@ import java.nio.ByteBuffer;
 */
 public class BC_RESULTS
 {
-	private List< BLAST_TB_LIST > l;
+    private List< BLAST_TB_LIST > l;
 
 /**
  * create instance of BC_RESULTS
@@ -48,7 +48,7 @@ public class BC_RESULTS
 */
     public BC_RESULTS()
     {
-		l = new ArrayList<>();
+        l = new ArrayList<>();
     }
 
 /**
@@ -57,36 +57,36 @@ public class BC_RESULTS
  * @param      items       list of BLAST_TB_LIST-instance to be added
  * @see        BLAST_TB_LIST
 */
-	public void add( List< BLAST_TB_LIST > items )
-	{
-		l.addAll( items );
-	}
+    public void add( List< BLAST_TB_LIST > items )
+    {
+        l.addAll( items );
+    }
 
 /**
  * sort the internal list, the item-class has an overriden comparison-method
  *
  * @see        BLAST_TB_LIST
 */
-	public void sort()
-	{
-		Collections.sort( l );
-	}
+    public void sort()
+    {
+        Collections.sort( l );
+    }
 
 /**
  * cut the internal list, to leave just the top num_items
  *
  * @see        BLAST_TB_LIST
 */
-	public void cutoff( int num_items )
-	{
-		List< BLAST_TB_LIST > sub = l.subList( 0, num_items );
-		l = sub;
-	}
+    public void cutoff( int num_items )
+    {
+        List< BLAST_TB_LIST > sub = l.subList( 0, num_items );
+        l = sub;
+    }
 
 /**
  * convert internal list of BLAST_TB_LIST-instances into a ByteBuffer
  *
- * @return 		ByteBuffer containing valid asn1 to be written to file
+ * @return      ByteBuffer containing valid asn1 to be written to file
  * @see         BLAST_TB_LIST
 */
     public ByteBuffer to_bytebuffer()
@@ -100,7 +100,7 @@ public class BC_RESULTS
         sum += seq_annot_prefix.length;
 
         byte[] seq_annot_suffix = { 0, 0, 0, 0, 0, 0, 0, 0 };
-		sum += seq_annot_suffix.length;
+        sum += seq_annot_suffix.length;
 
         ByteBuffer buf = ByteBuffer.allocate( sum );
 

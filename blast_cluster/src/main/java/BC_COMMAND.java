@@ -49,8 +49,8 @@ public final class BC_COMMAND
     BC_COMMAND( final PrintStream origin, final String line )
     {
         origin_stream = origin;
-		parts = line.trim().split( "\\s+" );	/* split on whitespace */
-		num_parts = parts.length;
+        parts = line.trim().split( "\\s+" );    /* split on whitespace */
+        num_parts = parts.length;
     }
 
 /**
@@ -58,35 +58,35 @@ public final class BC_COMMAND
  *
  * @return     is it a exit command ?
 */
-	private boolean is_exit() { return parts[ 0 ].equals( "exit" ); }
+    private boolean is_exit() { return parts[ 0 ].equals( "exit" ); }
 
 /**
  * test for stop command ( stop processing pending lists )
  *
  * @return     is it a stop command ?
 */
-	private boolean is_stop() { return parts[ 0 ].equals( "stop" ); }
+    private boolean is_stop() { return parts[ 0 ].equals( "stop" ); }
 
 /**
  * test for file command ( process a single request-file )
  *
  * @return     is it a file command ?
 */
-	private boolean is_file_request() { return parts[ 0 ].equals( "F" ); }
+    private boolean is_file_request() { return parts[ 0 ].equals( "F" ); }
 
 /**
  * test for list command ( process a list of request-files )
  *
  * @return     is it a list command ?
 */
-	private boolean is_list_request() { return parts[ 0 ].equals( "L" ); }
+    private boolean is_list_request() { return parts[ 0 ].equals( "L" ); }
 
 /**
  * test for bucket command ( process a bucket of request-files )
  *
  * @return     is it a bucket command ?
 */
-	private boolean is_bucket_request() { return parts[ 0 ].equals( "B" ); }
+    private boolean is_bucket_request() { return parts[ 0 ].equals( "B" ); }
 
 /**
  * helper-function to convert String to int
@@ -94,13 +94,13 @@ public final class BC_COMMAND
  * @param s  String to be converted to int
  * @return result of conversion
 */
-	private int toInt( String s )
-	{
-		int res = 0;
-		try	{ res = Integer.parseInt( s ); }
-		catch ( NumberFormatException e ) { res = 0; }
-		return res;
-	}
+    private int toInt( String s )
+    {
+        int res = 0;
+        try { res = Integer.parseInt( s ); }
+        catch ( NumberFormatException e ) { res = 0; }
+        return res;
+    }
 
 /**
  * handle the file-command, by delegating it to the global context
@@ -108,13 +108,13 @@ public final class BC_COMMAND
  * @param context the global application-context
  * @see        BC_CONTEXT
 */
-	private void handle_file_request( BC_CONTEXT context )
-	{
-		if ( num_parts > 1 )
-			context.add_request_file( parts[ 1 ], origin_stream );
-		else
-			origin_stream.printf( "filename is missing\n" );
-	}
+    private void handle_file_request( BC_CONTEXT context )
+    {
+        if ( num_parts > 1 )
+            context.add_request_file( parts[ 1 ], origin_stream );
+        else
+            origin_stream.printf( "filename is missing\n" );
+    }
 
 /**
  * handle the list-command, by delegating it to the global context
@@ -122,16 +122,16 @@ public final class BC_COMMAND
  * @param context the global application-context
  * @see        BC_CONTEXT
 */
-	private void handle_list_request( BC_CONTEXT context )
-	{
-		if ( num_parts > 1 )
-		{
-			int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
-			context.addRequestList( parts[ 1 ], origin_stream, limit );
-		}
-		else
-			origin_stream.printf( "filename is missing\n" );
-	}
+    private void handle_list_request( BC_CONTEXT context )
+    {
+        if ( num_parts > 1 )
+        {
+            int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
+            context.addRequestList( parts[ 1 ], origin_stream, limit );
+        }
+        else
+            origin_stream.printf( "filename is missing\n" );
+    }
 
 /**
  * handle the bucket-command, by delegating it to the global context
@@ -139,16 +139,16 @@ public final class BC_COMMAND
  * @param context the global application-context
  * @see        BC_CONTEXT
 */
-	private void handle_bucket_request( BC_CONTEXT context )
-	{
-		if ( num_parts > 1 )
-		{
-			int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
-			context.addRequestBucket( parts[ 1 ], origin_stream, limit );
-		}
-		else
-			origin_stream.printf( "bucket-url is missing\n" );
-	}
+    private void handle_bucket_request( BC_CONTEXT context )
+    {
+        if ( num_parts > 1 )
+        {
+            int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
+            context.addRequestBucket( parts[ 1 ], origin_stream, limit );
+        }
+        else
+            origin_stream.printf( "bucket-url is missing\n" );
+    }
 
 /**
  * handle a preparsed command using the given context
@@ -156,14 +156,14 @@ public final class BC_COMMAND
  * @param context application-context needed to handle the command
  * @see        BC_CONTEXT
 */
-	public void handle( BC_CONTEXT context )
-	{
+    public void handle( BC_CONTEXT context )
+    {
         if ( is_exit() ) context.stop();
         else if ( is_stop() ) context.stop_lists();
-		else if ( is_file_request() ) handle_file_request( context );
-		else if ( is_list_request() ) handle_list_request( context );
-		else if ( is_bucket_request() ) handle_bucket_request( context );
-		else origin_stream.printf( "unknown: %s\n", parts );
-	}
+        else if ( is_file_request() ) handle_file_request( context );
+        else if ( is_list_request() ) handle_list_request( context );
+        else if ( is_bucket_request() ) handle_bucket_request( context );
+        else origin_stream.printf( "unknown: %s\n", parts );
+    }
 }
 

@@ -46,10 +46,10 @@ public final class BC_JSON_UTILS
 /**
  * extract a String-value from a JsonObject, use dflt-value if key not found
  *
- * @param root			the JsonObject to extract the value from
- * @param key			the key of the value
+ * @param root          the JsonObject to extract the value from
+ * @param key           the key of the value
  * @param dflt          the default-value to use if key not found
- * @return 				found value or default-value
+ * @return              found value or default-value
 */
     public static String get_json_string( JsonObject root, final String key, final String dflt )
     {
@@ -75,10 +75,10 @@ public final class BC_JSON_UTILS
 /**
  * extract a Integer-value from a JsonObject, use dflt-value if key not found
  *
- * @param root			the JsonObject to extract the value from
- * @param key			the key of the value
+ * @param root          the JsonObject to extract the value from
+ * @param key           the key of the value
  * @param dflt          the default-value to use if key not found
- * @return 				found value or default-value
+ * @return              found value or default-value
 */
     public static Integer get_json_int( JsonObject root, final String key, final Integer dflt )
     {
@@ -104,10 +104,10 @@ public final class BC_JSON_UTILS
 /**
  * extract a Long-value from a JsonObject, use dflt-value if key not found
  *
- * @param root			the JsonObject to extract the value from
- * @param key			the key of the value
+ * @param root          the JsonObject to extract the value from
+ * @param key           the key of the value
  * @param dflt          the default-value to use if key not found
- * @return 				found value or default-value
+ * @return              found value or default-value
 */
     public static Long get_json_long( JsonObject root, final String key, final Long dflt )
     {
@@ -133,10 +133,10 @@ public final class BC_JSON_UTILS
 /**
  * extract a Double-value from a JsonObject, use dflt-value if key not found
  *
- * @param root			the JsonObject to extract the value from
- * @param key			the key of the value
+ * @param root          the JsonObject to extract the value from
+ * @param key           the key of the value
  * @param dflt          the default-value to use if key not found
- * @return 				found value or default-value
+ * @return              found value or default-value
 */
     public static Double get_json_double( JsonObject root, final String key, final Double dflt )
     {
@@ -162,10 +162,10 @@ public final class BC_JSON_UTILS
 /**
  * extract a Boolean-value from a JsonObject, use dflt-value if key not found
  *
- * @param root			the JsonObject to extract the value from
- * @param key			the key of the value
+ * @param root          the JsonObject to extract the value from
+ * @param key           the key of the value
  * @param dflt          the default-value to use if key not found
- * @return 				found value or default-value
+ * @return              found value or default-value
 */
     public static Boolean get_json_bool( JsonObject root, final String key, final Boolean dflt )
     {
@@ -191,9 +191,9 @@ public final class BC_JSON_UTILS
 /**
  * extract a sub-object from a JsonObject
  *
- * @param root			the JsonObject to extract the object from
- * @param key			the key of the object
- * @return 				found object or null
+ * @param root          the JsonObject to extract the object from
+ * @param key           the key of the object
+ * @return              found object or null
 */
     public static JsonObject get_sub( JsonObject root, final String key )
     {
@@ -212,9 +212,9 @@ public final class BC_JSON_UTILS
 /**
  * extract a sub-object from a JsonObject as a string
  *
- * @param root			the JsonObject to extract the object from
- * @param key			the key of the object
- * @return 				string-representation of found object or empty string
+ * @param root          the JsonObject to extract the object from
+ * @param key           the key of the object
+ * @return              string-representation of found object or empty string
 */
     public static String get_sub_as_string( JsonObject root, final String key )
     {
@@ -231,9 +231,9 @@ public final class BC_JSON_UTILS
 /**
  * extract an array of JsonObjects from a JsonObject
  *
- * @param root			the JsonObject to extract the array from
- * @param key			the key of the object
- * @return 				the found array or null
+ * @param root          the JsonObject to extract the array from
+ * @param key           the key of the object
+ * @return              the found array or null
 */
     public static JsonArray get_sub_array( JsonObject root, final String key )
     {
@@ -252,10 +252,10 @@ public final class BC_JSON_UTILS
 /**
  * extract a list of strings from a JsonObject
  *
- * @param root			the JsonObject to extract the list from
- * @param key			the key of the object
- * @param dflt		    the single dflt entry if key not found
- * @param lst		    list of strings to be filled with found values
+ * @param root          the JsonObject to extract the list from
+ * @param key           the key of the object
+ * @param dflt          the single dflt entry if key not found
+ * @param lst           list of strings to be filled with found values
 */
     public static void get_string_list( JsonObject root, final String key, final String dflt, List< String > lst )
     {

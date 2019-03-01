@@ -46,21 +46,21 @@ public final class BC_SETTINGS
     public boolean req_use_files = false;
     public String req_files_dir = "";
     public boolean req_use_socket = false;
-	public int req_port_nr = 0;
+    public int req_port_nr = 0;
     public int req_max_backlog = 10;
-	public int job_sleep_time = 100;
+    public int job_sleep_time = 100;
 
     /* DATABASES */
     HashMap< String, BC_DATABASE_SETTING > dbs; // configured via ini.json section
 
     /* RESULTS */
-	public boolean res_use_gs_bucket = false;
+    public boolean res_use_gs_bucket = false;
     public String res_gs_bucket = "";
     public String res_gs_pattern = "";
-	public boolean res_use_files = false;
+    public boolean res_use_files = false;
     public String res_files_dir = "";
     public String res_files_pattern = "";
-	public String report_dir = "report";
+    public String report_dir = "report";
 
     /* CLUSTER */
     public List< String > transfer_files;
@@ -72,12 +72,12 @@ public final class BC_SETTINGS
     public boolean set_shuffle_reduceLocality = false;
     public boolean shuffle_reduceLocality = false;
     public boolean scheduler_fair = false;
-	public int num_executors = 0;
-	public int num_executor_cores = 0;
+    public int num_executors = 0;
+    public int num_executor_cores = 0;
     public int parallel_jobs = 1;
     public String jni_log_level = "INFO";
-	public int console_sleep_time = 200;
-	public int debug_receiver_sleep_time = 200;
+    public int console_sleep_time = 200;
+    public int debug_receiver_sleep_time = 200;
 
     /* DEBUG */
     BC_DEBUG_SETTINGS debug;
@@ -85,40 +85,40 @@ public final class BC_SETTINGS
 /**
  * create instance of BC_SETTINGS with all values set to default
  *
- * @see		BC_DEBUG_SETTINGS
+ * @see     BC_DEBUG_SETTINGS
 */
     public BC_SETTINGS()
     {
         dbs = new HashMap<>();
-		transfer_files = new ArrayList<>();
+        transfer_files = new ArrayList<>();
         debug = new BC_DEBUG_SETTINGS();
     }
 
 /**
  * test if the request-settings are valid
  *
- * @return		are request-settings valid ?
+ * @return      are request-settings valid ?
 */
     private boolean req_valid()
     {
-		boolean res = req_use_pubsub || req_use_files || req_use_socket;
+        boolean res = req_use_pubsub || req_use_files || req_use_socket;
         if ( req_use_pubsub )
-			res = !req_pubsub_project_id.isEmpty() &&  !req_pubsub_subscript_id.isEmpty();
-		if ( res && req_use_pubsub )
-			res = !req_files_dir.isEmpty();
-		if ( res && req_use_socket )
-			res = req_port_nr != 0;
-		return res;
+            res = !req_pubsub_project_id.isEmpty() &&  !req_pubsub_subscript_id.isEmpty();
+        if ( res && req_use_pubsub )
+            res = !req_files_dir.isEmpty();
+        if ( res && req_use_socket )
+            res = req_port_nr != 0;
+        return res;
     }
 
 /**
  * test if the database-settings are valid
  *
- * @return		are database-settings valid ?
+ * @return      are database-settings valid ?
 */
     private boolean dbs_valid()
     {
-		if ( dbs.isEmpty() ) return false;
+        if ( dbs.isEmpty() ) return false;
         boolean res = true;
         for ( BC_DATABASE_SETTING e : dbs.values() )
             if ( !e.valid() ) res = false;
@@ -128,22 +128,22 @@ public final class BC_SETTINGS
 /**
  * test if result-settings are valid
  *
- * @return		are result-settings valid ?
+ * @return      are result-settings valid ?
 */
-	private boolean res_valid()
-	{
-		boolean res = res_use_gs_bucket || res_use_files;
-		if ( res_use_gs_bucket )
-    		res = !res_gs_bucket.isEmpty() && !res_gs_pattern.isEmpty();
-		if ( res && res_use_files )
-    		res = !res_files_dir.isEmpty() && !res_files_pattern.isEmpty();
-		return res;
-	}
+    private boolean res_valid()
+    {
+        boolean res = res_use_gs_bucket || res_use_files;
+        if ( res_use_gs_bucket )
+            res = !res_gs_bucket.isEmpty() && !res_gs_pattern.isEmpty();
+        if ( res && res_use_files )
+            res = !res_files_dir.isEmpty() && !res_files_pattern.isEmpty();
+        return res;
+    }
 
 /**
  * test if all settings are valid
  *
- * @return		are all settings valid ?
+ * @return      are all settings valid ?
 */
     public boolean valid()
     {
@@ -153,7 +153,7 @@ public final class BC_SETTINGS
 /**
  * convert all settings to a string
  *
- * @return		string containing all settings
+ * @return      string containing all settings
 */
     @Override public String toString()
     {
@@ -171,29 +171,29 @@ public final class BC_SETTINGS
             S = S + e.toString();
 
         S = S + "\nRESULTS:\n";
-		if ( res_use_gs_bucket )
+        if ( res_use_gs_bucket )
             S = S + String.format( "\tbucket ............. %s/%s\n", res_gs_bucket, res_gs_pattern );
-		if ( res_use_files )
+        if ( res_use_files )
             S = S + String.format( "\tfiles .............. %s/%s\n", res_files_dir, res_files_pattern );
 
         S = S + "\nCLUSTER:\n";
         S = S + String.format( "\tappName ............ '%s'\n", appName );
         S = S + String.format( "\ttransfer files ..... %s\n", transfer_files );
         S = S + String.format( "\tspark log level .... '%s'\n", spark_log_level );
-		if ( !locality_wait.isEmpty() )
-	        S = S + String.format( "\tlocality.wait ...... '%s'\n", locality_wait );
-		if ( set_dyn_alloc )
-        	S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
+        if ( !locality_wait.isEmpty() )
+            S = S + String.format( "\tlocality.wait ...... '%s'\n", locality_wait );
+        if ( set_dyn_alloc )
+            S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
-		if ( set_shuffle_reduceLocality )
+        if ( set_shuffle_reduceLocality )
         S = S + String.format( "\treduce_loc ......... %s\n", Boolean.toString( shuffle_reduceLocality ) );
 
         S = S + String.format( "\tscheduler fair ..... %s\n", Boolean.toString( scheduler_fair ) );
-		if ( num_executors > 0 )
-	        S = S + String.format( "\tnum-executors ...... %d\n", num_executors );
-		if ( num_executor_cores > 0 )
-	        S = S + String.format( "\tnum-executor-cores . %d\n", num_executor_cores );
+        if ( num_executors > 0 )
+            S = S + String.format( "\tnum-executors ...... %d\n", num_executors );
+        if ( num_executor_cores > 0 )
+            S = S + String.format( "\tnum-executor-cores . %d\n", num_executor_cores );
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
 

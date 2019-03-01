@@ -42,12 +42,12 @@ import java.util.ArrayList;
 */
 public class BC_DATABASE_SETTING implements Serializable
 {
-    public String key = "";       		/* key for mapping to request... ( 'nt', 'nr' ) */
+    public String key = "";             /* key for mapping to request... ( 'nt', 'nr' ) */
     public String worker_location = "/tmp/blast/db"; /* where is the location root on the worker? dflt: '/tmp/blast/db' */
-	public String source_location = "";	/* bucket or filesystem-path */
+    public String source_location = ""; /* bucket or filesystem-path */
     public Boolean direct = false;      /* are we adressing the chunks directly, in case of on-premise */
-	public int limit = 0;				/* in case we want to limit the number of db-chunks */
-	public List< String > extensions;	/* for nt: nsq, nin, nhr / nr: psq, pin, phr */
+    public int limit = 0;               /* in case we want to limit the number of db-chunks */
+    public List< String > extensions;   /* for nt: nsq, nin, nhr / nr: psq, pin, phr */
 
 /**
  * create instance of BC_DATABASE_SETTING
@@ -55,7 +55,7 @@ public class BC_DATABASE_SETTING implements Serializable
 */
     public BC_DATABASE_SETTING()
     {
-		extensions = new ArrayList();
+        extensions = new ArrayList();
     }
 
 /**
@@ -79,8 +79,8 @@ public class BC_DATABASE_SETTING implements Serializable
         S =  S  +  String.format( "\t(%s).source-loc ...... '%s'\n", key, source_location );
         S =  S  +  String.format( "\t(%s).direct .......... %s\n", key, Boolean.toString( direct ) );
         S =  S  +  String.format( "\t(%s).extensions ...... %s\n", key, extensions );
-		if ( limit > 0 )
-        	S =  S  +  String.format( "\t(%s).limit ........... %d\n", key, limit );
+        if ( limit > 0 )
+            S =  S  +  String.format( "\t(%s).limit ........... %d\n", key, limit );
         return S;
     }
 }

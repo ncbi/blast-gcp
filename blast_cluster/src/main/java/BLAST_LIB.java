@@ -39,12 +39,12 @@ public class BLAST_LIB
 /**
  * constructor responsible for loading the library containing the jni- and BLAST-code
  *
- * @param libname	name of the library to look for
+ * @param libname   name of the library to look for
  *
 */
     public BLAST_LIB( final String libname )
     {
-		// Guaranteed to be a singleton courtesy of BLAST_LIB_SINGLETON
+        // Guaranteed to be a singleton courtesy of BLAST_LIB_SINGLETON
         try
         {
             System.load( SparkFiles.get( libname ) );
@@ -58,7 +58,7 @@ public class BLAST_LIB
             invalid = new ExceptionInInitializerError( threx2 );
         }
 
-		/*
+        /*
         try
         {
             // Java will look for libblastjni.so, thread safe if successful?
@@ -83,7 +83,7 @@ public class BLAST_LIB
                 invalid = new ExceptionInInitializerError( threx2 );
             }
         }
-		*/
+        */
         processID = ManagementFactory.getRuntimeMXBean().getName().split("@",2)[0];
         logLevel = Level.ERROR;
     }
@@ -108,8 +108,8 @@ public class BLAST_LIB
 /**
  * helper-method to write to log4j, filtered by log-level
  *
- * @param level		log-level to filter by
- * @param msg		message to log
+ * @param level     log-level to filter by
+ * @param msg       message to log
  *
 */
     private void log( final String level, final String msg )
@@ -142,8 +142,8 @@ public class BLAST_LIB
 /**
  * helper-method
  *
- * @param url	url to test if it starts with 'gs://'
- * @return		empty string
+ * @param url   url to test if it starts with 'gs://'
+ * @return      empty string
  *
 */
     final String get_blob( String url )
@@ -159,19 +159,19 @@ public class BLAST_LIB
 /**
  * wrapper around call to jni-interface 'prelim_search'
  *
- * @param chunk			database-chunk to search against
- * @param req			request to search for in the database-chunk
- * @param pslogLevel	level for logging
- * @return				vector of BLAST_HSP_LIST-instances
+ * @param chunk         database-chunk to search against
+ * @param req           request to search for in the database-chunk
+ * @param pslogLevel    level for logging
+ * @return              vector of BLAST_HSP_LIST-instances
  *
 */
     final BLAST_HSP_LIST[] jni_prelim_search( final BC_DATABASE_RDD_ENTRY chunk,
-			final BC_REQUEST req, final String pslogLevel ) throws Exception
-	{
+            final BC_REQUEST req, final String pslogLevel ) throws Exception
+    {
         // CMT - I hadn't intended this to be used to guard every method, but it's safer to do so
         throwIfBad();
 
-		/*
+        /*
         logLevel = Level.toLevel( pslogLevel );
 
         // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
@@ -183,19 +183,19 @@ public class BLAST_LIB
         log( "INFO", "  topn      : " + req.top_n_prelim );
 
         if ( req.query_seq.contains( "\n" ) )
-		{
+        {
             log( "WARN", "Query contains newline, which may crash Blast library" );
         }
-		*/
+        */
 
         long starttime = System.currentTimeMillis();
         BLAST_HSP_LIST[] ret = prelim_search( req.query_seq, chunk.worker_location(), req.program, req.params, req.top_n_prelim );
         long finishtime = System.currentTimeMillis();
 
-		/*
+        /*
         log( "INFO", "jni_prelim_search returned in " + ( finishtime - starttime ) + " ms.");
         log( "INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:" );
-		*/
+        */
 
         int hspcnt = 0;
         for ( BLAST_HSP_LIST hspl : ret )
@@ -205,11 +205,11 @@ public class BLAST_LIB
                 log( "ERROR", "hspl is null" );
                 throw new Exception( "hspl " + hspcnt + " is null" );
             }
-			/*
+            /*
             if ( chunk == null )
-				log( "ERROR", "chunk is null" );
+                log( "ERROR", "chunk is null" );
             log( "DEBUG", "#" + hspcnt + ": " + hspl.toString() );
-			*/
+            */
             ++hspcnt;
         }
         return ret;
@@ -218,33 +218,33 @@ public class BLAST_LIB
 /**
  * wrapper around call to jni-interface 'traceback'
  *
- * @param hspl			vector of search-results
- * @param chunk			database-chunk to use
- * @param req			request to use
- * @param tblogLevel	level for logging
- * @return				vector of BLAST_TP_LIST-instances
+ * @param hspl          vector of search-results
+ * @param chunk         database-chunk to use
+ * @param req           request to use
+ * @param tblogLevel    level for logging
+ * @return              vector of BLAST_TP_LIST-instances
  *
 */
     final BLAST_TB_LIST[] jni_traceback( final BLAST_HSP_LIST[] hspl, final BC_DATABASE_RDD_ENTRY chunk,
             final BC_REQUEST req, final String tblogLevel )
-	{
+    {
         throwIfBad();
 
-		/*
+        /*
         logLevel = Level.toLevel( tblogLevel );
         log( "INFO", "Java jni_traceback called with" );
         log( "INFO", "  query_seq : " + req.query_seq );
         log( "INFO", "  db_spec   : " + chunk.name );
-		*/
+        */
 
         long starttime = System.currentTimeMillis();
         BLAST_TB_LIST[] ret = traceback( hspl, req.query_seq, chunk.worker_location(), req.program, req.params );
         long finishtime = System.currentTimeMillis();
 
-		/*
+        /*
         log( "INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms." );
         log( "INFO", "jni_traceback returned " + ret.length + " TB_LISTs:") ;
-		*/
+        */
 
         for ( BLAST_TB_LIST t : ret )
         {
@@ -256,12 +256,12 @@ public class BLAST_LIB
 /**
  * jni-interface call to perform prelim_search, implemented in C++
  *
- * @param query			request-query
- * @param dbspec		path to database-chunk on local disk
- * @param program		'nt' or 'nr'
- * @param params		json-encoded search parameters
- * @param topn			after how many unique score-values to cut the result-vector
- * @return				vector of BLAST_TP_LIST-instances
+ * @param query         request-query
+ * @param dbspec        path to database-chunk on local disk
+ * @param program       'nt' or 'nr'
+ * @param params        json-encoded search parameters
+ * @param topn          after how many unique score-values to cut the result-vector
+ * @return              vector of BLAST_TP_LIST-instances
  *
 */
     private native BLAST_HSP_LIST[] prelim_search(
@@ -270,12 +270,12 @@ public class BLAST_LIB
 /**
  * jni-interface call to perform 'traceback', implemented in C++
  *
- * @param hspl			vector of search-results
- * @param query			request-query
- * @param dbspec		path to database-chunk on local disk 
- * @param program		'nt' or 'nr'
- * @param params		json-encoded search parameters
- * @return				vector of BLAST_TP_LIST-instances
+ * @param hspl          vector of search-results
+ * @param query         request-query
+ * @param dbspec        path to database-chunk on local disk 
+ * @param program       'nt' or 'nr'
+ * @param params        json-encoded search parameters
+ * @return              vector of BLAST_TP_LIST-instances
  *
 */
     private native BLAST_TB_LIST[] traceback(

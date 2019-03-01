@@ -45,11 +45,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 */
 public class BC_CONTEXT
 {
-	public final BC_SETTINGS settings;
+    public final BC_SETTINGS settings;
     private final AtomicBoolean running;
     private final ConcurrentLinkedQueue< BC_COMMAND > command_queue;
     private final ConcurrentLinkedQueue< BC_REQUEST > request_queue;
-	private final BC_LISTS list_manager;
+    private final BC_LISTS list_manager;
 
 /**
  * create instance of BC_CONTEXT from settings
@@ -60,13 +60,13 @@ public class BC_CONTEXT
  * @see        BC_SETTINGS
 */
     public BC_CONTEXT( final BC_SETTINGS a_settings )
-	{
-		settings = a_settings;
+    {
+        settings = a_settings;
         running = new AtomicBoolean( true );
         command_queue = new ConcurrentLinkedQueue<>();
         request_queue = new ConcurrentLinkedQueue<>();
-		list_manager = new BC_LISTS( this );
-	}
+        list_manager = new BC_LISTS( this );
+    }
 
 /**
  * test if the request-queue has space for at least one more request
@@ -90,7 +90,7 @@ public class BC_CONTEXT
 /**
  * stop the processing of pending lists
 */
-	public void stop_lists() { list_manager.stop(); }	
+    public void stop_lists() { list_manager.stop(); }   
 
 /**
  * put a command into the internal command-queue
@@ -111,7 +111,7 @@ public class BC_CONTEXT
  *
  * @return application settings
 */
-	public BC_SETTINGS get_settings() { return settings; }
+    public BC_SETTINGS get_settings() { return settings; }
 
 /**
  * test if a request is already in the internal queue
@@ -141,7 +141,7 @@ public class BC_CONTEXT
             request_queue.offer( request );
 
             if ( ps != null && settings.debug.req_added )
-            	ps.printf( "REQUEST '%s' added to queue\n", request.id );
+                ps.printf( "REQUEST '%s' added to queue\n", request.id );
         }
         else
         {
@@ -169,8 +169,8 @@ public class BC_CONTEXT
             else if ( ps != null )
                 ps.printf( "invalid request '%s'\n", req_string );
         }
-		else if ( ps != null )
-			ps.printf( "rejected: request-queue is full\n" );
+        else if ( ps != null )
+            ps.printf( "rejected: request-queue is full\n" );
         return res;
     }
 
@@ -187,18 +187,18 @@ public class BC_CONTEXT
         if ( can_take() > 0 )
         {
             BC_REQUEST request = BC_REQUEST_READER.parse_from_file( filename );
-			if ( request != null )
-			{
-            	if ( add_request( request, ps ) )
-					res = 1;
-			}
+            if ( request != null )
+            {
+                if ( add_request( request, ps ) )
+                    res = 1;
+            }
             else
-			{
+            {
                 ps.printf( "invalid request in file '%s'\n", filename );
-				res = -1;
-			}
+                res = -1;
+            }
         }
-		else
+        else
             ps.printf( "rejected: '%s' request-queue is full\n", filename );
         return res;
     }
@@ -208,10 +208,10 @@ public class BC_CONTEXT
  *
  * @return         a valid BC_REQUEST-instance or null
 */
-	public BC_REQUEST get_request()
-	{
+    public BC_REQUEST get_request()
+    {
         return request_queue.poll();
-	}
+    }
 
 /**
  * add a list of requests to the internal list-manager
@@ -220,10 +220,10 @@ public class BC_CONTEXT
  * @param ps       stream to be used for error messages ( cannot be null )
  * @param limit    limit of entries to use
 */
-	public void addRequestList( final String filename, final PrintStream ps, int limit )
-	{
-		list_manager.addFile( filename, ps, limit );
-	}
+    public void addRequestList( final String filename, final PrintStream ps, int limit )
+    {
+        list_manager.addFile( filename, ps, limit );
+    }
 
 /**
  * add a bucket to the internal list-manager
@@ -232,18 +232,18 @@ public class BC_CONTEXT
  * @param ps         stream to be used for error messages ( cannot be null )
  * @param limit      limit of request-files to use
 */
-	public void addRequestBucket( final String bucket_url, final PrintStream ps, int limit )
-	{
-		list_manager.addBucket( bucket_url, ps, limit );
-	}
+    public void addRequestBucket( final String bucket_url, final PrintStream ps, int limit )
+    {
+        list_manager.addBucket( bucket_url, ps, limit );
+    }
 
 /**
  * wait for all list-threads owned by the list-manager to finish
  *
 */
-	public void join()
-	{
-		list_manager.join();
-	}
+    public void join()
+    {
+        list_manager.join();
+    }
 }
 

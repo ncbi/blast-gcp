@@ -59,8 +59,8 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 */
     public BC_DATABASE_RDD_ENTRY( final BC_DATABASE_SETTING a_setting, final String a_name )
     {
-		setting = a_setting;
-		name = a_name;
+        setting = a_setting;
+        name = a_name;
     }
 
 /**
@@ -71,13 +71,13 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @return           a list of BC_DATABASE_RDD_ENTRY-instances
  * @see              BC_DATABASE_SETTING
 */
-	public static List< BC_DATABASE_RDD_ENTRY > make_rdd_entry_list( final BC_DATABASE_SETTING a_setting, final List< String > names )
-	{
-		List< BC_DATABASE_RDD_ENTRY > res = new ArrayList<>();
-		for ( String a_name : names )
-			res.add( new BC_DATABASE_RDD_ENTRY( a_setting, a_name ) );
-		return res;
-	}
+    public static List< BC_DATABASE_RDD_ENTRY > make_rdd_entry_list( final BC_DATABASE_SETTING a_setting, final List< String > names )
+    {
+        List< BC_DATABASE_RDD_ENTRY > res = new ArrayList<>();
+        for ( String a_name : names )
+            res.add( new BC_DATABASE_RDD_ENTRY( a_setting, a_name ) );
+        return res;
+    }
 
 /**
  * construct the source-path for one of the database-chunk-files based on its extension
@@ -86,10 +86,10 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @return           fully qualified url of one of the files of a datbase-chunk
  * @see              BC_DATABASE_SETTING
 */
-	public String build_source_path( final String extension )
-	{
-		return String.format( "%s/%s.%s", setting.source_location, name, extension );
-	}
+    public String build_source_path( final String extension )
+    {
+        return String.format( "%s/%s.%s", setting.source_location, name, extension );
+    }
 
 /**
  * construct the destination-path one of the database-chunk-files based on its extension
@@ -98,10 +98,10 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @return           absolute path of one of the files of a datbase-chunk on the worker
  * @see              BC_DATABASE_SETTING
 */
-	public String build_worker_path( final String extension )
-	{
-		return String.format( "%s/%s/%s.%s", setting.worker_location, name, name, extension );
-	}
+    public String build_worker_path( final String extension )
+    {
+        return String.format( "%s/%s/%s.%s", setting.worker_location, name, name, extension );
+    }
 
 /**
  * construct the absolute path of the directory where the 3 database-chunk files are
@@ -110,23 +110,23 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @return           absolute path of one of the datbase-chunks on the worker
  * @see              BC_DATABASE_SETTING
 */
-	public String worker_location()
-	{
-		return String.format( "%s/%s/%s", setting.worker_location, name, name );
-	}
+    public String worker_location()
+    {
+        return String.format( "%s/%s/%s", setting.worker_location, name, name );
+    }
 
 /**
  * construct the name of the worker ( DNS-name + executor-id ) for debug purpose
  *
  * @return           worker-name, for instance 'cluster-w-0/1'
 */
-	public String workername()
-	{
-		String w;
-		try { w = java.net.InetAddress.getLocalHost().getHostName(); }
-		catch( Exception e ) { w = "?"; }
-		return String.format( "%s/%s", w, SparkEnv.get().executorId() );
-	}
+    public String workername()
+    {
+        String w;
+        try { w = java.net.InetAddress.getLocalHost().getHostName(); }
+        catch( Exception e ) { w = "?"; }
+        return String.format( "%s/%s", w, SparkEnv.get().executorId() );
+    }
 
 /**
  * check if all files of a database-chunk are present on the worker
@@ -134,17 +134,17 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @return           are all files of a database-chunk present on the worker
  * @see              BC_DATABASE_SETTING
 */
-	public boolean present()
-	{
-		int found = 0;
-		for ( String extension : setting.extensions )
-		{
-			File f_dst = new File( build_worker_path( extension ) );
-			if ( f_dst.exists() )
-				found += 1;
-		}
-		return ( found == setting.extensions.size() );
-	}
+    public boolean present()
+    {
+        int found = 0;
+        for ( String extension : setting.extensions )
+        {
+            File f_dst = new File( build_worker_path( extension ) );
+            if ( f_dst.exists() )
+                found += 1;
+        }
+        return ( found == setting.extensions.size() );
+    }
 
 /**
  * download ( if neccessary ) all files fo a database-chunk to the worker
@@ -153,26 +153,26 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @see              BC_DATABASE_SETTING
  * @see              BC_GCP_TOOLS
 */
-	public List< String > download()
-	{
-		List< String > lst = new ArrayList<>();
-		String wn = workername();
-		for ( String extension : setting.extensions )
-		{
-			String src = build_source_path( extension );
-			String dst = build_worker_path( extension );
-			File f_dst = new File( dst );
-			if ( f_dst.exists() )
-				lst.add( String.format( "%s : %s -> %s (exists)", wn, src, dst ) );
-			else
-			{
-				long started_at = System.currentTimeMillis();
-				boolean success = BC_GCP_TOOLS.download( src, dst );
-				long elapsed = System.currentTimeMillis() - started_at;
-			 	lst.add( String.format( "%s : %s -> %s (%s in %,d ms)", wn, src, dst, Boolean.toString( success ), elapsed ) );
-			}
-		}
-		return lst;
-	}
+    public List< String > download()
+    {
+        List< String > lst = new ArrayList<>();
+        String wn = workername();
+        for ( String extension : setting.extensions )
+        {
+            String src = build_source_path( extension );
+            String dst = build_worker_path( extension );
+            File f_dst = new File( dst );
+            if ( f_dst.exists() )
+                lst.add( String.format( "%s : %s -> %s (exists)", wn, src, dst ) );
+            else
+            {
+                long started_at = System.currentTimeMillis();
+                boolean success = BC_GCP_TOOLS.download( src, dst );
+                long elapsed = System.currentTimeMillis() - started_at;
+                lst.add( String.format( "%s : %s -> %s (%s in %,d ms)", wn, src, dst, Boolean.toString( success ), elapsed ) );
+            }
+        }
+        return lst;
+    }
 }
 

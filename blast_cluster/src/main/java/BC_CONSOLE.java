@@ -72,25 +72,25 @@ public final class BC_CONSOLE extends Thread
         {
 
             String line = null;
-		    try
-		    {
-		        if ( br.ready() )
-		            line = br.readLine().trim();
-		    }
-		    catch ( IOException e ) { }
+            try
+            {
+                if ( br.ready() )
+                    line = br.readLine().trim();
+            }
+            catch ( IOException e ) { }
 
             if ( line != null && !line.isEmpty() )
             {
                 context.push_command( new BC_COMMAND( System.out, line ) );
             }
-			else if ( context.is_running() )
-			{
-        		try
-				{
-					Thread.sleep( sleep_time );
-				}
-        		catch ( InterruptedException e ) { }
-			}
+            else if ( context.is_running() )
+            {
+                try
+                {
+                    Thread.sleep( sleep_time );
+                }
+                catch ( InterruptedException e ) { }
+            }
         }
     }
 }

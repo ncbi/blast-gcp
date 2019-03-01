@@ -43,9 +43,9 @@ public final class BLAST_HSP_LIST implements Serializable
 /**
  * constructor providing values for internal fields
  *
- * @param	oid 		OID - value ( object-ID ? )
- * @param	max_score	highest score for search-results
- * @param	hsp_blob	opaque HSP-blob
+ * @param   oid         OID - value ( object-ID ? )
+ * @param   max_score   highest score for search-results
+ * @param   hsp_blob    opaque HSP-blob
 */
     public BLAST_HSP_LIST( int oid, int max_score, byte[] hsp_blob )
     {
@@ -57,7 +57,7 @@ public final class BLAST_HSP_LIST implements Serializable
 /**
  * test for empty-ness
  *
- * @return		is this HSP-list empty ?
+ * @return      is this HSP-list empty ?
 */
     public Boolean isEmpty()
     {

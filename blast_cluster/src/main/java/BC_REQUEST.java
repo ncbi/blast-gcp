@@ -40,29 +40,29 @@ public final class BC_REQUEST implements Serializable
 /**
  * test if request is valid, has all neccessary information
  *
- * @return 	is the request valid ?
+ * @return  is the request valid ?
 */
-	public Boolean valid()
-	{
-    	if ( id == null ) return false;
-		if ( id.isEmpty() ) return false;
-		if ( db == null ) return false;
-		if ( db.isEmpty() ) return false;
-		if ( program == null ) return false;
-		if ( program.isEmpty() ) return false;
-		if ( top_n_prelim == null ) return false;
-		if ( top_n_prelim == 0 ) return false;
-		if ( top_n_traceback == null ) return false;
-		if ( top_n_traceback == 0 ) return false;
-		if ( query_seq == null ) return false;
-		if ( query_seq.isEmpty() ) return false;
-		return true;
-	}
+    public Boolean valid()
+    {
+        if ( id == null ) return false;
+        if ( id.isEmpty() ) return false;
+        if ( db == null ) return false;
+        if ( db.isEmpty() ) return false;
+        if ( program == null ) return false;
+        if ( program.isEmpty() ) return false;
+        if ( top_n_prelim == null ) return false;
+        if ( top_n_prelim == 0 ) return false;
+        if ( top_n_traceback == null ) return false;
+        if ( top_n_traceback == 0 ) return false;
+        if ( query_seq == null ) return false;
+        if ( query_seq.isEmpty() ) return false;
+        return true;
+    }
 
 /**
  * compare a request against another to define if they represent the same request-id
  *
- * @return 	is this request equal to the other request ?
+ * @return  is this request equal to the other request ?
 */
     @Override public boolean equals( Object other )
     {
@@ -75,7 +75,7 @@ public final class BC_REQUEST implements Serializable
 /**
  * convert request to a string
  *
- * @return 	request converted to string
+ * @return  request converted to string
 */
     @Override public String toString()
     {

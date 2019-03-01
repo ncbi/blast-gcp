@@ -47,9 +47,9 @@ public class BC_DEBUG_SETTINGS implements Serializable
     public boolean worker_shift = false;
     public boolean pref_loc = false;
     public boolean db_copy = false;
-	public boolean req_file_added = false;
-	public boolean req_added = false;
-	public boolean avg_time = false;
+    public boolean req_file_added = false;
+    public boolean req_added = false;
+    public boolean avg_time = false;
 
 /**
  * convert debug-settings to multiline string for debug-purpose
@@ -74,7 +74,7 @@ public class BC_DEBUG_SETTINGS implements Serializable
 
         S = S + String.format( "\tlog ................ %s\n", S_log );
 
-		return S;
+        return S;
     }
 }
 

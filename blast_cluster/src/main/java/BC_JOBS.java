@@ -56,14 +56,14 @@ class BC_JOB extends Thread
     private final BC_CONTEXT context;
     private final JavaSparkContext jsc;
     private Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS;
-	private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
-	private final int id;
+    private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
+    private final int id;
 
 /**
  * create instance of BC_JOB
  *
- * @param a_context    			application-context
- * @param a_jsc        			JavaSparkContext
+ * @param a_context             application-context
+ * @param a_jsc                 JavaSparkContext
  * @param a_DEBUG_SETTINGS      broadcasted debug-settings
  * @param a_db_dict             dictionary of blast-database-RDDs
  * @param a_id                  Id of the thread
@@ -76,13 +76,13 @@ class BC_JOB extends Thread
                    final JavaSparkContext a_jsc,
                    Broadcast< BC_DEBUG_SETTINGS > a_DEBUG_SETTINGS,
                    final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > a_db_dict,
-				   final int a_id )
+                   final int a_id )
     {
         context = a_context;
         DEBUG_SETTINGS = a_DEBUG_SETTINGS;
         jsc = a_jsc;
         db_dict = a_db_dict;
-		id = a_id;
+        id = a_id;
     }
 
 /**
@@ -99,8 +99,8 @@ class BC_JOB extends Thread
  * - write results to local filesystem
  * - write report to local filesystem
  *
- * @param DBG    		broadcast-variable to be used for debug-interface
- * @param request  		request to be 'blasted' against one database-chunk
+ * @param DBG           broadcast-variable to be used for debug-interface
+ * @param request       request to be 'blasted' against one database-chunk
  * @see        BC_DEBUG_SETTINGS
  * @see        BC_REQUEST
  * @see        BC_DATABASE_RDD_ENTRY
@@ -109,98 +109,98 @@ class BC_JOB extends Thread
  * @see        BLAST_LIB
  * @see        BLAST_HSP_LIST
 */
-	private void handle_request( Broadcast< BC_DEBUG_SETTINGS > DBG, BC_REQUEST request )
-	{
-		/* Attention: the Broadcast-Variable DBG has to be in the parameter-list, even
-		   if it is available as a field of the BC_JOB-class! If instead the class-field
-		   is referenced from within the closure, SPARK tries to serialize
-		   the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
-		   It will compile, but it will fail at runtime. */
+    private void handle_request( Broadcast< BC_DEBUG_SETTINGS > DBG, BC_REQUEST request )
+    {
+        /* Attention: the Broadcast-Variable DBG has to be in the parameter-list, even
+           if it is available as a field of the BC_JOB-class! If instead the class-field
+           is referenced from within the closure, SPARK tries to serialize
+           the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
+           It will compile, but it will fail at runtime. */
 
-		System.out.println( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
-		long job_starttime = System.currentTimeMillis();
+        System.out.println( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
+        long job_starttime = System.currentTimeMillis();
 
-		JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
-		if ( chunks == null )
-			chunks = db_dict.get( request.db.substring( 0, 2 ) );
+        JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
+        if ( chunks == null )
+            chunks = db_dict.get( request.db.substring( 0, 2 ) );
 
-		if ( chunks != null )
-		{
-			final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
-			List< String > lines = new ArrayList<>();
-			lines.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
+        if ( chunks != null )
+        {
+            final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
+            List< String > lines = new ArrayList<>();
+            lines.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
 
-			/* ***** perform the map-operation on the worker-nodes ***** */
-			JavaRDD< Tuple2< List< String >, List< BLAST_TB_LIST > > > RESULTS = chunks.map( item ->
-			{
-				BC_DEBUG_SETTINGS debug = DBG.getValue();
+            /* ***** perform the map-operation on the worker-nodes ***** */
+            JavaRDD< Tuple2< List< String >, List< BLAST_TB_LIST > > > RESULTS = chunks.map( item ->
+            {
+                BC_DEBUG_SETTINGS debug = DBG.getValue();
 
-				List< String > str_lst = new ArrayList<>();
-				List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
-				if ( !item.present() )
-					str_lst.addAll( item.download() );
-				BC_REQUEST req = REQUEST.getValue();
+                List< String > str_lst = new ArrayList<>();
+                List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
+                if ( !item.present() )
+                    str_lst.addAll( item.download() );
+                BC_REQUEST req = REQUEST.getValue();
 
-            	BLAST_LIB lib = new BLAST_LIB( "libblastjni.so" );
-            	if ( lib != null )
-            	{
-					long starttime = System.currentTimeMillis();
-					BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
-					long finishtime = System.currentTimeMillis();
+                BLAST_LIB lib = new BLAST_LIB( "libblastjni.so" );
+                if ( lib != null )
+                {
+                    long starttime = System.currentTimeMillis();
+                    BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
+                    long finishtime = System.currentTimeMillis();
 
-					if ( hsps == null )
-						str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.name ) );
-					else
-					{
-						str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
-											    item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
-						
-						starttime = System.currentTimeMillis();
-						BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
-						finishtime = System.currentTimeMillis();
+                    if ( hsps == null )
+                        str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.name ) );
+                    else
+                    {
+                        str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
+                                                item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
+                        
+                        starttime = System.currentTimeMillis();
+                        BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+                        finishtime = System.currentTimeMillis();
 
-						if ( tbs == null )
-							str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.name ) );
-						else
-						{
-							str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-												    item.workername(), item.name, tbs.length, ( finishtime - starttime ) ) );
+                        if ( tbs == null )
+                            str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.name ) );
+                        else
+                        {
+                            str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
+                                                    item.workername(), item.name, tbs.length, ( finishtime - starttime ) ) );
 
-							for ( BLAST_TB_LIST tb : tbs )
-								tp_lst.add( tb );
-						}
-					}
-				}
-				else
-					str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.name ) );
+                            for ( BLAST_TB_LIST tb : tbs )
+                                tp_lst.add( tb );
+                        }
+                    }
+                }
+                else
+                    str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.name ) );
 
-				return new Tuple2<>( str_lst, tp_lst );
-			});
+                return new Tuple2<>( str_lst, tp_lst );
+            });
 
-			List< Tuple2< List< String >, List< BLAST_TB_LIST > > > l_res = RESULTS.collect();
-			BC_RESULTS results = new BC_RESULTS();
+            List< Tuple2< List< String >, List< BLAST_TB_LIST > > > l_res = RESULTS.collect();
+            BC_RESULTS results = new BC_RESULTS();
 
-			/* collect and write the report... */
-			for ( Tuple2< List< String >, List< BLAST_TB_LIST > > item : l_res )
-			{
-				lines.addAll( item._1 );
-				results.add( item._2 );
-			}
-			long job_finishtime = System.currentTimeMillis();
-			lines.add( String.format( "request '%s' done at '%s' ( %d ms )", request.id, BC_UTILS.datetime(),
-										( job_finishtime - job_starttime ) ) );
-			BC_UTILS.save_to_file( lines, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
+            /* collect and write the report... */
+            for ( Tuple2< List< String >, List< BLAST_TB_LIST > > item : l_res )
+            {
+                lines.addAll( item._1 );
+                results.add( item._2 );
+            }
+            long job_finishtime = System.currentTimeMillis();
+            lines.add( String.format( "request '%s' done at '%s' ( %d ms )", request.id, BC_UTILS.datetime(),
+                                        ( job_finishtime - job_starttime ) ) );
+            BC_UTILS.save_to_file( lines, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
 
-			results.sort();
-			results.cutoff( request.top_n_traceback );
-			String asn1_file_name = String.format( "%s/REQ_%s.asn1", context.settings.report_dir, request.id );
-			BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
+            results.sort();
+            results.cutoff( request.top_n_traceback );
+            String asn1_file_name = String.format( "%s/REQ_%s.asn1", context.settings.report_dir, request.id );
+            BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
 
-			System.out.println( String.format( "JOB[%d] REQUEST[%s] done", id, request.id ) );
-		}
-		else
-			System.out.println( String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
-	}
+            System.out.println( String.format( "JOB[%d] REQUEST[%s] done", id, request.id ) );
+        }
+        else
+            System.out.println( String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
+    }
 
 /**
  * overwritten run method of Thread-BC_JOB
@@ -212,22 +212,22 @@ class BC_JOB extends Thread
  * @see        BC_REQUEST
 */
     @Override public void run()
-	{
+    {
         while( context.is_running() )
         {
             BC_REQUEST request = context.get_request();
             if ( request != null )
-				handle_request( DEBUG_SETTINGS, request );
-			else
-			{
-				try
-				{
-					Thread.sleep( context.settings.job_sleep_time );
-				}
-				catch ( InterruptedException e ) { }
-			}
-		}
-	}
+                handle_request( DEBUG_SETTINGS, request );
+            else
+            {
+                try
+                {
+                    Thread.sleep( context.settings.job_sleep_time );
+                }
+                catch ( InterruptedException e ) { }
+            }
+        }
+    }
 }
 
 /**
@@ -244,8 +244,8 @@ public class BC_JOBS
  * create instance of BC_JOBS
  * - create as much job-instances as requested in application-settings
  *
- * @param context    			application-context
- * @param jsc        			JavaSparkContext
+ * @param context               application-context
+ * @param jsc                   JavaSparkContext
  * @param DEBUG_SETTINGS        broadcasted debug-settings
  * @param db_dict               dictionary of blast-database-RDDs
  *
@@ -256,15 +256,15 @@ public class BC_JOBS
     public BC_JOBS( final BC_CONTEXT context,
                     final JavaSparkContext jsc,
                     Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS,
-					final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict )
+                    final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict )
     {
         jobs = new ArrayList<>();
         for ( int i = 0; i < context.settings.parallel_jobs; ++i )
-		{
-			BC_JOB job = new BC_JOB( context, jsc, DEBUG_SETTINGS, db_dict, i );
+        {
+            BC_JOB job = new BC_JOB( context, jsc, DEBUG_SETTINGS, db_dict, i );
             jobs.add( job );
-			job.start();
-		}
+            job.start();
+        }
     }
 
 /**
@@ -274,10 +274,10 @@ public class BC_JOBS
     public void join()
     {
         for ( BC_JOB job : jobs )
-		{
-		    try { job.join(); }
-		    catch( InterruptedException e ) { }
-		}
+        {
+            try { job.join(); }
+            catch( InterruptedException e ) { }
+        }
     }
 }
 

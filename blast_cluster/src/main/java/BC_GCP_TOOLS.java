@@ -162,33 +162,33 @@ public class BC_GCP_TOOLS
  *
  * @return         number of entries found
 */
-	private Integer list_bucket( final String bucket, List< String > lst )
-	{
-		Integer res = 0; 
+    private Integer list_bucket( final String bucket, List< String > lst )
+    {
+        Integer res = 0; 
         try
         {
             Storage.Objects.List list = storage.objects().list( bucket );
             if ( list != null )
             {
-				Objects objects;
-				do
-				{
-					objects = list.execute();
-					List< StorageObject > items = objects.getItems();
-					for ( StorageObject item : items )
-					{
-						lst.add( item.getName() );
-						res += 1;
-					}
-					list.setPageToken( objects.getNextPageToken() );
-				} while ( objects.getNextPageToken() != null );
+                Objects objects;
+                do
+                {
+                    objects = list.execute();
+                    List< StorageObject > items = objects.getItems();
+                    for ( StorageObject item : items )
+                    {
+                        lst.add( item.getName() );
+                        res += 1;
+                    }
+                    list.setPageToken( objects.getNextPageToken() );
+                } while ( objects.getNextPageToken() != null );
             }
         }
         catch( Exception e )
         {
         }
-		return res;
-	}
+        return res;
+    }
 
 /**
  * private helper-method to create a lock-file
@@ -196,17 +196,17 @@ public class BC_GCP_TOOLS
  * @param  f    file to be created
  *
 */
-	private void write_lock( File f )
-	{
-		BufferedWriter writer = null;
-		try
-		{
-			writer = new BufferedWriter( new FileWriter( f ) );
-			writer.write( "locked" );
-		}
-		catch( Exception e ) { e.printStackTrace(); }	
-		finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
-	}
+    private void write_lock( File f )
+    {
+        BufferedWriter writer = null;
+        try
+        {
+            writer = new BufferedWriter( new FileWriter( f ) );
+            writer.write( "locked" );
+        }
+        catch( Exception e ) { e.printStackTrace(); }   
+        finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
+    }
 
 /**
  * private helper-method to delete a lock-file
@@ -214,11 +214,11 @@ public class BC_GCP_TOOLS
  * @param  f    file to be deleted
  *
 */
-	private void delete_lock( File f )
-	{
-		try	{ f.delete(); }	
-		catch( Exception e ) { e.printStackTrace(); }
-	}
+    private void delete_lock( File f )
+    {
+        try { f.delete(); } 
+        catch( Exception e ) { e.printStackTrace(); }
+    }
 
 /**
  * private method to download a file from a bucket to the local filesystem, protected by a lock-file
@@ -232,36 +232,36 @@ public class BC_GCP_TOOLS
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
         boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
-		if ( res )
-		{
-			File f_lock = new File( String.format( "%s.lock", dst_filename ) );
-			res = ( !f_lock.exists() );
-			if ( res )
-			{
-				write_lock( f_lock );
-				try
-				{
-				    Storage.Objects.Get obj = storage.objects().get( bucket, key );
-				    if ( obj != null )
-				    {
-				        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+        if ( res )
+        {
+            File f_lock = new File( String.format( "%s.lock", dst_filename ) );
+            res = ( !f_lock.exists() );
+            if ( res )
+            {
+                write_lock( f_lock );
+                try
+                {
+                    Storage.Objects.Get obj = storage.objects().get( bucket, key );
+                    if ( obj != null )
+                    {
+                        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
-				        File f = new File( dst_filename );
-				        FileOutputStream f_out = new FileOutputStream( f );
+                        File f = new File( dst_filename );
+                        FileOutputStream f_out = new FileOutputStream( f );
 
-				        obj.executeMediaAndDownloadTo( f_out );
+                        obj.executeMediaAndDownloadTo( f_out );
 
-				        f_out.flush();
-				        f_out.close();
-				    }
-					else
-						res = false;
-				}
-				catch( Exception e ) { res = false; }
-				finally { delete_lock( f_lock ); }
-			}
+                        f_out.flush();
+                        f_out.close();
+                    }
+                    else
+                        res = false;
+                }
+                catch( Exception e ) { res = false; }
+                finally { delete_lock( f_lock ); }
+            }
 
-		}
+        }
         return res;
     }
 
@@ -278,20 +278,20 @@ public class BC_GCP_TOOLS
         InputStream res = null;
         BC_GCP_TOOLS inst = getInstance();
         if ( inst != null )
-		{
-		    try
-		    {
-		        Storage.Objects.Get obj = inst.storage.objects().get( bucket, key );
-		        if ( obj != null )
-		        {
-		            obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
-		            return obj.executeMediaAsInputStream(); 
-		        }
-		    }
-		    catch( Exception e )
-		    {
-		    }
-		}
+        {
+            try
+            {
+                Storage.Objects.Get obj = inst.storage.objects().get( bucket, key );
+                if ( obj != null )
+                {
+                    obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+                    return obj.executeMediaAsInputStream(); 
+                }
+            }
+            catch( Exception e )
+            {
+            }
+        }
         return res;
     }
 
@@ -308,22 +308,22 @@ public class BC_GCP_TOOLS
         boolean res = false;
         BC_GCP_TOOLS inst = getInstance();
         if ( inst != null )
-		{
-		    try
-		    {
-		        URI uri = new URI( bucket );
-		        if ( uri.getScheme().equals( "gs" ) )
-		        {
-		            String key = uri.getPath();
-		            if ( key.startsWith( "/" ) )
-		                key = key.substring( 1 );
-		            return inst.download_to_file( uri.getAuthority(), key, dst_filename );
-		        }
-		    }
-		    catch( URISyntaxException e )
-		    {
-		    }
-		}
+        {
+            try
+            {
+                URI uri = new URI( bucket );
+                if ( uri.getScheme().equals( "gs" ) )
+                {
+                    String key = uri.getPath();
+                    if ( key.startsWith( "/" ) )
+                        key = key.substring( 1 );
+                    return inst.download_to_file( uri.getAuthority(), key, dst_filename );
+                }
+            }
+            catch( URISyntaxException e )
+            {
+            }
+        }
         return res;
     }
 
@@ -339,22 +339,22 @@ public class BC_GCP_TOOLS
         InputStream res = null;
         BC_GCP_TOOLS inst = getInstance();
         if ( inst != null )
-		{
-		    try
-		    {
-		        URI uri = new URI( bucket );
-		        if ( uri.getScheme().equals( "gs" ) )
-		        {
-		            String key = uri.getPath();
-		            if ( key.startsWith( "/" ) )
-		                key = key.substring( 1 );
-		            return inst.download_as_stream( uri.getAuthority(), key );
-		        }
-		    }
-		    catch( URISyntaxException e )
-		    {
-		    }
-		}
+        {
+            try
+            {
+                URI uri = new URI( bucket );
+                if ( uri.getScheme().equals( "gs" ) )
+                {
+                    String key = uri.getPath();
+                    if ( key.startsWith( "/" ) )
+                        key = key.substring( 1 );
+                    return inst.download_as_stream( uri.getAuthority(), key );
+                }
+            }
+            catch( URISyntaxException e )
+            {
+            }
+        }
         return res;
     }
 
@@ -398,24 +398,24 @@ public class BC_GCP_TOOLS
  *
  * @return         List of Strings, names of items in the bucket
 */
-	public static List< String > list( final String bucket )
-	{
-		List< String > res = new ArrayList<>();
+    public static List< String > list( final String bucket )
+    {
+        List< String > res = new ArrayList<>();
         BC_GCP_TOOLS inst = getInstance();
         if ( inst != null )
-		{
-		    try
-		    {
-		        URI uri = new URI( bucket );
-		        if ( uri.getScheme().equals( "gs" ) )
-					inst.list_bucket( uri.getAuthority(), res );
-		    }
-		    catch( URISyntaxException e )
-		    {
-		    }
-		}
-		return res;
-	}
+        {
+            try
+            {
+                URI uri = new URI( bucket );
+                if ( uri.getScheme().equals( "gs" ) )
+                    inst.list_bucket( uri.getAuthority(), res );
+            }
+            catch( URISyntaxException e )
+            {
+            }
+        }
+        return res;
+    }
 
 /**
  * private static helper-method to test if a String ends in any of the given extensions
@@ -425,14 +425,14 @@ public class BC_GCP_TOOLS
  *
  * @return         does the string end in any of the given extensions ?
 */
-	private static boolean ends_with_any( final String s, final List< String > extensions )
-	{
-		for ( String ext : extensions )
-		{
-			if ( s.endsWith( ext ) ) return true;
-		}
-		return false;
-	}
+    private static boolean ends_with_any( final String s, final List< String > extensions )
+    {
+        for ( String ext : extensions )
+        {
+            if ( s.endsWith( ext ) ) return true;
+        }
+        return false;
+    }
 
 /**
  * public static helper-method filter a list of Strings, based on a list of given extensions
@@ -442,20 +442,20 @@ public class BC_GCP_TOOLS
  *
  * @return         list of strings that do end in any of the given extensions
 */
-	public static List< String > unique_without_extension( final List< String > all, final List< String > extensions )
-	{
-		List< String > res = new ArrayList<>();
-		for ( String s : all )
-		{
-			if ( ends_with_any( s, extensions ) )
-			{
-				String without_ext = s.substring( 0, s.length() - 4 );
-				if ( ! res.contains( without_ext ) )
-					res.add( without_ext );
-			}
-		}
-		return res;
-	}
+    public static List< String > unique_without_extension( final List< String > all, final List< String > extensions )
+    {
+        List< String > res = new ArrayList<>();
+        for ( String s : all )
+        {
+            if ( ends_with_any( s, extensions ) )
+            {
+                String without_ext = s.substring( 0, s.length() - 4 );
+                if ( ! res.contains( without_ext ) )
+                    res.add( without_ext );
+            }
+        }
+        return res;
+    }
 
 }
 
