@@ -47,18 +47,20 @@ public class BLAST_LIB {
         System.err.println("Trying to load " + libname);
         System.loadLibrary(libname);
       } else {
-        System.err.println("Trying to load " + libname.substring(0, lastPeriodPos));
+        System.err.println("Trying to load:" + libname.substring(0, lastPeriodPos));
         System.loadLibrary(libname.substring(0, lastPeriodPos));
       }
     } catch (Throwable threx) {
+      System.err.println("Exception was:" + threx);
       try {
-        System.err.println("Trying to load sparkfiles " + libname);
+        System.err.println("Trying to load via SparkFiles.get(" + libname + ")");
         System.load(SparkFiles.get(libname));
       } catch (ExceptionInInitializerError xininit) {
         invalid = xininit;
         throw xininit;
       } catch (Throwable threx2) {
         invalid = new ExceptionInInitializerError(threx2);
+        System.err.println("Giving up, throwing:" + threx2);
         throw threx2;
       }
     }
@@ -83,6 +85,7 @@ public class BLAST_LIB {
 
       if (lvl.isGreaterOrEqual(logLevel)) {
         final String newmsg = "BLASTJNI (" + BLAST_LIB.processID + "/" + threadId + ") " + msg;
+        // System.err.println(newmsg);
         logger.log(lvl, newmsg);
       }
     } catch (Throwable threx) {

@@ -46,6 +46,18 @@ class BLAST_HSP_LIST implements Serializable {
     return hsp_blob.length == 0;
   }
 
+  public int getOid() {
+    return oid;
+  }
+
+  public int getMax_score() {
+    return max_score;
+  }
+
+  public byte[] getHsp_blob() {
+    return hsp_blob;
+  }
+
   @Override
   public String toString() {
     String res = "";

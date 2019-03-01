@@ -43,6 +43,15 @@ class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.Serializable {
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;
 
+  public int getOid();
+    descriptor: ()I
+
+  public int getMax_score();
+    descriptor: ()I
+
+  public byte[] getHsp_blob();
+    descriptor: ()[B
+
   public java.lang.String toString();
     descriptor: ()Ljava/lang/String;
 }
