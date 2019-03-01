@@ -68,7 +68,7 @@ public final class BC_MAIN
  * @see        BC_DEBUG_RECEIVER
  * @see        BC_DEBUG_SETTINGS
 */
-    private static void run( final BC_SETTINGS settings )
+    private static void run( final BC_SETTINGS settings, final String list_to_run )
     {
         /* create and configure the spark-context */
         SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
@@ -106,7 +106,7 @@ public final class BC_MAIN
             /* get a list of unique names ( without the extension ) */
             List< String > names = BC_GCP_TOOLS.unique_without_extension( files, db_setting.extensions );
             if ( db_setting.limit > 0 )
-                System.out.println( String.format( "%s has %d chunks, using %d of them", key, names.size(), db_setting.limit ) );               
+                System.out.println( String.format( "%s has %d chunks, using %d of them", key, names.size(), db_setting.limit ) );
             else
                 System.out.println( String.format( "%s has %d chunks", key, names.size() ) );
 
@@ -121,23 +121,14 @@ public final class BC_MAIN
             db_dict.put( key, rdd );
         }
 
-        /* for each RDD in the database-dictionary run a simple map-operation to trigger the download*/
-        List< String > lines = new ArrayList<>();
-        for ( String key : db_dict.keySet() )
-        {
-            System.out.println( String.format( "downloading '%s' on the workers", key ) );
-            JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( key );
-            if ( chunks != null )
-            {
-                JavaRDD< String > DOWNLOADS = chunks.flatMap( item -> { return item.download().iterator(); } );
-                lines.addAll( DOWNLOADS.collect() );
-            }
-        }
-        BC_UTILS.save_to_file( lines, "downloads.txt" );
-
+        /* create the job-pool to process jobs in parallel */
         BC_JOBS jobs = new BC_JOBS( context, jsc, DEBUG_SETTINGS, db_dict );
 
         System.out.println( "ready" );
+
+        /* if we have a list to run at startup... */
+        if ( list_to_run != null )
+            context.addRequestList( list_to_run, System.out, 0 );
 
         /* we are handling commands, which originate form the master-console or from a socket */
         while ( context.is_running() )
@@ -196,8 +187,9 @@ public final class BC_MAIN
                 {
                     System.out.println( "settings are valid! preparing cluster" );
 
+                    String list_to_run = args.length > 1 ? args[ 1 ] : null;
                     /* === run the application === */
-                    run( settings );
+                    run( settings, list_to_run );
                 }
             }
             else
