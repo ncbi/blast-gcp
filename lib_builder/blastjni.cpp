@@ -26,6 +26,28 @@
 
 #include "blastjni.hpp"
 #include "gov_nih_nlm_ncbi_blastjni_BLAST_LIB.h"
+#include <algo/blast/core/blast_hspstream.h>
+
+#include <jni.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include <algo/blast/api/blast4spark.hpp>
 #include <algo/blast/api/blast_advprot_options.hpp>
 #include <algo/blast/api/blast_exception.hpp>
@@ -35,16 +57,6 @@
 #include <algo/blast/api/objmgrfree_query_data.hpp>
 #include <algo/blast/api/prelim_stage.hpp>
 #include <algo/blast/api/setup_factory.hpp>
-#include <algo/blast/core/blast_hspstream.h>
-#include <algorithm>
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <jni.h>
 #include <ncbi_pch.hpp>
 #include <objects/seq/Bioseq.hpp>
 #include <objects/seq/Seq_data.hpp>
@@ -53,15 +65,6 @@
 #include <objects/seqloc/Seq_id.hpp>
 #include <objects/seqset/Bioseq_set.hpp>
 #include <objects/seqset/Seq_entry.hpp>
-#include <pthread.h>
-#include <set>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <sys/types.h>
-#include <unistd.h>
-#include <vector>
-
 enum
 {
     xc_no_err,
