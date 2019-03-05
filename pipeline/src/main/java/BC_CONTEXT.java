@@ -90,7 +90,7 @@ public class BC_CONTEXT
 /**
  * stop the processing of pending lists
 */
-    public void stop_lists() { list_manager.stop(); }   
+    public void stop_lists() { list_manager.stop(); }
 
 /**
  * put a command into the internal command-queue
@@ -169,8 +169,6 @@ public class BC_CONTEXT
             else if ( ps != null )
                 ps.printf( "invalid request '%s'\n", req_string );
         }
-        else if ( ps != null )
-            ps.printf( "rejected: request-queue is full\n" );
         return res;
     }
 
@@ -198,8 +196,6 @@ public class BC_CONTEXT
                 res = -1;
             }
         }
-        else
-            ps.printf( "rejected: '%s' request-queue is full\n", filename );
         return res;
     }
 
