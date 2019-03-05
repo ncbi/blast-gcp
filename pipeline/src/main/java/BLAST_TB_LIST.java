@@ -116,6 +116,41 @@ public final class BLAST_TB_LIST implements Serializable, Comparable< BLAST_TB_L
             return -1;
     }
 
+  private static String toHex(byte[] blob) {
+    String res = "";
+    res += "\n        ";
+    int brk = 0;
+    for (final byte b : blob) {
+      res += String.format("%02x", b);
+      ++brk;
+      if (brk % 4 == 0) {
+        res += " ";
+      }
+      if (brk % 32 == 0) {
+        res += "\n        ";
+      }
+    }
+    res += "\n";
+    return res;
+  }
+
+/**
+ * getter for use by test-code
+ *
+ * @return      returns the object as string
+*/
+  @Override
+  public String toString() {
+    String res = "  TBLIST";
+    res += String.format("\n  evalue=%f oid=%d", evalue, oid);
+    if (asn1_blob != null) {
+      res += "\n  " + asn1_blob.length + " bytes in ASN.1 blob\n";
+    }
+    if (asn1_blob != null) {
+      res += toHex(asn1_blob);
+    }
+    return res;
+  }
     
 }
 
