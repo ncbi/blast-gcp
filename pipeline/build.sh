@@ -2,4 +2,4 @@
 
 clear
 echo "compiling java-classes"
-mvn -q package
+mvn -q package -DskipTests

@@ -10,7 +10,7 @@
 		"files" :
 		{
 			"dir" : "/panfs/somewhere",
-			"use" : "false"
+			"use" : "true"
 		},
 		"socket" :
 		{
@@ -26,13 +26,15 @@
 			"key" : "nr",
 			"worker_location" : "/tmp/blast/db",
 			"source_location" : "gs://nr_50mb_chunks",
-			"extensions" : [ "psq", "pin", "phr" ]
+			"extensions" : [ "psq", "pin", "phr" ],
+			"limit" : 20
 		},
 		{
 			"key" : "nt",
 			"worker_location" : "/tmp/blast/db",
 			"source_location" : "gs://nt_50mb_chunks",
-			"extensions" : [ "nsq", "nin", "nhr" ]
+			"extensions" : [ "nsq", "nin", "nhr" ],
+			"limit" : 20
 		}
 	],
 
@@ -48,16 +50,15 @@
         {
             "dir"  : "/panfs/somewhere",
 			"pattern" : "%s.asn",
-			"use" : false
+			"use" : true
         }
     },
 
     "cluster" :
     {
 		"transfer_files" : [ "libblastjni.so" ],
-		"parallel_jobs" : 12,
-        "num_executors" : 8,
-        "num_executor_cores" : 2
+		"num_executors" : 8,
+		"parallel_jobs" : 12
     },
 
     "debug" :

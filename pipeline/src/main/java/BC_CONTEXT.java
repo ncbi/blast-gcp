@@ -34,43 +34,106 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Context of the Application :
+ * - stores the Application-settings
+ * - owns a atomic Boolean for the running state
+ * - owns a thread-safe queue for commands
+ * - owns a thread-safe queue for requests
+ * - owns a list of Request-Lists
+ * @see        BC_SETTINGS
+*/
 public class BC_CONTEXT
 {
-	public final BC_SETTINGS settings;
+    public final BC_SETTINGS settings;
     private final AtomicBoolean running;
     private final ConcurrentLinkedQueue< BC_COMMAND > command_queue;
     private final ConcurrentLinkedQueue< BC_REQUEST > request_queue;
-	private final BC_LISTS lists;
+    private final BC_LISTS list_manager;
 
+/**
+ * create instance of BC_CONTEXT from settings
+ * - store reference to settings
+ * - create private queues and BC_LISTS-instance
+ *
+ * @param a_settings application-settings
+ * @see        BC_SETTINGS
+*/
     public BC_CONTEXT( final BC_SETTINGS a_settings )
-	{
-		settings = a_settings;
+    {
+        settings = a_settings;
         running = new AtomicBoolean( true );
         command_queue = new ConcurrentLinkedQueue<>();
         request_queue = new ConcurrentLinkedQueue<>();
-		lists = new BC_LISTS( this );
-	}
+        list_manager = new BC_LISTS( this );
+    }
 
+/**
+ * test if the request-queue has space for at least one more request
+ *
+ * @return     does the request-queue has space for at least one more request ?
+*/
     public int can_take() { return ( settings.req_max_backlog - request_queue.size() ); }
 
+/**
+ * test if the application is still in running mode
+ *
+ * @return     is the application still in running mode ?
+*/
     public boolean is_running() { return running.get(); }
-    public void stop() { running.set( false ); }
-	public void stop_lists() { lists.stop(); }	
 
+/**
+ * stop the application
+*/
+    public void stop() { running.set( false ); }
+
+/**
+ * stop the processing of pending lists
+*/
+    public void stop_lists() { list_manager.stop(); }   
+
+/**
+ * put a command into the internal command-queue
+ *
+ * @param command the command to be put into the queue
+*/
     public void push_command( final BC_COMMAND command ) { command_queue.offer( command ); }
+
+/**
+ * get a command from the internal command-queue
+ *
+ * @return a BC_COMMAND instance or null if the queue is empty
+*/
     public BC_COMMAND pull_cmd() { return command_queue.poll(); }
 
-	public BC_SETTINGS get_settings() { return settings; }
+/**
+ * return reference to internally store settings
+ *
+ * @return application settings
+*/
+    public BC_SETTINGS get_settings() { return settings; }
 
-
-    public boolean contains( BC_REQUEST request )
+/**
+ * test if a request is already in the internal queue
+ *
+ * @param request BC_REQUEST-instance to be tested
+ * @return        is the BC_REQUEST-instance already in the internal queue ?
+*/
+    public boolean contains( final BC_REQUEST request )
     {
         boolean res = request_queue.contains( request );
         //if ( !res ) res = is_a_running_id( request.id ); /* we will need this protection again */
         return res;
     }
 
-    public boolean add_request( BC_REQUEST request, final PrintStream ps )
+/**
+ * put a BC_REQUEST-instance into the internal request-queue
+ *
+ * @param request  BC_REQUEST-instance to be added
+ * @param ps       stream to be used for error messages, can be null
+ * @return         was the request successfully added ?
+*/
+    public boolean add_request( final BC_REQUEST request, final PrintStream ps )
     {
         boolean res = !contains( request );
         if ( res )
@@ -78,7 +141,7 @@ public class BC_CONTEXT
             request_queue.offer( request );
 
             if ( ps != null && settings.debug.req_added )
-            	ps.printf( "REQUEST '%s' added to queue\n", request.id );
+                ps.printf( "REQUEST '%s' added to queue\n", request.id );
         }
         else
         {
@@ -88,6 +151,13 @@ public class BC_CONTEXT
         return res;
     }
 
+/**
+ * put a String, containing a json-encoded BC_REQUEST into the internal request-queue
+ *
+ * @param req_string String containing a json-encoded BC_REQUEST
+ * @param ps         stream to be used for error messages, can be null
+ * @return           was the request successfully added ?
+*/
     public boolean add_request_string( final String req_string, final PrintStream ps )
     {
         boolean res = false;
@@ -99,49 +169,81 @@ public class BC_CONTEXT
             else if ( ps != null )
                 ps.printf( "invalid request '%s'\n", req_string );
         }
+        else if ( ps != null )
+            ps.printf( "rejected: request-queue is full\n" );
         return res;
     }
 
-	/* return 1..done, 0..not-done, -1..invalid*/
+/**
+ * put a file, containing a json-encoded BC_REQUEST into the internal request-queue
+ *
+ * @param filename name of file containing a json-encoded BC_REQUEST
+ * @param ps       stream to be used for error messages ( cannot be null )
+ * @return         1..done, 0..not done, -1..request invalid
+*/
     public int add_request_file( final String filename, final PrintStream ps )
     {
         int res = 0;
         if ( can_take() > 0 )
         {
             BC_REQUEST request = BC_REQUEST_READER.parse_from_file( filename );
-			if ( request != null )
-			{
-            	if ( add_request( request, ps ) )
-					res = 1;
-			}
+            if ( request != null )
+            {
+                if ( add_request( request, ps ) )
+                    res = 1;
+            }
             else
-			{
-				if ( ps != null )
-	                ps.printf( "invalid request in file '%s'\n", filename );
-				res = -1;
-			}
+            {
+                ps.printf( "invalid request in file '%s'\n", filename );
+                res = -1;
+            }
         }
+        else
+            ps.printf( "rejected: '%s' request-queue is full\n", filename );
         return res;
     }
 
-	public BC_REQUEST get_request()
-	{
-        BC_REQUEST request = request_queue.poll();
-        return request;
-	}
+/**
+ * get a BC_REQUEST-instance from the internal request-queue
+ *
+ * @return         a valid BC_REQUEST-instance or null
+*/
+    public BC_REQUEST get_request()
+    {
+        return request_queue.poll();
+    }
 
-	public void addRequestList( final String filename, final PrintStream ps, int limit )
-	{
-		lists.addFile( filename, ps, limit );
-	}
+/**
+ * add a list of requests to the internal list-manager
+ *
+ * @param filename name of file containing a list of request-files
+ * @param ps       stream to be used for error messages ( cannot be null )
+ * @param limit    limit of entries to use
+*/
+    public void addRequestList( final String filename, final PrintStream ps, int limit )
+    {
+        list_manager.addFile( filename, ps, limit );
+    }
 
-	public void addRequestBucket( final String filename, final PrintStream ps, int limit )
-	{
-		lists.addBucket( filename, ps, limit );
-	}
+/**
+ * add a bucket to the internal list-manager
+ *
+ * @param bucket_url url of bucket containing request-files
+ * @param ps         stream to be used for error messages ( cannot be null )
+ * @param limit      limit of request-files to use
+*/
+    public void addRequestBucket( final String bucket_url, final PrintStream ps, int limit )
+    {
+        list_manager.addBucket( bucket_url, ps, limit );
+    }
 
-	public void join()
-	{
-		lists.join();
-	}
+/**
+ * wait for all list-threads owned by the list-manager to finish
+ *
+*/
+    public void join()
+    {
+        list_manager.join();
+    }
 }
+

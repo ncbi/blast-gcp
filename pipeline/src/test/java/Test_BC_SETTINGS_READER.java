@@ -64,6 +64,8 @@ public class Test_BC_SETTINGS_READER {
         assertTrue ("one of res_use_gs_bucket or res_use_files has to be true",
                     (res.res_use_gs_bucket == true || res.res_use_files == true));
 
+        /*
+        WRONG UNDERSTANDING: use_gs_bucket and use_gs_files are not mutually exclusive!
         if (res.res_use_gs_bucket == true) {
             assertTrue ("if res_use_gs_bucket == true, then res_use_files must be false",
                         (res.res_use_files == false));
@@ -79,11 +81,17 @@ public class Test_BC_SETTINGS_READER {
             assertTrue ("if res_use_files == true, then res_files_dir and res_files_pattern must be set",
                         (!res.res_files_dir.isEmpty() && !res.res_files_pattern.isEmpty()));
         }
+        */
 
         /* CLUSTER */
         assertTrue ("transfer_files must be set", (!res.transfer_files.isEmpty()));
         assertTrue ("num_executors must be > 0", (res.num_executors > 0));
+
+        /*
+        WRONG UNDERSTANDING: zero-cores means do not set, used YARNs defaults, aks ZERO IS VALID
         assertTrue ("num_executor_cores must be > 0", (res.num_executor_cores > 0));
+        */
+
         assertTrue ("parallel_jobs must be > 0", (res.parallel_jobs > 0));
 
         /* SUMMARY CHECK */

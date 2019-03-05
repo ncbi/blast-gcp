@@ -27,55 +27,99 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 
-// Warning: C++ JNI code expects this to be name BLAST_HSP_LIST
-class BLAST_HSP_LIST implements Serializable {
-  private int oid;
-  private int max_score;
-  private byte[] hsp_blob;
+/**
+ * storage for the output of blast-search
+ * name and layout is coupled with the BLAST_LIB-class and the C++-code
+ *
+ * @see BLAST_LIB
+*/
+public final class BLAST_HSP_LIST implements Serializable
+{
+    private int oid;
+    private int max_score;
+    private byte[] hsp_blob;
 
-  BLAST_HSP_LIST(final int oid, final int max_score, final byte[] hsp_blob) {
-    this.oid = oid;
-    this.max_score = max_score;
-    this.hsp_blob = hsp_blob;
-  }
-
-  public Boolean isEmpty() {
-    if (hsp_blob == null) {
-      return true;
+/**
+ * constructor providing values for internal fields
+ *
+ * @param   oid         OID - value ( object-ID ? )
+ * @param   max_score   highest score for search-results
+ * @param   hsp_blob    opaque HSP-blob
+*/
+    public BLAST_HSP_LIST( int oid, int max_score, byte[] hsp_blob )
+    {
+        this.oid = oid;
+        this.max_score = max_score;
+        this.hsp_blob = hsp_blob;
     }
-    return hsp_blob.length == 0;
-  }
 
-  public int getOid() {
-    return oid;
-  }
-
-  public int getMax_score() {
-    return max_score;
-  }
-
-  public byte[] getHsp_blob() {
-    return hsp_blob;
-  }
-
-  @Override
-  public String toString() {
-    String res = "";
-    res += "  HSPLIST";
-    res += "\n         oid = " + oid;
-    res += "\n   max_score = " + max_score;
-    res += "\n" + String.format("        blob = %d bytes:", hsp_blob.length);
-    res += "\n      ";
-    int brk = 0;
-    for (int i = 0; i != hsp_blob.length; ++i) {
-      final byte b = hsp_blob[i];
-      res += String.format("%02x", b);
-      ++brk;
-      if (brk % 4 == 0) {
-        res += " ";
-      }
+/**
+ * test for empty-ness
+ *
+ * @return      is this HSP-list empty ?
+*/
+    public Boolean isEmpty()
+    {
+        if (hsp_blob == null) return true;
+        return (hsp_blob.length == 0);
     }
-    res += "\n";
-    return res;
-  }
-}
+
+/**
+ * getter for use by test-code
+ *
+ * @return      returns the internal OID
+*/
+    public int getOid()
+    {
+        return oid;
+    }
+
+/**
+ * getter for use by test-code
+ *
+ * @return      returns the max-score
+*/
+    public int getMax_score()
+    {
+        return max_score;
+    }
+
+/**
+ * getter for use by test-code
+ *
+ * @return      returns the whole blob
+*/
+    public byte[] getHsp_blob()
+    {
+        return hsp_blob;
+    }
+
+/**
+ * getter for use by test-code
+ *
+ * @return      returns the object as string
+*/
+    @Override public String toString()
+    {
+        String res = "";
+        res += "  HSPLIST";
+        res += "\n         oid = " + oid;
+        res += "\n   max_score = " + max_score;
+        res += "\n" + String.format( "        blob = %d bytes:", hsp_blob.length );
+        res += "\n      ";
+        int brk = 0;
+        for ( int i = 0; i != hsp_blob.length; ++i )
+        {
+            final byte b = hsp_blob[i];
+            res += String.format("%02x", b);
+            ++brk;
+            if ( brk % 4 == 0 )
+            {
+                res += " ";
+            }
+        }
+        res += "\n";
+        return res;
+    }
+
+};

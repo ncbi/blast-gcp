@@ -33,6 +33,11 @@ import java.net.InetAddress;
 
 import org.apache.spark.SparkEnv;
 
+/**
+ * utility-class to send debug-information from workers to the master
+ * implemented as a singleton
+ *
+*/
 public class BC_SEND implements Serializable
 {
     private static BC_SEND instance = null;
@@ -40,15 +45,20 @@ public class BC_SEND implements Serializable
     private PrintStream ps;
     private String localName;
     private String executorName;
-	private long start_milisecs;
+    //private long start_milisecs;
 
+/**
+ * private constructor to prevent accidential instantiation
+ *
+ * @param   host    the host the send messages to
+ * @param   port    the port on the host the send messages to
+*/
     private BC_SEND( final String host, final int port )
     {
         try
         {
-            //localName = "W" + java.net.InetAddress.getLocalHost().getHostName().replaceAll( "\\D+","" );
-			localName = java.net.InetAddress.getLocalHost().getHostName();
-			executorName = SparkEnv.get().executorId();
+            localName = java.net.InetAddress.getLocalHost().getHostName();
+            executorName = SparkEnv.get().executorId();
             Socket socket = new Socket( host, port );
             socket.setTcpNoDelay( true );
             ps = new PrintStream( socket.getOutputStream() );
@@ -60,6 +70,12 @@ public class BC_SEND implements Serializable
         }
     }
 
+/**
+ * private helper method to return already existing or newly created instance
+ *
+ * @param   host    the host the send messages to
+ * @param   port    the port on the host the send messages to
+*/
     public static BC_SEND getInstance( final String host, final int port )
     {
         if ( instance == null )
@@ -69,18 +85,23 @@ public class BC_SEND implements Serializable
         return instance;
     }
 
+/**
+ * private helper method to send message, inserts local name and executorName
+ *
+ * @param   msg     message to send
+*/
     private void send_msg( final String msg )
     {
         try
         {
             if ( ps != null )
-			{
-				/*
-				long milliseconds = System.currentTimeMillis();
-				ps.printf( "%d %s %s %s\n", milliseconds, localName, executorName, msg );
-				*/
-				ps.printf( "%s %s %s\n", localName, executorName, msg );
-			}
+            {
+                /*
+                long milliseconds = System.currentTimeMillis();
+                ps.printf( "%d %s %s %s\n", milliseconds, localName, executorName, msg );
+                */
+                ps.printf( "%s %s %s\n", localName, executorName, msg );
+            }
         }
         catch ( Exception e )
         {
@@ -88,6 +109,13 @@ public class BC_SEND implements Serializable
         }
     }
 
+/**
+ * public method to send message, to host:port
+ *
+ * @param   host    the host the send messages to
+ * @param   port    the port on the host the send messages to
+ * @param   msg     message to send
+*/
     public static void send( final String host, final int port, final String msg )
     {
         BC_SEND inst = getInstance( host, port );
@@ -95,22 +123,16 @@ public class BC_SEND implements Serializable
             inst.send_msg( msg );
     }
 
+/**
+ * public method to send message, to host,port taken from debug-settings-instance
+ *
+ * @param   debug   instance BC_DEBUG_SETTINGS to take host/port from
+ * @param   msg     message to send
+*/
     public static void send( final BC_DEBUG_SETTINGS debug, final String msg )
     {
         send( debug.host, debug.port, msg );
     }
 
-    public static String resolve( final String hostname )
-    {
-        try
-        {
-            InetAddress address = InetAddress.getByName( hostname ); 
-            return address.getHostAddress();
-        }
-        catch ( Exception e )
-        {
-            return hostname;
-        }
-    }
 }
 

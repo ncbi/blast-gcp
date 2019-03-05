@@ -36,36 +36,44 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
+/**
+ * Infrastructure-Class to display lines, read form a tcp-socket for debugging
+ * class is used only by the BC_DEBUG_RECEIVER-class
+ * - stores reference to application-context
+ * - stores socket to use
+ * @see        BC_CONTEXT
+*/
 class BC_DEBUG_RECEIVER_CLIENT extends Thread
 {
     private final BC_CONTEXT context;
+    private final long sleep_time;
     private final Socket socket;
 
+/**
+ * create instance of BC_DEBUG_RECEIVER_CLIENT
+ * - store reference application-context
+ * - store socket to use
+ *
+ * @param a_context    application-context
+ * @param a_socket     socket to use
+ * @see        BC_CONTEXT
+*/
     public BC_DEBUG_RECEIVER_CLIENT( BC_CONTEXT a_context, Socket a_socket )
     {
         context = a_context;
+        sleep_time = context.get_settings().debug_receiver_sleep_time;
         socket = a_socket;
     }
 
-    private void sleepFor( long milliseconds )
-    {
-        try { Thread.sleep( milliseconds ); }
-        catch ( InterruptedException e ) { }
-    }
-
-    private String get_line( BufferedReader br )
-    {
-        try
-        {
-            if ( br.ready() )
-                return br.readLine().trim();
-        }
-        catch ( IOException e )
-        {
-        }
-        return null;
-    }
-
+/**
+ * overwritten run method of Thread-BC_DEBUG_RECEIVER_CLIENT
+ * - create a buffered-reader for reading from a socket
+ * - loop until application closed
+ * - if the reader is ready to produce a line, read the line,
+ *   print the line on the system-console
+ *
+ * @see        BC_CONTEXT
+*/
     @Override public void run()
     {
         try
@@ -75,18 +83,27 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
             String input;
 
             while( context.is_running() && br != null )
-			{
-		        boolean do_sleep = true;
+            {
+                String line = null;
+                try
+                {
+                    if ( br.ready() )
+                        line = br.readLine().trim();
+                }
+                catch ( IOException e ) { }
 
-		        String line = get_line( br );
-		        if ( line != null && !line.isEmpty() )
-		        {
-					System.out.println( line.trim() );
-		            do_sleep = false;
-		        }
-
-            	if ( context.is_running() && do_sleep )
-					sleepFor( 100 );
+                if ( line != null && !line.isEmpty() )
+                {
+                    System.out.println( line.trim() );
+                }
+                else if ( context.is_running() )
+                {
+                    try
+                    {
+                        Thread.sleep( sleep_time );
+                    }
+                    catch ( InterruptedException e ) { }
+                }
             }
             socket.close();
         }
@@ -97,23 +114,46 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
     }
 }
 
-
-class BC_DEBUG_RECEIVER extends Thread
+/**
+ * Infrastructure-Class to listen on the debug-socket for connections coming from workers
+ * - stores reference to application-context
+ * - owns list of BC_DEBUG_RECEIVER_CLIENT-instances
+ *
+ * @see        BC_CONTEXT
+*/
+public final class BC_DEBUG_RECEIVER extends Thread
 {
     private final BC_CONTEXT context;
-	private List< BC_DEBUG_RECEIVER_CLIENT > clients;
+    private List< BC_DEBUG_RECEIVER_CLIENT > clients;
 
+/**
+ * create instance of BC_DEBUG_RECEIVER
+ * - store reference application-context
+ * - creates empty list for client-connections from the workers
+ *
+ * @param a_context    application-context
+ * @see        BC_CONTEXT
+*/
     public BC_DEBUG_RECEIVER( BC_CONTEXT a_context )
     {
         context = a_context;
-		clients = new ArrayList<>();
+        clients = new ArrayList<>();
     }
 
+/**
+ * overwritten run method of Thread-BC_DEBUG_RECEIVER
+ * - create a serversocket to listen on the debug-port
+ * - loop until application closed
+ * - if a new connection has been accepted, create a instance of BC_DEBUG_RECEIVER_CLIENT,
+ *   add it to the clients-list, start the client thread
+ *
+ * @see        BC_CONTEXT
+*/
     @Override public void run()
     {
         try
         {
-			int port = context.get_settings().debug.port;
+            int port = context.get_settings().debug.port;
             System.out.println( String.format( "DEBUG_RECEIVER listening on port: %d", port ) );
 
             ServerSocket ss = new ServerSocket( port );
@@ -124,7 +164,7 @@ class BC_DEBUG_RECEIVER extends Thread
                     ss.setSoTimeout( 500 );
                     Socket client_socket = ss.accept();
                     BC_DEBUG_RECEIVER_CLIENT client = new BC_DEBUG_RECEIVER_CLIENT( context, client_socket );
-					clients.add( client );
+                    clients.add( client );
                     client.start();
                 }
                 catch ( Exception e )
@@ -140,15 +180,19 @@ class BC_DEBUG_RECEIVER extends Thread
         }
     }
 
-	public void join_clients()
-	{
-		for( BC_DEBUG_RECEIVER_CLIENT client : clients )
-		{
-		    try { client.join(); }
-		    catch( InterruptedException e ) { }
-		}
-		try { join(); }
-		catch( InterruptedException e ) { }
-	}
+/**
+ * wait for all client-socket-threads to finish, then wait for this tread to finish
+ *
+*/
+    public void join_clients()
+    {
+        for( BC_DEBUG_RECEIVER_CLIENT client : clients )
+        {
+            try { client.join(); }
+            catch( InterruptedException e ) { }
+        }
+        try { join(); }
+        catch( InterruptedException e ) { }
+    }
 }
 

@@ -28,14 +28,23 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkFiles;
 
-/** Wrapper around Blast C++ library. */
+/**
+ * wrapper for calling the jni-interface for BLAST
+ * name and layout is coupled with the C++-code
+ *
+*/
 public class BLAST_LIB {
   private static String processID;
   private static ExceptionInInitializerError invalid;
   private static Level logLevel;
   private static final int WARNLONGMS = 50_000;
 
-  /** @param libname where to find libblastjni.so */
+/**
+ * constructor responsible for loading the library containing the jni- and BLAST-code
+ *
+ * @param libname   name of the library to look for
+ *
+*/
   public BLAST_LIB(final String libname) {
     final int lastPeriodPos = libname.lastIndexOf('.');
     if (libname.startsWith("lib")) {
@@ -69,14 +78,23 @@ public class BLAST_LIB {
     logLevel = Level.ERROR;
   }
 
+/**
+ * helper-method to throw an exception if invalid-exception is initialized
+ *
+*/
   private void throwIfInvalid() {
     if (invalid != null) {
       throw invalid;
     }
   }
 
-  // We can't rely on log4j.properties to filter, instead we'll look at
-  // logLevel
+/**
+ * helper-method to write to log4j, filtered by log-level
+ *
+ * @param level     log-level to filter by
+ * @param msg       message to log
+ *
+*/
   private void log(final String level, final String msg) {
     try {
       final Logger logger = LogManager.getLogger(BLAST_LIB.class);
@@ -98,6 +116,32 @@ public class BLAST_LIB {
     }
   }
 
+/**
+ * helper-method
+ *
+ * @param url   url to test if it starts with 'gs://'
+ * @return      empty string
+ *
+*/
+    final String get_blob( String url )
+    {
+        if ( !url.startsWith( "gs://" ) )
+        {
+            log( "ERROR", "url: " + url + " not in a gs:// bucket" );
+            return "";
+        }
+        return "";
+    }
+
+/**
+ * wrapper around call to jni-interface 'prelim_search'
+ *
+ * @param chunk         database-chunk to search against
+ * @param req           request to search for in the database-chunk
+ * @param pslogLevel    level for logging
+ * @return              vector of BLAST_HSP_LIST-instances
+ *
+*/
   final BLAST_HSP_LIST[] jni_prelim_search(
       final BC_DATABASE_RDD_ENTRY chunk, final BC_REQUEST req, final String pslogLevel)
       throws Exception {
@@ -148,6 +192,16 @@ public class BLAST_LIB {
     return ret;
   }
 
+/**
+ * wrapper around call to jni-interface 'traceback'
+ *
+ * @param hspl          vector of search-results
+ * @param chunk         database-chunk to use
+ * @param req           request to use
+ * @param tblogLevel    level for logging
+ * @return              vector of BLAST_TP_LIST-instances
+ *
+*/
   final BLAST_TB_LIST[] jni_traceback(
       final BLAST_HSP_LIST[] hspl,
       final BC_DATABASE_RDD_ENTRY chunk,
@@ -180,9 +234,31 @@ public class BLAST_LIB {
     return ret;
   }
 
+/**
+ * jni-interface call to perform prelim_search, implemented in C++
+ *
+ * @param query         request-query
+ * @param dbspec        path to database-chunk on local disk
+ * @param program       'nt' or 'nr'
+ * @param params        json-encoded search parameters
+ * @param topn          after how many unique score-values to cut the result-vector
+ * @return              vector of BLAST_TP_LIST-instances
+ *
+*/
   private native BLAST_HSP_LIST[] prelim_search(
       String query, String dbspec, String program, String params, int topn);
 
+/**
+ * jni-interface call to perform 'traceback', implemented in C++
+ *
+ * @param hspl          vector of search-results
+ * @param query         request-query
+ * @param dbspec        path to database-chunk on local disk
+ * @param program       'nt' or 'nr'
+ * @param params        json-encoded search parameters
+ * @return              vector of BLAST_TP_LIST-instances
+ *
+*/
   private native BLAST_TB_LIST[] traceback(
       BLAST_HSP_LIST[] hspl, String query, String dbspec, String program, String params);
 }

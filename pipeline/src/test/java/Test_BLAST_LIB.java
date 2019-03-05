@@ -146,7 +146,7 @@ public class Test_BLAST_LIB {
     dbset.key = "nt";
     dbset.worker_location = testpath.toString();
 
-    dbset.flat_layout = true;
+    dbset.direct = true;
     final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, protdb);
 
     String params = "{";
@@ -216,7 +216,7 @@ public class Test_BLAST_LIB {
     dbset.key = "nt";
     dbset.worker_location = testpath.toString();
 
-    dbset.flat_layout = true;
+    dbset.direct = true;
     final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, nucldb);
 
     String params = "{";

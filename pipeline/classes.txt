@@ -1,0 +1,28 @@
+classes that contain closures executed on workers:
+	BC_MAIN.java
+	BC_JOBS.java
+
+classes used by closures executed on workers:
+	BC_DATABASE_RDD_ENTRY.java
+	BC_DATABASE_SETTING.java
+	BC_DEBUG_SETTINGS.java
+	BC_GCP_TOOLS.java
+	BC_REQUEST.java
+	BC_SEND.java
+	BLAST_HSP_LIST.java
+	BLAST_LIB.java
+	BLAST_TB_LIST.java
+
+infrastructure used only on the master:
+	BC_COMMAND.java
+	BC_CONSOLE.java
+	BC_CONTEXT.java
+	BC_DEBUG_RECEIVER.java
+	BC_JSON_UTILS.java
+	BC_LISTS.java
+	BC_REQUEST_READER.java
+	BC_RESULTS.java
+	BC_SETTINGS.java
+	BC_SETTINGS_READER.java
+	BC_UTILS.java
+
