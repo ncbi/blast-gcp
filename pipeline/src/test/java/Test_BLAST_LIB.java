@@ -76,7 +76,7 @@ public class Test_BLAST_LIB {
       dbset.key = "nt";
       dbset.worker_location = "/panfs/pan1.be-md.ncbi.nlm.nih.gov/blastprojects/GCP_blastdb/50M/";
 
-      dbset.flat_layout = true;
+      dbset.direct = true;
       final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, "nt_50M.14");
 
       String params = "{";

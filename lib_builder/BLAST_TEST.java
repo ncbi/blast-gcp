@@ -51,7 +51,7 @@ final class BLAST_TEST {
     final BC_DATABASE_SETTING dbset = new BC_DATABASE_SETTING();
     dbset.key = "nt";
     dbset.worker_location = LOCATION;
-    dbset.flat_layout = true;
+    dbset.direct = true;
     final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, "nt_50M.14");
 
     // String query_url = "gs://blast-largequeries/query-021125518.txt";
@@ -107,7 +107,7 @@ final class BLAST_TEST {
     // BLAST_SETTINGS bls = BLAST_SETTINGS.getValue();
     // BLAST_LIB blaster = BLAST_LIB_SINGLETON.get_lib(partitionobj, bls);
     System.out.println("Creating blaster");
-    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so");
+    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so", true);
     System.out.println("Created  blaster");
 
     params = "nt"; // FIX - When Blast team ready for JSON params
