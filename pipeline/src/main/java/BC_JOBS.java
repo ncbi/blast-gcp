@@ -141,7 +141,7 @@ class BC_JOB extends Thread
                     str_lst.addAll( item.download() );
                 BC_REQUEST req = REQUEST.getValue();
 
-                BLAST_LIB lib = new BLAST_LIB( "libblastjni.so" );
+                BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
                 if ( lib != null )
                 {
                     long starttime = System.currentTimeMillis();
@@ -154,7 +154,7 @@ class BC_JOB extends Thread
                     {
                         str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
                                                 item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
-                        
+
                         starttime = System.currentTimeMillis();
                         BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
                         finishtime = System.currentTimeMillis();

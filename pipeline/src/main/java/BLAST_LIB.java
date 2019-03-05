@@ -43,40 +43,60 @@ public class BLAST_LIB {
  * constructor responsible for loading the library containing the jni- and BLAST-code
  *
  * @param libname   name of the library to look for
+ * @param local     true .. we are running not on a spark-node
  *
 */
-  public BLAST_LIB(final String libname) {
-    final int lastPeriodPos = libname.lastIndexOf('.');
-    if (libname.startsWith("lib")) {
-      System.err.println("Warning, libname starts with 'lib'");
-    }
+    public BLAST_LIB( final String libname, boolean local )
+    {
+        if ( local )
+        {
+            final int lastPeriodPos = libname.lastIndexOf( '.' );
+            if ( libname.startsWith( "lib" ) )
+            {
+                System.err.println( "Warning, libname starts with 'lib'" );
+            }
+            try
+            {
+                if ( lastPeriodPos <= 0 )
+                {
+                    System.err.println( "Trying to load " + libname );
+                    System.loadLibrary( libname );
+                }
+                else
+                {
+                    String to_load = libname.substring( 0, lastPeriodPos );
+                    System.err.println( "Trying to load: " + to_load );
+                    System.loadLibrary( to_load );
+                }
+            }
+            catch ( Throwable threx )
+            {
+                /* now we really have on error in local mode */
+                System.err.println( "Exception was: " + threx );
+            }
+        }
+        else
+        {
+            try
+            {
+                System.load( SparkFiles.get( libname ) );
+            }
+            catch ( ExceptionInInitializerError xininit )
+            {
+                invalid = xininit;
+                throw xininit;
+            }
+            catch ( Throwable threx )
+            {
+                invalid = new ExceptionInInitializerError( threx );
+                System.err.println( "Error loading the lib : " + threx );
+                throw threx;
+            }
+        }
 
-    try {
-      if (lastPeriodPos <= 0) {
-        System.err.println("Trying to load " + libname);
-        System.loadLibrary(libname);
-      } else {
-        System.err.println("Trying to load:" + libname.substring(0, lastPeriodPos));
-        System.loadLibrary(libname.substring(0, lastPeriodPos));
-      }
-    } catch (Throwable threx) {
-      System.err.println("Exception was:" + threx);
-      try {
-        System.err.println("Trying to load via SparkFiles.get(" + libname + ")");
-        System.load(SparkFiles.get(libname));
-      } catch (ExceptionInInitializerError xininit) {
-        invalid = xininit;
-        throw xininit;
-      } catch (Throwable threx2) {
-        invalid = new ExceptionInInitializerError(threx2);
-        System.err.println("Giving up, throwing:" + threx2);
-        throw threx2;
-      }
+        processID = ManagementFactory.getRuntimeMXBean().getName().split("@", 2)[0];
+        logLevel = Level.ERROR;
     }
-
-    processID = ManagementFactory.getRuntimeMXBean().getName().split("@", 2)[0];
-    logLevel = Level.ERROR;
-  }
 
 /**
  * helper-method to throw an exception if invalid-exception is initialized
@@ -171,10 +191,8 @@ public class BLAST_LIB {
     }
     final long finishtime = System.currentTimeMillis();
 
-    /*
     log( "INFO", "jni_prelim_search returned in " + ( finishtime - starttime ) + " ms.");
     log( "INFO", "jni_prelim_search returned " + ret.length + " HSP_LISTs:" );
-    */
 
     int hspcnt = 0;
     for (final BLAST_HSP_LIST hspl : ret) {
@@ -182,11 +200,12 @@ public class BLAST_LIB {
         log("ERROR", "hspl is null");
         throw new Exception("hspl " + hspcnt + " is null");
       }
-      /*
+
       if ( chunk == null )
-      log( "ERROR", "chunk is null" );
+        log( "ERROR", "chunk is null" );
+
       log( "DEBUG", "#" + hspcnt + ": " + hspl.toString() );
-      */
+
       ++hspcnt;
     }
     return ret;
@@ -209,12 +228,10 @@ public class BLAST_LIB {
       final String tblogLevel) {
     throwIfInvalid();
 
-    /*
     logLevel = Level.toLevel( tblogLevel );
     log( "INFO", "Java jni_traceback called with" );
     log( "INFO", "  query_seq : " + req.query_seq );
     log( "INFO", "  db_spec   : " + chunk.name );
-    */
 
     final long starttime = System.currentTimeMillis();
     BLAST_TB_LIST[] ret;
@@ -223,10 +240,8 @@ public class BLAST_LIB {
     }
     final long finishtime = System.currentTimeMillis();
 
-    /*
     log( "INFO", "jni_traceback returned in " + (finishtime - starttime) + " ms." );
     log( "INFO", "jni_traceback returned " + ret.length + " TB_LISTs:") ;
-    */
 
     for (final BLAST_TB_LIST t : ret) {
       t.top_n = req.top_n_traceback;

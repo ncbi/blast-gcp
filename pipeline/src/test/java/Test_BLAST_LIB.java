@@ -64,7 +64,7 @@ public class Test_BLAST_LIB {
 
   @Test
   public void testLoadLibrary() {
-    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so");
+    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so", true);
     assertNotNull("should not be null", blaster);
   }
   /*
@@ -169,7 +169,7 @@ public class Test_BLAST_LIB {
     requestobj.top_n_prelim = TOPN;
     requestobj.top_n_traceback = TOPN;
 
-    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so");
+    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so",true);
 
     assertNotNull("shouldn't be null", blaster);
 
@@ -239,7 +239,7 @@ public class Test_BLAST_LIB {
     requestobj.top_n_prelim = TOPN;
     requestobj.top_n_traceback = TOPN;
 
-    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so");
+    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so",true);
 
     assertNotNull("shouldn't be null", blaster);
 

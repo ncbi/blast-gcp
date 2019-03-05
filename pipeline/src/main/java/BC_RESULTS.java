@@ -79,8 +79,11 @@ public class BC_RESULTS
 */
     public void cutoff( int num_items )
     {
-        List< BLAST_TB_LIST > sub = l.subList( 0, num_items );
-        l = sub;
+        if ( l.size() > num_items )
+        {
+            List< BLAST_TB_LIST > sub = l.subList( 0, num_items );
+            l = sub;
+        }
     }
 
 /**
