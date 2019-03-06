@@ -88,7 +88,7 @@ class BC_LIST extends Thread
     protected boolean is_running()
     {
         boolean res = ( context.is_running() && running.get() );
-        if ( res && limit > 0 ) res = ( line_nr <= limit );
+        if ( res && limit > 0 ) res = ( line_nr < limit );
         return res;
     }
 
@@ -218,7 +218,7 @@ class BC_BUCKET_LIST extends BC_LIST
  * overwritten run method of Thread-BC_FILE_LIST
  * - call BC_GCP_TOOLS.list() to get a list of all entries in bucket
  * - loop until application closed, no more lines, limit reached
- * - get entry-name, 
+ * - get entry-name,
  *   submit line by calling BC_LIST.submitFile()
  *
 */
@@ -228,7 +228,7 @@ class BC_BUCKET_LIST extends BC_LIST
 
         List< String > files = BC_GCP_TOOLS.list( srcName );
         Iterator< String > iter = files.iterator();
-        
+
         while ( is_running() && iter.hasNext() )
         {
             String fn = iter.next();

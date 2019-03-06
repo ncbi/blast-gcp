@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import java.nio.ByteBuffer;
 
@@ -58,6 +59,7 @@ class BC_JOB extends Thread
     private Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS;
     private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
     private final int id;
+    private final AtomicBoolean active;
 
 /**
  * create instance of BC_JOB
@@ -83,6 +85,15 @@ class BC_JOB extends Thread
         jsc = a_jsc;
         db_dict = a_db_dict;
         id = a_id;
+        active = new AtomicBoolean( false );
+    }
+
+/**
+ * check if this job is active ( processes a request )
+*/
+    public boolean is_active()
+    {
+        return active.get();
     }
 
 /**
@@ -217,7 +228,11 @@ class BC_JOB extends Thread
         {
             BC_REQUEST request = context.get_request();
             if ( request != null )
+            {
+                active.set( true );
                 handle_request( DEBUG_SETTINGS, request );
+                active.set( false );
+            }
             else
             {
                 try
@@ -265,6 +280,22 @@ public class BC_JOBS
             jobs.add( job );
             job.start();
         }
+        context.set_jobs( this );
+    }
+
+/**
+ * counts how many jobs are active
+ *
+ * return number of active jobs
+*/
+    public int active()
+    {
+        int res = 0;
+        for ( BC_JOB j : jobs )
+        {
+            if ( j.is_active() ) res += 1;
+        }
+        return res;
     }
 
 /**

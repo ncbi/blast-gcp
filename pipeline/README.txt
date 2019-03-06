@@ -31,7 +31,7 @@ Available commands on the console:
 			AFEVMVZM014.json
 			AFEVN6PB014.json
 			AFEVP7WY014.json
-		
+
 	'L request-list N' ... processes the first N request in the given list
 		example: 'L list.txt 3'
 
@@ -43,6 +43,10 @@ Available commands on the console:
 
 	'stop'	... cancels all running lists ( 'L' and 'B' ) commands
 		but tries to finish the jobs which are currently running
+
+    'I' ... info, prints
+        - how many entries are in the request-queue
+        - how many jobs are active
 
 where are the results?
 	in the directory './report'

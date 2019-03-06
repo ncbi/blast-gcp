@@ -37,7 +37,7 @@ import java.io.Serializable;
 public class BC_DEBUG_SETTINGS implements Serializable
 {
     public String host = "";
-    public Integer port = 10011;
+    public Integer port = 0;
     public String jni_log_level = "INFO";
     public boolean request = false;
     public boolean job_start = false;
@@ -50,6 +50,19 @@ public class BC_DEBUG_SETTINGS implements Serializable
     public boolean req_file_added = false;
     public boolean req_added = false;
     public boolean avg_time = false;
+
+/**
+ * check if any event has been selected
+ *
+ * return has any event been selected?
+*/
+    public boolean events_selected()
+    {
+        return ( port > 0 ) &&
+               ( request || job_start || job_done || log_final || part_prep ||
+                 worker_shift || pref_loc || db_copy || req_file_added ||
+                 req_added || avg_time );
+    }
 
 /**
  * convert debug-settings to multiline string for debug-purpose
@@ -73,7 +86,6 @@ public class BC_DEBUG_SETTINGS implements Serializable
         if ( avg_time )   S_log = S_log + "avg-time";
 
         S = S + String.format( "\tlog ................ %s\n", S_log );
-
         return S;
     }
 }

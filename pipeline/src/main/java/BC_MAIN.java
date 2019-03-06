@@ -87,8 +87,13 @@ public final class BC_MAIN
         BC_CONSOLE console = new BC_CONSOLE( context );
         console.start();
 
-        BC_DEBUG_RECEIVER debug_receiver = new BC_DEBUG_RECEIVER( context );
-        debug_receiver.start();
+        // listen for debug-events
+        BC_DEBUG_RECEIVER debug_receiver = null;
+        if ( settings.debug.events_selected() )
+        {
+            debug_receiver = new BC_DEBUG_RECEIVER( context );
+            debug_receiver.start();
+        }
 
         /* broadcast the Debug-settings */
         Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS = jsc.broadcast( settings.debug );
@@ -148,7 +153,8 @@ public final class BC_MAIN
         try
         {
             jobs.join();
-            debug_receiver.join_clients();
+            if ( debug_receiver != null )
+                debug_receiver.join_clients();
             console.join();
             context.join();     /* because context owns request-list-threads */
         }

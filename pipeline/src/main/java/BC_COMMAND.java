@@ -89,6 +89,13 @@ public final class BC_COMMAND
     private boolean is_bucket_request() { return parts[ 0 ].equals( "B" ); }
 
 /**
+ * test for info command ( print request-queue-size and running commands )
+ *
+ * @return     is it a infot command ?
+*/
+    private boolean is_info_request() { return parts[ 0 ].equals( "I" ); }
+
+/**
  * helper-function to convert String to int
  *
  * @param s  String to be converted to int
@@ -163,6 +170,7 @@ public final class BC_COMMAND
         else if ( is_file_request() ) handle_file_request( context );
         else if ( is_list_request() ) handle_list_request( context );
         else if ( is_bucket_request() ) handle_bucket_request( context );
+        else if ( is_info_request() ) context.print_info( origin_stream );
         else origin_stream.printf( "unknown: %s\n", parts );
     }
 }

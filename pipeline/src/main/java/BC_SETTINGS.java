@@ -38,7 +38,7 @@ import java.util.HashMap;
 public final class BC_SETTINGS
 {
     public String appName = "";
-    
+
     /* REQUESTS */
     public boolean req_use_pubsub = false;
     public String req_pubsub_project_id = "";
@@ -101,6 +101,10 @@ public final class BC_SETTINGS
 */
     private boolean req_valid()
     {
+        /*
+        >>> when code for these special request-sources has been added
+            these test will make sense
+
         boolean res = req_use_pubsub || req_use_files || req_use_socket;
         if ( req_use_pubsub )
             res = !req_pubsub_project_id.isEmpty() &&  !req_pubsub_subscript_id.isEmpty();
@@ -109,6 +113,8 @@ public final class BC_SETTINGS
         if ( res && req_use_socket )
             res = req_port_nr != 0;
         return res;
+        */
+        return true;
     }
 
 /**
@@ -132,12 +138,34 @@ public final class BC_SETTINGS
 */
     private boolean res_valid()
     {
+        /*
+        >>> when code for these special result-destinations has been added
+            these test will make sense
+
         boolean res = res_use_gs_bucket || res_use_files;
         if ( res_use_gs_bucket )
             res = !res_gs_bucket.isEmpty() && !res_gs_pattern.isEmpty();
         if ( res && res_use_files )
             res = !res_files_dir.isEmpty() && !res_files_pattern.isEmpty();
         return res;
+        */
+        return true;
+    }
+
+/**
+ * test if the given transfer-files can be found
+ *
+ * @return      transfer-files found ?
+*/
+    private boolean transfer_files_present()
+    {
+        int not_found = 0;
+        for ( String S : transfer_files )
+        {
+            if ( !BC_UTILS.file_exists( S ) )
+                not_found += 1;
+        }
+        return ( not_found == 0 );
     }
 
 /**
@@ -147,7 +175,7 @@ public final class BC_SETTINGS
 */
     public boolean valid()
     {
-        return ( req_valid() && dbs_valid() && res_valid() );
+        return req_valid() && dbs_valid() && res_valid() && transfer_files_present();
     }
 
 /**
@@ -164,13 +192,14 @@ public final class BC_SETTINGS
             S = S + String.format( "\tfiles-dir .......... '%s'\n", req_files_dir );
         if ( req_use_socket )
             S = S + String.format( "\tport ............... %d\n", req_port_nr );
-        S = S + String.format( "\tmax. backlog ....... %d requests\n", req_max_backlog );
+        S = S + String.format( "\tmax. backlog ......... %d requests\n", req_max_backlog );
 
         S = S + "\nDATABASES:\n";
         for ( BC_DATABASE_SETTING e : dbs.values() )
             S = S + e.toString();
 
-        S = S + "\nRESULTS:\n";
+        if ( res_use_gs_bucket || res_use_files )
+            S = S + "\nRESULTS:\n";
         if ( res_use_gs_bucket )
             S = S + String.format( "\tbucket ............. %s/%s\n", res_gs_bucket, res_gs_pattern );
         if ( res_use_files )
@@ -197,8 +226,11 @@ public final class BC_SETTINGS
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
 
-        S = S + "\nDEBUG:\n";
-        S = S + debug.toString();
+        if ( debug.events_selected() )
+        {
+            S = S + "\nDEBUG:\n";
+            S = S + debug.toString();
+        }
 
         return S;
     }

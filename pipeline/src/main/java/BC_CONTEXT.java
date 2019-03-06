@@ -50,6 +50,7 @@ public class BC_CONTEXT
     private final ConcurrentLinkedQueue< BC_COMMAND > command_queue;
     private final ConcurrentLinkedQueue< BC_REQUEST > request_queue;
     private final BC_LISTS list_manager;
+    private BC_JOBS jobs;
 
 /**
  * create instance of BC_CONTEXT from settings
@@ -66,7 +67,15 @@ public class BC_CONTEXT
         command_queue = new ConcurrentLinkedQueue<>();
         request_queue = new ConcurrentLinkedQueue<>();
         list_manager = new BC_LISTS( this );
+        jobs = null;
     }
+
+/**
+ * set the jobs-manager after creation
+ *
+ * @param   reference to jobs-manager
+*/
+    public void set_jobs( BC_JOBS a_jobs ) { jobs = a_jobs; }
 
 /**
  * test if the request-queue has space for at least one more request
@@ -231,6 +240,20 @@ public class BC_CONTEXT
     public void addRequestBucket( final String bucket_url, final PrintStream ps, int limit )
     {
         list_manager.addBucket( bucket_url, ps, limit );
+    }
+
+/**
+ * print info about context...
+ *
+ * @param ps         stream to be used for error messages ( cannot be null )
+*/
+    public void print_info( final PrintStream ps )
+    {
+        ps.printf( "request-queue: %d of %d\n",
+                    request_queue.size(), settings.req_max_backlog );
+
+        int n = ( jobs != null ) ? jobs.active() : 0;
+        ps.printf( "jobs active  : %d of %d\n", n, settings.parallel_jobs );
     }
 
 /**
