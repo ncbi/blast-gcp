@@ -75,7 +75,7 @@ public final class BC_UTILS
                 res = d.exists();
                 if ( !res )
                 {
-                    d.mkdir();
+                    d.mkdirs();
                     res = d.exists();
                 }
             }

@@ -150,40 +150,46 @@ class BC_JOB extends Thread
                 List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
                 if ( !item.present() )
                     str_lst.addAll( item.download() );
-                BC_REQUEST req = REQUEST.getValue();
 
-                BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
-                if ( lib != null )
+                if ( item.present() )
                 {
-                    long starttime = System.currentTimeMillis();
-                    BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
-                    long finishtime = System.currentTimeMillis();
+                    BC_REQUEST req = REQUEST.getValue();
 
-                    if ( hsps == null )
-                        str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.name ) );
-                    else
+                    BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
+                    if ( lib != null )
                     {
-                        str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
-                                                item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
+                        long starttime = System.currentTimeMillis();
+                        BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
+                        long finishtime = System.currentTimeMillis();
 
-                        starttime = System.currentTimeMillis();
-                        BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
-                        finishtime = System.currentTimeMillis();
-
-                        if ( tbs == null )
-                            str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.name ) );
+                        if ( hsps == null )
+                            str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.name ) );
                         else
                         {
-                            str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-                                                    item.workername(), item.name, tbs.length, ( finishtime - starttime ) ) );
+                            str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
+                                                    item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
 
-                            for ( BLAST_TB_LIST tb : tbs )
-                                tp_lst.add( tb );
+                            starttime = System.currentTimeMillis();
+                            BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+                            finishtime = System.currentTimeMillis();
+
+                            if ( tbs == null )
+                                str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.name ) );
+                            else
+                            {
+                                str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
+                                                        item.workername(), item.name, tbs.length, ( finishtime - starttime ) ) );
+
+                                for ( BLAST_TB_LIST tb : tbs )
+                                    tp_lst.add( tb );
+                            }
                         }
                     }
+                    else
+                        str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.name ) );
                 }
                 else
-                    str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.name ) );
+                    str_lst.add( String.format( "%s: %s - failed to download", item.workername(), item.name ) );
 
                 return new Tuple2<>( str_lst, tp_lst );
             });

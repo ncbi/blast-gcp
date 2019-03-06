@@ -41,6 +41,7 @@ import java.net.URISyntaxException;
 
 import java.security.GeneralSecurityException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileLock;
 import java.util.Collection;
 
 import com.google.cloud.storage.Bucket;
@@ -164,7 +165,7 @@ public class BC_GCP_TOOLS
 */
     private Integer list_bucket( final String bucket, List< String > lst )
     {
-        Integer res = 0; 
+        Integer res = 0;
         try
         {
             Storage.Objects.List list = storage.objects().list( bucket );
@@ -191,36 +192,6 @@ public class BC_GCP_TOOLS
     }
 
 /**
- * private helper-method to create a lock-file
- *
- * @param  f    file to be created
- *
-*/
-    private void write_lock( File f )
-    {
-        BufferedWriter writer = null;
-        try
-        {
-            writer = new BufferedWriter( new FileWriter( f ) );
-            writer.write( "locked" );
-        }
-        catch( Exception e ) { e.printStackTrace(); }   
-        finally { try{ writer.close(); } catch( Exception e ) { e.printStackTrace(); } }
-    }
-
-/**
- * private helper-method to delete a lock-file
- *
- * @param  f    file to be deleted
- *
-*/
-    private void delete_lock( File f )
-    {
-        try { f.delete(); } 
-        catch( Exception e ) { e.printStackTrace(); }
-    }
-
-/**
  * private method to download a file from a bucket to the local filesystem, protected by a lock-file
  *
  * @param  bucket        url of the bucket
@@ -234,11 +205,10 @@ public class BC_GCP_TOOLS
         boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
         if ( res )
         {
-            File f_lock = new File( String.format( "%s.lock", dst_filename ) );
-            res = ( !f_lock.exists() );
+            BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
+            res = lock.aquire();
             if ( res )
             {
-                write_lock( f_lock );
                 try
                 {
                     Storage.Objects.Get obj = storage.objects().get( bucket, key );
@@ -249,7 +219,23 @@ public class BC_GCP_TOOLS
                         File f = new File( dst_filename );
                         FileOutputStream f_out = new FileOutputStream( f );
 
-                        obj.executeMediaAndDownloadTo( f_out );
+                        FileLock f_lock = f_out.getChannel().tryLock();
+                        if ( f_lock != null )
+                        {
+                            try
+                            {
+                                obj.executeMediaAndDownloadTo( f_out );
+                            }
+                            catch( Exception e )
+                            {
+                                e.printStackTrace();
+                                res = false;
+                            }
+                            finally
+                            {
+                                f_lock.release();
+                            }
+                        }
 
                         f_out.flush();
                         f_out.close();
@@ -257,10 +243,16 @@ public class BC_GCP_TOOLS
                     else
                         res = false;
                 }
-                catch( Exception e ) { res = false; }
-                finally { delete_lock( f_lock ); }
+                catch( Exception e )
+                {
+                    e.printStackTrace();
+                    res = false;
+                }
+                finally
+                {
+                    lock.release();
+                }
             }
-
         }
         return res;
     }
@@ -285,7 +277,7 @@ public class BC_GCP_TOOLS
                 if ( obj != null )
                 {
                     obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
-                    return obj.executeMediaAsInputStream(); 
+                    return obj.executeMediaAsInputStream();
                 }
             }
             catch( Exception e )
