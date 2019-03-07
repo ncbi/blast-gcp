@@ -1,7 +1,4 @@
-# F gs://blast-test-requests-sprint6/AFEVGV0P014.json
-# F gs://blast-test-requests-sprint6/AFEVHK3N014.json
-#
-:src=gs://blast-test-requests-sprint6
+:src=gs://blast-test-requests-sprint11
 AFEVGV0P014.json
 AFEVHK3N014.json
 AFEVJ4EE014.json
