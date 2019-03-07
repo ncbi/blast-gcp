@@ -81,7 +81,7 @@ public final class BC_CONSOLE extends Thread
 
             if ( line != null && !line.isEmpty() )
             {
-                context.push_command( new BC_COMMAND( System.out, line ) );
+                context.push_command( System.out, line );
             }
             else if ( context.is_running() )
             {

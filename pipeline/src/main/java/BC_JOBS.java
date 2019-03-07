@@ -149,15 +149,20 @@ class BC_JOB extends Thread
                 List< String > str_lst = new ArrayList<>();
                 List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
                 if ( !item.present() )
-                    str_lst.addAll( item.download() );
-
-                while ( !item.present() )
                 {
-                    try
+                    str_lst.addAll( item.download() );
+                    int loops = 0;
+                    while ( !item.present() )
                     {
-                        Thread.sleep( 100 );
+                        try
+                        {
+                            loops +=1;
+                            Thread.sleep( 100 );
+                        }
+                        catch ( InterruptedException e ) { }
                     }
-                    catch ( InterruptedException e ) { }
+                    if ( loops > 0 )
+                        str_lst.add( String.format( "%s: %s - waited %d loops for chunks to become present", item.workername(), item.chunk.name, loops ) );
                 }
 
                 if ( item.present() )
@@ -178,19 +183,22 @@ class BC_JOB extends Thread
                             str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
                                                     item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
 
-                            starttime = System.currentTimeMillis();
-                            BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
-                            finishtime = System.currentTimeMillis();
-
-                            if ( tbs == null )
-                                str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
-                            else
+                            if ( hsps.length > 0 )
                             {
-                                str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-                                                        item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
+                                starttime = System.currentTimeMillis();
+                                BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+                                finishtime = System.currentTimeMillis();
 
-                                for ( BLAST_TB_LIST tb : tbs )
-                                    tp_lst.add( tb );
+                                if ( tbs == null )
+                                    str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
+                                else
+                                {
+                                    str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
+                                                            item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
+
+                                    for ( BLAST_TB_LIST tb : tbs )
+                                        tp_lst.add( tb );
+                                }
                             }
                         }
                     }
