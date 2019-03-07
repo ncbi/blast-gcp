@@ -47,7 +47,7 @@ import org.apache.spark.SparkEnv;
 public class BC_DATABASE_RDD_ENTRY implements Serializable
 {
     private final BC_DATABASE_SETTING setting;
-    public final String name;
+    public final BC_CHUNK_VALUES chunk;
 
 /**
  * create instance BC_DATABASE_RDD_ENTRY
@@ -57,10 +57,10 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @param a_name     name of one particular database-chunk
  * @see        BC_DATABASE_SETTING
 */
-    public BC_DATABASE_RDD_ENTRY( final BC_DATABASE_SETTING a_setting, final String a_name )
+    public BC_DATABASE_RDD_ENTRY( final BC_DATABASE_SETTING a_setting, final BC_CHUNK_VALUES a_chunk )
     {
         setting = a_setting;
-        name = a_name;
+        chunk = a_chunk;
     }
 
 /**
@@ -71,11 +71,12 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @return           a list of BC_DATABASE_RDD_ENTRY-instances
  * @see              BC_DATABASE_SETTING
 */
-    public static List< BC_DATABASE_RDD_ENTRY > make_rdd_entry_list( final BC_DATABASE_SETTING a_setting, final List< String > names )
+    public static List< BC_DATABASE_RDD_ENTRY > make_rdd_entry_list( final BC_DATABASE_SETTING a_setting,
+            final List< BC_CHUNK_VALUES > files )
     {
         List< BC_DATABASE_RDD_ENTRY > res = new ArrayList<>();
-        for ( String a_name : names )
-            res.add( new BC_DATABASE_RDD_ENTRY( a_setting, a_name ) );
+        for ( BC_CHUNK_VALUES chunk : files )
+            res.add( new BC_DATABASE_RDD_ENTRY( a_setting, chunk ) );
         return res;
     }
 
@@ -88,7 +89,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 */
     public String build_source_path( final String extension )
     {
-        return String.format( "%s/%s.%s", setting.source_location, name, extension );
+        return String.format( "%s/%s.%s", setting.source_location, chunk.name, extension );
     }
 
 /**
@@ -100,7 +101,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 */
     public String build_worker_path( final String extension )
     {
-        return String.format( "%s/%s/%s.%s", setting.worker_location, name, name, extension );
+        return String.format( "%s/%s/%s.%s", setting.worker_location, chunk.name, chunk.name, extension );
     }
 
 /**
@@ -113,9 +114,9 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     public String worker_location()
     {
         if ( setting.direct )
-            return String.format( "%s/%s", setting.worker_location, name );
+            return String.format( "%s/%s", setting.worker_location, chunk.name );
         else
-            return String.format( "%s/%s/%s", setting.worker_location, name, name );
+            return String.format( "%s/%s/%s", setting.worker_location, chunk.name, chunk.name );
     }
 
 /**
@@ -140,13 +141,18 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     public boolean present()
     {
         int found = 0;
-        for ( String extension : setting.extensions )
+        for ( BC_NAME_SIZE obj : chunk.files )
         {
-            File f_dst = new File( build_worker_path( extension ) );
-            if ( f_dst.exists() )
-                found += 1;
+            String extension = obj.name;
+            File f = new File( build_worker_path( extension ) );
+            if ( f.exists() )
+            {
+                /* new: we can now check for the correct size */
+                if ( obj.size.longValue() == f.length() )
+                    found += 1;
+            }
         }
-        return ( found == setting.extensions.size() );
+        return ( found == chunk.files.size() );
     }
 
 /**
@@ -160,19 +166,36 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     {
         List< String > lst = new ArrayList<>();
         String wn = workername();
-        for ( String extension : setting.extensions )
+        for ( BC_NAME_SIZE obj : chunk.files )
         {
+            String extension = obj.name;
             String src = build_source_path( extension );
             String dst = build_worker_path( extension );
-            File f_dst = new File( dst );
-            if ( f_dst.exists() )
-                lst.add( String.format( "%s : %s -> %s (exists)", wn, src, dst ) );
+            File f = new File( dst );
+            if ( f.exists() )
+            {
+                long fl = f.length();
+                /* we can now check the size... */
+                if ( obj.size.longValue() == fl )
+                    lst.add( String.format( "%s : %s -> %s (exists size = %d )", wn, src, dst, fl ) );
+                else
+                    lst.add( String.format( "%s : %s -> %s (exists, size=%d, should be %d)", wn, src, dst, fl, obj.size ) );
+            }
             else
             {
                 long started_at = System.currentTimeMillis();
                 boolean success = BC_GCP_TOOLS.download( src, dst );
                 long elapsed = System.currentTimeMillis() - started_at;
-                lst.add( String.format( "%s : %s -> %s (%s in %,d ms)", wn, src, dst, Boolean.toString( success ), elapsed ) );
+
+                /* we can now check the size... */
+                long fl = f.length();
+                if ( obj.size.longValue() == fl )
+                    lst.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl ) );
+                else
+                {
+                    success = false;
+                    lst.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d, should=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl, obj.size ) );
+                }
             }
         }
         return lst;

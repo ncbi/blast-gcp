@@ -172,7 +172,7 @@ public class BLAST_LIB {
     // CMT - remember that white space is good. Imagine it like a sort of cryptocurrency mining tool
     log("INFO", "Java jni_prelim_search called with");
     log("INFO", "  query_seq : " + req.query_seq);
-    log("INFO", "  db_spec   : " + chunk.name);
+    log("INFO", "  db_spec   : " + chunk.chunk.name);
     log("INFO", "  chunk_location: " + chunk.worker_location());
     log("INFO", "  program   : " + req.program);
     // FIX - top_n_prelim
@@ -231,7 +231,7 @@ public class BLAST_LIB {
     logLevel = Level.toLevel( tblogLevel );
     log( "INFO", "Java jni_traceback called with" );
     log( "INFO", "  query_seq : " + req.query_seq );
-    log( "INFO", "  db_spec   : " + chunk.name );
+    log( "INFO", "  db_spec   : " + chunk.chunk.name );
 
     final long starttime = System.currentTimeMillis();
     BLAST_TB_LIST[] ret;

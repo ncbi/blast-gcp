@@ -71,11 +71,11 @@ public class Test_BC_GCP_TOOLS {
 
     @Test
     public void testList() {
-        List< String > listing = BC_GCP_TOOLS.list("gs://" + gs_bucket);
+        List< BC_NAME_SIZE > listing = BC_GCP_TOOLS.list("gs://" + gs_bucket);
         assertTrue(!listing.isEmpty());
         int ii = 0;
-        for (String entry : listing) {
-            System.out.println(entry);
+        for ( BC_NAME_SIZE entry : listing ) {
+            System.out.println(entry.name);
             if (++ii == 10) break;
         }
     }

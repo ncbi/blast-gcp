@@ -226,14 +226,14 @@ class BC_BUCKET_LIST extends BC_LIST
     {
         ps.printf( String.format( "bucket-list '%s' start\n", srcName ) );
 
-        List< String > files = BC_GCP_TOOLS.list( srcName );
-        Iterator< String > iter = files.iterator();
+        List< BC_NAME_SIZE > files = BC_GCP_TOOLS.list( srcName );
+        Iterator< BC_NAME_SIZE > iter = files.iterator();
 
         while ( is_running() && iter.hasNext() )
         {
-            String fn = iter.next();
-            if ( fn.endsWith( "json" ) )
-                submitFile( String.format( "%s/%s", srcName, fn ) );
+            BC_NAME_SIZE obj = iter.next();
+            if ( obj.name.endsWith( "json" ) )
+                submitFile( String.format( "%s/%s", srcName, obj.name ) );
         }
 
         ps.printf( String.format( "bucket-list '%s' done\n", srcName ) );

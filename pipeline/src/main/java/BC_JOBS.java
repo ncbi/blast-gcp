@@ -151,6 +151,15 @@ class BC_JOB extends Thread
                 if ( !item.present() )
                     str_lst.addAll( item.download() );
 
+                while ( !item.present() )
+                {
+                    try
+                    {
+                        Thread.sleep( 100 );
+                    }
+                    catch ( InterruptedException e ) { }
+                }
+
                 if ( item.present() )
                 {
                     BC_REQUEST req = REQUEST.getValue();
@@ -163,22 +172,22 @@ class BC_JOB extends Thread
                         long finishtime = System.currentTimeMillis();
 
                         if ( hsps == null )
-                            str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.name ) );
+                            str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.chunk.name ) );
                         else
                         {
                             str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
-                                                    item.workername(), item.name, hsps.length, ( finishtime - starttime ) ) );
+                                                    item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
 
                             starttime = System.currentTimeMillis();
                             BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
                             finishtime = System.currentTimeMillis();
 
                             if ( tbs == null )
-                                str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.name ) );
+                                str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
                             else
                             {
                                 str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-                                                        item.workername(), item.name, tbs.length, ( finishtime - starttime ) ) );
+                                                        item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
 
                                 for ( BLAST_TB_LIST tb : tbs )
                                     tp_lst.add( tb );
@@ -186,10 +195,10 @@ class BC_JOB extends Thread
                         }
                     }
                     else
-                        str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.name ) );
+                        str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.chunk.name ) );
                 }
                 else
-                    str_lst.add( String.format( "%s: %s - failed to download", item.workername(), item.name ) );
+                    str_lst.add( String.format( "%s: %s - failed to download", item.workername(), item.chunk.name ) );
 
                 return new Tuple2<>( str_lst, tp_lst );
             });

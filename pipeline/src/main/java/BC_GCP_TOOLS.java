@@ -27,6 +27,8 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -163,7 +165,7 @@ public class BC_GCP_TOOLS
  *
  * @return         number of entries found
 */
-    private Integer list_bucket( final String bucket, List< String > lst )
+    private Integer list_bucket( final String bucket, List< BC_NAME_SIZE > lst )
     {
         Integer res = 0;
         try
@@ -178,7 +180,7 @@ public class BC_GCP_TOOLS
                     List< StorageObject > items = objects.getItems();
                     for ( StorageObject item : items )
                     {
-                        lst.add( item.getName() );
+                        lst.add( new BC_NAME_SIZE( item.getName(), item.getSize() ) );
                         res += 1;
                     }
                     list.setPageToken( objects.getNextPageToken() );
@@ -390,9 +392,9 @@ public class BC_GCP_TOOLS
  *
  * @return         List of Strings, names of items in the bucket
 */
-    public static List< String > list( final String bucket )
+    public static List< BC_NAME_SIZE > list( final String bucket )
     {
-        List< String > res = new ArrayList<>();
+        List< BC_NAME_SIZE  > res = new ArrayList<>();
         BC_GCP_TOOLS inst = getInstance();
         if ( inst != null )
         {
@@ -427,7 +429,7 @@ public class BC_GCP_TOOLS
     }
 
 /**
- * public static helper-method filter a list of Strings, based on a list of given extensions
+ * public static helper-method to filter a list of Strings, based on a list of given extensions
  *
  * @param  all         list of strings to be filtered
  * @param  extensions  extensions to be used as filter
@@ -445,6 +447,50 @@ public class BC_GCP_TOOLS
                 if ( ! res.contains( without_ext ) )
                     res.add( without_ext );
             }
+        }
+        return res;
+    }
+
+/**
+ * public static helper-method to filter a list of BC_NAME_SIZE tuples, based on a list of given extensions
+ *
+ * @param  all         list of BC_NAME_SIZE tuples
+ * @param  extensions  extensions to be used as filter
+ *
+ * @return         list of strings that do end in any of the given extensions
+*/
+    public static List< BC_CHUNK_VALUES > unique_by_extension( final List< BC_NAME_SIZE > all, final List< String > extensions )
+    {
+        List< BC_CHUNK_VALUES > res = new ArrayList<>();
+        Map< String, BC_CHUNK_VALUES > dict = new HashMap<>();
+        for ( BC_NAME_SIZE item : all )
+        {
+            if ( ends_with_any( item.name, extensions ) )
+            {
+                String key = item.name.substring( 0, item.name.length() - 4 );
+                if ( dict.containsKey( key ) )
+                {
+                    BC_CHUNK_VALUES obj = dict.get( key );
+                    obj.files.add( item );
+                }
+                else
+                {
+                    BC_CHUNK_VALUES obj = new BC_CHUNK_VALUES( key );
+                    obj.files.add( item );
+                    dict.put( key, obj );
+                }
+            }
+        }
+        for ( BC_CHUNK_VALUES obj : dict.values() )
+        {
+            BC_CHUNK_VALUES v = new BC_CHUNK_VALUES( obj.name );
+            for ( BC_NAME_SIZE ns : obj.files )
+            {
+                /* get the last 3 characters ( aka the extension ) */
+                String ext = ns.name.substring( Math.max( ns.name.length() - 3, 0 ) );
+                v.files.add( new BC_NAME_SIZE( ext, ns.size ) );
+            }
+            res.add( v );
         }
         return res;
     }

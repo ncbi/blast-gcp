@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.*;
+import java.math.BigInteger;
 
 public class Test_BLAST_LIB {
 
@@ -133,8 +134,12 @@ public class Test_BLAST_LIB {
   @Test
   public void testProteinSearch() throws Exception {
     final String queryfname = "data/prot_query.asn";
-    final String protdb = "data/prot_w_aux";
     final String program = "blastp";
+
+    final BC_CHUNK_VALUES protdb = new BC_CHUNK_VALUES( "data/prot_w_aux" );
+    protdb.files.add( new BC_NAME_SIZE( "pax", new BigInteger( "130" ) ) );
+    protdb.files.add( new BC_NAME_SIZE( "pin", new BigInteger( "112" ) ) );
+    protdb.files.add( new BC_NAME_SIZE( "psq", new BigInteger( "2434" ) ) );
 
     final Path cwd = Paths.get(System.getProperty("user.dir"), "../lib_builder/unit_test/");
     final Path testpath = cwd.normalize();
@@ -147,7 +152,7 @@ public class Test_BLAST_LIB {
     dbset.worker_location = testpath.toString();
 
     dbset.direct = true;
-    final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, protdb);
+    final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY( dbset, protdb );
 
     String params = "{";
     params += "\n\"version\": 1,";
@@ -203,8 +208,12 @@ public class Test_BLAST_LIB {
   @Test
   public void testNucleotideSearch() throws Exception {
     final String queryfname = "data/nucl_query.asn";
-    final String nucldb = "data/nucl_w_aux";
     final String program = "blastn";
+
+    final BC_CHUNK_VALUES nucldb = new BC_CHUNK_VALUES( "data/nucl_w_aux" );
+    nucldb.files.add( new BC_NAME_SIZE( "nax", new BigInteger( "136" ) ) );
+    nucldb.files.add( new BC_NAME_SIZE( "nin", new BigInteger( "136" ) ) );
+    nucldb.files.add( new BC_NAME_SIZE( "nsq", new BigInteger( "2418" ) ) );
 
     final Path cwd = Paths.get(System.getProperty("user.dir"), "../lib_builder/unit_test/");
     final Path testpath = cwd.normalize();
