@@ -2,13 +2,13 @@
 
 renice +19 -p $$
 
-MAXJOBS=24
+MAXJOBS=2
 
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/vartanianmh/blast-gcp/lib_builder/:."
 
 TESTS=$(/bin/ls -1 $TMP/tests/A*.json | sort -R)
 for test in $TESTS; do
-    ~/blast-gcp/experiment_dataset2/fixjson.py "$test"
+    ~/blast-gcp/lib_builder/fixjson.py "$test"
     OUT="$TMP/$(basename $test).out"
     echo "$OUT"
     echo "Running $test -> $OUT"
