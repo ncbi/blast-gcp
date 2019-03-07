@@ -15,14 +15,14 @@ Available commands on the console:
 	'exit'	... terminates the application
 
 	'F request-file' ... processes this one request, full url to json-file in bucket
-		example: 'F gs://blast-test-requests-sprint6/AFEVGV0P014.json'
+		example: 'F gs://blast-test-requests-sprint11/AFEVGV0P014.json'
 
 	'L request-list' ... processes the list of requests found in the given file
 		example: 'L list.txt'
 
 		example-of list-file:
 			#this is a comment
-			:src=gs://blast-test-requests-sprint6
+			:src=gs://blast-test-requests-sprint11
 			AFEVGV0P014.json
 			AFEVHK3N014.json
 			AFEVJ4EE014.json
@@ -36,10 +36,10 @@ Available commands on the console:
 		example: 'L list.txt 3'
 
 	'B bucket-url' ... processes all requests found in the given bucket
-		example: 'B gs://blast-test-requests-sprint6'
+		example: 'B gs://blast-test-requests-sprint11'
 
 	'B bucket-url N' ... processes the first N requests found in the given bucket
-		example: 'B gs://blast-test-requests-sprint6 10'
+		example: 'B gs://blast-test-requests-sprint11 10'
 
 	'stop'	... cancels all running lists ( 'L' and 'B' ) commands
 		but tries to finish the jobs which are currently running
