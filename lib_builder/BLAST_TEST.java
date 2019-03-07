@@ -52,7 +52,8 @@ final class BLAST_TEST {
     dbset.key = "nt";
     dbset.worker_location = LOCATION;
     dbset.direct = true;
-    final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, "nt_50M.14");
+    final BC_CHUNK_VALUES values = new BC_CHUNK_VALUES("nt_50M.14");
+    final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, values);
 
     // String query_url = "gs://blast-largequeries/query-021125518.txt";
 
