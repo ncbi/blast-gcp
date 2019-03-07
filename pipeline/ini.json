@@ -20,8 +20,8 @@
     "cluster" :
     {
 		"transfer_files" : [ "libblastjni.so" ],
-		"num_executors" : 16,
-		"num_executor_cores" : 1,
+		"num_executors" : 8,
+		"num_executor_cores" : 2,
 		"parallel_jobs" : 12,
         "jni_log_level" : "WARN"
     }

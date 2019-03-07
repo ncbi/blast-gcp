@@ -1,8 +1,6 @@
-target/
 gov/
 *.result
-*.jar
-Req*asn1
 output.*
 blast_json
 blast_server
+libblastjni.so

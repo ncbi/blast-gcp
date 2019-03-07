@@ -28,6 +28,10 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.PrintStream;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,6 +55,7 @@ public class BC_CONTEXT
     private final ConcurrentLinkedQueue< BC_REQUEST > request_queue;
     private final BC_LISTS list_manager;
     private BC_JOBS jobs;
+    private final List< String > history;
 
 /**
  * create instance of BC_CONTEXT from settings
@@ -68,6 +73,7 @@ public class BC_CONTEXT
         request_queue = new ConcurrentLinkedQueue<>();
         list_manager = new BC_LISTS( this );
         jobs = null;
+        history = Collections.synchronizedList( new ArrayList< String >() );
     }
 
 /**
@@ -106,7 +112,40 @@ public class BC_CONTEXT
  *
  * @param command the command to be put into the queue
 */
-    public void push_command( final BC_COMMAND command ) { command_queue.offer( command ); }
+    public void push_command( final PrintStream origin, final String command )
+    {
+        if ( !command.isEmpty() )
+        {
+            if ( !command.startsWith( "H" ) && !command.startsWith( "E" ) )
+                history.add( command );
+
+            command_queue.offer( new BC_COMMAND( origin, command ) );
+        }
+    }
+
+/**
+ * return a history string
+ *
+ * @param idx   index in the history buffer
+ * @return String from history buffer
+*/
+    public String get_cmd_history( int idx )
+    {
+        String res = "";
+        if ( idx < history.size() )
+            res = history.get( idx );
+        return res;
+    }
+
+/**
+ * return how many history entries we have
+ *
+ * @return how many history entries ?
+*/
+    public int get_cmd_history()
+    {
+        return history.size();
+    }
 
 /**
  * get a command from the internal command-queue

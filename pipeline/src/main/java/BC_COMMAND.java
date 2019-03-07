@@ -91,9 +91,23 @@ public final class BC_COMMAND
 /**
  * test for info command ( print request-queue-size and running commands )
  *
- * @return     is it a infot command ?
+ * @return     is it a info command ?
 */
     private boolean is_info_request() { return parts[ 0 ].equals( "I" ); }
+
+/**
+ * test for history command ( print last n commands )
+ *
+ * @return     is it a history command ?
+*/
+    private boolean is_history_request() { return parts[ 0 ].equals( "H" ); }
+
+/**
+ * test for execute from history command ( executes commnd from history )
+ *
+ * @return     is it a execute from history command ?
+*/
+    private boolean is_execute_request() { return parts[ 0 ].equals( "E" ); }
 
 /**
  * helper-function to convert String to int
@@ -158,6 +172,51 @@ public final class BC_COMMAND
     }
 
 /**
+ * handle the history-command
+ *
+ * @param context the global application-context
+ * @see        BC_CONTEXT
+*/
+    private void handle_history_request( BC_CONTEXT context )
+    {
+        int entries = context.get_cmd_history();
+        if ( entries > 0 )
+        {
+            int limit = ( num_parts > 1 ) ? toInt( parts[ 1 ] ) : 0;
+            int high = ( limit > 0 ) ? limit : entries;
+            for( int idx = 0; idx < high; idx = idx + 1 )
+            {
+                String s = context.get_cmd_history( idx );
+                if ( !s.isEmpty() )
+                {
+                    origin_stream.printf( String.format( "[%d] %s\n", idx, s ) );
+                }
+            }
+        }
+    }
+
+/**
+ * handle the execute from history-command
+ *
+ * @param context the global application-context
+ * @see        BC_CONTEXT
+*/
+    private void handle_execute_request( BC_CONTEXT context )
+    {
+        int entries = context.get_cmd_history();
+        if ( entries > 0 )
+        {
+            int idx = ( num_parts > 1 ) ? toInt( parts[ 1 ] ) : 0;
+            String s = context.get_cmd_history( idx );
+            if ( !s.isEmpty() )
+            {
+                origin_stream.printf( String.format( "%s\n", s ) );
+                context.push_command( origin_stream, s );
+            }
+        }
+    }
+
+/**
  * handle a preparsed command using the given context
  *
  * @param context application-context needed to handle the command
@@ -170,6 +229,8 @@ public final class BC_COMMAND
         else if ( is_file_request() ) handle_file_request( context );
         else if ( is_list_request() ) handle_list_request( context );
         else if ( is_bucket_request() ) handle_bucket_request( context );
+        else if ( is_history_request() ) handle_history_request( context );
+        else if ( is_execute_request() ) handle_execute_request( context );
         else if ( is_info_request() ) context.print_info( origin_stream );
         else origin_stream.printf( "unknown: %s\n", parts );
     }
