@@ -152,7 +152,7 @@ class BC_JOB extends Thread
                 {
                     str_lst.addAll( item.download() );
                     int loops = 0;
-                    while ( !item.present() )
+                    while ( !item.present() && loops < 500 )
                     {
                         try
                         {
@@ -254,10 +254,10 @@ class BC_JOB extends Thread
             {
                 active.set( true );
                 handle_request( DEBUG_SETTINGS, request );
-                active.set( false );
             }
             else
             {
+                active.set( false );
                 try
                 {
                     Thread.sleep( context.settings.job_sleep_time );
