@@ -34,7 +34,7 @@ import java.io.Serializable;
  * @see BLAST_LIB
  */
 public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LIST> {
-  static double epsilon = 1.0e-6;
+  public static double epsilon = 1.0e-6;
   public int oid;
   public double evalue;
   public byte[] asn1_blob;
@@ -69,7 +69,7 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
    * @param evalue2 second evalue to compare
    * @return 0...evalue1==evalue2, -1...evalue1<evalue2, +1...evalue1>evalue2
    */
-  static int FuzzyEvalueComp(double evalue1, double evalue2) {
+  public static int FuzzyEvalueComp(final double evalue1, final double evalue2) {
     /* recommended by BLAST-team */
     if (evalue1 < (1.0 - epsilon) * evalue2) {
       return -1;
@@ -90,17 +90,13 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   public int compareTo(final BLAST_TB_LIST other) {
     // ascending order
     final double delta = this.evalue - other.evalue;
-    if (Math.abs(delta) <= epsilon) // treat as equal
-    {
-      final int oiddelta = this.oid - other.oid;
-      if (oiddelta == 0) return 0;
-      else if (oiddelta > 0) return 1;
-      return -1;
-    }
+    if (Math.abs(delta) > epsilon) // treat as equal
     return (int) Math.signum(delta);
+    final int oiddelta = this.oid - other.oid;
+    return Integer.signum(oiddelta);
   }
 
-  private static String toHex(byte[] blob) {
+  private static String toHex(final byte[] blob) {
     String res = "";
     res += "\n        ";
     int brk = 0;
