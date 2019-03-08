@@ -2,6 +2,9 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 import org.junit.*;
 
 public class Test_BLAST_TB_LIST {
@@ -86,5 +89,77 @@ public class Test_BLAST_TB_LIST {
         "compareTo and FuzzyEvalueComp disagree",
         test9.compareTo(test8),
         BLAST_TB_LIST.FuzzyEvalueComp(test9.evalue, test8.evalue));
+  }
+
+  @Test
+  public void testSort() {
+    final double delta = BLAST_TB_LIST.epsilon / 10.0;
+    final byte[] blob = new byte[] {};
+    // These should be listed in desired sorting order
+    final BLAST_TB_LIST test1 = new BLAST_TB_LIST(1, -2.0, blob);
+    final BLAST_TB_LIST test2 = new BLAST_TB_LIST(1, 1.0 - delta, blob);
+
+    ArrayList<BLAST_TB_LIST> l = new ArrayList<>();
+    l.add(test1);
+    l.add(test2);
+    Collections.sort(l);
+    assertTrue(l.get(0).evalue < l.get(1).evalue);
+  }
+
+  @Test
+  public void testSort2() {
+    final byte[] blob = new byte[] {};
+
+    ArrayList<BLAST_TB_LIST> l = new ArrayList<>();
+    Random rng = new Random();
+    BLAST_TB_LIST test;
+    for (int i = 0; i != 10000; ++i) {
+      final int oid = rng.nextInt(5) - 2;
+      final double evalue = rng.nextDouble();
+      test = new BLAST_TB_LIST(oid, evalue, blob);
+      l.add(test);
+      test = new BLAST_TB_LIST(oid, evalue, blob);
+      l.add(test);
+      test = new BLAST_TB_LIST(oid + 1, evalue, blob);
+      l.add(test);
+      test = new BLAST_TB_LIST(oid, evalue + BLAST_TB_LIST.epsilon, blob);
+      l.add(test);
+      test = new BLAST_TB_LIST(oid, evalue - BLAST_TB_LIST.epsilon, blob);
+      l.add(test);
+      test = new BLAST_TB_LIST(oid, evalue + 1.0, blob);
+      l.add(test);
+      test = new BLAST_TB_LIST(oid + 1, evalue + 1.0, blob);
+      l.add(test);
+    }
+    test = new BLAST_TB_LIST(0, 0.0, blob);
+    l.add(test);
+    l.add(test);
+    test = new BLAST_TB_LIST(0, 0.0, blob);
+    l.add(test);
+    test = new BLAST_TB_LIST(-1, 0.0, blob);
+    l.add(test);
+    test = new BLAST_TB_LIST(1, 0.0, blob);
+    l.add(test);
+
+    // Extracted from REQ_AFFAUTCT014.asn1.unsorted
+    test = new BLAST_TB_LIST(100, 9.78849863e-20, blob);
+    l.add(test);
+    l.add(test);
+    test = new BLAST_TB_LIST(100, 9.75016079e-13, blob);
+    l.add(test);
+    l.add(test);
+
+    Collections.sort(l);
+    double prev_evalue = -99999.0;
+    int prev_oid = -99999;
+    for (BLAST_TB_LIST x : l) {
+      final String why = String.format("%d %f  <=> %d %f", x.oid, x.evalue, prev_oid, prev_evalue);
+      if (x.evalue - prev_evalue < BLAST_TB_LIST.epsilon) assertTrue(why, x.oid >= prev_oid);
+      else assertTrue(why, x.evalue >= prev_evalue);
+
+      prev_evalue = x.evalue;
+      prev_oid = x.oid;
+    }
+    assertTrue(l.get(0).evalue <= l.get(1).evalue);
   }
 }
