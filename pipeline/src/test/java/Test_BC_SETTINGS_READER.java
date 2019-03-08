@@ -27,15 +27,6 @@ public class Test_BC_SETTINGS_READER {
     //            (res.req_use_pubsub == true || res.req_use_files == true || res.req_use_socket ==
     // true));
 
-    if (res.req_use_pubsub == true) {
-      //    assertTrue ("if req_use_pubsub == true, then req_use_files and req_use_socket must be
-      // false",
-      //                (res.req_use_files == false || res.req_use_socket == false));
-
-      assertTrue(
-          "if req_use_pubsub == true, then req_pubsub_project_id and req_pubsub_subscript_id must be set",
-          (!res.req_pubsub_project_id.isEmpty() && !res.req_pubsub_subscript_id.isEmpty()));
-    }
     if (res.req_use_files == true) {
       //    assertTrue ("if req_use_files == true, then req_use_pubsub and req_use_socket must be
       // false",
