@@ -225,11 +225,17 @@ class BC_JOB extends Thread
                                         ( job_finishtime - job_starttime ) ) );
             BC_UTILS.save_to_file( lines, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
 
-            results.sort();
-            results.cutoff( request.top_n_traceback );
-            String asn1_file_name = String.format( "%s/REQ_%s.asn1", context.settings.report_dir, request.id );
-            BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
-
+            if ( results.sort( request.id ) )
+            {
+                results.cutoff( request.top_n_traceback );
+                String asn1_file_name = String.format( "%s/REQ_%s.asn1", context.settings.report_dir, request.id );
+                BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
+            }
+            else
+            {
+                String asn1_file_name = String.format( "%s/REQ_%s.asn1.unsorted", context.settings.report_dir, request.id );
+                BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
+            }
             System.out.println( String.format( "JOB[%d] REQUEST[%s] done", id, request.id ) );
         }
         else

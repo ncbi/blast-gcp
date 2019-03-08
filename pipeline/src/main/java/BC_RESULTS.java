@@ -65,11 +65,24 @@ public class BC_RESULTS
 /**
  * sort the internal list, the item-class has an overriden comparison-method
  *
- * @see        BLAST_TB_LIST
+ * @param   request_id id of request to be sorted
+ * @return  success
+ * @see     BLAST_TB_LIST
 */
-    public void sort()
+    public boolean sort( final String request_id )
     {
-        Collections.sort( l );
+        boolean res = false;
+        try
+        {
+            Collections.sort( l );
+            res = true;
+        }
+        catch ( Exception e )
+        {
+            System.out.println( String.format( "exception while sorting results of reqeust[%s]", request_id ) );
+            //e.printStackTrace();
+        }
+        return res;
     }
 
 /**
