@@ -21,7 +21,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.11.11</version>
+      <version>2.11.12</version>
       <scope>provided</scope>
       <!--scope>system</scope>
             <systemPath>/usr/lib/spark/jars/scala-library-2.11.8.jar</systemPath-->
@@ -29,13 +29,13 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_2.11</artifactId>
-      <version>2.2.0</version>
+      <version>2.3.2</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_2.11</artifactId>
-      <version>2.1.1</version>
+      <version>2.3.2</version>
       <scope>provided</scope>
       <!--scope>system</scope>
             <systemPath>/usr/lib/spark/jars/spark-core_2.11-2.2.0.jar</systemPath-->
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-streaming_2.11</artifactId>
-      <version>2.1.1</version>
+      <version>2.3.2</version>
       <scope>provided</scope>
       <!--scope>system</scope>
             <systemPath>/usr/lib/spark/jars/spark-streaming_2.11-2.2.0.jar</systemPath-->
