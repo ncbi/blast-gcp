@@ -82,7 +82,7 @@ public class Test_BC_GCP_TOOLS {
 
     @Test
     public void testUniqueWithoutExt() {
-        List< String > all = new ArrayList();
+        List< String > all = new ArrayList<>();
         all.add("anucl1.ndb");
         all.add("anucl1.nhr");
         all.add("anucl1.nin");
@@ -90,7 +90,7 @@ public class Test_BC_GCP_TOOLS {
         all.add("aprot1.pdb");
         all.add("aprot1.psq");
 
-        List< String > ext = new ArrayList();
+        List< String > ext = new ArrayList<>();
         ext.add("ndb");
         ext.add("nhr");
         ext.add("nin");
