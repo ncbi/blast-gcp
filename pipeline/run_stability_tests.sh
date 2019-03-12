@@ -6,9 +6,9 @@ set -o errexit # same as -e
 
 BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
-BC_INI="ini.json"
+BC_INI="ini_test.json"
 
-which asntool || sudo apt install ncbi-tools-bin
+command -v asntool || sudo apt install ncbi-tools-bin
 
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 
@@ -17,20 +17,50 @@ which asntool || sudo apt install ncbi-tools-bin
 
 echo "Downloading test queries..."
 gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
-	stability_test/ > /dev/null 2>&1
+    stability_test/ > /dev/null 2>&1
 echo "Downloaded test queries."
 
 find stability_test -name "*json" | \
-	head -10 > stability_test/stability_tests.txt
+    head -10 > stability_test/stability_tests.txt
 
-echo "L stability_test/stability_tests.txt" | \
-	spark-submit --master yarn --class $BC_CLASS $BC_JAR $BC_INI
+cat << EOF > $BC_INI
+    {
+        "databases" :
+        [
+            {
+                "key" : "nr",
+                "worker_location" : "/tmp/blast/db",
+                "source_location" : "gs://nr_50mb_chunks",
+                "extensions" : [ "psq", "pin", "phr" ],
+                "limit" : 1086
+            },
+            {
+                "key" : "nt",
+                "worker_location" : "/tmp/blast/db",
+                "source_location" : "gs://nt_50mb_chunks",
+                "extensions" : [ "nsq", "nin", "nhr" ],
+                "limit" : 887
+            }
+        ],
+        "cluster" :
+        {
+            "transfer_files" : [ "libblastjni.so" ],
+            "num_executors" : 32,
+            "num_executor_cores" : 2,
+            "parallel_jobs" : 12,
+            "jni_log_level" : "WARN"
+        }
 
+    }
+EOF
+
+echo -e "I\nL stability_test/stability_tests.txt\nexit\n" | \
+    spark-submit --master yarn --class $BC_CLASS $BC_JAR $BC_INI
 
 cd report
 grep -h "done at" ./*.txt | sort > dones
 for asn in *.asn1; do
-	asntool -m ../../lib_builder/asn.all -t Seq-annot -d "$asn" -p "$asn.txt"
+    asntool -m ../../lib_builder/asn.all -t Seq-annot -d "$asn" -p "$asn.txt"
 done
 
 rm -f ./*.result
@@ -38,11 +68,11 @@ rm -f ./*.result
 md5sum -- *.asn1* | sort > asn1.md5sum.result
 md5sum -- *.asn1.txt* | sort > asn1.txt.md5sum.result
 
-diff ../asn1.md5sum.expected asn1.md5sum.result
-if [ "$?" -ne 0 ]; then
-	echo "Differences in .asn1 output"
+if diff ../asn1.md5sum.expected asn1.md5sum.result; then
+#if [ "$?" -ne 0 ]; then
+    echo "Differences in .asn1 output"
 fi
-diff ../asn1.txt.md5sum.expected asn1.txt.md5sum.result
-if [ "$?" -ne 0 ]; then
-	echo "Differences in .asn1.txt output"
+
+if diff ../asn1.txt.md5sum.expected asn1.txt.md5sum.result; then
+    echo "Differences in .asn1.txt output"
 fi
