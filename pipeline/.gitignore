@@ -16,3 +16,5 @@ pmd.txt
 labels.json
 lifecycle.json
 checkstyle.html
+report/
+stability_test/
