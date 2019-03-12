@@ -158,10 +158,10 @@ public class BC_GCP_TOOLS
     }
 
 /**
- * private method list all entries of a bucket
+ * private method list all entries of a bucket : name + size
  *
  * @param  bucket  url of the bucket
- * @param  lst     reference of list of strings, to insert entry-names into
+ * @param  lst     reference of list of string/size-tuples, to insert entry-names into
  *
  * @return         number of entries found
 */
@@ -185,6 +185,62 @@ public class BC_GCP_TOOLS
                     }
                     list.setPageToken( objects.getNextPageToken() );
                 } while ( objects.getNextPageToken() != null );
+            }
+        }
+        catch( Exception e )
+        {
+        }
+        return res;
+    }
+
+/**
+ * private method list all entries of a bucket: just names
+ *
+ * @param  bucket  url of the bucket
+ * @param  lst     reference of list of strings, to insert entry-names into
+ *
+ * @return         number of entries found
+*/
+    private Integer list_bucket_names( final String bucket, List< String > lst, int limit )
+    {
+        Integer res = 0;
+        try
+        {
+            Storage.Objects.List list = storage.objects().list( bucket );
+            if ( list != null )
+            {
+                Objects objects;
+                if ( limit > 0 )
+                {
+                    boolean done = false;
+                    do
+                    {
+                        objects = list.execute();
+                        List< StorageObject > items = objects.getItems();
+                        for ( StorageObject item : items )
+                        {
+                            lst.add( item.getName() );
+                            res += 1;
+                            done = ( res >= limit );
+                            if ( done ) break;
+                        }
+                        list.setPageToken( objects.getNextPageToken() );
+                    } while ( !done && ( objects.getNextPageToken() != null ) );
+                }
+                else
+                {
+                    do
+                    {
+                        objects = list.execute();
+                        List< StorageObject > items = objects.getItems();
+                        for ( StorageObject item : items )
+                        {
+                            lst.add( item.getName() );
+                            res += 1;
+                        }
+                        list.setPageToken( objects.getNextPageToken() );
+                    } while ( objects.getNextPageToken() != null );
+                }
             }
         }
         catch( Exception e )
@@ -390,7 +446,7 @@ public class BC_GCP_TOOLS
  *
  * @param  bucket  url of the bucket
  *
- * @return         List of Strings, names of items in the bucket
+ * @return         List of String/Size-tuples, names/size of items in the bucket
 */
     public static List< BC_NAME_SIZE > list( final String bucket )
     {
@@ -403,6 +459,32 @@ public class BC_GCP_TOOLS
                 URI uri = new URI( bucket );
                 if ( uri.getScheme().equals( "gs" ) )
                     inst.list_bucket( uri.getAuthority(), res );
+            }
+            catch( URISyntaxException e )
+            {
+            }
+        }
+        return res;
+    }
+
+/**
+ * public static method to list all items in a bucket
+ *
+ * @param  bucket  url of the bucket
+ *
+ * @return         List of Strings, names of items in the bucket
+*/
+    public static List< String > list_names( final String bucket, int limit )
+    {
+        List< String  > res = new ArrayList<>();
+        BC_GCP_TOOLS inst = getInstance();
+        if ( inst != null )
+        {
+            try
+            {
+                URI uri = new URI( bucket );
+                if ( uri.getScheme().equals( "gs" ) )
+                    inst.list_bucket_names( uri.getAuthority(), res, limit );
             }
             catch( URISyntaxException e )
             {

@@ -172,7 +172,7 @@ class BC_FILE_LIST extends BC_LIST
                     {
                         try
                         {
-                            src = line.substring( 5 );
+                            src = line.substring( 5 ).trim();
                         }
                         catch( Exception e )
                         {
@@ -183,7 +183,7 @@ class BC_FILE_LIST extends BC_LIST
                         int time_limit = 0;
                         try
                         {
-                            time_limit = BC_UTILS.toInt( tline.substring( 6 ) );
+                            time_limit = BC_UTILS.toInt( tline.substring( 6 ).trim() );
                         }
                         catch( Exception e )
                         {
@@ -194,12 +194,32 @@ class BC_FILE_LIST extends BC_LIST
                     {
                         context.stop();
                     }
+                    else if ( tline.startsWith( ":pick" ) )
+                    {
+                        int limit = 0;
+                        try
+                        {
+                            limit = BC_UTILS.toInt( tline.substring( 5 ).trim() );
+                        }
+                        catch( Exception e )
+                        {
+                        }
+                        if ( !src.isEmpty() )
+                        {
+                            context.addRequestBucket( src, ps, limit );
+                            try
+                            {
+                                Thread.sleep( 2000 );
+                            }
+                            catch ( InterruptedException e ) { }
+                        }
+                    }
                     else
                     {
+                        String requestFile = tline;
                         if ( !src.isEmpty() )
-                            submitFile( String.format( "%s/%s", src, tline ) );
-                        else
-                            submitFile( tline );
+                            requestFile = String.format( "%s/%s", src, tline );
+                        context.add_request_file( requestFile, ps );
                     }
                 }
             }
@@ -222,6 +242,7 @@ class BC_FILE_LIST extends BC_LIST
 */
 class BC_BUCKET_LIST extends BC_LIST
 {
+    private List< String > files;
 
 /**
  * create instance of BC_FILE_LIST
@@ -235,6 +256,8 @@ class BC_BUCKET_LIST extends BC_LIST
     public BC_BUCKET_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
     {
         super( a_context, a_srcName, a_ps, a_limit );
+        ps.printf( String.format( "bucket-list '%s' reading files... ( limit %d )\n", srcName, limit ) );
+        files = BC_GCP_TOOLS.list_names( srcName, limit );
     }
 
 /**
@@ -249,14 +272,13 @@ class BC_BUCKET_LIST extends BC_LIST
     {
         ps.printf( String.format( "bucket-list '%s' start\n", srcName ) );
 
-        List< BC_NAME_SIZE > files = BC_GCP_TOOLS.list( srcName );
-        Iterator< BC_NAME_SIZE > iter = files.iterator();
+        Iterator< String > iter = files.iterator();
 
         while ( is_running() && iter.hasNext() )
         {
-            BC_NAME_SIZE obj = iter.next();
-            if ( obj.name.endsWith( "json" ) )
-                submitFile( String.format( "%s/%s", srcName, obj.name ) );
+            String obj = iter.next();
+            if ( obj.endsWith( "json" ) )
+                submitFile( String.format( "%s/%s", srcName, obj ) );
         }
 
         ps.printf( String.format( "bucket-list '%s' done\n", srcName ) );
