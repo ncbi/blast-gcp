@@ -165,18 +165,41 @@ class BC_FILE_LIST extends BC_LIST
 
             while ( is_running() && ( ( line = br.readLine() ) != null ) )
             {
-                if ( !line.isEmpty() && !line.startsWith( "#" ) )
+                String tline = line.trim();
+                if ( !tline.isEmpty() && !tline.startsWith( "#" ) )
                 {
-                    if ( line.startsWith( ":src=" ) )
+                    if ( tline.startsWith( ":src=" ) )
                     {
-                        src = line.trim().substring( 5 );
+                        try
+                        {
+                            src = line.substring( 5 );
+                        }
+                        catch( Exception e )
+                        {
+                        }
+                    }
+                    else if ( tline.startsWith( ":wait" ) )
+                    {
+                        int time_limit = 0;
+                        try
+                        {
+                            time_limit = BC_UTILS.toInt( tline.substring( 6 ) );
+                        }
+                        catch( Exception e )
+                        {
+                        }
+                        context.wait_for_empty( time_limit );
+                    }
+                    else if ( tline.startsWith( ":exit" ) )
+                    {
+                        context.stop();
                     }
                     else
                     {
                         if ( !src.isEmpty() )
-                            submitFile( String.format( "%s/%s", src, line.trim() ) );
+                            submitFile( String.format( "%s/%s", src, tline ) );
                         else
-                            submitFile( line.trim() );
+                            submitFile( tline );
                     }
                 }
             }
