@@ -8,7 +8,7 @@ BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini_test.json"
 
-command -v asntool || sudo apt install ncbi-tools-bin
+command -v asntool || sudo apt install -y ncbi-tools-bin
 
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 
@@ -20,8 +20,9 @@ gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
     stability_test/ > /dev/null 2>&1
 echo "Downloaded test queries."
 
-find stability_test -name "*json" | \
-    head -10 > stability_test/stability_tests.txt
+find stability_test -name "*json" \
+    | sort -R \
+    > stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
     {
@@ -45,16 +46,16 @@ cat << EOF > $BC_INI
         "cluster" :
         {
             "transfer_files" : [ "libblastjni.so" ],
-            "num_executors" : 32,
+            "num_executors" : 256,
             "num_executor_cores" : 2,
-            "parallel_jobs" : 12,
+            "parallel_jobs" : 20,
             "jni_log_level" : "WARN"
         }
 
     }
 EOF
 
-echo -e "I\nL stability_test/stability_tests.txt\nexit\n" | \
+echo -e "I\nL stability_test/stability_tests.txt\nI\n" | \
     spark-submit --master yarn --class $BC_CLASS $BC_JAR $BC_INI
 
 cd report
@@ -65,8 +66,8 @@ done
 
 rm -f ./*.result
 
-md5sum -- *.asn1* | sort > asn1.md5sum.result
-md5sum -- *.asn1.txt* | sort > asn1.txt.md5sum.result
+md5sum -- *.asn1 | sort > asn1.md5sum.result
+md5sum -- *.asn1.txt | sort > asn1.txt.md5sum.result
 
 if diff ../asn1.md5sum.expected asn1.md5sum.result; then
 #if [ "$?" -ne 0 ]; then
