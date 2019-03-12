@@ -66,14 +66,14 @@ done
 
 rm -f ./*.result
 
-md5sum -- *.asn1 | sort > asn1.md5sum.result
-md5sum -- *.asn1.txt | sort > asn1.txt.md5sum.result
+wc -l -- *.asn1 | sort > asn1.wc.result
+wc -l -- *.asn1.txt | sort > asn1.txt.wc.result
 
-if diff ../asn1.md5sum.expected asn1.md5sum.result; then
+if diff ../asn1.wc.expected asn1.wc.result; then
 #if [ "$?" -ne 0 ]; then
     echo "Differences in .asn1 output"
 fi
 
-if diff ../asn1.txt.md5sum.expected asn1.txt.md5sum.result; then
+if diff ../asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
 fi
