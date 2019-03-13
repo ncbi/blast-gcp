@@ -110,18 +110,11 @@ public final class BC_COMMAND
     private boolean is_execute_request() { return parts[ 0 ].equals( "E" ); }
 
 /**
- * helper-function to convert String to int
+ * test for wait command ( wait until all jobs are done )
  *
- * @param s  String to be converted to int
- * @return result of conversion
+ * @return     is it a wait command ?
 */
-    private int toInt( String s )
-    {
-        int res = 0;
-        try { res = Integer.parseInt( s ); }
-        catch ( NumberFormatException e ) { res = 0; }
-        return res;
-    }
+    private boolean is_wait_request() { return parts[ 0 ].equals( "wait" ); }
 
 /**
  * handle the file-command, by delegating it to the global context
@@ -147,7 +140,7 @@ public final class BC_COMMAND
     {
         if ( num_parts > 1 )
         {
-            int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
+            int limit = ( num_parts > 2 ) ? BC_UTILS.toInt( parts[ 2 ] ) : 0;
             context.addRequestList( parts[ 1 ], origin_stream, limit );
         }
         else
@@ -164,7 +157,7 @@ public final class BC_COMMAND
     {
         if ( num_parts > 1 )
         {
-            int limit = ( num_parts > 2 ) ? toInt( parts[ 2 ] ) : 0;
+            int limit = ( num_parts > 2 ) ? BC_UTILS.toInt( parts[ 2 ] ) : 0;
             context.addRequestBucket( parts[ 1 ], origin_stream, limit );
         }
         else
@@ -182,7 +175,7 @@ public final class BC_COMMAND
         int entries = context.get_cmd_history();
         if ( entries > 0 )
         {
-            int limit = ( num_parts > 1 ) ? toInt( parts[ 1 ] ) : 0;
+            int limit = ( num_parts > 1 ) ? BC_UTILS.toInt( parts[ 1 ] ) : 0;
             int high = ( limit > 0 ) ? limit : entries;
             for( int idx = 0; idx < high; idx = idx + 1 )
             {
@@ -206,7 +199,7 @@ public final class BC_COMMAND
         int entries = context.get_cmd_history();
         if ( entries > 0 )
         {
-            int idx = ( num_parts > 1 ) ? toInt( parts[ 1 ] ) : 0;
+            int idx = ( num_parts > 1 ) ? BC_UTILS.toInt( parts[ 1 ] ) : 0;
             String s = context.get_cmd_history( idx );
             if ( !s.isEmpty() )
             {
@@ -214,6 +207,23 @@ public final class BC_COMMAND
                 context.push_command( origin_stream, s );
             }
         }
+    }
+
+/**
+ * handle the wait-request
+ *
+ * @param context the global application-context
+ * @see        BC_CONTEXT
+*/
+    private void handle_wait_request( BC_CONTEXT context )
+    {
+        int time_limit = ( num_parts > 1 ) ? BC_UTILS.toInt( parts[ 1 ] ) : 0;
+        if ( time_limit > 0 )
+            origin_stream.printf( String.format( "waiting for done or %d minutes\n", time_limit ) );
+        else
+            origin_stream.printf( "waiting for done\n" );
+        context.wait_for_empty( time_limit );
+        origin_stream.printf( "wait done\n" );
     }
 
 /**
@@ -232,6 +242,7 @@ public final class BC_COMMAND
         else if ( is_history_request() ) handle_history_request( context );
         else if ( is_execute_request() ) handle_execute_request( context );
         else if ( is_info_request() ) context.print_info( origin_stream );
+        else if ( is_wait_request() ) handle_wait_request( context );
         else origin_stream.printf( "unknown: %s\n", parts );
     }
 }

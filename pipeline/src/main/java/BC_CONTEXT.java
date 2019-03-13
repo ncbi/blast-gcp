@@ -296,6 +296,36 @@ public class BC_CONTEXT
     }
 
 /**
+ * print info about context...
+ *
+ * @param ps         stream to be used for error messages ( cannot be null )
+*/
+    public void wait_for_empty( int minutes_to_wait )
+    {
+        boolean done = false;
+        long endtime = 0;
+        if ( minutes_to_wait > 0 )
+        {
+            endtime = System.currentTimeMillis() + ( 1000 * 60 * minutes_to_wait );
+        }
+
+        while ( !done )
+        {
+            done = ( ( request_queue.size() == 0 ) && ( jobs.active() == 0 ) );
+            if ( !done && endtime > 0 )
+                done = ( System.currentTimeMillis() > endtime );
+            if ( !done )
+            {
+                try
+                {
+                    Thread.sleep( 500 );
+                }
+                catch ( InterruptedException e ) { }
+            }
+        }
+    }
+
+/**
  * wait for all list-threads owned by the list-manager to finish
  *
 */
