@@ -13,7 +13,7 @@ import java.io.InputStream;
 
 public class Test_BC_GCP_TOOLS {
 
-    static public final String GS_BUCKET_DFLT = "yan-blastdb";
+    static public final String GS_BUCKET_DFLT = "blast-db";
     static public final String GS_KEY_DFLT = "test";
     static public final String GS_URI_DFLT = "gs://blast-db/latest-dir";
     static public final String DST_FILE_DFLT = "/tmp/gs_file.out";
