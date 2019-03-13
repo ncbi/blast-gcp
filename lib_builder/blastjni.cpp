@@ -833,8 +833,8 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         jenv->DeleteLocalRef(blobobj);
     }
 
-    ncbi::blast::TIntermediateAlignments alignments;
-    int                                  result = ncbi::blast::TracebackSearch(
+    ncbi::blast::TIntermediateAlignmentsTie alignments;
+    int result = ncbi::blast::TracebackSearch(
         std::string(jquery), std::string(jdb_spec), std::string(jprogram),
         std::string(jparams), flat_hsp_list, alignments);
     size_t num_alignments = alignments.size();
@@ -849,7 +849,7 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         throw std::runtime_error("Can't get tb class");
     }
 
-    jmethodID tb_ctor_id = jenv->GetMethodID(tbcls, "<init>", "(ID[B)V");
+    jmethodID tb_ctor_id = jenv->GetMethodID(tbcls, "<init>", "(II[B)V");
     if (tb_ctor_id == nullptr)
     {
         throw std::runtime_error("Can't find tb ctor method");
@@ -859,12 +859,12 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         = jenv->NewObjectArray(num_alignments, tbcls, nullptr);
     for (size_t i = 0; i != num_alignments; ++i)
     {
-        jdouble     evalue = alignments[i].first;
+        jint     evalue = alignments[i].first[0];
         std::string asn    = alignments[i].second;
         oid                = flat_hsp_list[i].oid;
 
         log(jenv, jthis, jlog_method, "DEBUG",
-            "  evalue=%f, oid=%d, ASN is %lu bytes", evalue, oid, asn.size());
+            "  evalue=%d, oid=%d, ASN is %lu bytes", evalue, oid, asn.size());
 
         jbyteArray asn_blob = jenv->NewByteArray(asn.size());
         if (asn_blob == nullptr)
@@ -1035,7 +1035,7 @@ iterate_HSPs_nojni(const std::vector<BlastHSPList *> & hsp_lists, int topn)
 
 // typedef std::vector<std::pair<double, std::string>>
 // TIntermediateAlignments
-ncbi::blast::TIntermediateAlignments
+ncbi::blast::TIntermediateAlignmentsTie
 searchandtb(const std::string & query, const std::string & db_spec,
             const std::string & program, const std::string & params,
             int top_n_prelim, int top_n_traceback)
@@ -1045,7 +1045,7 @@ searchandtb(const std::string & query, const std::string & db_spec,
         ncbi::blast::PrelimSearch(query, db_spec, program, params));
     fprintf(stderr, "Called  PrelimSearch\n");
 
-    ncbi::blast::TIntermediateAlignments alignments;
+    ncbi::blast::TIntermediateAlignmentsTie alignments;
 
     if (hsp_stream == nullptr)
     {

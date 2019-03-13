@@ -36,7 +36,7 @@ import java.io.Serializable;
 public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LIST> {
   public static double epsilon = 1.0e-6;
   public int oid;
-  public double evalue;
+  public int evalue;
   public byte[] asn1_blob;
   public int top_n;
 
@@ -47,7 +47,7 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
    * @param evalue value to be used for sorting
    * @param asn1_blob opaque asn1-blob, the traceback-result
    */
-  public BLAST_TB_LIST(int oid, double evalue, byte[] asn1_blob) {
+  public BLAST_TB_LIST(int oid, int evalue, byte[] asn1_blob) {
     this.oid = oid;
     this.evalue = evalue;
     this.asn1_blob = asn1_blob;
@@ -63,24 +63,6 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   }
 
   /**
-   * fuzzy comparison for sorting
-   *
-   * @param evalue1 first evalue to compare
-   * @param evalue2 second evalue to compare
-   * @return 0...evalue1==evalue2, -1...evalue1<evalue2, +1...evalue1>evalue2
-   */
-  public static int FuzzyEvalueComp(final double evalue1, final double evalue2) {
-    /* recommended by BLAST-team */
-    if (evalue1 < (1.0 - epsilon) * evalue2) {
-      return -1;
-    } else if (evalue1 > (1.0 + epsilon) * evalue2) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-  /**
    * overriden comparison, for sorting
    *
    * @param other other instance to compare against
@@ -89,7 +71,7 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   @Override
   public int compareTo(final BLAST_TB_LIST other) {
     // ascending order
-    int res = Double.compare( this.evalue, other.evalue );
+    int res = Integer.compare( this.evalue, other.evalue );
     if ( res != 0 )
         return res;
     return ( this.oid - other.oid );
@@ -132,7 +114,7 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   @Override
   public String toString() {
     String res = "  TBLIST";
-    res += String.format("\n  evalue=%f oid=%d", evalue, oid);
+    res += String.format("\n  evalue=%d oid=%d", evalue, oid);
     if (asn1_blob != null) {
       res += "\n  " + asn1_blob.length + " bytes in ASN.1 blob\n";
     }
