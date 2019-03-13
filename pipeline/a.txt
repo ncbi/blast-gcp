@@ -1,7 +1,4 @@
-:src=gs://blast-test-requests-sprint11L
-:pick 10
-:wait
-:exit
+:src=gs://blast-test-requests-sprint11
 AFEVGV0P014.json
 AFEVHK3N014.json
 AFEVJ4EE014.json
@@ -29,5 +26,4 @@ AFEWC884014.json
 #AFEWCZPB014.json
 AFEWDVPY014.json
 AFEWH7UU014.json
-:wait
-:exit
+

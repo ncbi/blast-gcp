@@ -257,7 +257,7 @@ class BC_BUCKET_LIST extends BC_LIST
     {
         super( a_context, a_srcName, a_ps, a_limit );
         ps.printf( String.format( "bucket-list '%s' reading files... ( limit %d )\n", srcName, limit ) );
-        files = BC_GCP_TOOLS.list_names( srcName, limit );
+        files = BC_GCP_TOOLS.list_names( srcName, limit, "json" );
     }
 
 /**
@@ -276,9 +276,7 @@ class BC_BUCKET_LIST extends BC_LIST
 
         while ( is_running() && iter.hasNext() )
         {
-            String obj = iter.next();
-            if ( obj.endsWith( "json" ) )
-                submitFile( String.format( "%s/%s", srcName, obj ) );
+            submitFile( String.format( "%s/%s", srcName, iter.next() ) );
         }
 
         ps.printf( String.format( "bucket-list '%s' done\n", srcName ) );

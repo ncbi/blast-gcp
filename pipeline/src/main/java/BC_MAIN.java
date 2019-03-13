@@ -111,16 +111,16 @@ public final class BC_MAIN
             List< BC_NAME_SIZE > files = BC_GCP_TOOLS.list( db_setting.source_location );
 
             /* get a list of unique names ( without the extension ) */
-            //List< String > names = BC_GCP_TOOLS.unique_without_extension( files, db_setting.extensions );
-            List< BC_CHUNK_VALUES > chunks = BC_GCP_TOOLS.unique_by_extension( files, db_setting.extensions );
+            List< BC_CHUNK_VALUES > all_chunks = BC_GCP_TOOLS.unique_by_extension( files, db_setting.extensions );
             if ( db_setting.limit > 0 )
-                System.out.println( String.format( "%s has %d chunks, using %d of them", key, chunks.size(), db_setting.limit ) );
+                System.out.println( String.format( "%s has %d chunks, using %d of them", key, all_chunks.size(), db_setting.limit ) );
             else
-                System.out.println( String.format( "%s has %d chunks", key, chunks.size() ) );
+                System.out.println( String.format( "%s has %d chunks", key, all_chunks.size() ) );
+
+            List< BC_CHUNK_VALUES > used_chunks = db_setting.limit > 0 ? all_chunks.subList( 0, db_setting.limit ) : all_chunks;
 
             /* create a list of Database-RDD-entries using a static method of this class */
-            List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting,
-                db_setting.limit > 0 ? chunks.subList( 0, db_setting.limit ) : chunks );
+            List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, used_chunks );
 
             /* ask the spark-context to distribute the RDD to the workers */
             JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, num_executors * 4 );

@@ -201,7 +201,7 @@ public class BC_GCP_TOOLS
  *
  * @return         number of entries found
 */
-    private Integer list_bucket_names( final String bucket, List< String > lst, int limit )
+    private Integer list_bucket_names( final String bucket, List< String > lst, int limit, final String filter )
     {
         Integer res = 0;
         try
@@ -219,10 +219,16 @@ public class BC_GCP_TOOLS
                         List< StorageObject > items = objects.getItems();
                         for ( StorageObject item : items )
                         {
-                            lst.add( item.getName() );
-                            res += 1;
-                            done = ( res >= limit );
-                            if ( done ) break;
+                            String s = item.getName();
+                            boolean valid = true;
+                            if ( !filter.isEmpty() ) valid = s.endsWith( filter );
+                            if ( valid )
+                            {
+                                lst.add( item.getName() );
+                                res += 1;
+                                done = ( res >= limit );
+                                if ( done ) break;
+                            }
                         }
                         list.setPageToken( objects.getNextPageToken() );
                     } while ( !done && ( objects.getNextPageToken() != null ) );
@@ -235,8 +241,14 @@ public class BC_GCP_TOOLS
                         List< StorageObject > items = objects.getItems();
                         for ( StorageObject item : items )
                         {
-                            lst.add( item.getName() );
-                            res += 1;
+                            String s = item.getName();
+                            boolean valid = true;
+                            if ( !filter.isEmpty() ) valid = s.endsWith( filter );
+                            if ( valid )
+                            {
+                                lst.add( item.getName() );
+                                res += 1;
+                            }
                         }
                         list.setPageToken( objects.getNextPageToken() );
                     } while ( objects.getNextPageToken() != null );
@@ -474,7 +486,7 @@ public class BC_GCP_TOOLS
  *
  * @return         List of Strings, names of items in the bucket
 */
-    public static List< String > list_names( final String bucket, int limit )
+    public static List< String > list_names( final String bucket, int limit, final String filter )
     {
         List< String  > res = new ArrayList<>();
         BC_GCP_TOOLS inst = getInstance();
@@ -484,7 +496,7 @@ public class BC_GCP_TOOLS
             {
                 URI uri = new URI( bucket );
                 if ( uri.getScheme().equals( "gs" ) )
-                    inst.list_bucket_names( uri.getAuthority(), res, limit );
+                    inst.list_bucket_names( uri.getAuthority(), res, limit, filter );
             }
             catch( URISyntaxException e )
             {
