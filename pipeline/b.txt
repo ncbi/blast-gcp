@@ -1,5 +1,5 @@
 :src=gs://blast-test-requests-sprint11
-:pick 25
+:pick 100
 :wait
 :exit
 
