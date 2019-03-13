@@ -77,7 +77,8 @@ public class Test_BC_SETTINGS_READER {
 
     /* CLUSTER */
     assertTrue("transfer_files must be set", (!res.transfer_files.isEmpty()));
-    assertTrue("num_executors must be > 0", (res.num_executors > 0));
+    /* num_executors == 0 is valid, it means dynamic allocation is used */
+    assertTrue("num_executors must be > 0", (res.num_executors > -1 ));
 
     /*
     WRONG UNDERSTANDING: zero-cores means do not set, used YARNs defaults, aks ZERO IS VALID

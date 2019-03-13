@@ -84,3 +84,10 @@ how to perform a fully scripted test-run:
     then run the applictaion with this list on startup
         ./start.sh b.txt
 
+how to set the number of executors?
+    It is now possible to not set the number of executors in the ini.json-file.
+    Internally the default value will be zero.
+    If the number of executors is zero BC_SETTINGS_READER.createSparkConfAndConfigure()
+    will enable dynamic alloction of executors.
+    Tests have shown that this will fully utilize the cluster after about 5-10 requests.
+
