@@ -4,6 +4,8 @@ set -o errexit # same as -e
 #set -o pipefail
 #shopt -s nullglob globstar #
 
+unset LC_ALL # Messes with sorting
+
 BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini_test.json"
