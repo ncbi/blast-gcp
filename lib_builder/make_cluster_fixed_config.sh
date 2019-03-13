@@ -11,10 +11,10 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 # NT takes about 49GB, NR 116GB
 DB_SPACE=166
 MASTER=n1-standard-4
-WORKER=n1-standard-32
+WORKER=n1-standard-64
 DISK_PER_MASTER=400 # For test data
 DISK_PER_WORKER=400 # For DBs and logs
-NUM_WORKERS=13
+NUM_WORKERS=6
 PREEMPT_WORKERS=0
 
 gcloud beta dataproc \
@@ -28,10 +28,10 @@ gcloud beta dataproc \
         --preemptible-worker-boot-disk-size $DISK_PER_WORKER \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
+    --max-age=8h \
     --labels owner=$USER \
     --region us-east4 \
     --zone   us-east4-b \
-    --max-age=8h \
     --properties dataproc:dataproc.monitoring.stackdriver.enable=true,dataproc:dataproc.logging.stackdriver.enable=true, \
     --initialization-action-timeout 30m \
     --initialization-actions \

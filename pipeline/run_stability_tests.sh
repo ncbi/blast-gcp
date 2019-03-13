@@ -20,9 +20,11 @@ gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
     stability_test/ > /dev/null 2>&1
 echo "Downloaded test queries."
 
-find stability_test -name "*json" \
-    | sort -R \
-    > stability_test/stability_tests.txt
+# Randomly shuffle order, but do databases in order
+grep -l nr_50M stability_test/*json | \
+    sort -R > stability_test/stability_tests.txt
+grep -l nt_50M stability_test/*json | \
+    sort -R >> stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
     {
@@ -63,14 +65,13 @@ for asn in *.asn1; do
         -t Seq-annot -d "$asn" -p "$asn.txt"
 done
 
-rm -f ./*.result
-
-wc -l -- *.asn1 | sort > ../asn1.wc.result
+#rm -f ../*.result
+#wc -l -- *.asn1 | sort > ../asn1.wc.result
 wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
 
-if diff asn1.wc.expected asn1.wc.result; then
-    echo "Differences in .asn1 output"
-fi
+#if diff asn1.wc.expected asn1.wc.result; then
+#    echo "Differences in .asn1 output"
+#fi
 
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
