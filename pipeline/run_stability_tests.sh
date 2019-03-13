@@ -32,15 +32,13 @@ cat << EOF > $BC_INI
                 "key" : "nr",
                 "worker_location" : "/tmp/blast/db",
                 "source_location" : "gs://nr_50mb_chunks",
-                "extensions" : [ "psq", "pin", "phr" ],
-                "limit" : 1086
+                "extensions" : [ "psq", "pin", "phr" ]
             },
             {
                 "key" : "nt",
                 "worker_location" : "/tmp/blast/db",
                 "source_location" : "gs://nt_50mb_chunks",
-                "extensions" : [ "nsq", "nin", "nhr" ],
-                "limit" : 887
+                "extensions" : [ "nsq", "nin", "nhr" ]
             }
         ],
         "cluster" :
@@ -55,25 +53,25 @@ cat << EOF > $BC_INI
     }
 EOF
 
-echo -e "I\nL stability_test/stability_tests.txt\nI\n" | \
+echo -e "I\nL stability_test/stability_tests.txt\nI\n:exit\n" | \
     spark-submit --master yarn --class $BC_CLASS $BC_JAR $BC_INI
 
-cd report
+cd report || exit
 grep -h "done at" ./*.txt | sort > dones
 for asn in *.asn1; do
-    asntool -m ../../lib_builder/asn.all -t Seq-annot -d "$asn" -p "$asn.txt"
+    asntool -m ../../lib_builder/asn.all \
+        -t Seq-annot -d "$asn" -p "$asn.txt"
 done
 
 rm -f ./*.result
 
-wc -l -- *.asn1 | sort > asn1.wc.result
-wc -l -- *.asn1.txt | sort > asn1.txt.wc.result
+wc -l -- *.asn1 | sort > ../asn1.wc.result
+wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
 
-if diff ../asn1.wc.expected asn1.wc.result; then
-#if [ "$?" -ne 0 ]; then
+if diff asn1.wc.expected asn1.wc.result; then
     echo "Differences in .asn1 output"
 fi
 
-if diff ../asn1.txt.wc.expected asn1.txt.wc.result; then
+if diff asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
 fi
