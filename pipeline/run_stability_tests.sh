@@ -55,8 +55,10 @@ cat << EOF > $BC_INI
     }
 EOF
 
-echo -e "I\nL stability_test/stability_tests.txt\nI\n:exit\n" | \
-    spark-submit --master yarn --class $BC_CLASS $BC_JAR $BC_INI
+echo -e ":wait\n:exit\n" \
+ >> stability_test/stability_tests.txt
+
+./run.sh stability_test/stability_tests.txt
 
 cd report || exit
 grep -h "done at" ./*.txt | sort > dones
