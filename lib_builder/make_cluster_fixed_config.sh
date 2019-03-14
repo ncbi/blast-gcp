@@ -12,6 +12,9 @@ PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 DB_SPACE=166
 MASTER=n1-standard-4
 WORKER=n1-standard-64
+# Note that GCP is soon going to default to 1TB PD disks for throughput, but
+# since we pretty much just load everything into kernel cache at startup, we're
+# not as sensitive to this as most Hadoop applications.
 DISK_PER_MASTER=400 # For test data
 DISK_PER_WORKER=400 # For DBs and logs
 NUM_WORKERS=6
@@ -31,7 +34,7 @@ gcloud beta dataproc \
     --max-age=8h \
     --labels owner=$USER \
     --region us-east4 \
-    --zone   us-east4-b \
+    --zone   us-east4-c \
     --properties dataproc:dataproc.monitoring.stackdriver.enable=true,dataproc:dataproc.logging.stackdriver.enable=true, \
     --initialization-action-timeout 30m \
     --initialization-actions \
