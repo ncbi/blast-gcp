@@ -49,6 +49,8 @@ cat << EOF > $BC_INI
         {
             "transfer_files" : [ "libblastjni.so" ],
             "parallel_jobs" : 20,
+            "XXnum-executors": 512,
+            "XXnum-executor-cores": 1,
             "log_level" : "INFO",
             "jni_log_level" : "WARN"
         }
