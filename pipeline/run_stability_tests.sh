@@ -22,11 +22,11 @@ gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
     stability_test/ > /dev/null 2>&1
 echo "Downloaded test queries."
 
-# Randomly shuffle order, but do databases in order
+# Query databases in order
 grep -l nr_50M stability_test/*json | \
-    sort -R > stability_test/stability_tests.txt
+    sort > stability_test/stability_tests.txt
 grep -l nt_50M stability_test/*json | \
-    sort -R >> stability_test/stability_tests.txt
+    sort >> stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
     {
@@ -48,12 +48,10 @@ cat << EOF > $BC_INI
         "cluster" :
         {
             "transfer_files" : [ "libblastjni.so" ],
-            "num_executors" : 256,
-            "num_executor_cores" : 2,
             "parallel_jobs" : 20,
+            "log_level" : "INFO",
             "jni_log_level" : "WARN"
         }
-
     }
 EOF
 
