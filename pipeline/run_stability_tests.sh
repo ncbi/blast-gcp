@@ -60,7 +60,8 @@ echo -e ":wait\n:exit\n" \
 
 #./run.sh stability_test/stability_tests.txt
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
-spark-submit --master yarn --class $BC_CLASS $BC_JAR $BC_INI
+spark-submit --master yarn \
+    --class $BC_CLASS $BC_JAR $BC_INI stability_test/stability_tests.txt
 
 
 cd report || exit
