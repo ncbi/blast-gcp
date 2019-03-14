@@ -36,13 +36,13 @@ cat << EOF > $BC_INI
                 "key" : "nr",
                 "worker_location" : "/tmp/blast/db",
                 "source_location" : "gs://nr_50mb_chunks",
-                "extensions" : [ "psq", "pin", "phr" ]
+                "extensions" : [ "psq", "pin", "pax" ]
             },
             {
                 "key" : "nt",
                 "worker_location" : "/tmp/blast/db",
                 "source_location" : "gs://nt_50mb_chunks",
-                "extensions" : [ "nsq", "nin", "nhr" ]
+                "extensions" : [ "nsq", "nin", "nax" ]
             }
         ],
         "cluster" :
