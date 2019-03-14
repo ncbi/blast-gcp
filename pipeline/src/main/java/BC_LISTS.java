@@ -170,24 +170,14 @@ class BC_FILE_LIST extends BC_LIST
                 {
                     if ( tline.startsWith( ":src=" ) )
                     {
-                        try
-                        {
-                            src = line.substring( 5 ).trim();
-                        }
-                        catch( Exception e )
-                        {
-                        }
+                        try { src = tline.substring( 5 ).trim(); }
+                        catch( Exception e ) {}
                     }
                     else if ( tline.startsWith( ":wait" ) )
                     {
                         int time_limit = 0;
-                        try
-                        {
-                            time_limit = BC_UTILS.toInt( tline.substring( 6 ).trim() );
-                        }
-                        catch( Exception e )
-                        {
-                        }
+                        try { time_limit = BC_UTILS.toInt( tline.substring( 6 ).trim() ); }
+                        catch( Exception e ) {}
                         context.wait_for_empty( time_limit );
                     }
                     else if ( tline.startsWith( ":exit" ) )
@@ -197,29 +187,21 @@ class BC_FILE_LIST extends BC_LIST
                     else if ( tline.startsWith( ":pick" ) )
                     {
                         int limit = 0;
-                        try
-                        {
-                            limit = BC_UTILS.toInt( tline.substring( 5 ).trim() );
-                        }
-                        catch( Exception e )
-                        {
-                        }
+                        try { limit = BC_UTILS.toInt( tline.substring( 5 ).trim() ); }
+                        catch( Exception e ) {}
                         if ( !src.isEmpty() )
                         {
                             context.addRequestBucket( src, ps, limit );
-                            try
-                            {
-                                Thread.sleep( 2000 );
-                            }
+                            try { Thread.sleep( 2000 ); }
                             catch ( InterruptedException e ) { }
                         }
                     }
                     else
                     {
-                        String requestFile = tline;
                         if ( !src.isEmpty() )
-                            requestFile = String.format( "%s/%s", src, tline );
-                        context.add_request_file( requestFile, ps );
+                            submitFile( String.format( "%s/%s", src, tline ) );
+                        else
+                            submitFile( tline );
                     }
                 }
             }
