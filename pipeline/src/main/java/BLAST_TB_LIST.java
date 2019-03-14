@@ -34,7 +34,6 @@ import java.io.Serializable;
  * @see BLAST_LIB
  */
 public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LIST> {
-  public static double epsilon = 1.0e-6;
   public int oid;
   public int evalue;
   public byte[] asn1_blob;
@@ -44,7 +43,8 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
    * constructor providing values for internal fields
    *
    * @param oid OID - value ( object-ID ? )
-   * @param evalue value to be used for sorting
+   * @param evalue scaled exponent of E-value, to be used for sorting.
+   *               The value: -10000 * log(E-value)
    * @param asn1_blob opaque asn1-blob, the traceback-result
    */
   public BLAST_TB_LIST(int oid, int evalue, byte[] asn1_blob) {
@@ -70,22 +70,8 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
    */
   @Override
   public int compareTo(final BLAST_TB_LIST other) {
-    // ascending order
-    int res = Integer.compare( this.evalue, other.evalue );
-    if ( res != 0 )
-        return res;
-    return ( this.oid - other.oid );
-
-    /*
-    if the epsilon is taken into consideration, this comparison
-    does violate java's compare-contract
-    -------------------------------------------------------------
-    final double delta = this.evalue - other.evalue;
-    if ( Math.abs( delta ) > epsilon ) // treat as equal
-        return Double.compare( this.evalue, other.evalue );
-    final int oiddelta = this.oid - other.oid;
-    return Integer.signum(oiddelta);
-    */
+    // descending order
+    return -Integer.compare( this.evalue, other.evalue );
   }
 
   private static String toHex(final byte[] blob) {
