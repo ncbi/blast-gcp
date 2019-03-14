@@ -5,14 +5,14 @@
 			"key" : "nr",
 			"worker_location" : "/tmp/blast/db",
 			"source_location" : "gs://nr_50mb_chunks",
-			"extensions" : [ "psq", "pin", "phr" ],
+			"extensions" : [ "psq", "pin", "pax" ],
 			"limit" : 20
 		},
 		{
 			"key" : "nt",
 			"worker_location" : "/tmp/blast/db",
 			"source_location" : "gs://nt_50mb_chunks",
-			"extensions" : [ "nsq", "nin", "nhr" ],
+			"extensions" : [ "nsq", "nin", "nax" ],
 			"limit" : 20
 		}
 	],
@@ -20,9 +20,7 @@
     "cluster" :
     {
 		"transfer_files" : [ "libblastjni.so" ],
-		"num_executors" : 8,
-		"num_executor_cores" : 2,
-		"parallel_jobs" : 12,
+		"parallel_jobs" : 16,
         "jni_log_level" : "WARN"
     }
 
