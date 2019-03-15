@@ -158,13 +158,14 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 /**
  * download ( if neccessary ) all files fo a database-chunk to the worker
  *
- * @return           list of strings documenting the download process
+ * @param       report, list of string reporting the download
+ * @return      number of errors
  * @see              BC_DATABASE_SETTING
  * @see              BC_GCP_TOOLS
 */
-    public List< String > download()
+    public Integer download( List< String > report )
     {
-        List< String > lst = new ArrayList<>();
+        Integer errors = 0;
         String wn = workername();
         for ( BC_NAME_SIZE obj : chunk.files )
         {
@@ -177,9 +178,10 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                 long fl = f.length();
                 /* we can now check the size... */
                 if ( obj.size.longValue() == fl )
-                    lst.add( String.format( "%s : %s -> %s (exists size = %d )", wn, src, dst, fl ) );
+                    report.add( String.format( "%s : %s -> %s (exists size = %d )", wn, src, dst, fl ) );
                 else
-                    lst.add( String.format( "%s : %s -> %s (exists, size=%d, should be %d)", wn, src, dst, fl, obj.size ) );
+                    report.add( String.format( "%s : %s -> %s (exists, size=%d, should be %d)", wn, src, dst, fl, obj.size ) );
+                    /* this is not an error, the caller will retry in this case */
             }
             else
             {
@@ -190,15 +192,16 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                 /* we can now check the size... */
                 long fl = f.length();
                 if ( obj.size.longValue() == fl )
-                    lst.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl ) );
+                    report.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl ) );
                 else
                 {
                     success = false;
-                    lst.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d, should=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl, obj.size ) );
+                    report.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d, should=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl, obj.size ) );
                 }
+                if ( !success ) errors += 1;
             }
         }
-        return lst;
+        return errors;
     }
 }
 
