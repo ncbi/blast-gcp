@@ -137,6 +137,7 @@ class BC_JOB extends Thread
 
         if ( chunks != null )
         {
+            chunks.cache();
             final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
             List< String > lines = new ArrayList<>();
             lines.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
