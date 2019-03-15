@@ -790,7 +790,6 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         throw std::runtime_error("Can't get hsp_blob fieldID");
     }
 
-    jint                               oid = -1;
     std::vector<ncbi::blast::SFlatHSP> flat_hsp_list;
     flat_hsp_list.reserve(hspl_sz * 4 / 3);
     // Iterate through HSP_LIST[]
@@ -849,7 +848,7 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         throw std::runtime_error("Can't get tb class");
     }
 
-    jmethodID tb_ctor_id = jenv->GetMethodID(tbcls, "<init>", "(II[B)V");
+    jmethodID tb_ctor_id = jenv->GetMethodID(tbcls, "<init>", "(III[B)V");
     if (tb_ctor_id == nullptr)
     {
         throw std::runtime_error("Can't find tb ctor method");
@@ -857,14 +856,22 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
 
     jobjectArray retarray
         = jenv->NewObjectArray(num_alignments, tbcls, nullptr);
+
     for (size_t i = 0; i != num_alignments; ++i)
     {
-        jint     evalue = alignments[i].first[0];
+        if (alignments[i].first.size() < 3u) {
+            throw std::runtime_error(
+                       "Not enough information for sorting BLAST results");
+        }
+
+        jint evalue = alignments[i].first[0];
+        jint score = alignments[i].first[1];
+        jint seqid = alignments[i].first[2];
         std::string asn    = alignments[i].second;
-        oid                = flat_hsp_list[i].oid;
 
         log(jenv, jthis, jlog_method, "DEBUG",
-            "  evalue=%d, oid=%d, ASN is %lu bytes", evalue, oid, asn.size());
+            "  evalue=%d, score=%d, seqidhash=%d, ASN is %lu bytes", evalue,
+            score, seqid, asn.size());
 
         jbyteArray asn_blob = jenv->NewByteArray(asn.size());
         if (asn_blob == nullptr)
@@ -874,7 +881,7 @@ static jobjectArray traceback(JNIEnv * jenv, jobject jthis,
         jenv->SetByteArrayRegion(asn_blob, 0, asn.size(),
                                  reinterpret_cast<const jbyte *>(asn.data()));
         jobject tb_obj
-            = jenv->NewObject(tbcls, tb_ctor_id, oid, evalue, asn_blob);
+            = jenv->NewObject(tbcls, tb_ctor_id, evalue, score, seqid, asn_blob);
         if (tb_obj == nullptr)
         {
             throw std::runtime_error("Couldn't make new TB_LIST");

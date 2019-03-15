@@ -34,22 +34,25 @@ import java.io.Serializable;
  * @see BLAST_LIB
  */
 public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LIST> {
-  public int oid;
   public int evalue;
+  public int score;
+  public int seqid;
   public byte[] asn1_blob;
   public int top_n;
 
   /**
    * constructor providing values for internal fields
    *
-   * @param oid OID - value ( object-ID ? )
    * @param evalue scaled exponent of E-value, to be used for sorting.
    *               The value: -10000 * log(E-value)
+   * @param score alignment score (used for sorting)
+   * @param seqid hash value of sequence id (used for sorting)
    * @param asn1_blob opaque asn1-blob, the traceback-result
    */
-  public BLAST_TB_LIST(int oid, int evalue, byte[] asn1_blob) {
-    this.oid = oid;
+   public BLAST_TB_LIST(int evalue, int score, int seqid, byte[] asn1_blob) {
     this.evalue = evalue;
+    this.score = score;
+    this.seqid = seqid;
     this.asn1_blob = asn1_blob;
   }
 
@@ -64,6 +67,8 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
 
   /**
    * overriden comparison, for sorting
+   * First compare evalues, then alignment scores, and then sequence id hash
+   * values.
    *
    * @param other other instance to compare against
    * @return 0...equal, -1...this > other, +1...this < other
@@ -71,7 +76,15 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   @Override
   public int compareTo(final BLAST_TB_LIST other) {
     // descending order
-    return -Integer.compare( this.evalue, other.evalue );
+      if (this.evalue != other.evalue) {
+          return -Integer.compare( this.evalue, other.evalue );
+      }
+
+      if (this.score != other.score) {
+          return -Integer.compare( this.score, other.score );
+      }
+
+      return Integer.compare( this.seqid, other.seqid );
   }
 
   private static String toHex(final byte[] blob) {
@@ -100,7 +113,8 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   @Override
   public String toString() {
     String res = "  TBLIST";
-    res += String.format("\n  evalue=%d oid=%d", evalue, oid);
+    res += String.format("\n  evalue=%d score=%d seqid=%d", evalue, score,
+                         seqid);
     if (asn1_blob != null) {
       res += "\n  " + asn1_blob.length + " bytes in ASN.1 blob\n";
     }
