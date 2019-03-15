@@ -324,7 +324,7 @@ public class BC_GCP_TOOLS
                         try
                         {
                             if ( f.exists() )
-                                f.delete()
+                                f.delete();
                         }
                         catch( Exception e )
                         {
