@@ -71,7 +71,10 @@ public final class BC_FILE_LOCK
     public void release()
     {
         try { f.delete(); }
-        catch( Exception e ) { }
+        catch( Exception e )
+        {
+            e.printStackTrace();
+        }
     }
 
 }
