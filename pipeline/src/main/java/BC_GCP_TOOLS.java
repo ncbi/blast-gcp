@@ -319,6 +319,18 @@ public class BC_GCP_TOOLS
                         f_out.flush();
                         f_out.close();
                     }
+                    if ( !res )
+                    {
+                        try
+                        {
+                            if ( f.exists() )
+                                f.delete()
+                        }
+                        catch( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
             catch( Exception e )
