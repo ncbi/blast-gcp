@@ -13,7 +13,7 @@ import java.io.InputStream;
 
 public class Test_BC_GCP_TOOLS {
 
-    static public final String GS_BUCKET_DFLT = "yan-blastdb";
+    static public final String GS_BUCKET_DFLT = "blast-db";
     static public final String GS_KEY_DFLT = "test";
     static public final String GS_URI_DFLT = "gs://blast-db/latest-dir";
     static public final String DST_FILE_DFLT = "/tmp/gs_file.out";
@@ -66,7 +66,7 @@ public class Test_BC_GCP_TOOLS {
         String testStr = "This is a test";
         int length = testStr.length();
         Integer check_cnt = BC_GCP_TOOLS.upload(gs_bucket, gs_key, "This is a test");
-        assertTrue(length == check_cnt.intValue());
+        assertFalse(length == check_cnt.intValue()); // not everyone can write to this bucket
     }
 
     @Test
@@ -82,7 +82,7 @@ public class Test_BC_GCP_TOOLS {
 
     @Test
     public void testUniqueWithoutExt() {
-        List< String > all = new ArrayList();
+        List< String > all = new ArrayList<>();
         all.add("anucl1.ndb");
         all.add("anucl1.nhr");
         all.add("anucl1.nin");
@@ -90,7 +90,7 @@ public class Test_BC_GCP_TOOLS {
         all.add("aprot1.pdb");
         all.add("aprot1.psq");
 
-        List< String > ext = new ArrayList();
+        List< String > ext = new ArrayList<>();
         ext.add("ndb");
         ext.add("nhr");
         ext.add("nin");

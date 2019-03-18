@@ -167,4 +167,18 @@ public final class BC_UTILS
         return res;
     }
 
+/**
+ * helper-method to parse String to int
+ *
+ * @param s          the string to parse
+ * @return           int value as parsed string, or zero
+*/
+    public static int toInt( String s )
+    {
+        int res = 0;
+        try { res = Integer.parseInt( s ); }
+        catch ( NumberFormatException e ) { res = 0; }
+        return res;
+    }
+
 }

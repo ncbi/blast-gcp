@@ -27,66 +27,54 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
 
-//import java.nio.channels.FileChannel;
-
+/**
+ * utility-class to provide a file-system-lock between different
+ * jwm-instances, using File.mkdir() which is atomic in the file-system
+ *
+*/
 public final class BC_FILE_LOCK
 {
-    private final String fileName;
     private File f;
 
+/**
+ * consructor, to create instance of FILE_LOCK
+ *
+ * @param   to_protect  file to protect from multiple access
+*/
     BC_FILE_LOCK( final String to_protect )
     {
-        fileName = String.format( "%s.lock", to_protect );
-        f = new File( fileName );
+        f = new File( String.format( "%s.lock", to_protect ) );
+        String parent = f.getParent();
+        if ( parent != null )
+        {
+            File p = new File( parent );
+            p.mkdirs();
+        }
     }
 
-    private boolean write_text( final String content )
+/**
+ * aquire the lock: we are creating a directory!
+ *
+ * @return creating the directory was successful, we have the lock!
+*/
+    public boolean aquire()
     {
-        boolean res = false;
-        BufferedWriter writer = null;
-        try
-        {
-            writer = new BufferedWriter( new FileWriter( f ) );
-            writer.write( content );
-        }
+        /*  mkdir is atomic at the filesystem-level! */
+        return f.mkdir();
+    }
+
+/**
+ * releaseing the lock: we delete the directory!
+ *
+*/
+    public void release()
+    {
+        try { f.delete(); }
         catch( Exception e )
         {
             e.printStackTrace();
         }
-        finally
-        {
-            try
-            {
-                writer.close();
-                res = true;
-            }
-            catch( Exception e )
-            {
-                e.printStackTrace();
-            }
-        }
-        return res;
-    }
-
-    public boolean aquire()
-    {
-        boolean res = false;
-        if ( !f.exists() )
-        {
-            if ( write_text( "locked" ) )
-            {
-                return true;
-            }
-        }
-        return res;
-    }
-
-    public void release()
-    {
-        if ( f.exists() ) f.delete();
     }
 
 }

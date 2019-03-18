@@ -158,10 +158,10 @@ public class BC_GCP_TOOLS
     }
 
 /**
- * private method list all entries of a bucket
+ * private method list all entries of a bucket : name + size
  *
  * @param  bucket  url of the bucket
- * @param  lst     reference of list of strings, to insert entry-names into
+ * @param  lst     reference of list of string/size-tuples, to insert entry-names into
  *
  * @return         number of entries found
 */
@@ -194,6 +194,74 @@ public class BC_GCP_TOOLS
     }
 
 /**
+ * private method list all entries of a bucket: just names
+ *
+ * @param  bucket  url of the bucket
+ * @param  lst     reference of list of strings, to insert entry-names into
+ *
+ * @return         number of entries found
+*/
+    private Integer list_bucket_names( final String bucket, List< String > lst, int limit, final String filter )
+    {
+        Integer res = 0;
+        try
+        {
+            Storage.Objects.List list = storage.objects().list( bucket );
+            if ( list != null )
+            {
+                Objects objects;
+                if ( limit > 0 )
+                {
+                    boolean done = false;
+                    do
+                    {
+                        objects = list.execute();
+                        List< StorageObject > items = objects.getItems();
+                        for ( StorageObject item : items )
+                        {
+                            String s = item.getName();
+                            boolean valid = true;
+                            if ( !filter.isEmpty() ) valid = s.endsWith( filter );
+                            if ( valid )
+                            {
+                                lst.add( item.getName() );
+                                res += 1;
+                                done = ( res >= limit );
+                                if ( done ) break;
+                            }
+                        }
+                        list.setPageToken( objects.getNextPageToken() );
+                    } while ( !done && ( objects.getNextPageToken() != null ) );
+                }
+                else
+                {
+                    do
+                    {
+                        objects = list.execute();
+                        List< StorageObject > items = objects.getItems();
+                        for ( StorageObject item : items )
+                        {
+                            String s = item.getName();
+                            boolean valid = true;
+                            if ( !filter.isEmpty() ) valid = s.endsWith( filter );
+                            if ( valid )
+                            {
+                                lst.add( item.getName() );
+                                res += 1;
+                            }
+                        }
+                        list.setPageToken( objects.getNextPageToken() );
+                    } while ( objects.getNextPageToken() != null );
+                }
+            }
+        }
+        catch( Exception e )
+        {
+        }
+        return res;
+    }
+
+/**
  * private method to download a file from a bucket to the local filesystem, protected by a lock-file
  *
  * @param  bucket        url of the bucket
@@ -204,23 +272,25 @@ public class BC_GCP_TOOLS
 */
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
-        boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
+        /* the constructor of BC_FILE_LOCK does create the parent-directory! */
+        BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
+        boolean res = lock.aquire();
         if ( res )
         {
-            BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
-            res = lock.aquire();
-            if ( res )
+            try
             {
-                try
+                Storage.Objects.Get obj = storage.objects().get( bucket, key );
+                res = ( obj != null );
+                if ( res )
                 {
-                    Storage.Objects.Get obj = storage.objects().get( bucket, key );
-                    if ( obj != null )
+                    obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+
+                    File f = new File( dst_filename );
+                    FileOutputStream f_out = new FileOutputStream( f );
+
+                    try
                     {
-                        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
-
-                        File f = new File( dst_filename );
-                        FileOutputStream f_out = new FileOutputStream( f );
-
+                        /* f_lock does not apply across multiple JWMs, but we have BC_FILE_LOCK... */
                         FileLock f_lock = f_out.getChannel().tryLock();
                         if ( f_lock != null )
                         {
@@ -238,23 +308,37 @@ public class BC_GCP_TOOLS
                                 f_lock.release();
                             }
                         }
-
+                    }
+                    catch( Exception e )
+                    {
+                        e.printStackTrace();
+                        res = false;
+                    }
+                    finally
+                    {
                         f_out.flush();
                         f_out.close();
                     }
-                    else
-                        res = false;
-                }
-                catch( Exception e )
-                {
-                    e.printStackTrace();
-                    res = false;
-                }
-                finally
-                {
-                    lock.release();
+                    if ( !res )
+                    {
+                        try
+                        {
+                            if ( f.exists() )
+                                f.delete();
+                        }
+                        catch( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
+            catch( Exception e )
+            {
+                e.printStackTrace();
+                res = false;
+            }
+            lock.release();
         }
         return res;
     }
@@ -390,7 +474,7 @@ public class BC_GCP_TOOLS
  *
  * @param  bucket  url of the bucket
  *
- * @return         List of Strings, names of items in the bucket
+ * @return         List of String/Size-tuples, names/size of items in the bucket
 */
     public static List< BC_NAME_SIZE > list( final String bucket )
     {
@@ -403,6 +487,32 @@ public class BC_GCP_TOOLS
                 URI uri = new URI( bucket );
                 if ( uri.getScheme().equals( "gs" ) )
                     inst.list_bucket( uri.getAuthority(), res );
+            }
+            catch( URISyntaxException e )
+            {
+            }
+        }
+        return res;
+    }
+
+/**
+ * public static method to list all items in a bucket
+ *
+ * @param  bucket  url of the bucket
+ *
+ * @return         List of Strings, names of items in the bucket
+*/
+    public static List< String > list_names( final String bucket, int limit, final String filter )
+    {
+        List< String  > res = new ArrayList<>();
+        BC_GCP_TOOLS inst = getInstance();
+        if ( inst != null )
+        {
+            try
+            {
+                URI uri = new URI( bucket );
+                if ( uri.getScheme().equals( "gs" ) )
+                    inst.list_bucket_names( uri.getAuthority(), res, limit, filter );
             }
             catch( URISyntaxException e )
             {

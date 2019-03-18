@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-ncbi::blast::TIntermediateAlignments
+ncbi::blast::TIntermediateAlignmentsTie
 searchandtb(const std::string & query, const std::string & db_spec,
             const std::string & program, const std::string & params,
             int top_n_prelim, int top_n_traceback);

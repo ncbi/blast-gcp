@@ -4779,7 +4779,7 @@ TSeqSet ::= SEQUENCE OF TSeq    -- a bunch of them
 
 END
 
---$Id: scoremat.asn,v 1.14 2011/12/21 15:29:33 kazimird Exp $
+--$Id: scoremat.asn,v 1.15 2018/05/14 15:49:17 fukanchi Exp $
 -- ===========================================================================
 --
 --                            PUBLIC DOMAIN NOTICE
@@ -4965,7 +4965,10 @@ PssmFinalData ::= SEQUENCE {
 	kappaUngapped       REAL OPTIONAL,
 
     -- Karlin & Altschul parameter produced during the PSSM's calculation
-    hUngapped           REAL OPTIONAL
+    hUngapped           REAL OPTIONAL,
+
+    -- Word score threshold
+    wordScoreThreshold    REAL OPTIONAL
 }
 
 -- Contains the PSSM's intermediate data used to create the PSSM's scores 

@@ -50,3 +50,44 @@ Available commands on the console:
 
 where are the results?
 	in the directory './report'
+
+how to perform a fully scripted test-run:
+    create a text-file ( for instance 'b.txt' ) with the following content
+
+        :src=gs://blast-test-requests-sprint11
+        :pick 25
+        :wait
+        :exit
+        #pick the first 25 requests from the src-bucket
+        #wait for the request-queue and the jobs to finish
+        #exit the application
+    or
+        :src=gs://blast-test-requests-sprint11
+        :pick
+        :wait
+        :exit
+        #pick all requests from the src-bucket
+        #wait for the request-queue and the jobs to finish
+        #exit the application
+    or
+        :src=gs://blast-test-requests-sprint11
+        AFEVGV0P014.json
+        AFEVHK3N014.json
+        AFEVJ4EE014.json
+        AFEVKCK9014.json
+        :wait
+        :exit
+        #execute these specific requests
+        #wait for the request-queue and the jobs to finish
+        #exit the application
+
+    then run the applictaion with this list on startup
+        ./start.sh b.txt
+
+how to set the number of executors?
+    It is now possible to not set the number of executors in the ini.json-file.
+    Internally the default value will be zero.
+    If the number of executors is zero BC_SETTINGS_READER.createSparkConfAndConfigure()
+    will enable dynamic alloction of executors.
+    Tests have shown that this will fully utilize the cluster after about 5-10 requests.
+
