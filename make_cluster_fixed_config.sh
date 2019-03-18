@@ -20,8 +20,8 @@ WORKER=n1-standard-64
 # not as sensitive to this as most Hadoop applications.
 DISK_PER_MASTER=400 # For test data
 DISK_PER_WORKER=400 # For DBs and logs
-NUM_WORKERS=2
-PREEMPT_WORKERS=14
+NUM_WORKERS=16
+PREEMPT_WORKERS=0
 
 gcloud beta dataproc \
     clusters create blast-dataproc-$USER-big \
