@@ -31,8 +31,13 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.ByteBuffer;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
@@ -60,6 +65,9 @@ class BC_JOB extends Thread
     private final Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict;
     private final int id;
     private final AtomicBoolean active;
+    private final AtomicInteger errors;
+    private final Logger logger;
+    private final Level log_level;
 
 /**
  * create instance of BC_JOB
@@ -86,14 +94,29 @@ class BC_JOB extends Thread
         db_dict = a_db_dict;
         id = a_id;
         active = new AtomicBoolean( false );
+        errors = new AtomicInteger( 0 );
+        logger = LogManager.getLogger( BC_JOB.class );
+        log_level = Level.toLevel( "INFO" );
     }
 
 /**
  * check if this job is active ( processes a request )
+ *
+ * @return is this job currently processing a request
 */
     public boolean is_active()
     {
         return active.get();
+    }
+
+/**
+ * get the total number of errors
+ *
+ * @return how many errors have happened since start
+*/
+    public Integer get_errors()
+    {
+        return errors.get();
     }
 
 /**
@@ -129,7 +152,7 @@ class BC_JOB extends Thread
            the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
            It will compile, but it will fail at runtime. */
 
-        System.out.println( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
+        logger.log( log_level, String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
         long job_starttime = System.currentTimeMillis();
         boolean res = true;
 
@@ -257,12 +280,15 @@ class BC_JOB extends Thread
                 String asn1_file_name = String.format( "%s/REQ_%s.asn1.unsorted", context.settings.report_dir, request.id );
                 BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
             }
-            System.out.println( String.format( "JOB[%d] REQUEST[%s] done, %d errors", id, request.id, total_errors ) );
+
+            logger.log( log_level, String.format( "JOB[%d] REQUEST[%s] done, %d errors", id, request.id, total_errors ) );
+            errors.getAndAdd( total_errors );
             res = ( total_errors == 0 );
         }
         else
-            System.out.println( String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
-
+        {
+            logger.log( log_level, String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
+        }
         return res;
     }
 
@@ -348,6 +374,21 @@ public class BC_JOBS
         for ( BC_JOB j : jobs )
         {
             if ( j.is_active() ) res += 1;
+        }
+        return res;
+    }
+
+/**
+ * counts how many errors did happen
+ *
+ * return total number of errors
+*/
+    public int errors()
+    {
+        int res = 0;
+        for ( BC_JOB j : jobs )
+        {
+            res += j.get_errors();
         }
         return res;
     }
