@@ -9,7 +9,7 @@ set -euo pipefail
 PIPELINEBUCKET="gs://blastgcp-pipeline-test"
 
 # NT takes about 49GB, NR 116GB
-DB_SPACE=166
+#DB_SPACE=166
 MASTER=n1-standard-4
 WORKER=n1-standard-64
 # Note that GCP is soon going to default to 1TB PD disks for throughput, but
@@ -21,7 +21,7 @@ NUM_WORKERS=6
 PREEMPT_WORKERS=0
 
 gcloud beta dataproc \
-    clusters create blast-dataproc-$USER \
+    clusters create "blast-dataproc-$USER" \
     --master-machine-type $MASTER \
         --master-boot-disk-size $DISK_PER_MASTER \
     --num-workers $NUM_WORKERS \
@@ -32,13 +32,13 @@ gcloud beta dataproc \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
     --max-age=8h \
-    --labels owner=$USER \
+    --labels "owner=$USER" \
     --region us-east4 \
     --zone   us-east4-c \
     --properties dataproc:dataproc.monitoring.stackdriver.enable=true,dataproc:dataproc.logging.stackdriver.enable=true, \
     --initialization-action-timeout 30m \
     --initialization-actions \
     $PIPELINEBUCKET/scripts/cluster_initialize.sh,$PIPELINEBUCKET/scripts/ganglia.sh \
-    --tags blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S) \
-    --bucket ${USER}-test
+    --tags "blast-dataproc-$USER-$(date +%Y%m%d-%H%M%S)" \
+    --bucket "${USER}-test"
 

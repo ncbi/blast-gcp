@@ -9,5 +9,6 @@ LOG_CONF="--driver-java-options=-Dlog4j.configuration=file:log4j.properties"
 
 rm report/*
 
+# NOTE: Any changes below should also be in run_stability_tests.sh
 spark-submit --master yarn $LOG_CONF --class $BC_CLASS $BC_JAR $BC_INI $1
 

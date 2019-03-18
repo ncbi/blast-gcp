@@ -9,6 +9,7 @@ unset LC_ALL # Messes with sorting
 BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini_test.json"
+LOG_CONF="--driver-java-options=-Dlog4j.configuration=file:log4j.properties"
 
 command -v asntool || sudo apt install -y ncbi-tools-bin
 
@@ -49,8 +50,7 @@ cat << EOF > $BC_INI
         {
             "transfer_files" : [ "libblastjni.so" ],
             "parallel_jobs" : 20,
-            "XXnum-executors": 512,
-            "XXnum-executor-cores": 1,
+            "num-executor-cores": 64,
             "log_level" : "INFO",
             "jni_log_level" : "WARN"
         }
@@ -63,6 +63,7 @@ echo -e ":wait\n:exit\n" \
 #./run.sh stability_test/stability_tests.txt
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 spark-submit --master yarn \
+    "$LOG_CONF" \
     --class $BC_CLASS $BC_JAR $BC_INI stability_test/stability_tests.txt
 
 
