@@ -11,7 +11,7 @@ BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini_test.json"
 LOG_CONF="--driver-java-options=-Dlog4j.configuration=file:log4j.properties"
 
-command -v asntool || sudo apt install -y ncbi-tools-bin
+command -v asntool > /dev/null || sudo apt install -y ncbi-tools-bin
 
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 
