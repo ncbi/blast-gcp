@@ -85,3 +85,4 @@ wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
 fi
+
