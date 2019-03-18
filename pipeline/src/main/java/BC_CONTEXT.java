@@ -26,8 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.PrintStream;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +35,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * Context of the Application :
@@ -56,6 +58,8 @@ public class BC_CONTEXT
     private final BC_LISTS list_manager;
     private BC_JOBS jobs;
     private final List< String > history;
+    private final Logger logger;
+    private final Level log_level;
 
 /**
  * create instance of BC_CONTEXT from settings
@@ -74,6 +78,8 @@ public class BC_CONTEXT
         list_manager = new BC_LISTS( this );
         jobs = null;
         history = Collections.synchronizedList( new ArrayList< String >() );
+        logger = LogManager.getLogger( BC_CONTEXT.class );
+        log_level = Level.toLevel( "INFO" );
     }
 
 /**
@@ -112,14 +118,14 @@ public class BC_CONTEXT
  *
  * @param command the command to be put into the queue
 */
-    public void push_command( final PrintStream origin, final String command )
+    public void push_command( final String command )
     {
         if ( !command.isEmpty() )
         {
             if ( !command.startsWith( "H" ) && !command.startsWith( "E" ) )
                 history.add( command );
 
-            command_queue.offer( new BC_COMMAND( origin, command ) );
+            command_queue.offer( new BC_COMMAND( command ) );
         }
     }
 
@@ -181,20 +187,19 @@ public class BC_CONTEXT
  * @param ps       stream to be used for error messages, can be null
  * @return         was the request successfully added ?
 */
-    public boolean add_request( final BC_REQUEST request, final PrintStream ps )
+    public boolean add_request( final BC_REQUEST request )
     {
         boolean res = !contains( request );
         if ( res )
         {
             request_queue.offer( request );
 
-            if ( ps != null && settings.debug.req_added )
-                ps.printf( "REQUEST '%s' added to queue\n", request.id );
+            if ( settings.debug.req_added )
+                logger.log( log_level, String.format( "REQUEST '%s' added to queue", request.id ) );
         }
         else
         {
-            if ( ps != null )
-                ps.printf( "REQUEST '%s' rejected: already queued\n", request.id );
+            logger.log( log_level, String.format( "REQUEST '%s' rejected: already queued", request.id ) );
         }
         return res;
     }
@@ -206,16 +211,16 @@ public class BC_CONTEXT
  * @param ps         stream to be used for error messages, can be null
  * @return           was the request successfully added ?
 */
-    public boolean add_request_string( final String req_string, final PrintStream ps )
+    public boolean add_request_string( final String req_string )
     {
         boolean res = false;
         if ( can_take() > 0 )
         {
             BC_REQUEST request = BC_REQUEST_READER.parse_from_string( req_string );
             if ( request != null )
-                res = add_request( request, ps );
-            else if ( ps != null )
-                ps.printf( "invalid request '%s'\n", req_string );
+                res = add_request( request );
+            else
+                logger.log( log_level, String.format( "invalid request '%s'", req_string ) );
         }
         return res;
     }
@@ -227,7 +232,7 @@ public class BC_CONTEXT
  * @param ps       stream to be used for error messages ( cannot be null )
  * @return         1..done, 0..not done, -1..request invalid
 */
-    public int add_request_file( final String filename, final PrintStream ps )
+    public int add_request_file( final String filename)
     {
         int res = 0;
         if ( can_take() > 0 )
@@ -235,12 +240,12 @@ public class BC_CONTEXT
             BC_REQUEST request = BC_REQUEST_READER.parse_from_file( filename );
             if ( request != null )
             {
-                if ( add_request( request, ps ) )
+                if ( add_request( request ) )
                     res = 1;
             }
             else
             {
-                ps.printf( "invalid request in file '%s'\n", filename );
+                logger.log( log_level, String.format( "invalid request in file '%s'", filename ) );
                 res = -1;
             }
         }
@@ -264,9 +269,9 @@ public class BC_CONTEXT
  * @param ps       stream to be used for error messages ( cannot be null )
  * @param limit    limit of entries to use
 */
-    public void addRequestList( final String filename, final PrintStream ps, int limit )
+    public void addRequestList( final String filename, int limit )
     {
-        list_manager.addFile( filename, ps, limit );
+        list_manager.addFile( filename, limit );
     }
 
 /**
@@ -276,9 +281,9 @@ public class BC_CONTEXT
  * @param ps         stream to be used for error messages ( cannot be null )
  * @param limit      limit of request-files to use
 */
-    public void addRequestBucket( final String bucket_url, final PrintStream ps, int limit )
+    public void addRequestBucket( final String bucket_url, int limit )
     {
-        list_manager.addBucket( bucket_url, ps, limit );
+        list_manager.addBucket( bucket_url, limit );
     }
 
 /**
@@ -286,13 +291,14 @@ public class BC_CONTEXT
  *
  * @param ps         stream to be used for error messages ( cannot be null )
 */
-    public void print_info( final PrintStream ps )
+    public void print_info()
     {
-        ps.printf( "request-queue: %d of %d\n",
-                    request_queue.size(), settings.req_max_backlog );
+        logger.log( log_level, String.format( "request-queue: %d of %d\n",
+                    request_queue.size(), settings.req_max_backlog ) );
 
         int n = ( jobs != null ) ? jobs.active() : 0;
-        ps.printf( "jobs active  : %d of %d\n", n, settings.parallel_jobs );
+        logger.log( log_level, String.format( "jobs active  : %d of %d\n",
+                    n, settings.parallel_jobs ) );
     }
 
 /**

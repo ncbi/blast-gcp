@@ -26,10 +26,13 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.PrintStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -53,9 +56,10 @@ class BC_LIST extends Thread
     protected final BC_CONTEXT context;
     protected final String srcName;
     protected final int limit;
-    protected final PrintStream ps;
     protected int line_nr = 0;
     protected final AtomicBoolean running;
+    private final Logger logger;
+    private final Level log_level;
 
 /**
  * create instance of BC_LIST
@@ -66,14 +70,25 @@ class BC_LIST extends Thread
  * @param a_limit      limit number of jobs in the list
  * @see        BC_CONTEXT
 */
-    public BC_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
+    public BC_LIST( final BC_CONTEXT a_context, final String a_srcName, int a_limit )
     {
         context = a_context;
         srcName = a_srcName;
         limit = a_limit;
-        ps = a_ps;
         line_nr = 0;
         running = new AtomicBoolean( true );
+        logger = LogManager.getLogger( BC_LIST.class );
+        log_level = Level.toLevel( "INFO" );
+    }
+
+/**
+ * method for derived classes to use the logger
+ *
+ * @param msg   message to log
+*/
+    protected void log( final String msg )
+    {
+        logger.log( log_level, msg );
     }
 
 /**
@@ -105,7 +120,7 @@ class BC_LIST extends Thread
         boolean done = false;
         while( context.is_running() && !done )
         {
-            int res = context.add_request_file( request_filename, ps );
+            int res = context.add_request_file( request_filename );
             done = ( res != 0 );    /* 0...not done( because no space in queue, 1...done, -1...invalid */
             if ( context.is_running() && !done )
             {
@@ -139,9 +154,9 @@ class BC_FILE_LIST extends BC_LIST
  * @param a_limit      limit number of jobs in the list
  * @see        BC_CONTEXT
 */
-    public BC_FILE_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
+    public BC_FILE_LIST( final BC_CONTEXT a_context, final String a_srcName, int a_limit )
     {
-        super( a_context, a_srcName, a_ps, a_limit );
+        super( a_context, a_srcName, a_limit );
     }
 
 /**
@@ -155,7 +170,7 @@ class BC_FILE_LIST extends BC_LIST
 */
     @Override public void run()
     {
-        ps.printf( String.format( "request-list '%s' start\n", srcName ) );
+        log( String.format( "request-list '%s' start", srcName ) );
         try
         {
             FileInputStream fs = new FileInputStream( srcName );
@@ -191,7 +206,7 @@ class BC_FILE_LIST extends BC_LIST
                         catch( Exception e ) {}
                         if ( !src.isEmpty() )
                         {
-                            context.addRequestBucket( src, ps, limit );
+                            context.addRequestBucket( src, limit );
                             try { Thread.sleep( 2000 ); }
                             catch ( InterruptedException e ) { }
                         }
@@ -209,9 +224,9 @@ class BC_FILE_LIST extends BC_LIST
         }
         catch( Exception e )
         {
-            ps.printf( String.format( "request-list '%s' : %s", srcName, e ) );
+            log( String.format( "request-list '%s' : %s", srcName, e ) );
         }
-        ps.printf( String.format( "request-list '%s' done\n", srcName ) );
+        log( String.format( "request-list '%s' done", srcName ) );
     }
 }
 
@@ -235,10 +250,10 @@ class BC_BUCKET_LIST extends BC_LIST
  * @param a_limit      limit number of jobs in the list
  * @see        BC_CONTEXT
 */
-    public BC_BUCKET_LIST( final BC_CONTEXT a_context, final String a_srcName, final PrintStream a_ps, int a_limit )
+    public BC_BUCKET_LIST( final BC_CONTEXT a_context, final String a_srcName, int a_limit )
     {
-        super( a_context, a_srcName, a_ps, a_limit );
-        ps.printf( String.format( "bucket-list '%s' reading files... ( limit %d )\n", srcName, limit ) );
+        super( a_context, a_srcName, a_limit );
+        log( String.format( "bucket-list '%s' reading files... ( limit %d )", srcName, limit ) );
         files = BC_GCP_TOOLS.list_names( srcName, limit, "json" );
     }
 
@@ -252,7 +267,7 @@ class BC_BUCKET_LIST extends BC_LIST
 */
     @Override public void run()
     {
-        ps.printf( String.format( "bucket-list '%s' start\n", srcName ) );
+        log( String.format( "bucket-list '%s' start", srcName ) );
 
         Iterator< String > iter = files.iterator();
 
@@ -261,7 +276,7 @@ class BC_BUCKET_LIST extends BC_LIST
             submitFile( String.format( "%s/%s", srcName, iter.next() ) );
         }
 
-        ps.printf( String.format( "bucket-list '%s' done\n", srcName ) );
+        log( String.format( "bucket-list '%s' done", srcName ) );
     }
 }
 
@@ -318,17 +333,16 @@ public final class BC_LISTS
  * helper function to add a new BC_FILE_LIST
  *
  * @param     filename   filename of list to process
- * @param     ps         PrintStream to write debug-output
  * @param     limit      limit number of jobs in the list
  * @see       BC_LIST
 */
-    public void addFile( final String filename, final PrintStream ps, int limit )
+    public void addFile( final String filename, int limit )
     {
         /* try to join lists that are done */
         join_done_list();
 
         /* create a new list, and start it */
-        BC_LIST list = new BC_FILE_LIST( context, filename, ps, limit );
+        BC_LIST list = new BC_FILE_LIST( context, filename, limit );
         lists.add( list );
         list.start();
     }
@@ -337,17 +351,16 @@ public final class BC_LISTS
  * helper function to add a new BC_BUCKET_LIST
  *
  * @param     bucketName url of bucket to process
- * @param     ps         PrintStream to write debug-output
  * @param     limit      limit number of jobs in the list
  * @see       BC_LIST
 */
-    public void addBucket( final String bucketName, final PrintStream ps, int limit )
+    public void addBucket( final String bucketName, int limit )
     {
         /* try to join lists that are done */
         join_done_list();
 
         /* create a new list, and start it */
-        BC_LIST list = new BC_BUCKET_LIST( context, bucketName, ps, limit );
+        BC_LIST list = new BC_BUCKET_LIST( context, bucketName, limit );
         lists.add( list );
         list.start();
     }
