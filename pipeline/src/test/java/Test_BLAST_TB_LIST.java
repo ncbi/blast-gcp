@@ -100,7 +100,7 @@ public class Test_BLAST_TB_LIST {
 
                    (l.get(i).evalue == l.get(i + 1).evalue &&
                     l.get(i).score == l.get(i + 1).score &&
-                    l.get(i).seqid <= l.get(i + 1).seqid));
+                    l.get(i).seqid >= l.get(i + 1).seqid));
     }
   }
 
@@ -136,7 +136,7 @@ public class Test_BLAST_TB_LIST {
 
                    (l.get(i).evalue == l.get(i + 1).evalue &&
                     l.get(i).score == l.get(i + 1).score &&
-                    l.get(i).seqid <= l.get(i + 1).seqid));
+                    l.get(i).seqid >= l.get(i + 1).seqid));
     }
   }
 
