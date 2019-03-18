@@ -34,22 +34,25 @@ import java.io.Serializable;
  * @see BLAST_LIB
  */
 public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LIST> {
-  public static double epsilon = 1.0e-6;
-  public int oid;
-  public double evalue;
+  public int evalue;
+  public int score;
+  public int seqid;
   public byte[] asn1_blob;
   public int top_n;
 
   /**
    * constructor providing values for internal fields
    *
-   * @param oid OID - value ( object-ID ? )
-   * @param evalue value to be used for sorting
+   * @param evalue scaled exponent of E-value, to be used for sorting.
+   *               The value: -10000 * log(E-value)
+   * @param score alignment score (used for sorting)
+   * @param seqid hash value of sequence id (used for sorting)
    * @param asn1_blob opaque asn1-blob, the traceback-result
    */
-  public BLAST_TB_LIST(int oid, double evalue, byte[] asn1_blob) {
-    this.oid = oid;
+   public BLAST_TB_LIST(int evalue, int score, int seqid, byte[] asn1_blob) {
     this.evalue = evalue;
+    this.score = score;
+    this.seqid = seqid;
     this.asn1_blob = asn1_blob;
   }
 
@@ -63,47 +66,25 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   }
 
   /**
-   * fuzzy comparison for sorting
-   *
-   * @param evalue1 first evalue to compare
-   * @param evalue2 second evalue to compare
-   * @return 0...evalue1==evalue2, -1...evalue1<evalue2, +1...evalue1>evalue2
-   */
-  public static int FuzzyEvalueComp(final double evalue1, final double evalue2) {
-    /* recommended by BLAST-team */
-    if (evalue1 < (1.0 - epsilon) * evalue2) {
-      return -1;
-    } else if (evalue1 > (1.0 + epsilon) * evalue2) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-  /**
    * overriden comparison, for sorting
+   * First compare evalues, then alignment scores, and then sequence id hash
+   * values.
    *
    * @param other other instance to compare against
    * @return 0...equal, -1...this > other, +1...this < other
    */
   @Override
   public int compareTo(final BLAST_TB_LIST other) {
-    // ascending order
-    int res = Double.compare( this.evalue, other.evalue );
-    if ( res != 0 )
-        return res;
-    return ( this.oid - other.oid );
+    // descending order
+      if (this.evalue != other.evalue) {
+          return -Integer.compare( this.evalue, other.evalue );
+      }
 
-    /*
-    if the epsilon is taken into consideration, this comparison
-    does violate java's compare-contract
-    -------------------------------------------------------------
-    final double delta = this.evalue - other.evalue;
-    if ( Math.abs( delta ) > epsilon ) // treat as equal
-        return Double.compare( this.evalue, other.evalue );
-    final int oiddelta = this.oid - other.oid;
-    return Integer.signum(oiddelta);
-    */
+      if (this.score != other.score) {
+          return -Integer.compare( this.score, other.score );
+      }
+
+      return Integer.compare( this.seqid, other.seqid );
   }
 
   private static String toHex(final byte[] blob) {
@@ -132,7 +113,8 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
   @Override
   public String toString() {
     String res = "  TBLIST";
-    res += String.format("\n  evalue=%f oid=%d", evalue, oid);
+    res += String.format("\n  evalue=%d score=%d seqid=%d", evalue, score,
+                         seqid);
     if (asn1_blob != null) {
       res += "\n  " + asn1_blob.length + " bytes in ASN.1 blob\n";
     }

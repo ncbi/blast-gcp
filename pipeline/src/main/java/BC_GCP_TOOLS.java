@@ -272,23 +272,25 @@ public class BC_GCP_TOOLS
 */
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
-        boolean res = BC_UTILS.create_paths_if_neccessary( dst_filename );
+        /* the constructor of BC_FILE_LOCK does create the parent-directory! */
+        BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
+        boolean res = lock.aquire();
         if ( res )
         {
-            BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
-            res = lock.aquire();
-            if ( res )
+            try
             {
-                try
+                Storage.Objects.Get obj = storage.objects().get( bucket, key );
+                res = ( obj != null );
+                if ( res )
                 {
-                    Storage.Objects.Get obj = storage.objects().get( bucket, key );
-                    if ( obj != null )
+                    obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+
+                    File f = new File( dst_filename );
+                    FileOutputStream f_out = new FileOutputStream( f );
+
+                    try
                     {
-                        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
-
-                        File f = new File( dst_filename );
-                        FileOutputStream f_out = new FileOutputStream( f );
-
+                        /* f_lock does not apply across multiple JWMs, but we have BC_FILE_LOCK... */
                         FileLock f_lock = f_out.getChannel().tryLock();
                         if ( f_lock != null )
                         {
@@ -306,23 +308,37 @@ public class BC_GCP_TOOLS
                                 f_lock.release();
                             }
                         }
-
+                    }
+                    catch( Exception e )
+                    {
+                        e.printStackTrace();
+                        res = false;
+                    }
+                    finally
+                    {
                         f_out.flush();
                         f_out.close();
                     }
-                    else
-                        res = false;
-                }
-                catch( Exception e )
-                {
-                    e.printStackTrace();
-                    res = false;
-                }
-                finally
-                {
-                    lock.release();
+                    if ( !res )
+                    {
+                        try
+                        {
+                            if ( f.exists() )
+                                f.delete();
+                        }
+                        catch( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
+            catch( Exception e )
+            {
+                e.printStackTrace();
+                res = false;
+            }
+            lock.release();
         }
         return res;
     }
