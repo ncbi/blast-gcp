@@ -129,7 +129,10 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
         String w;
         try { w = java.net.InetAddress.getLocalHost().getHostName(); }
         catch( Exception e ) { w = "?"; }
-        return String.format( "%s/%s", w, SparkEnv.get().executorId() );
+        if (SparkEnv.get()!=null)
+            return String.format( "%s/%s", w, SparkEnv.get().executorId() );
+        else
+            return String.format( "%s/localhost", w);
     }
 
 /**
