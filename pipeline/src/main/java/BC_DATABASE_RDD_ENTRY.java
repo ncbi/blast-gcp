@@ -127,12 +127,23 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     public String workername()
     {
         String w;
-        try { w = java.net.InetAddress.getLocalHost().getHostName(); }
+
+        try {
+            w = java.net.InetAddress.getLocalHost().getHostName();
+        }
         catch( Exception e ) { w = "?"; }
-        if (SparkEnv.get()!=null)
+
+        try {
             return String.format( "%s/%s", w, SparkEnv.get().executorId() );
-        else
+        }
+        catch (Exception e) // Running outside Spark
+        {
             return String.format( "%s/localhost", w);
+        }
+        catch (NoClassDefFoundError e)
+        {
+            return String.format( "%s/localhost", w);
+        }
     }
 
 /**
