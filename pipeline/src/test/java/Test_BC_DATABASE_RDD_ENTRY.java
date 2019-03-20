@@ -10,7 +10,7 @@ import java.util.Random;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
-public class Test_BC_DATABASE_RDD_ENTRY {
+public class Test_BC_DATABASE_RDD_ENTRY extends Thread{
 
   public static final String CFG_FILE_DFLT = "ini.json";
 
@@ -95,5 +95,19 @@ public class Test_BC_DATABASE_RDD_ENTRY {
     }
   }
 
-  public static void main(final String[] args) throws Exception {}
+  public void run()
+  {
+	  System.out.println("Thread started");
+  }
+
+  public static void main(final String[] args) throws Exception {
+	for (int i=0; i!=30; ++i) {
+		Test_BC_DATABASE_RDD_ENTRY thrd = new Test_BC_DATABASE_RDD_ENTRY();
+		thrd.start();
+		while (java.lang.Thread.activeCount() >= 8) {
+			Thread.sleep(100);
+		}
+	}
+  }
+
 }
