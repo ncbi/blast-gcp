@@ -66,7 +66,8 @@ public class Test_BC_DATABASE_RDD_ENTRY {
     final List<BC_DATABASE_RDD_ENTRY> entries =
         BC_DATABASE_RDD_ENTRY.make_rdd_entry_list(setting, allChunks);
     final List<String> errorList = new ArrayList<>();
-    Integer errors = 0;
+    final List<String> infoList = new ArrayList<>();
+    boolean errors;
     final int part = rng.nextInt(entries.size());
     final BC_DATABASE_RDD_ENTRY entry = entries.get(part);
     assertNotNull(entry);
@@ -83,9 +84,9 @@ public class Test_BC_DATABASE_RDD_ENTRY {
       assertFalse(dbfile.exists());
     }
     assertFalse(entry.present());
-    errors += entry.download(errorList);
+    errors = entry.download(errorList,infoList);
+    //assertFalse(errors);
     assertTrue(entry.present());
-    assertEquals((long) errors, 0);
     for (final BC_NAME_SIZE obj : entry.chunk.files) {
       final String dst = entry.build_worker_path(obj.name);
       final File dbfile = new File(dst);

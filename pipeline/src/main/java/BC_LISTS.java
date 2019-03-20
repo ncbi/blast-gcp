@@ -30,7 +30,6 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -58,8 +57,7 @@ class BC_LIST extends Thread
     protected final int limit;
     protected int line_nr = 0;
     protected final AtomicBoolean running;
-    private final Logger logger;
-    private final Level log_level;
+    protected final Logger logger;
 
 /**
  * create instance of BC_LIST
@@ -78,17 +76,6 @@ class BC_LIST extends Thread
         line_nr = 0;
         running = new AtomicBoolean( true );
         logger = LogManager.getLogger( BC_LIST.class );
-        log_level = Level.toLevel( "INFO" );
-    }
-
-/**
- * method for derived classes to use the logger
- *
- * @param msg   message to log
-*/
-    protected void log( final String msg )
-    {
-        logger.log( log_level, msg );
     }
 
 /**
@@ -170,7 +157,7 @@ class BC_FILE_LIST extends BC_LIST
 */
     @Override public void run()
     {
-        log( String.format( "request-list '%s' start", srcName ) );
+        logger.info( String.format( "request-list '%s' start", srcName ) );
         try
         {
             FileInputStream fs = new FileInputStream( srcName );
@@ -224,9 +211,9 @@ class BC_FILE_LIST extends BC_LIST
         }
         catch( Exception e )
         {
-            log( String.format( "request-list '%s' : %s", srcName, e ) );
+            logger.info( String.format( "request-list '%s' : %s", srcName, e ) );
         }
-        log( String.format( "request-list '%s' done", srcName ) );
+        logger.info( String.format( "request-list '%s' done", srcName ) );
     }
 }
 
@@ -253,7 +240,7 @@ class BC_BUCKET_LIST extends BC_LIST
     public BC_BUCKET_LIST( final BC_CONTEXT a_context, final String a_srcName, int a_limit )
     {
         super( a_context, a_srcName, a_limit );
-        log( String.format( "bucket-list '%s' reading files... ( limit %d )", srcName, limit ) );
+        logger.info( String.format( "bucket-list '%s' reading files... ( limit %d )", srcName, limit ) );
         files = BC_GCP_TOOLS.list_names( srcName, limit, "json" );
     }
 
@@ -267,7 +254,7 @@ class BC_BUCKET_LIST extends BC_LIST
 */
     @Override public void run()
     {
-        log( String.format( "bucket-list '%s' start", srcName ) );
+        logger.info( String.format( "bucket-list '%s' start", srcName ) );
 
         Iterator< String > iter = files.iterator();
 
@@ -276,7 +263,7 @@ class BC_BUCKET_LIST extends BC_LIST
             submitFile( String.format( "%s/%s", srcName, iter.next() ) );
         }
 
-        log( String.format( "bucket-list '%s' done", srcName ) );
+        logger.info( String.format( "bucket-list '%s' done", srcName ) );
     }
 }
 

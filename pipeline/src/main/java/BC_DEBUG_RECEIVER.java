@@ -29,6 +29,9 @@ package gov.nih.nlm.ncbi.blastjni;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
@@ -48,6 +51,7 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
     private final BC_CONTEXT context;
     private final long sleep_time;
     private final Socket socket;
+    private final Logger logger;
 
 /**
  * create instance of BC_DEBUG_RECEIVER_CLIENT
@@ -63,6 +67,7 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
         context = a_context;
         sleep_time = context.get_settings().debug_receiver_sleep_time;
         socket = a_socket;
+        logger = LogManager.getLogger( BC_DEBUG_RECEIVER_CLIENT.class );
     }
 
 /**
@@ -94,7 +99,7 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
 
                 if ( line != null && !line.isEmpty() )
                 {
-                    System.out.println( line.trim() );
+                    logger.info( line.trim() );
                 }
                 else if ( context.is_running() )
                 {
@@ -109,7 +114,7 @@ class BC_DEBUG_RECEIVER_CLIENT extends Thread
         }
         catch ( Exception e )
         {
-            System.out.println( String.format( "BC_DEBUG_RECEIVER_CLIENT: %s", e ) );
+            logger.info( String.format( "BC_DEBUG_RECEIVER_CLIENT: %s", e ) );
         }
     }
 }
@@ -125,6 +130,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
 {
     private final BC_CONTEXT context;
     private List< BC_DEBUG_RECEIVER_CLIENT > clients;
+    private final Logger logger;
 
 /**
  * create instance of BC_DEBUG_RECEIVER
@@ -138,6 +144,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
     {
         context = a_context;
         clients = new ArrayList<>();
+        logger = LogManager.getLogger( BC_DEBUG_RECEIVER.class );
     }
 
 /**
@@ -154,7 +161,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
         try
         {
             int port = context.get_settings().debug.port;
-            System.out.println( String.format( "DEBUG_RECEIVER listening on port: %d", port ) );
+            logger.info( String.format( "DEBUG_RECEIVER listening on port: %d", port ) );
 
             ServerSocket ss = new ServerSocket( port );
             while( context.is_running() )
@@ -176,7 +183,7 @@ public final class BC_DEBUG_RECEIVER extends Thread
         }
         catch ( Exception e )
         {
-            System.out.println( String.format( "BC_DEBUG_RECEIVER: %s", e ) );
+            logger.info( String.format( "BC_DEBUG_RECEIVER: %s", e ) );
         }
     }
 
