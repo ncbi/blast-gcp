@@ -272,9 +272,7 @@ public class BC_GCP_TOOLS
 */
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
-        /* the constructor of BC_FILE_LOCK does create the parent-directory! */
-        BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
-        boolean res = lock.aquire();
+        boolean res = true;
         if ( res )
         {
             try
@@ -290,23 +288,12 @@ public class BC_GCP_TOOLS
 
                     try
                     {
-                        /* f_lock does not apply across multiple JWMs, but we have BC_FILE_LOCK... */
-                        FileLock f_lock = f_out.getChannel().tryLock();
-                        if ( f_lock != null )
-                        {
-                            try
-                            {
-                                obj.executeMediaAndDownloadTo( f_out );
-                            }
-                            catch( Exception e )
-                            {
-                                e.printStackTrace();
-                                res = false;
-                            }
-                            finally
-                            {
-                                f_lock.release();
-                            }
+                        try {
+                            obj.executeMediaAndDownloadTo( f_out );
+                        }
+                        catch( Exception e ) {
+                            e.printStackTrace();
+                            res = false;
                         }
                     }
                     catch( Exception e )
@@ -338,7 +325,6 @@ public class BC_GCP_TOOLS
                 e.printStackTrace();
                 res = false;
             }
-            lock.release();
         }
         return res;
     }

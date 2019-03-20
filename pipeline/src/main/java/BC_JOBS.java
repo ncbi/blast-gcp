@@ -176,26 +176,8 @@ class BC_JOB extends Thread
                 List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
                 Integer errors = 0;
 
-                if ( !item.present() )
-                {
-                    errors += item.download( str_lst );
-                    int loops = 0;
-
-                    if ( errors == 0 )
-                    {
-                        /* waiting for the item to became present by another executor */
-                        while ( !item.present() && loops < 500  )
-                        {
-                            try
-                            {
-                                loops +=1;
-                                Thread.sleep( 100 );
-                            }
-                            catch ( InterruptedException e ) { }
-                        }
-                        if ( loops > 0 )
-                            str_lst.add( String.format( "%s: %s - waited %d loops for chunks to become present", item.workername(), item.chunk.name, loops ) );
-                    }
+                if ( !item.present() ) {
+                    errors += item.downloadIfAbsent( str_lst );
                 }
 
                 if ( errors == 0 )
