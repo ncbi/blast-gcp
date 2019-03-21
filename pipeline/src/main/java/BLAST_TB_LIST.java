@@ -84,7 +84,7 @@ public final class BLAST_TB_LIST implements Serializable, Comparable<BLAST_TB_LI
           return -Integer.compare( this.score, other.score );
       }
 
-      return Integer.compare( this.seqid, other.seqid );
+      return -Integer.compare( this.seqid, other.seqid );
   }
 
   private static String toHex(final byte[] blob) {
