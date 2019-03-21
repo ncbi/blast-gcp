@@ -69,11 +69,13 @@ spark-submit --master yarn \
 
 
 cd report || exit
-grep -h "done at" ./*.txt | sort > dones
+grep -h "done at" ./*.txt | sort > dones &
 for asn in *.asn1; do
     asntool -m ../../lib_builder/asn.all \
-        -t Seq-annot -d "$asn" -p "$asn.txt"
+        -t Seq-annot -d "$asn" -p "$asn.txt" &
 done
+
+wait
 
 #rm -f ../*.result
 #wc -l -- *.asn1 | sort > ../asn1.wc.result
