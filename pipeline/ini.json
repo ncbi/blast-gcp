@@ -21,7 +21,7 @@
     {
 		"transfer_files" : [ "libblastjni.so" ],
 		"parallel_jobs" : 16,
-        "jni_log_level" : "WARN",
+        "jni_log_level" : "INFO",
         "log_level" : "INFO"
     }
 
