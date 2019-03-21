@@ -220,7 +220,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
  * @see              BC_DATABASE_SETTING
  * @see              BC_GCP_TOOLS
 */
-    public synchronized Integer downloadIfAbsent( List< String> report)
+    public Integer downloadIfAbsent( List< String> report)
     {
         Integer errors = 0;
         String wn = workername();
