@@ -242,24 +242,15 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
             FileOutputStream f_out = null;
             FileLock f_lock = null;
 
-
-            System.out.println(String.format("%s: %s waiting on mutex", wn, dst));
             // synchronize threads within a jvm
             synchronized(mutex) {
-                System.out.println(String.format("%s: %s mutex aquired", wn, dst));
                 
                 try {
 
                     f_out = new FileOutputStream( ff );
-                    System.out.println(String.format(
-                                     "%s: %s trying to aquire FileLock",
-                                     wn, dst));
 
                     // synchronize jvms
                     f_lock = f_out.getChannel().lock();
-                    System.out.println(String.format(
-                                             "%s: %s FileLock aquired",
-                                             wn, dst));
                     
                     if ( f.exists() ) {
                         long fl = f.length();
@@ -280,10 +271,6 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                         long started_at = System.currentTimeMillis();
                         boolean success = BC_GCP_TOOLS.download( src, dst );
                         long elapsed = System.currentTimeMillis() - started_at;
-
-                        System.out.println(String.format(
-                                             "%s: %s downloaded in %d ms",
-                                             wn, dst, elapsed));
 
                         /* we can now check the size... */
                         long fl = f.length();
@@ -314,8 +301,6 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                 }
                 finally {
                     try {
-                        System.out.println(String.format(
-                                      "%s: %s FileLock released", wn, dst));
                         f_lock.release();
                     }
                     catch (Exception e) {
@@ -323,10 +308,8 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                     }
                 }
             }
-            System.out.println(String.format("%s: %s Mutex released", wn, dst));
         }
         return errors;
-
     }
 
 }
