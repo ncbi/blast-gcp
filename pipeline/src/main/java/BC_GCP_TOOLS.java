@@ -279,7 +279,6 @@ public class BC_GCP_TOOLS
                 res = ( obj != null );
                 if ( res )
                 {
-                    obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
                     File f = new File( dst_filename );
                     FileOutputStream f_out = new FileOutputStream( f );
