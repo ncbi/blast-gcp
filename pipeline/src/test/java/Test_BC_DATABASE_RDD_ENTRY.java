@@ -16,6 +16,8 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
 
   private static String cfg_file;
 
+  @Rule public TemporaryFolder tempfolder = new TemporaryFolder();
+
   @BeforeClass
   public static void setUpEnv() {
     final Map<String, String> env = System.getenv();
@@ -45,14 +47,12 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
     }
   }
 
-  @Rule public TemporaryFolder tempfolder = new TemporaryFolder();
-
   @Test
-  public void test_dbload() throws Exception {
+  public void testDbLoad() throws Exception {
     final Random rng = new Random();
-    System.out.println("Using config file: " + cfg_file);
+    // System.out.println("Using config file: " + cfg_file);
     final BC_SETTINGS res = BC_SETTINGS_READER.read_from_json(cfg_file, "junit");
-    System.out.println("res is " + res);
+    // System.out.println("res is " + res);
     assertTrue("dbs must not be empty", !res.dbs.isEmpty());
 
     final String key = "nr";
@@ -73,7 +73,6 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
         BC_DATABASE_RDD_ENTRY.make_rdd_entry_list(setting, allChunks);
     final List<String> errorList = new ArrayList<>();
     final List<String> infoList = new ArrayList<>();
-    boolean errors;
     int part = rng.nextInt(entries.size());
     part = 3;
     final BC_DATABASE_RDD_ENTRY entry = entries.get(part);
@@ -91,7 +90,7 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
       assertFalse(dbfile.exists());
     }
     assertFalse(entry.present());
-    errors = entry.download(errorList, infoList);
+    boolean errors = entry.download(errorList, infoList);
     // assertFalse(errors);
     assertTrue(entry.present());
     for (final BC_NAME_SIZE obj : entry.chunk.files) {
@@ -102,11 +101,11 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
     }
   }
 
-  private void stress_dbload() {
+  private void stressDbLoad() {
     final Random rng = new Random();
     System.out.println("Using config file: " + cfg_file);
     final BC_SETTINGS res = BC_SETTINGS_READER.read_from_json(cfg_file, "junit");
-    System.out.println("res is " + res);
+    // System.out.println("res is " + res);
     assertTrue("dbs must not be empty", !res.dbs.isEmpty());
 
     final String key = "nr";
@@ -122,7 +121,6 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
         BC_DATABASE_RDD_ENTRY.make_rdd_entry_list(setting, allChunks);
     final List<String> errorList = new ArrayList<>();
     final List<String> infoList = new ArrayList<>();
-    boolean errors;
     int part = rng.nextInt(entries.size());
     part = 3;
     final BC_DATABASE_RDD_ENTRY entry = entries.get(part);
@@ -133,15 +131,17 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
     System.out.println("worker is " + entry.workername());
     System.out.println("present " + entry.present());
     */
-    for (int i = 0; i != 10000; ++i) {
+    for (int i = 0; i != 10_000; ++i) {
       for (final BC_NAME_SIZE obj : entry.chunk.files) {
         final String dst = entry.build_worker_path(obj.name);
         final File dbfile = new File(dst);
         //        System.out.println("  dst is:" + dst);
         //        System.out.println("  Size is " + dbfile.length());
-        if (entry.present()) assertEquals(dbfile.length(), obj.size.longValue());
+        if (entry.present()) {
+          assertEquals(dbfile.length(), obj.size.longValue());
+        }
         // else assertEquals(dbfile.length(), 0);
-        errors = entry.download(errorList, infoList);
+        boolean errors = entry.download(errorList, infoList);
         assertTrue(entry.present());
         assertTrue(dbfile.exists());
         assertEquals(dbfile.length(), obj.size.longValue());
@@ -154,7 +154,7 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
     System.out.println("Thread started");
     setUpEnv();
     tempfolder = new TemporaryFolder();
-    stress_dbload();
+    stressDbLoad();
   }
 
   // Invoke with:
@@ -162,9 +162,9 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
   // .:/usr/local/spark/2.3.2/jars:target/sparkblast-1-jar-with-dependencies.jar:target/test-classes:$HOME/.m2/repository/junit/junit/4.12/junit-4.12.jar gov.nih.nlm.ncbi.blastjni.Test_BC_DATABASE_RDD_ENTRY
   public static void main(final String[] args) throws Exception {
     for (int i = 0; i != 30; ++i) {
-      Test_BC_DATABASE_RDD_ENTRY thrd = new Test_BC_DATABASE_RDD_ENTRY();
+      final Test_BC_DATABASE_RDD_ENTRY thrd = new Test_BC_DATABASE_RDD_ENTRY();
       thrd.start();
-      while (java.lang.Thread.activeCount() >= 8) {
+      while (Thread.activeCount() >= 8) {
         Thread.sleep(100);
       }
     }

@@ -24,10 +24,11 @@ gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
 echo "Downloaded test queries."
 
 # Query databases in order
-grep -l nr_50M stability_test/*json | \
-    sort > stability_test/stability_tests.txt
-grep -l nt_50M stability_test/*json | \
-    sort >> stability_test/stability_tests.txt
+#grep -l nr_50M stability_test/*json | \
+#    sort > stability_test/stability_tests.txt
+#grep -l nt_50M stability_test/*json | \
+#    sort >> stability_test/stability_tests.txt
+find stability_test/ -name "*.json" | sort > stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
     {
