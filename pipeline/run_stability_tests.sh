@@ -77,7 +77,8 @@ done
 
 #rm -f ../*.result
 #wc -l -- *.asn1 | sort > ../asn1.wc.result
-wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
+unset LC_ALL # Messes with sorting
+wc -l -- *.asn1.txt | sort -k2 > ../asn1.txt.wc.result
 
 #if diff asn1.wc.expected asn1.wc.result; then
 #    echo "Differences in .asn1 output"
