@@ -129,7 +129,7 @@ public final class BC_MAIN
             List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, used_chunks );
 
             /* ask the spark-context to distribute the RDD to the workers */
-            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries );
+            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, used_chunks.size());
 
             /* put the RDD in the database-dictionary */
             db_dict.put( key, rdd );
