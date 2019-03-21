@@ -127,9 +127,23 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     public String workername()
     {
         String w;
-        try { w = java.net.InetAddress.getLocalHost().getHostName(); }
+
+        try {
+            w = java.net.InetAddress.getLocalHost().getHostName();
+        }
         catch( Exception e ) { w = "?"; }
-        return String.format( "%s/%s", w, SparkEnv.get().executorId() );
+
+        try {
+            return String.format( "%s/%s", w, SparkEnv.get().executorId() );
+        }
+        catch (Exception e) // Running outside Spark
+        {
+            return String.format( "%s/localhost", w);
+        }
+        catch (NoClassDefFoundError e)
+        {
+            return String.format( "%s/localhost", w);
+        }
     }
 
 /**
@@ -158,14 +172,15 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 /**
  * download ( if neccessary ) all files fo a database-chunk to the worker
  *
- * @param       report, list of string reporting the download
- * @return      number of errors
+ * @param       error_lst       list of download-errors
+ * @param       info_lst        list of info's
+ * @return      success
+ *
  * @see              BC_DATABASE_SETTING
  * @see              BC_GCP_TOOLS
 */
-    public Integer download( List< String > report )
+    public boolean download( List< String > error_lst, List< String > info_lst )
     {
-        Integer errors = 0;
         String wn = workername();
         for ( BC_NAME_SIZE obj : chunk.files )
         {
@@ -178,9 +193,9 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                 long fl = f.length();
                 /* we can now check the size... */
                 if ( obj.size.longValue() == fl )
-                    report.add( String.format( "%s : %s -> %s (exists size = %d )", wn, src, dst, fl ) );
+                    info_lst.add( String.format( "%s : %s -> %s ( exists size = %d )", wn, src, dst, fl ) );
                 else
-                    report.add( String.format( "%s : %s -> %s (exists, size=%d, should be %d)", wn, src, dst, fl, obj.size ) );
+                    info_lst.add( String.format( "%s : %s -> %s ( exists, size=%d, should be %d )", wn, src, dst, fl, obj.size ) );
                     /* this is not an error, the caller will retry in this case */
             }
             else
@@ -189,19 +204,26 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                 boolean success = BC_GCP_TOOLS.download( src, dst );
                 long elapsed = System.currentTimeMillis() - started_at;
 
-                /* we can now check the size... */
                 long fl = f.length();
-                if ( obj.size.longValue() == fl )
-                    report.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl ) );
+                if ( success )
+                {
+                    /* we can now check the size... */
+                    if ( obj.size.longValue() == fl )
+                        info_lst.add( String.format( "%s : %s -> %s ( OK in %,d ms, size=%d )", wn, src, dst, elapsed, fl ) );
+                    else
+                    {
+                        error_lst.add( String.format( "%s : %s -> %s ( SIZE-ERROR in %,d ms, size=%d, should=%d )", wn, src, dst, elapsed, fl, obj.size ) );
+                        return false;
+                    }
+                }
                 else
                 {
-                    success = false;
-                    report.add( String.format( "%s : %s -> %s (%s in %,d ms, size=%d, should=%d)", wn, src, dst, Boolean.toString( success ), elapsed, fl, obj.size ) );
+                    error_lst.add( String.format( "%s : %s -> %s ( FAILED in %,d ms, size=%d, should=%d )", wn, src, dst, elapsed, fl, obj.size ) );
+                    return false;
                 }
-                if ( !success ) errors += 1;
             }
         }
-        return errors;
+        return true;
     }
 }
 

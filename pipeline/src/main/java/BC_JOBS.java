@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.ByteBuffer;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -67,7 +66,6 @@ class BC_JOB extends Thread
     private final AtomicBoolean active;
     private final AtomicInteger errors;
     private final Logger logger;
-    private final Level log_level;
 
 /**
  * create instance of BC_JOB
@@ -96,7 +94,6 @@ class BC_JOB extends Thread
         active = new AtomicBoolean( false );
         errors = new AtomicInteger( 0 );
         logger = LogManager.getLogger( BC_JOB.class );
-        log_level = Level.toLevel( "INFO" );
     }
 
 /**
@@ -152,7 +149,7 @@ class BC_JOB extends Thread
            the whole BC_JOB-instance. This will fail: BC_JOB is not serializable.
            It will compile, but it will fail at runtime. */
 
-        logger.log( log_level, String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
+        logger.info( String.format( "JOB[%d] handles REQUEST[%s]", id, request.id ) );
         long job_starttime = System.currentTimeMillis();
         boolean res = true;
 
@@ -164,110 +161,106 @@ class BC_JOB extends Thread
         {
             chunks.cache();
             final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
-            List< String > lines = new ArrayList<>();
-            lines.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
+            List< String > infoLst = new ArrayList<>();
+            List< String > errorLst = new ArrayList<>();
+            infoLst.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
 
             /* ***** perform the map-operation on the worker-nodes ***** */
-            JavaRDD< Tuple3< List< String >, List< BLAST_TB_LIST >, Integer > > RESULTS = chunks.map( item ->
+            JavaRDD< Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > > RESULTS = chunks.map( item ->
             {
                 BC_DEBUG_SETTINGS debug = DBG.getValue();
 
-                List< String > str_lst = new ArrayList<>();
                 List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
-                Integer errors = 0;
+                List< String > error_lst = new ArrayList<>();
+                List< String > info_lst = new ArrayList<>();
+
+                int loops = 0;
+                if ( !item.present() && error_lst.isEmpty() && loops < 50 )
+                {
+                    if ( !item.download( error_lst, info_lst ) )
+                    {
+                        /* waiting for the item to became present by another executor */
+                        try
+                        {
+                            loops +=1;
+                            Thread.sleep( 100 );
+                        }
+                        catch ( InterruptedException e ) { }
+                    }
+                }
 
                 if ( !item.present() )
                 {
-                    errors += item.download( str_lst );
-                    int loops = 0;
-
-                    if ( errors == 0 )
+                    if ( loops > 0 )
                     {
-                        /* waiting for the item to became present by another executor */
-                        while ( !item.present() && loops < 500  )
-                        {
-                            try
-                            {
-                                loops +=1;
-                                Thread.sleep( 100 );
-                            }
-                            catch ( InterruptedException e ) { }
-                        }
-                        if ( loops > 0 )
-                            str_lst.add( String.format( "%s: %s - waited %d loops for chunks to become present", item.workername(), item.chunk.name, loops ) );
+                        String msg = String.format( "%s: %s - waited %d loops for chunks to become present", item.workername(), item.chunk.name, loops );
+                        error_lst.add( msg );
                     }
                 }
-
-                if ( errors == 0 )
+                else if ( error_lst.isEmpty() )
                 {
-                    if ( item.present() )
+                    BC_REQUEST req = REQUEST.getValue();
+
+                    BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
+                    if ( lib != null )
                     {
-                        BC_REQUEST req = REQUEST.getValue();
+                        long starttime = System.currentTimeMillis();
+                        BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
+                        long finishtime = System.currentTimeMillis();
 
-                        BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
-                        if ( lib != null )
+                        if ( hsps == null )
+                            error_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.chunk.name ) );
+                        else
                         {
-                            long starttime = System.currentTimeMillis();
-                            BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
-                            long finishtime = System.currentTimeMillis();
-
-                            if ( hsps == null )
-                                str_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.chunk.name ) );
-                            else
+                            info_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
+                                                    item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
+                            if ( hsps.length > 0 )
                             {
-                                str_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
-                                                        item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
+                                starttime = System.currentTimeMillis();
+                                BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+                                finishtime = System.currentTimeMillis();
 
-                                if ( hsps.length > 0 )
+                                if ( tbs == null )
+                                    error_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
+                                else
                                 {
-                                    starttime = System.currentTimeMillis();
-                                    BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
-                                    finishtime = System.currentTimeMillis();
+                                    info_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
+                                                         item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
 
-                                    if ( tbs == null )
-                                        str_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
-                                    else
-                                    {
-                                        str_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-                                                                item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
-
-                                        for ( BLAST_TB_LIST tb : tbs )
-                                            tp_lst.add( tb );
-                                    }
+                                    for ( BLAST_TB_LIST tb : tbs )
+                                        tp_lst.add( tb );
                                 }
                             }
                         }
-                        else
-                        {
-                            str_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.chunk.name ) );
-                            errors += 1;
-                        }
                     }
                     else
-                    {
-                        str_lst.add( String.format( "%s: %s - failed to download", item.workername(), item.chunk.name ) );
-                        errors += 1;
-                    }
+                        error_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.chunk.name ) );
                 }
-                return new Tuple3<>( str_lst, tp_lst, errors );
+                return new Tuple3<>( tp_lst, error_lst, info_lst );
             });
 
-            List< Tuple3< List< String >, List< BLAST_TB_LIST >, Integer > > l_res = RESULTS.collect();
+            List< Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > > l_res = RESULTS.collect();
             BC_RESULTS results = new BC_RESULTS();
 
             Integer total_errors = 0;
             /* collect and write the report... */
-            for ( Tuple3< List< String >, List< BLAST_TB_LIST >, Integer > item : l_res )
+            for ( Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > item : l_res )
             {
-                lines.addAll( item._1() );
-                results.add( item._2() );
-                total_errors += item._3();
+                results.add( item._1() );
+                errorLst.addAll( item._2() );
+                infoLst.addAll( item._2() );
             }
 
             long job_finishtime = System.currentTimeMillis();
-            lines.add( String.format( "request '%s' done at '%s' ( %d ms ), errors = %d", request.id, BC_UTILS.datetime(),
-                                        ( job_finishtime - job_starttime ), total_errors ) );
-            BC_UTILS.save_to_file( lines, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
+            infoLst.add( String.format( "request '%s' done at '%s' ( %d ms ), errors = %d", request.id, BC_UTILS.datetime(),
+                                      ( job_finishtime - job_starttime ), errorLst.size() ) );
+            BC_UTILS.save_to_file( infoLst, String.format( "%s/REQ_%s.txt", context.settings.report_dir, request.id ) );
+            if ( !errorLst.isEmpty() )
+            {
+                BC_UTILS.save_to_file( errorLst, String.format( "%s/REQ_%s.errors.txt", context.settings.report_dir, request.id ) );
+                for ( String msg : errorLst )
+                    logger.info( msg );
+            }
 
             if ( results.sort( request.id ) )
             {
@@ -281,13 +274,13 @@ class BC_JOB extends Thread
                 BC_UTILS.write_to_file( results.to_bytebuffer(), asn1_file_name );
             }
 
-            logger.log( log_level, String.format( "JOB[%d] REQUEST[%s] done, %d errors", id, request.id, total_errors ) );
-            errors.getAndAdd( total_errors );
-            res = ( total_errors == 0 );
+            logger.info( String.format( "JOB[%d] REQUEST[%s] done, %d errors", id, request.id, errorLst.size() ) );
+            errors.getAndAdd( errorLst.size() );
+            res = errorLst.isEmpty();
         }
         else
         {
-            logger.log( log_level, String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
+            logger.info( String.format( "JOB[%d] REQUEST[%s] : db '%s' not found", id, request.id, request.db ) );
         }
         return res;
     }

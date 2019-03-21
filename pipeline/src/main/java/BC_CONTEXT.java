@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -59,7 +58,6 @@ public class BC_CONTEXT
     private BC_JOBS jobs;
     private final List< String > history;
     private final Logger logger;
-    private final Level log_level;
 
 /**
  * create instance of BC_CONTEXT from settings
@@ -79,7 +77,6 @@ public class BC_CONTEXT
         jobs = null;
         history = Collections.synchronizedList( new ArrayList< String >() );
         logger = LogManager.getLogger( BC_CONTEXT.class );
-        log_level = Level.toLevel( "INFO" );
     }
 
 /**
@@ -195,11 +192,11 @@ public class BC_CONTEXT
             request_queue.offer( request );
 
             if ( settings.debug.req_added )
-                logger.log( log_level, String.format( "REQUEST '%s' added to queue", request.id ) );
+                logger.info( String.format( "REQUEST '%s' added to queue", request.id ) );
         }
         else
         {
-            logger.log( log_level, String.format( "REQUEST '%s' rejected: already queued", request.id ) );
+            logger.info( String.format( "REQUEST '%s' rejected: already queued", request.id ) );
         }
         return res;
     }
@@ -220,7 +217,7 @@ public class BC_CONTEXT
             if ( request != null )
                 res = add_request( request );
             else
-                logger.log( log_level, String.format( "invalid request '%s'", req_string ) );
+                logger.info( String.format( "invalid request '%s'", req_string ) );
         }
         return res;
     }
@@ -245,7 +242,7 @@ public class BC_CONTEXT
             }
             else
             {
-                logger.log( log_level, String.format( "invalid request in file '%s'", filename ) );
+                logger.info( String.format( "invalid request in file '%s'", filename ) );
                 res = -1;
             }
         }
@@ -293,11 +290,11 @@ public class BC_CONTEXT
 */
     public void print_info()
     {
-        logger.log( log_level, String.format( "request-queue: %d of %d\n",
+        logger.info( String.format( "request-queue: %d of %d\n",
                     request_queue.size(), settings.req_max_backlog ) );
 
         int n = ( jobs != null ) ? jobs.active() : 0;
-        logger.log( log_level, String.format( "jobs active  : %d of %d\n",
+        logger.info( String.format( "jobs active  : %d of %d\n",
                     n, settings.parallel_jobs ) );
     }
 

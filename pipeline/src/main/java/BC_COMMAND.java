@@ -26,7 +26,6 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -39,7 +38,6 @@ public final class BC_COMMAND
     private String[] parts;
     private final int num_parts;
     private final Logger logger;
-    private final Level log_level;
 
 /**
  * create instance of BC_COMMAND from a String
@@ -54,7 +52,6 @@ public final class BC_COMMAND
         parts = line.trim().split( "\\s+" );    /* split on whitespace */
         num_parts = parts.length;
         logger = LogManager.getLogger( BC_COMMAND.class );
-        log_level = Level.toLevel( "INFO" );
     }
 
 /**
@@ -131,7 +128,7 @@ public final class BC_COMMAND
         if ( num_parts > 1 )
             context.add_request_file( parts[ 1 ] );
         else
-            logger.log( log_level, "file_request: filename is missing" );
+            logger.info( "file_request: filename is missing" );
     }
 
 /**
@@ -148,7 +145,7 @@ public final class BC_COMMAND
             context.addRequestList( parts[ 1 ], limit );
         }
         else
-            logger.log( log_level, "list_request: filename is missing" );
+            logger.info( "list_request: filename is missing" );
     }
 
 /**
@@ -165,7 +162,7 @@ public final class BC_COMMAND
             context.addRequestBucket( parts[ 1 ], limit );
         }
         else
-            logger.log( log_level, "bucket_request: bucket-url is missing" );
+            logger.info( "bucket_request: bucket-url is missing" );
     }
 
 /**
@@ -186,7 +183,7 @@ public final class BC_COMMAND
                 String s = context.get_cmd_history( idx );
                 if ( !s.isEmpty() )
                 {
-                    logger.log( log_level, String.format( "[%d] %s", idx, s ) );
+                    logger.info( String.format( "[%d] %s", idx, s ) );
                 }
             }
         }
@@ -207,7 +204,7 @@ public final class BC_COMMAND
             String s = context.get_cmd_history( idx );
             if ( !s.isEmpty() )
             {
-                logger.log( log_level, String.format( "%s", s ) );
+                logger.info( s );
                 context.push_command( s );
             }
         }
@@ -223,11 +220,11 @@ public final class BC_COMMAND
     {
         int time_limit = ( num_parts > 1 ) ? BC_UTILS.toInt( parts[ 1 ] ) : 0;
         if ( time_limit > 0 )
-            logger.log( log_level, String.format( "waiting for done or %d minutes", time_limit ) );
+            logger.info( String.format( "waiting for done or %d minutes", time_limit ) );
         else
-            logger.log( log_level, "waiting for done" );
+            logger.info( "waiting for done" );
         context.wait_for_empty( time_limit );
-        logger.log( log_level, "wait done\n" );
+        logger.info( "wait done\n" );
     }
 
 /**
@@ -247,7 +244,7 @@ public final class BC_COMMAND
         else if ( is_execute_request() ) handle_execute_request( context );
         else if ( is_info_request() ) context.print_info();
         else if ( is_wait_request() ) handle_wait_request( context );
-        else logger.log( log_level, String.format( "unknown: %s", parts ) );
+        else logger.info( String.format( "unknown: %s", parts ) );
     }
 }
 

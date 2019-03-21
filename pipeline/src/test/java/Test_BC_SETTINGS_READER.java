@@ -78,7 +78,7 @@ public class Test_BC_SETTINGS_READER {
     /* CLUSTER */
     assertTrue("transfer_files must be set", (!res.transfer_files.isEmpty()));
     /* num_executors == 0 is valid, it means dynamic allocation is used */
-    assertTrue("num_executors must be > 0", (res.num_executors > -1 ));
+    assertTrue("num_executors must be > 0", (res.num_executors > -1));
 
     /*
     WRONG UNDERSTANDING: zero-cores means do not set, used YARNs defaults, aks ZERO IS VALID
@@ -87,6 +87,13 @@ public class Test_BC_SETTINGS_READER {
 
     assertTrue("parallel_jobs must be > 0", (res.parallel_jobs > 0));
 
+    for (final String key : res.dbs.keySet()) {
+      BC_DATABASE_SETTING db_setting = res.dbs.get(key);
+
+      for (final String ext : db_setting.extensions) {
+        assertFalse("No phr or nhr databases", ext.endsWith("hr"));
+      }
+    }
     /* SUMMARY CHECK */
     assertTrue("Summary check", res.valid());
 
