@@ -32,7 +32,6 @@ import java.util.Map;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,6 @@ import java.net.URISyntaxException;
 
 import java.security.GeneralSecurityException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileLock;
 import java.util.Collection;
 
 import com.google.cloud.storage.Bucket;
