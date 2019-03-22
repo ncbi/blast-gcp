@@ -9,8 +9,9 @@ unset LC_ALL # Messes with sorting
 BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini_test.json"
+LOG_CONF="--driver-java-options=-Dlog4j.configuration=file:log4j.properties"
 
-command -v asntool || sudo apt install -y ncbi-tools-bin
+command -v asntool > /dev/null || sudo apt install -y ncbi-tools-bin
 
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 
@@ -23,10 +24,11 @@ gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
 echo "Downloaded test queries."
 
 # Query databases in order
-grep -l nr_50M stability_test/*json | \
-    sort > stability_test/stability_tests.txt
-grep -l nt_50M stability_test/*json | \
-    sort >> stability_test/stability_tests.txt
+#grep -l nr_50M stability_test/*json | \
+#    sort > stability_test/stability_tests.txt
+#grep -l nt_50M stability_test/*json | \
+#    sort >> stability_test/stability_tests.txt
+find stability_test/ -name "*.json" | sort > stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
     {
@@ -48,9 +50,8 @@ cat << EOF > $BC_INI
         "cluster" :
         {
             "transfer_files" : [ "libblastjni.so" ],
-            "parallel_jobs" : 20,
-            "XXnum-executors": 512,
-            "XXnum-executor-cores": 1,
+            "parallel_jobs" : 48,
+            "num-executor-cores": 64,
             "log_level" : "INFO",
             "jni_log_level" : "WARN"
         }
@@ -63,6 +64,7 @@ echo -e ":wait\n:exit\n" \
 #./run.sh stability_test/stability_tests.txt
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 spark-submit --master yarn \
+    "$LOG_CONF" \
     --class $BC_CLASS $BC_JAR $BC_INI stability_test/stability_tests.txt
 
 
@@ -81,6 +83,7 @@ wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
 #    echo "Differences in .asn1 output"
 #fi
 
+cd ..
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
 fi

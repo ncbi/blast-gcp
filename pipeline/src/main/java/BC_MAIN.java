@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -65,6 +64,9 @@ public final class BC_MAIN
  * - join threads in BC_JOBS, BC_DEBUG_RECEICER, BC_CONSOLE and BC_CONTEXT
  *
  * @param settings  parsed and validated application settings
+ * @param list_to_run   optional filename of autostart-list
+ * @param logger        logger of this class
+ *
  * @see        BC_SETTINGS
  * @see        BC_SETTINGS_READER
  * @see        BC_CONTEXT
@@ -74,8 +76,7 @@ public final class BC_MAIN
 */
     private static void run( final BC_SETTINGS settings,
                              final String list_to_run,
-                             final Logger logger,
-                             final Level log_level )
+                             final Logger logger )
     {
         /* create and configure the spark-context */
         SparkConf sc = BC_SETTINGS_READER.createSparkConfAndConfigure( settings );
@@ -83,7 +84,7 @@ public final class BC_MAIN
         jsc.addFile( "libblastjni.so" );
         jsc.setLogLevel( settings.spark_log_level );
 
-        logger.log( log_level, String.format( "running on Spark-version: '%s'", jsc.sc().version() ) );
+        logger.info( String.format( "running on Spark-version: '%s'", jsc.sc().version() ) );
 
         /* create the application-context, lives only on the master */
         BC_CONTEXT context = new BC_CONTEXT( settings );
@@ -118,9 +119,9 @@ public final class BC_MAIN
             /* get a list of unique names ( without the extension ) */
             List< BC_CHUNK_VALUES > all_chunks = BC_GCP_TOOLS.unique_by_extension( files, db_setting.extensions );
             if ( db_setting.limit > 0 )
-                logger.log( log_level, String.format( "%s has %d chunks, using %d of them", key, all_chunks.size(), db_setting.limit ) );
+                logger.info( String.format( "%s has %d chunks, using %d of them", key, all_chunks.size(), db_setting.limit ) );
             else
-                logger.log( log_level, String.format( "%s has %d chunks", key, all_chunks.size() ) );
+                logger.info( String.format( "%s has %d chunks", key, all_chunks.size() ) );
 
             List< BC_CHUNK_VALUES > used_chunks = db_setting.limit > 0 ? all_chunks.subList( 0, db_setting.limit ) : all_chunks;
 
@@ -137,7 +138,7 @@ public final class BC_MAIN
         /* create the job-pool to process jobs in parallel */
         BC_JOBS jobs = new BC_JOBS( context, jsc, DEBUG_SETTINGS, db_dict );
 
-        logger.log( log_level, "ready" );
+        logger.info( "ready" );
 
         /* if we have a list to run at startup... */
         if ( list_to_run != null )
@@ -170,7 +171,7 @@ public final class BC_MAIN
         }
         catch( Exception e ) { e.printStackTrace(); }
 
-        logger.log( log_level, String.format( "done, %d errors", errors ) );
+        logger.info( String.format( "done, %d errors", errors ) );
     }
 
 /**
@@ -187,32 +188,31 @@ public final class BC_MAIN
     public static void main( String[] args ) throws Exception
     {
         final Logger logger = LogManager.getLogger( BC_MAIN.class );
-        final Level log_level = Level.toLevel( "INFO" );
 
         if ( args.length < 1 )
-            logger.log( log_level, "settings-file not specified" );
+            logger.info( "settings-file not specified" );
         else
         {
             String settings_file_name = args[ 0 ];
             if ( BC_UTILS.file_exists( settings_file_name ) )
             {
-                logger.log( log_level, String.format( "reading settings from file: '%s'", settings_file_name ) );
+                logger.info( String.format( "reading settings from file: '%s'", settings_file_name ) );
                 /* parse the settings-file */
                 BC_SETTINGS settings = BC_SETTINGS_READER.read_from_json( settings_file_name, BC_MAIN.class.getSimpleName() );
-                logger.log( log_level, settings );
+                logger.info( settings );
                 if ( !settings.valid() )
-                    logger.log( log_level, "settings are invalid!, exiting..." );
+                    logger.info( "settings are invalid!, exiting..." );
                 else
                 {
-                    logger.log( log_level, "settings are valid! preparing cluster" );
+                    logger.info( "settings are valid! preparing cluster" );
 
                     String list_to_run = args.length > 1 ? args[ 1 ] : null;
                     /* === run the application === */
-                    run( settings, list_to_run, logger, log_level );
+                    run( settings, list_to_run, logger );
                 }
             }
             else
-                logger.log( log_level, String.format( "settings-file '%s' not found", settings_file_name ) );
+                logger.info( String.format( "settings-file '%s' not found", settings_file_name ) );
         }
    }
 }

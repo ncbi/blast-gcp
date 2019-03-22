@@ -25,15 +25,15 @@ package gov.nih.nlm.ncbi.blastjni;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.*;
-import java.math.BigInteger;
 
 public class Test_BLAST_LIB {
 
-  private static final String LOGLEVEL = "DEBUG";
+  private static final String LOGLEVEL = "INFO";
   private static final int TOPN = 100;
 
   private String readFile(final String filename) throws IOException {
@@ -136,10 +136,10 @@ public class Test_BLAST_LIB {
     final String queryfname = "data/prot_query.asn";
     final String program = "blastp";
 
-    final BC_CHUNK_VALUES protdb = new BC_CHUNK_VALUES( "data/prot_w_aux" );
-    protdb.files.add( new BC_NAME_SIZE( "pax", new BigInteger( "130" ) ) );
-    protdb.files.add( new BC_NAME_SIZE( "pin", new BigInteger( "112" ) ) );
-    protdb.files.add( new BC_NAME_SIZE( "psq", new BigInteger( "2434" ) ) );
+    final BC_CHUNK_VALUES protdb = new BC_CHUNK_VALUES("data/prot_w_aux");
+    protdb.files.add(new BC_NAME_SIZE("pax", new BigInteger("130")));
+    protdb.files.add(new BC_NAME_SIZE("pin", new BigInteger("112")));
+    protdb.files.add(new BC_NAME_SIZE("psq", new BigInteger("2434")));
 
     final Path cwd = Paths.get(System.getProperty("user.dir"), "../lib_builder/unit_test/");
     final Path testpath = cwd.normalize();
@@ -152,7 +152,7 @@ public class Test_BLAST_LIB {
     dbset.worker_location = testpath.toString();
 
     dbset.direct = true;
-    final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY( dbset, protdb );
+    final BC_DATABASE_RDD_ENTRY chunk = new BC_DATABASE_RDD_ENTRY(dbset, protdb);
 
     String params = "{";
     params += "\n\"version\": 1,";
@@ -169,12 +169,12 @@ public class Test_BLAST_LIB {
     requestobj.params = params;
 
     if (!requestobj.valid()) {
-      System.err.println("Warning: BC_REQUEST not valid:\t" + requestobj);
+      System.err.println("Warning (OK if test): BC_REQUEST not valid.");
     }
     requestobj.top_n_prelim = TOPN;
     requestobj.top_n_traceback = TOPN;
 
-    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so",true);
+    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so", true);
 
     assertNotNull("shouldn't be null", blaster);
 
@@ -210,10 +210,10 @@ public class Test_BLAST_LIB {
     final String queryfname = "data/nucl_query.asn";
     final String program = "blastn";
 
-    final BC_CHUNK_VALUES nucldb = new BC_CHUNK_VALUES( "data/nucl_w_aux" );
-    nucldb.files.add( new BC_NAME_SIZE( "nax", new BigInteger( "136" ) ) );
-    nucldb.files.add( new BC_NAME_SIZE( "nin", new BigInteger( "136" ) ) );
-    nucldb.files.add( new BC_NAME_SIZE( "nsq", new BigInteger( "2418" ) ) );
+    final BC_CHUNK_VALUES nucldb = new BC_CHUNK_VALUES("data/nucl_w_aux");
+    nucldb.files.add(new BC_NAME_SIZE("nax", new BigInteger("136")));
+    nucldb.files.add(new BC_NAME_SIZE("nin", new BigInteger("136")));
+    nucldb.files.add(new BC_NAME_SIZE("nsq", new BigInteger("2418")));
 
     final Path cwd = Paths.get(System.getProperty("user.dir"), "../lib_builder/unit_test/");
     final Path testpath = cwd.normalize();
@@ -248,7 +248,7 @@ public class Test_BLAST_LIB {
     requestobj.top_n_prelim = TOPN;
     requestobj.top_n_traceback = TOPN;
 
-    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so",true);
+    final BLAST_LIB blaster = new BLAST_LIB("blastjni.so", true);
 
     assertNotNull("shouldn't be null", blaster);
 
