@@ -21,7 +21,9 @@ command -v asntool > /dev/null || sudo apt install -y ncbi-tools-bin
 echo "Downloading test queries..."
 gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
     stability_test/ > /dev/null 2>&1
-echo "Downloaded test queries."
+
+numtests=$(find stability_test/ -name "*.json" | wc -l)
+echo "Downloaded $numtests test queries."
 
 # Query databases in order
 #grep -l nr_50M stability_test/*json | \
