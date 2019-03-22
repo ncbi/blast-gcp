@@ -138,8 +138,10 @@ void start_thread ( int threadnum )
 
             int alnum = 0;
             for ( const auto &alignment : alignments ) {
-                fprintf ( stderr, "Alignment %d: evalue=%f\n", alnum,
-                    alignment.first );
+                fprintf ( stderr, "Alignment %d: evalues=%d %d %d\n", alnum,
+                    alignment.first[0],
+                    alignment.first[1],
+                    alignment.first[2]);
                 ++alnum;
             }
         }
