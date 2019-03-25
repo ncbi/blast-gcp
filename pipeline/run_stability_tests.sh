@@ -21,7 +21,9 @@ command -v asntool > /dev/null || sudo apt install -y ncbi-tools-bin
 echo "Downloading test queries..."
 gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
     stability_test/ > /dev/null 2>&1
-echo "Downloaded test queries."
+
+numtests=$(find stability_test/ -name "*.json" | wc -l)
+echo "Downloaded $numtests test queries."
 
 # Query databases in order
 #grep -l nr_50M stability_test/*json | \
@@ -51,9 +53,9 @@ cat << EOF > $BC_INI
         {
             "transfer_files" : [ "libblastjni.so" ],
             "parallel_jobs" : 48,
-            "num-executor-cores": 64,
+            "num-executor-cores": 1,
             "log_level" : "INFO",
-            "jni_log_level" : "WARN"
+            "jni_log_level" : "INFO"
         }
     }
 EOF
@@ -69,16 +71,18 @@ spark-submit --master yarn \
 
 
 cd report || exit
-grep -h "done at" ./*.txt | sort > dones
+grep -h "done at" ./*.txt | sort > dones &
 for asn in *.asn1; do
     asntool -m ../../lib_builder/asn.all \
         -t Seq-annot -d "$asn" -p "$asn.txt"
 done
 
+wait
+
 #rm -f ../*.result
 #wc -l -- *.asn1 | sort > ../asn1.wc.result
-wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
-
+unset LC_ALL # Messes with sorting
+wc -l ./*.asn1.txt | awk '{print $1 "\t" $2;}' | sort -k2 > ../asn1.txt.wc.result
 #if diff asn1.wc.expected asn1.wc.result; then
 #    echo "Differences in .asn1 output"
 #fi
