@@ -90,7 +90,8 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
       assertFalse(dbfile.exists());
     }
     assertFalse(entry.present());
-    boolean errors = entry.download(errorList, infoList);
+    boolean errors = entry.downloadIfAbsent(errorList, infoList);
+
     // assertFalse(errors);
     assertTrue(entry.present());
     for (final BC_NAME_SIZE obj : entry.chunk.files) {
@@ -141,7 +142,7 @@ public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
           assertEquals(dbfile.length(), obj.size.longValue());
         }
         // else assertEquals(dbfile.length(), 0);
-        boolean errors = entry.download(errorList, infoList);
+        boolean errors = entry.downloadIfAbsent(errorList, infoList);
         assertTrue(entry.present());
         assertTrue(dbfile.exists());
         assertEquals(dbfile.length(), obj.size.longValue());

@@ -28,6 +28,8 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.Serializable;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -36,6 +38,8 @@ import java.util.Iterator;
 import java.net.InetAddress;
 
 import org.apache.spark.SparkEnv;
+
+import java.nio.channels.FileLock;
 
 /**
  * Content of the Database-RDD
@@ -48,6 +52,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 {
     private final BC_DATABASE_SETTING setting;
     public final BC_CHUNK_VALUES chunk;
+    private static Object mutex = new Object();
 
 /**
  * create instance BC_DATABASE_RDD_ENTRY
@@ -225,5 +230,113 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
         }
         return true;
     }
-}
 
+
+
+/**
+ * Check a database file is present and download if it is not. The method is
+ * synchronized for threads and processes. Check and download is atomic.
+ *
+ * @param       report, list of string reporting the download
+ * @return      number of errors
+ * @see              BC_DATABASE_SETTING
+ * @see              BC_GCP_TOOLS
+*/
+    public boolean downloadIfAbsent(List<String> error_lst,
+                                    List<String> info_lst)
+    {
+        String wn = workername();
+
+        for ( BC_NAME_SIZE obj : chunk.files )
+        {
+            String extension = obj.name;
+            String src = build_source_path( extension );
+            String dst = build_worker_path( extension );
+            File f = new File( dst );
+
+            String parent = f.getParent();
+            if (parent != null) {
+                File p = new File(parent);
+                p.mkdirs();
+            }
+
+            File ff = new File( dst + ".lock");
+            FileOutputStream f_out = null;
+            FileLock f_lock = null;
+
+            // synchronize threads within a jvm
+            synchronized(mutex) {
+                
+                try {
+
+                    f_out = new FileOutputStream( ff );
+
+                    // synchronize jvms
+                    f_lock = f_out.getChannel().lock();
+                    
+                    if ( f.exists() ) {
+                        long fl = f.length();
+                        /* we can now check the size... */
+                        if ( obj.size.longValue() == fl ) {
+                            info_lst.add( String.format( 
+                                          "%s : %s -> %s (exists size = %d )",
+                                          wn, src, dst, fl ) );
+                        }
+                        else {
+                            error_lst.add( String.format(
+                               "%s : %s -> %s (exists, size=%d, should be %d)",
+                               wn, src, dst, fl, obj.size ) );
+                        }
+                    }
+                    else {
+                        long started_at = System.currentTimeMillis();
+                        boolean success = BC_GCP_TOOLS.download( src, dst );
+                        long elapsed = System.currentTimeMillis() - started_at;
+
+                        /* we can now check the size... */
+                        long fl = f.length();
+                        if (success) {
+                            if ( obj.size.longValue() == fl ) {
+                                info_lst.add( String.format(
+                                     "%s : %s -> %s (%s in %,d ms, size=%d)",
+                                     wn, src, dst, Boolean.toString( success ),
+                                     elapsed, fl ) );
+                            }
+                            else {
+                                success = false;
+                                error_lst.add( String.format(
+                                    "%s : %s -> %s ( SIZE-ERROR in %,d ms, size=%d, should=%d )",
+                                    wn, src, dst, elapsed, fl, obj.size ) );
+                                return false;
+                            }
+                        }
+                        else {
+                            error_lst.add( String.format(
+                                 "%s : %s -> %s ( FAILED in %,d ms, size=%d, should=%d )",
+                                 wn, src, dst, elapsed, fl, obj.size ) );
+                    return false;
+
+                        }
+                    }
+
+                }
+                catch (java.io.FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                catch (java.io.IOException e) {
+                    e.printStackTrace();
+                }
+                finally {
+                    try {
+                        f_lock.release();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+}

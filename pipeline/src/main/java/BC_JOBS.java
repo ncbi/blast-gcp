@@ -174,30 +174,11 @@ class BC_JOB extends Thread
                 List< String > error_lst = new ArrayList<>();
                 List< String > info_lst = new ArrayList<>();
 
-                int loops = 0;
-                if ( !item.present() && error_lst.isEmpty() && loops < 50 )
-                {
-                    if ( !item.download( error_lst, info_lst ) )
-                    {
-                        /* waiting for the item to became present by another executor */
-                        try
-                        {
-                            loops +=1;
-                            Thread.sleep( 100 );
-                        }
-                        catch ( InterruptedException e ) { }
-                    }
+                if ( !item.present() ) {
+                    item.downloadIfAbsent( error_lst, info_lst );
                 }
 
-                if ( !item.present() )
-                {
-                    if ( loops > 0 )
-                    {
-                        String msg = String.format( "%s: %s - waited %d loops for chunks to become present", item.workername(), item.chunk.name, loops );
-                        error_lst.add( msg );
-                    }
-                }
-                else if ( error_lst.isEmpty() )
+                if ( error_lst.isEmpty() )
                 {
                     BC_REQUEST req = REQUEST.getValue();
 
