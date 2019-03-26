@@ -1,8 +1,6 @@
 #!/bin/bash
 set -o nounset # same as -u
 set -o errexit # same as -e
-#set -o pipefail
-#shopt -s nullglob globstar #
 
 unset LC_ALL # Messes with sorting
 
@@ -26,10 +24,6 @@ numtests=$(find stability_test/ -name "*.json" | wc -l)
 echo "Downloaded $numtests test queries."
 
 # Query databases in order
-#grep -l nr_50M stability_test/*json | \
-#    sort > stability_test/stability_tests.txt
-#grep -l nt_50M stability_test/*json | \
-#    sort >> stability_test/stability_tests.txt
 find stability_test/ -name "*.json" | sort > stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
@@ -63,7 +57,6 @@ EOF
 echo -e ":wait\n:exit\n" \
  >> stability_test/stability_tests.txt
 
-#./run.sh stability_test/stability_tests.txt
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 spark-submit --master yarn \
     "$LOG_CONF" \
@@ -77,13 +70,8 @@ for asn in *.asn1; do
         -t Seq-annot -d "$asn" -p "$asn.txt"
 done
 
-#rm -f ../*.result
-#wc -l -- *.asn1 | sort > ../asn1.wc.result
 unset LC_ALL # Messes with sorting
 wc -l ./*.asn1.txt | awk '{print $1 "\t" $2;}' | sort -k2 > ../asn1.txt.wc.result
-#if diff asn1.wc.expected asn1.wc.result; then
-#    echo "Differences in .asn1 output"
-#fi
 
 DATE=$(date "+%Y%m%d%H%M")
 gsutil -m cp -r ./* "gs://blast-stability-test-results/$DATE"
