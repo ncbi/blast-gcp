@@ -92,3 +92,13 @@ find ./ -name "*gz" -print0 | nice xargs -0 -n 8 -P 8 gunzip
 echo "Uncompressed  reference results."
 cd ..
 
+for check in blast-results-reference/*.asn; do
+    base=$(basename "$check")
+    req="report/REQ_${base}1"
+    diff "$check" "$req" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Differences with $base"
+    else
+        echo "Ok with $base"
+    fi
+done
