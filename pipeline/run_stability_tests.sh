@@ -80,3 +80,17 @@ cd ..
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
 fi
+
+echo "Downloading reference results..."
+gsutil -m cp -nr gs://blast-results-reference/ . > /dev/null 2>&1
+numrefs=$(find blast-results-reference/ -name "*.gz" | wc -l)
+echo "Downloaded $numrefs reference results."
+
+echo "Uncompressing reference results..."
+cd blast-results-reference || exit
+for gz in *.asn.gz; do
+    gunzip "$gz"
+done
+echo "Uncompressed  reference results."
+cd ..
+
