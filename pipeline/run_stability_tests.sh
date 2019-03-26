@@ -71,13 +71,11 @@ spark-submit --master yarn \
 
 
 cd report || exit
-grep -h "done at" ./*.txt | sort > dones &
+grep -h "done at" ./*.txt | sort > dones
 for asn in *.asn1; do
     asntool -m ../../lib_builder/asn.all \
         -t Seq-annot -d "$asn" -p "$asn.txt"
 done
-
-wait
 
 #rm -f ../*.result
 #wc -l -- *.asn1 | sort > ../asn1.wc.result
@@ -86,6 +84,9 @@ wc -l ./*.asn1.txt | awk '{print $1 "\t" $2;}' | sort -k2 > ../asn1.txt.wc.resul
 #if diff asn1.wc.expected asn1.wc.result; then
 #    echo "Differences in .asn1 output"
 #fi
+
+DATE=$(date "+%Y%m%d%H%M")
+gsutil -m cp -r ./* "gs://blast-stability-rest-results/$DATE"
 
 cd ..
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
