@@ -88,9 +88,7 @@ echo "Downloaded $numrefs reference results."
 
 echo "Uncompressing reference results..."
 cd blast-results-reference || exit
-for gz in *.asn.gz; do
-    gunzip "$gz"
-done
+find ./ -name "*gz" -print0 | nice xargs -0 -n 8 -P 8 gunzip
 echo "Uncompressed  reference results."
 cd ..
 
