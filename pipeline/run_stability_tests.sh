@@ -94,10 +94,10 @@ cd ..
 
 for check in blast-results-reference/*.asn; do
     base=$(basename "$check")
-    req="report/REQ_${base}1"
+    req="report/REQ_${base}1.txt"
     diff "$check" "$req" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo "Differences with $base"
+        echo "Differences with $check $req"
     else
         echo "Ok with $base"
     fi
