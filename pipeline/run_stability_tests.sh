@@ -74,7 +74,7 @@ unset LC_ALL # Messes with sorting
 wc -l ./*.asn1.txt | awk '{print $1 "\t" $2;}' | sort -k2 > ../asn1.txt.wc.result
 
 DATE=$(date "+%Y%m%d%H%M")
-gsutil -m cp -r ./* "gs://blast-stability-test-results/$DATE"
+gsutil -m cp -r ./* "gs://blast-stability-test-results/$DATE" > /dev/null 2>&1
 
 cd ..
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
