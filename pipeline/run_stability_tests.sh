@@ -86,7 +86,7 @@ wc -l ./*.asn1.txt | awk '{print $1 "\t" $2;}' | sort -k2 > ../asn1.txt.wc.resul
 #fi
 
 DATE=$(date "+%Y%m%d%H%M")
-gsutil -m cp -r ./* "gs://blast-stability-rest-results/$DATE"
+gsutil -m cp -r ./* "gs://blast-stability-test-results/$DATE"
 
 cd ..
 if diff asn1.txt.wc.expected asn1.txt.wc.result; then
