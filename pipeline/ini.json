@@ -6,14 +6,14 @@
 			"worker_location" : "/tmp/blast/db",
 			"source_location" : "gs://nr_50mb_chunks",
 			"extensions" : [ "psq", "pin", "phr" ],
-			"limit" : 30
+			"limit" : 40
 		},
 		{
 			"key" : "nt",
 			"worker_location" : "/tmp/blast/db",
 			"source_location" : "gs://nt_50mb_chunks",
 			"extensions" : [ "nsq", "nin", "nhr" ],
-			"limit" : 30
+			"limit" : 40
 		}
 	],
 

@@ -27,14 +27,16 @@
 package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * utility-class to provide a file-system-lock between different
  * jwm-instances, using File.mkdir() which is atomic in the file-system
  *
 */
-public final class BC_FILE_LOCK
+public final class BC_FILE_LOCK implements AutoCloseable
 {
+    private final AtomicBoolean locked;
     private File f;
 
 /**
@@ -44,12 +46,22 @@ public final class BC_FILE_LOCK
 */
     BC_FILE_LOCK( final String to_protect )
     {
+        locked = new AtomicBoolean( false );
         f = new File( String.format( "%s.lock", to_protect ) );
         String parent = f.getParent();
         if ( parent != null )
         {
             File p = new File( parent );
             p.mkdirs();
+        }
+        try
+        {
+            /*  mkdir is atomic at the filesystem-level! */
+            locked.set( f.mkdir() );
+        }
+        catch( Exception e )
+        {
+            e.printStackTrace();
         }
     }
 
@@ -58,22 +70,28 @@ public final class BC_FILE_LOCK
  *
  * @return creating the directory was successful, we have the lock!
 */
-    public boolean aquire()
+    public boolean locked()
     {
-        /*  mkdir is atomic at the filesystem-level! */
-        return f.mkdir();
+        return locked.get();
     }
 
 /**
  * releaseing the lock: we delete the directory!
  *
 */
-    public void release()
+    @Override public void close()
     {
-        try { f.delete(); }
-        catch( Exception e )
+        if ( locked.get() )
         {
-            e.printStackTrace();
+            try
+            {
+                f.delete();
+                locked.set( false );
+            }
+            catch( Exception e )
+            {
+                e.printStackTrace();
+            }
         }
     }
 

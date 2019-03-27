@@ -247,7 +247,7 @@ class BC_JOB extends Thread
             {
                 results.add( item._1() );
                 errorLst.addAll( item._2() );
-                infoLst.addAll( item._2() );
+                infoLst.addAll( item._3() );
             }
 
             long job_finishtime = System.currentTimeMillis();

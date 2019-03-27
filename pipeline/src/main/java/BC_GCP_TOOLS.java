@@ -272,73 +272,74 @@ public class BC_GCP_TOOLS
 */
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
+        boolean res = false;
         /* the constructor of BC_FILE_LOCK does create the parent-directory! */
-        BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
-        boolean res = lock.aquire();
-        if ( res )
+        try ( BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename ) )
         {
-            try
+            if ( lock.locked() )
             {
-                Storage.Objects.Get obj = storage.objects().get( bucket, key );
-                res = ( obj != null );
-                if ( res )
+                try
                 {
-                    obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
+                    Storage.Objects.Get obj = storage.objects().get( bucket, key );
+                    res = ( obj != null );
+                    if ( res )
+                    {
+                        obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
-                    File f = new File( dst_filename );
-                    FileOutputStream f_out = new FileOutputStream( f );
+                        File f = new File( dst_filename );
+                        FileOutputStream f_out = new FileOutputStream( f );
 
-                    try
-                    {
-                        /* f_lock does not apply across multiple JWMs, but we have BC_FILE_LOCK... */
-                        FileLock f_lock = f_out.getChannel().tryLock();
-                        if ( f_lock != null )
-                        {
-                            try
-                            {
-                                obj.executeMediaAndDownloadTo( f_out );
-                            }
-                            catch( Exception e )
-                            {
-                                e.printStackTrace();
-                                res = false;
-                            }
-                            finally
-                            {
-                                f_lock.release();
-                            }
-                        }
-                    }
-                    catch( Exception e )
-                    {
-                        e.printStackTrace();
-                        res = false;
-                    }
-                    finally
-                    {
-                        f_out.flush();
-                        f_out.close();
-                    }
-                    if ( !res )
-                    {
                         try
                         {
-                            if ( f.exists() )
-                                f.delete();
+                            /* f_lock does not apply across multiple JWMs, but we have BC_FILE_LOCK... */
+                            FileLock f_lock = f_out.getChannel().tryLock();
+                            if ( f_lock != null )
+                            {
+                                try
+                                {
+                                    obj.executeMediaAndDownloadTo( f_out );
+                                }
+                                catch( Exception e )
+                                {
+                                    e.printStackTrace();
+                                    res = false;
+                                }
+                                finally
+                                {
+                                    f_lock.release();
+                                }
+                            }
                         }
                         catch( Exception e )
                         {
                             e.printStackTrace();
+                            res = false;
+                        }
+                        finally
+                        {
+                            f_out.flush();
+                            f_out.close();
+                        }
+                        if ( !res )
+                        {
+                            try
+                            {
+                                if ( f.exists() )
+                                    f.delete();
+                            }
+                            catch( Exception e )
+                            {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
+                catch( Exception e )
+                {
+                    e.printStackTrace();
+                    res = false;
+                }
             }
-            catch( Exception e )
-            {
-                e.printStackTrace();
-                res = false;
-            }
-            lock.release();
         }
         return res;
     }

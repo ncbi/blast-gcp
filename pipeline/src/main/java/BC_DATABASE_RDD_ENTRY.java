@@ -204,7 +204,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
                 }
                 else
                 {
-                    error_lst.add( String.format( "%s : %s -> %s ( FAILED in %,d ms, size=%d, should=%d )", wn, src, dst, elapsed, fl, obj.size ) );
+                    //error_lst.add( String.format( "%s : %s -> %s ( FAILED in %,d ms, size=%d, should=%d )", wn, src, dst, elapsed, fl, obj.size ) );
                     return false;
                 }
             }
