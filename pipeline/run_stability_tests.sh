@@ -48,6 +48,7 @@ cat << EOF > $BC_INI
             "transfer_files" : [ "libblastjni.so" ],
             "parallel_jobs" : 48,
             "num-executor-cores": 1,
+            "executor-memory": 2G,
             "log_level" : "INFO",
             "jni_log_level" : "INFO"
         }
@@ -79,7 +80,9 @@ gsutil -m cp -r ./* "gs://blast-stability-test-results/$DATE" > /dev/null 2>&1
 echo "Uploaded  test results"
 
 cd ..
-if diff asn1.txt.wc.expected asn1.txt.wc.result; then
+
+diff asn1.txt.wc.expected asn1.txt.wc.result
+if [ $? -ne 0 ]; then
     echo "Differences in .asn1.txt output"
 fi
 
@@ -87,13 +90,13 @@ fi
 ### gsutil -m cp -nr gs://blast-results-reference/ . > /dev/null 2>&1
 ### numrefs=$(find blast-results-reference/ -name "*.gz" | wc -l)
 ### echo "Downloaded $numrefs reference results."
-### 
+###
 ### echo "Uncompressing reference results..."
 ### cd blast-results-reference || exit
 ### find ./ -name "*gz" -print0 | nice xargs -0 -n 8 -P 8 gunzip
 ### echo "Uncompressed  reference results."
 ### cd ..
-### 
+###
 ### for check in blast-results-reference/*.asn; do
 ###     base=$(basename "$check")
 ###     req="report/REQ_${base}1.txt"
