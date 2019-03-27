@@ -83,24 +83,24 @@ if diff asn1.txt.wc.expected asn1.txt.wc.result; then
     echo "Differences in .asn1.txt output"
 fi
 
-echo "Downloading reference results..."
-gsutil -m cp -nr gs://blast-results-reference/ . > /dev/null 2>&1
-numrefs=$(find blast-results-reference/ -name "*.gz" | wc -l)
-echo "Downloaded $numrefs reference results."
-
-echo "Uncompressing reference results..."
-cd blast-results-reference || exit
-find ./ -name "*gz" -print0 | nice xargs -0 -n 8 -P 8 gunzip
-echo "Uncompressed  reference results."
-cd ..
-
-for check in blast-results-reference/*.asn; do
-    base=$(basename "$check")
-    req="report/REQ_${base}1.txt"
-    diff "$check" "$req" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Differences with $check $req"
-    else
-        echo "Ok with $base"
-    fi
-done
+### echo "Downloading reference results..."
+### gsutil -m cp -nr gs://blast-results-reference/ . > /dev/null 2>&1
+### numrefs=$(find blast-results-reference/ -name "*.gz" | wc -l)
+### echo "Downloaded $numrefs reference results."
+### 
+### echo "Uncompressing reference results..."
+### cd blast-results-reference || exit
+### find ./ -name "*gz" -print0 | nice xargs -0 -n 8 -P 8 gunzip
+### echo "Uncompressed  reference results."
+### cd ..
+### 
+### for check in blast-results-reference/*.asn; do
+###     base=$(basename "$check")
+###     req="report/REQ_${base}1.txt"
+###     diff "$check" "$req" > /dev/null 2>&1
+###     if [ $? -ne 0 ]; then
+###         echo "Differences with $check $req"
+###     else
+###         echo "Ok with $base"
+###     fi
+### done
