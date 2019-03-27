@@ -128,8 +128,11 @@ public final class BC_MAIN
             /* create a list of Database-RDD-entries using a static method of this class */
             List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, used_chunks );
 
-            /* ask the spark-context to distribute the RDD to the workers */
-            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, used_chunks.size());
+            /* ask the spark-context to distribute the RDD to the workers
+             * 16 parallel jobs, 64 partitions each = 1024
+             * 16 workers, 64 cores each =            1024
+             */
+            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, 64);
 
             /* put the RDD in the database-dictionary */
             db_dict.put( key, rdd );
