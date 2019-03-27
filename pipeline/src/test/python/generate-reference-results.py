@@ -71,7 +71,7 @@ def main():
                 qfile = os.path.join(query_dir, "{}.fsa".format(rid))
                 with open(qfile, 'w') as query_file:
                     query_file.write(fields[2])
-                blast_cmd = "/usr/bin/{} -db {} -query {} -num_threads {} -outfmt 11 -out {}" \
+                blast_cmd = "/usr/bin/{} -subject_besthit -db {} -query {} -num_threads {} -outfmt 11 -out {}" \
                     .format(fields[0], os.path.join(args.blastdb, fields[1]), qfile, args.nt, output_file)
                 jobs.append(blast_cmd)
 
