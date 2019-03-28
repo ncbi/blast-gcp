@@ -62,6 +62,9 @@ def main():
                     continue
                 fields = line.split(",")
                 rid = fields[3]
+                dbname = fields[1]
+                #if dbname == "nt":
+                #    continue
                 output_file = os.path.join(args.outdir, rid) + ".asn"
                 try:
                     if os.path.getsize(output_file) > 100:
@@ -72,7 +75,7 @@ def main():
                 with open(qfile, 'w') as query_file:
                     query_file.write(fields[2])
                 blast_cmd = "/usr/bin/{} -subject_besthit -db {} -query {} -num_threads {} -outfmt 11 -out {}" \
-                    .format(fields[0], os.path.join(args.blastdb, fields[1]), qfile, args.nt, output_file)
+                    .format(fields[0], os.path.join(args.blastdb, dbname), qfile, args.nt, output_file)
                 jobs.append(blast_cmd)
 
             logging.debug("About to run {} BLAST searches".format(len(jobs)))
