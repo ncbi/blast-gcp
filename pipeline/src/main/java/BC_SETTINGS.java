@@ -65,7 +65,7 @@ public final class BC_SETTINGS
     /* CLUSTER */
     public List< String > transfer_files;
     public String  spark_log_level = "INFO";
-    public String  locality_wait = "";
+    public String  locality_wait = "24h";
     public boolean set_dyn_alloc = false;
     public boolean with_dyn_alloc = false;
     public String  executor_memory = "";
