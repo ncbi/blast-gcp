@@ -53,6 +53,7 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     private final BC_DATABASE_SETTING setting;
     public final BC_CHUNK_VALUES chunk;
     private static Object mutex = new Object();
+    private final byte[] ballast;
 
 /**
  * create instance BC_DATABASE_RDD_ENTRY
@@ -66,6 +67,10 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
     {
         setting = a_setting;
         chunk = a_chunk;
+        if ( setting.ballast > 0 )
+            ballast = new byte[ setting.ballast ];
+        else
+            ballast = null;
     }
 
 /**
@@ -266,19 +271,19 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
 
             // synchronize threads within a jvm
             synchronized(mutex) {
-                
+
                 try {
 
                     f_out = new FileOutputStream( ff );
 
                     // synchronize jvms
                     f_lock = f_out.getChannel().lock();
-                    
+
                     if ( f.exists() ) {
                         long fl = f.length();
                         /* we can now check the size... */
                         if ( obj.size.longValue() == fl ) {
-                            info_lst.add( String.format( 
+                            info_lst.add( String.format(
                                           "%s : %s -> %s (exists size = %d )",
                                           wn, src, dst, fl ) );
                         }
