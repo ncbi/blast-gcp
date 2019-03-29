@@ -132,7 +132,9 @@ public final class BC_MAIN
              * 16 parallel jobs, 64 partitions each = 1024
              * 16 workers, 64 cores each =            1024
              */
-            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, 64);
+            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = settings.num_partitions > 0 ?
+                jsc.parallelize( entries, settings.num_partitions ) :
+                jsc.parallelize( entries );
 
             /* put the RDD in the database-dictionary */
             db_dict.put( key, rdd );
