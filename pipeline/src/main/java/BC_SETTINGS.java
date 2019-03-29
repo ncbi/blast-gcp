@@ -72,6 +72,7 @@ public final class BC_SETTINGS
     public boolean set_shuffle_reduceLocality = false;
     public boolean shuffle_reduceLocality = false;
     public boolean scheduler_fair = false;
+    public boolean map_partitions = false;
     public int num_executors = 0;
     public int num_executor_cores = 0;
     public int parallel_jobs = 1;
@@ -213,6 +214,8 @@ public final class BC_SETTINGS
             S = S + String.format( "\tlocality.wait ...... '%s'\n", locality_wait );
         if ( set_dyn_alloc )
             S = S + String.format( "\twith_dyn_alloc ..... %s\n", Boolean.toString( with_dyn_alloc ) );
+        S = S + String.format( "\tmap partitions ..... %s\n", Boolean.toString( map_partitions ) );
+
         if ( !executor_memory.isEmpty() )
             S  =  S +  String.format( "\texecutor memory..... %s\n", executor_memory );
         if ( set_shuffle_reduceLocality )
