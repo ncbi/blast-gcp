@@ -166,59 +166,125 @@ class BC_JOB extends Thread
             infoLst.add( String.format( "starting request '%s' at '%s'", request.id, BC_UTILS.datetime() ) );
 
             /* ***** perform the map-operation on the worker-nodes ***** */
-            JavaRDD< Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > > RESULTS = chunks.map( item ->
+            JavaRDD< Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > > RESULTS;
+
+            if ( context.settings.map_partitions )
             {
-                BC_DEBUG_SETTINGS debug = DBG.getValue();
-
-                List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
-                List< String > error_lst = new ArrayList<>();
-                List< String > info_lst = new ArrayList<>();
-
-                if ( !item.present() ) {
-                    item.downloadIfAbsent( error_lst, info_lst );
-                }
-
-                if ( error_lst.isEmpty() )
+                RESULTS = chunks.mapPartitions( item_iter ->
                 {
+                    BC_DEBUG_SETTINGS debug = DBG.getValue();
                     BC_REQUEST req = REQUEST.getValue();
-
+                    List< Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > > results = new ArrayList<>();
                     BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
                     if ( lib != null )
                     {
-                        long starttime = System.currentTimeMillis();
-                        BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
-                        long finishtime = System.currentTimeMillis();
-
-                        if ( hsps == null )
-                            error_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.chunk.name ) );
-                        else
+                        while( item_iter.hasNext() )
                         {
-                            info_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
-                                                    item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
-                            if ( hsps.length > 0 )
-                            {
-                                starttime = System.currentTimeMillis();
-                                BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
-                                finishtime = System.currentTimeMillis();
+                            BC_DATABASE_RDD_ENTRY item = item_iter.next();
+                            List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
+                            List< String > error_lst = new ArrayList<>();
+                            List< String > info_lst = new ArrayList<>();
 
-                                if ( tbs == null )
-                                    error_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
+                            if ( !item.present() ) {
+                                item.downloadIfAbsent( error_lst, info_lst );
+                            }
+
+                            if ( error_lst.isEmpty() )
+                            {
+                                long starttime = System.currentTimeMillis();
+                                BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
+                                long finishtime = System.currentTimeMillis();
+
+                                if ( hsps == null )
+                                    error_lst.add( String.format( "%s: %s - search.v2: returned null", item.workername(), item.chunk.name ) );
                                 else
                                 {
-                                    info_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-                                                         item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
+                                    info_lst.add( String.format( "%s: %s - search.v2: %d items ( %d ms )",
+                                                            item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
+                                    if ( hsps.length > 0 )
+                                    {
+                                        starttime = System.currentTimeMillis();
+                                        BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+                                        finishtime = System.currentTimeMillis();
 
-                                    for ( BLAST_TB_LIST tb : tbs )
-                                        tp_lst.add( tb );
+                                        if ( tbs == null )
+                                            error_lst.add( String.format( "%s: %s - traceback.v2: returned null", item.workername(), item.chunk.name ) );
+                                        else
+                                        {
+                                            info_lst.add( String.format( "%s: %s - traceback.v2: %d items ( %d ms )",
+                                                                 item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
+
+                                            for ( BLAST_TB_LIST tb : tbs )
+                                                tp_lst.add( tb );
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                                error_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.chunk.name ) );
+
+                            results.add( new Tuple3<>( tp_lst, error_lst, info_lst ) );
+                        }
+                    }
+                    return results.iterator();
+                }, true );
+            }
+            else
+            {
+                RESULTS = chunks.map( item ->
+                {
+                    BC_DEBUG_SETTINGS debug = DBG.getValue();
+
+                    List< BLAST_TB_LIST > tp_lst = new ArrayList<>();
+                    List< String > error_lst = new ArrayList<>();
+                    List< String > info_lst = new ArrayList<>();
+
+                    if ( !item.present() ) {
+                        item.downloadIfAbsent( error_lst, info_lst );
+                    }
+
+                    if ( error_lst.isEmpty() )
+                    {
+                        BC_REQUEST req = REQUEST.getValue();
+
+                        BLAST_LIB lib = new BLAST_LIB( "libblastjni.so", false );
+                        if ( lib != null )
+                        {
+                            long starttime = System.currentTimeMillis();
+                            BLAST_HSP_LIST[] hsps = lib.jni_prelim_search( item, req, debug.jni_log_level );
+                            long finishtime = System.currentTimeMillis();
+
+                            if ( hsps == null )
+                                error_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.chunk.name ) );
+                            else
+                            {
+                                info_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
+                                                        item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
+                                if ( hsps.length > 0 )
+                                {
+                                    starttime = System.currentTimeMillis();
+                                    BLAST_TB_LIST [] tbs = lib.jni_traceback( hsps, item, req, debug.jni_log_level );
+                                    finishtime = System.currentTimeMillis();
+
+                                    if ( tbs == null )
+                                        error_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
+                                    else
+                                    {
+                                        info_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
+                                                             item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
+
+                                        for ( BLAST_TB_LIST tb : tbs )
+                                            tp_lst.add( tb );
+                                    }
                                 }
                             }
                         }
+                        else
+                            error_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.chunk.name ) );
                     }
-                    else
-                        error_lst.add( String.format( "%s: %s - lib not initialized", item.workername(), item.chunk.name ) );
-                }
-                return new Tuple3<>( tp_lst, error_lst, info_lst );
-            });
+                    return new Tuple3<>( tp_lst, error_lst, info_lst );
+                });
+            }
 
             List< Tuple3< List< BLAST_TB_LIST >, List< String >, List< String > > > l_res = RESULTS.collect();
             BC_RESULTS results = new BC_RESULTS();

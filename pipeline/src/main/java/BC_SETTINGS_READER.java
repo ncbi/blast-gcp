@@ -333,6 +333,7 @@ class CLUSTER_SETTINGS_READER
     private static final String key_locality_wait = "locality_wait";
     private static final String key_set_dyn_alloc = "set_dyn_alloc";
     private static final String key_with_dyn_alloc = "with_dyn_alloc";
+    private static final String key_map_partitions = "map_partitions";
     private static final String key_executor_memory = "executor_memory";
     private static final String key_set_shuffle_reduceLocality = "set_shuffle_reduceLocality";
     private static final String key_shuffle_reduceLocality = "shuffle_reduceLocality";
@@ -364,6 +365,8 @@ class CLUSTER_SETTINGS_READER
                 key_locality_wait, settings.locality_wait );
             settings.set_dyn_alloc = BC_JSON_UTILS.get_json_bool( obj,
                 key_set_dyn_alloc, settings.set_dyn_alloc );
+            settings.map_partitions = BC_JSON_UTILS.get_json_bool( obj,
+                key_map_partitions, settings.map_partitions );
             settings.with_dyn_alloc = BC_JSON_UTILS.get_json_bool( obj,
                 key_with_dyn_alloc, settings.with_dyn_alloc );
             settings.executor_memory = BC_JSON_UTILS.get_json_string( obj,
@@ -483,7 +486,7 @@ public final class BC_SETTINGS_READER
                 CLUSTER_SETTINGS_READER.from_json( root, res );
                 DEBUG_SETTINGS_READER.from_json( root, res.debug, res.jni_log_level );
             }
-        }           
+        }
         catch( Exception e )
         {
             System.out.println( String.format( "json-parsing: %s", e ) );
