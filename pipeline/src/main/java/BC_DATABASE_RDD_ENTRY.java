@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 import java.net.InetAddress;
 
@@ -68,7 +69,18 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
         setting = a_setting;
         chunk = a_chunk;
         if ( setting.ballast > 0 )
+        {
             ballast = new byte[ setting.ballast ];
+            try
+            {
+                Random rand = new Random();
+                rand.nextBytes( ballast );
+            }
+            catch( Exception e )
+            {
+                e.printStackTrace();
+            }
+        }
         else
             ballast = null;
     }
