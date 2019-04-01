@@ -28,6 +28,10 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
 
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.Files;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,6 +110,7 @@ public final class BC_MAIN
 
         Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict = new HashMap<>();
 
+
         /* populate db_dict */
         for ( String key : settings.dbs.keySet() )
         {
@@ -133,6 +138,22 @@ public final class BC_MAIN
              * 16 workers, 64 cores each =            1024
              */
             JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, 64);
+
+            rdd = rdd.map(item -> {
+
+                           List<String> error_list = new ArrayList<String>();
+                           List<String> info_list = new ArrayList<String>();
+                           item.downloadIfAbsent(error_list, info_list);
+
+                           for (BC_NAME_SIZE i: item.chunk.files) {
+                               Path path = Paths.get(
+                                          item.build_worker_path(i.name));
+                               byte[] fileContents = Files.readAllBytes(path);
+                           }
+                           return item;
+                          }).cache();
+
+            rdd.collect();
 
             /* put the RDD in the database-dictionary */
             db_dict.put( key, rdd );
