@@ -31,6 +31,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.Files;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -337,6 +341,37 @@ public class BC_DATABASE_RDD_ENTRY implements Serializable
             }
         }
         return true;
+    }
+
+
+/**
+ * Download a database volume if it is not already present and scan database
+ * files to put them in memory. Download is synchronized for threads and
+ * processes.
+ *
+ * @param       error_list, list of error messages
+ * @param       info_list, list of inforamtional messages
+ * @return      True on success, false on failure
+*/
+    public boolean downloadAndScan(List<String> error_list,
+                                   List<String> info_list)
+    {
+        String wn = workername();
+        boolean status = downloadIfAbsent(error_list, info_list);
+        if (status) {
+            try {
+                for (BC_NAME_SIZE i: chunk.files) {
+                    Path path = Paths.get(build_worker_path(i.name));
+                    byte[] fileContents = Files.readAllBytes(path);
+                }
+            }
+            catch (java.io.IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println(String.format("Downloaded %s in %s", chunk.name, wn));
+        return status;
     }
 
 }

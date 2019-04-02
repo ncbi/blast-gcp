@@ -153,7 +153,11 @@ class BC_JOB extends Thread
         long job_starttime = System.currentTimeMillis();
         boolean res = true;
 
-        JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
+        JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = null;
+
+        synchronized(db_dict) {
+            chunks = db_dict.get( request.db );
+        }
         if ( chunks == null )
             chunks = db_dict.get( request.db.substring( 0, 2 ) );
 

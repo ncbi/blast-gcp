@@ -28,10 +28,6 @@ package gov.nih.nlm.ncbi.blastjni;
 
 import java.io.File;
 
-import java.nio.file.Paths;
-import java.nio.file.Path;
-import java.nio.file.Files;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -143,13 +139,7 @@ public final class BC_MAIN
 
                            List<String> error_list = new ArrayList<String>();
                            List<String> info_list = new ArrayList<String>();
-                           item.downloadIfAbsent(error_list, info_list);
-
-                           for (BC_NAME_SIZE i: item.chunk.files) {
-                               Path path = Paths.get(
-                                          item.build_worker_path(i.name));
-                               byte[] fileContents = Files.readAllBytes(path);
-                           }
+                           item.downloadAndScan(error_list, info_list);
                            return item;
                           }).cache();
 
@@ -174,8 +164,30 @@ public final class BC_MAIN
             try
             {
                 BC_COMMAND cmd = context.pull_cmd();
-                if ( cmd != null )
+                if ( cmd != null ) {
                     cmd.handle( context );
+
+                    for ( String key : settings.dbs.keySet() ) {
+                        synchronized(db_dict) {
+                            JavaRDD<BC_DATABASE_RDD_ENTRY> rdd =
+                                db_dict.get(key);
+                        
+                            rdd = rdd.map(item -> {
+
+                                         List<String> error_list =
+                                             new ArrayList<String>();
+                                         List<String> info_list =
+                                             new ArrayList<String>();
+                                         item.downloadAndScan(error_list,
+                                                              info_list);
+                                         return item;
+                                          }).cache();
+
+                            rdd.collect();
+                            db_dict.put( key, rdd);
+                        }
+                    }
+                }
                 else
                     Thread.sleep( 250 );
             }
