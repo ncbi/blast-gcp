@@ -163,7 +163,22 @@ class BC_JOB extends Thread
 
         if ( chunks != null )
         {
-            chunks.cache();
+            synchronized(db_dict) {
+                        
+                chunks = chunks.map(item -> {
+
+                       List<String> error_list = new ArrayList<String>();
+                       List<String> info_list = new ArrayList<String>();
+                       item.downloadAndScan(error_list, info_list);
+                       return item;
+                              }).cache();
+
+                chunks.collect();
+
+                // probably not needed
+                db_dict.put( request.db, chunks);
+            }
+
             final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
             List< String > infoLst = new ArrayList<>();
             List< String > errorLst = new ArrayList<>();

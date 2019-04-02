@@ -164,30 +164,8 @@ public final class BC_MAIN
             try
             {
                 BC_COMMAND cmd = context.pull_cmd();
-                if ( cmd != null ) {
+                if ( cmd != null )
                     cmd.handle( context );
-
-                    for ( String key : settings.dbs.keySet() ) {
-                        synchronized(db_dict) {
-                            JavaRDD<BC_DATABASE_RDD_ENTRY> rdd =
-                                db_dict.get(key);
-                        
-                            rdd = rdd.map(item -> {
-
-                                         List<String> error_list =
-                                             new ArrayList<String>();
-                                         List<String> info_list =
-                                             new ArrayList<String>();
-                                         item.downloadAndScan(error_list,
-                                                              info_list);
-                                         return item;
-                                          }).cache();
-
-                            rdd.collect();
-                            db_dict.put( key, rdd);
-                        }
-                    }
-                }
                 else
                     Thread.sleep( 250 );
             }
