@@ -83,6 +83,8 @@ public final class BC_MAIN
         JavaSparkContext jsc = new JavaSparkContext( sc );
         jsc.addFile( "libblastjni.so" );
         jsc.setLogLevel( settings.spark_log_level );
+        // needed for RDD checkpoint
+        jsc.setCheckpointDir("/tmp");
 
         logger.info( String.format( "running on Spark-version: '%s'", jsc.sc().version() ) );
 

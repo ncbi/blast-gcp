@@ -173,6 +173,8 @@ class BC_JOB extends Thread
                        return item;
                               }).cache();
 
+                chunks.checkpoint();
+
                 chunks.collect();
 
                 // probably not needed
