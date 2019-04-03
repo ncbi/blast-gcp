@@ -30,12 +30,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 public final class LOCATION_REPORT
 {
@@ -61,7 +56,8 @@ public final class LOCATION_REPORT
     private static void report( final String caption, final Map< String, Set< String > > dict )
     {
         System.out.println( caption );
-        for ( String key : dict.keySet() )
+        Map<String, Set<String>> map = new TreeMap<>(dict);
+        for ( String key : map.keySet() )
             System.out.println( String.format( "%s : %s", key, String.join( ",", dict.get( key ) ) ) );
     }
 
@@ -85,9 +81,9 @@ public final class LOCATION_REPORT
         {
             Integer numWorkers = dict.get( numDbs );
             if ( numWorkers == 1 )
-                System.out.println( String.format( "one worker stores %d databases", numDbs ) );
+                System.out.println( String.format( "one worker stores %d database chunks", numDbs ) );
             else
-                System.out.println( String.format( "%d workers store %d databases", numWorkers, numDbs ) );
+                System.out.println( String.format( "%d workers store %d database chunks", numWorkers, numDbs ) );
         }
     }
 
@@ -210,8 +206,14 @@ public final class LOCATION_REPORT
                 report( "\nWORKERS BY DB chunks:", by_db );
             }
             report_spread1( "\nSPREAD OF REQUESTS OVER WORKERS:", spread1 );
-            report_spread2( "\nSPREAD OF DB chunks OVER WORKERS:", spread2 );
-            System.out.println("Total number of DB chunks: " + by_db.keySet().size());
+            report_spread2( "\nSPREAD OF DB CHUNKS OVER WORKERS:", spread2 );
+
+            System.out.println("\nTotal number of DB chunks: " + by_db.keySet().size());
+            if (verbose) {
+                Map<String, Set<String>> map = new TreeMap<>(by_db);
+                for (String x : map.keySet())
+                    System.out.println(x);
+            }
         }
     }
 }
