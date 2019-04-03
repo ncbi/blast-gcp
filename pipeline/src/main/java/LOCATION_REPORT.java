@@ -62,8 +62,11 @@ public final class LOCATION_REPORT
     {
         System.out.println( caption );
         Map<String, Set<String>> map = new TreeMap<>(dict);
-        for ( String key : map.keySet() )
-            System.out.println( String.format( "%s : %s", key, String.join( ",", dict.get( key ) ) ) );
+        for ( String key : map.keySet() ) {
+            List<String> list2sort = new ArrayList<>(dict.get(key));
+            Collections.sort(list2sort);
+            System.out.println(String.format("%s : %s", key, String.join(",", list2sort)));
+        }
     }
 
     private static void report_spread1( final String caption, final Map< Integer, Integer > dict )
