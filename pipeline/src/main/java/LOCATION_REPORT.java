@@ -211,7 +211,7 @@ public final class LOCATION_REPORT
             }
             report_spread1( "\nSPREAD OF REQUESTS OVER WORKERS:", spread1 );
             report_spread2( "\nSPREAD OF DB chunks OVER WORKERS:", spread2 );
-            System.out.println("Total number of DB chunks: {}".format(by_db.keySet().size()));
+            System.out.println("Total number of DB chunks: " + by_db.keySet().size());
         }
     }
 }
