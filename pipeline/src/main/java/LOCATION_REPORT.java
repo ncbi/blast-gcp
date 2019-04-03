@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 
+import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.*;
 
 public final class LOCATION_REPORT
@@ -37,6 +39,9 @@ public final class LOCATION_REPORT
     private static int getReports( final String path, List< String > reports )
     {
         int res = 0;
+        if (Files.notExists(Paths.get(path)))
+            throw new IllegalArgumentException("Directory " + path + " does not exist");
+
         File[] files = new File( path ).listFiles();
         for ( File f : files )
         {
