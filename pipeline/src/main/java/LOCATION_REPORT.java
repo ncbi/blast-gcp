@@ -187,10 +187,10 @@ public final class LOCATION_REPORT
         if ( getReports( path, reports ) > 0 )
         {
             // key   : worker-name
-            // value : list of db-entries
+            // value : list of db-chunks
             Map< String, Set< String > > by_worker = new HashMap<>();
 
-            // key   : db-entry
+            // key   : db-chunks
             // value : list of worker-names
             Map< String, Set< String > > by_db = new HashMap<>();
 
@@ -206,11 +206,12 @@ public final class LOCATION_REPORT
 
             if ( verbose )
             {
-                report( "\nDB's BY WORKERS:", by_worker );
-                report( "\nWORKERS BY DB's:", by_db );
+                report( "\nDB chunks BY WORKERS:", by_worker );
+                report( "\nWORKERS BY DB chunks:", by_db );
             }
             report_spread1( "\nSPREAD OF REQUESTS OVER WORKERS:", spread1 );
-            report_spread2( "\nSPREAD OF DBs OVER WORKERS:", spread2 );
+            report_spread2( "\nSPREAD OF DB chunks OVER WORKERS:", spread2 );
+            System.out.println("Total number of DB chunks: {}".format(by_db.keySet().size()));
         }
     }
 }
