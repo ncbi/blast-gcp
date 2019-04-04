@@ -339,6 +339,7 @@ class CLUSTER_SETTINGS_READER
     private static final String key_scheduler_fair = "scheduler_fair";
     private static final String key_num_executors = "num_executors";
     private static final String key_num_executor_cores = "num_executor_cores";
+    private static final String key_num_partitions = "num_partitions";
     private static final String key_parallel_jobs = "parallel_jobs";
     private static final String key_jni_log_level = "jni_log_level";
     private static final String  dflt_transfer_file = "libblastjni.so";
@@ -378,6 +379,8 @@ class CLUSTER_SETTINGS_READER
                 key_num_executors, settings.num_executors );
             settings.num_executor_cores = BC_JSON_UTILS.get_json_int( obj,
                 key_num_executor_cores, settings.num_executor_cores );
+            settings.num_partitions = BC_JSON_UTILS.get_json_int( obj,
+                key_num_partitions, settings.num_partitions );
             settings.parallel_jobs = BC_JSON_UTILS.get_json_int( obj,
                 key_parallel_jobs, settings.parallel_jobs);
             settings.jni_log_level = BC_JSON_UTILS.get_json_string( obj,
@@ -483,7 +486,7 @@ public final class BC_SETTINGS_READER
                 CLUSTER_SETTINGS_READER.from_json( root, res );
                 DEBUG_SETTINGS_READER.from_json( root, res.debug, res.jni_log_level );
             }
-        }           
+        }
         catch( Exception e )
         {
             System.out.println( String.format( "json-parsing: %s", e ) );
