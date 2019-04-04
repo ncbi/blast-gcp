@@ -10,6 +10,11 @@ How to run the cluster:
 	> run the script './run.sh'
 	( the application will be ready to take commands after you see the string 'ready' on the console )
 
+Notes on the number of partitions spark uses to split the BLASTDB RDD:
+This can be configured on the `ini.json` file in the cluster section. If not
+set (or set to 0), Spark will split the RDD into the number of partitions of
+its choosing, otherwise the provided value is used.
+
 Available commands on the console:
 
 	'exit'	... terminates the application
