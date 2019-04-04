@@ -7,7 +7,7 @@ It must be run in the report directory.
 Takes no parameters.
 
 Prints to stdout, tab-delimited: search number, RID, number of volumes that
-were searched on a different node than in the prevoius search.
+were searched on a different node than in the prevoius search, search time.
 """
 
 
@@ -24,19 +24,22 @@ if __name__ == '__main__':
     count = 0
     for fname in files:
         deltas = 0
+        runtime = 0
         with open(fname) as f:
             for line in f:
-                if 'search' not in line:
+                if 'search' not in line and 'traceback' not in line:
                     continue
 
                 fields = line.rstrip().split()
                 host = fields[0][:-1]
                 db = fields[1]
+                chunk_time = int(fields[7])
+                runtime += chunk_time
                 
                 if d[db] != host:
                     deltas += 1
                     d[db] = host
 
-        print('{}\t{}\t{}'.format(count, fname, deltas))
+        print('{}\t{}\t{}\t{}'.format(count, fname, deltas, runtime))
         count += 1
 
