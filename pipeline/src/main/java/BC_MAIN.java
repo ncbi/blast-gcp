@@ -83,8 +83,6 @@ public final class BC_MAIN
         JavaSparkContext jsc = new JavaSparkContext( sc );
         jsc.addFile( "libblastjni.so" );
         jsc.setLogLevel( settings.spark_log_level );
-        // needed for RDD checkpoint
-        jsc.setCheckpointDir("hdfs:///tmp");
 
         logger.info( String.format( "running on Spark-version: '%s'", jsc.sc().version() ) );
 
@@ -107,7 +105,6 @@ public final class BC_MAIN
         Broadcast< BC_DEBUG_SETTINGS > DEBUG_SETTINGS = jsc.broadcast( settings.debug );
 
         Map< String, JavaRDD< BC_DATABASE_RDD_ENTRY > > db_dict = new HashMap<>();
-
 
         /* populate db_dict */
         for ( String key : settings.dbs.keySet() )

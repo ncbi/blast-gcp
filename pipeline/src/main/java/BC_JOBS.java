@@ -153,34 +153,13 @@ class BC_JOB extends Thread
         long job_starttime = System.currentTimeMillis();
         boolean res = true;
 
-        JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = null;
-
-        synchronized(db_dict) {
-            chunks = db_dict.get( request.db );
-        }
+        JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
         if ( chunks == null )
             chunks = db_dict.get( request.db.substring( 0, 2 ) );
 
         if ( chunks != null )
         {
-            synchronized(db_dict) {
-                        
-                chunks = chunks.map(item -> {
-
-                       List<String> error_list = new ArrayList<String>();
-                       List<String> info_list = new ArrayList<String>();
-                       item.downloadAndScan(error_list, info_list);
-                       return item;
-                              }).cache();
-
-                chunks.checkpoint();
-
-                chunks.collect();
-
-                // probably not needed
-                db_dict.put( request.db, chunks);
-            }
-
+            chunks.cache();
             final Broadcast< BC_REQUEST > REQUEST = jsc.broadcast( request );
             List< String > infoLst = new ArrayList<>();
             List< String > errorLst = new ArrayList<>();
