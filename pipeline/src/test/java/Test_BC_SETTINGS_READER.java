@@ -7,7 +7,7 @@ import org.junit.*;
 
 public class Test_BC_SETTINGS_READER {
 
-  public static final String CFG_FILE_DFLT = "ini.json";
+  public static final String CFG_FILE_DFLT = "src/test/resources/ini.json";
 
   private static String cfg_file;
 

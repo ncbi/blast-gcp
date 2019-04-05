@@ -12,7 +12,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class Test_BC_DATABASE_RDD_ENTRY extends Thread {
 
-  public static final String CFG_FILE_DFLT = "ini.json";
+  public static final String CFG_FILE_DFLT = "src/test/resources/ini.json";
 
   private static String cfg_file;
 
