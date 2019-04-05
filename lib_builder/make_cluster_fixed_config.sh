@@ -17,7 +17,7 @@ WORKER=n1-standard-64
 # not as sensitive to this as most Hadoop applications.
 DISK_PER_MASTER=400 # For test data
 DISK_PER_WORKER=400 # For DBs and logs
-NUM_WORKERS=6
+NUM_WORKERS=8
 PREEMPT_WORKERS=0
 
 gcloud beta dataproc \
@@ -31,7 +31,7 @@ gcloud beta dataproc \
         --preemptible-worker-boot-disk-size $DISK_PER_WORKER \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
-    --max-age=8h \
+    --max-age=10h \
     --labels "owner=$USER" \
     --region us-east4 \
     --zone   us-east4-c \
