@@ -1,6 +1,10 @@
 #!/bin/bash
 # run-remotely.sh: Script to launch the simple spark app at GCP without logging into the master.
 # Assumes cluster started with make_cluster_fixed_config.sh
+# This script is experimental
+
+echo "NOT READY FOR USAGE"
+exit 1
 
 DB=${1:-"nr"}
 CONFIG=$DB-ini.json
