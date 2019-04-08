@@ -17,7 +17,7 @@ WORKER=n1-standard-64
 # not as sensitive to this as most Hadoop applications.
 DISK_PER_MASTER=400 # For test data
 DISK_PER_WORKER=400 # For DBs and logs
-NUM_WORKERS=8
+NUM_WORKERS=2
 PREEMPT_WORKERS=0
 
 gcloud beta dataproc \
@@ -26,6 +26,7 @@ gcloud beta dataproc \
         --master-boot-disk-size $DISK_PER_MASTER \
     --num-workers $NUM_WORKERS \
         --worker-boot-disk-size $DISK_PER_WORKER \
+        --num-worker-local-ssds=1 \
     --worker-machine-type $WORKER \
     --num-preemptible-workers $PREEMPT_WORKERS \
         --preemptible-worker-boot-disk-size $DISK_PER_WORKER \
