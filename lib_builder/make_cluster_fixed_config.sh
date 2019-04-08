@@ -26,12 +26,12 @@ gcloud beta dataproc \
         --master-boot-disk-size $DISK_PER_MASTER \
     --num-workers $NUM_WORKERS \
         --worker-boot-disk-size $DISK_PER_WORKER \
+        --num-worker-local-ssds=1 \
     --worker-machine-type $WORKER \
     --num-preemptible-workers $PREEMPT_WORKERS \
         --preemptible-worker-boot-disk-size $DISK_PER_WORKER \
     --scopes cloud-platform \
     --project ncbi-sandbox-blast \
-    --max-age=10h \
     --labels "owner=$USER" \
     --region us-east4 \
     --zone   us-east4-c \
