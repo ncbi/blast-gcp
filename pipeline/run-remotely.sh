@@ -3,9 +3,6 @@
 # Assumes cluster started with make_cluster_fixed_config.sh
 # This script is experimental
 
-echo "NOT READY FOR USAGE"
-exit 1
-
 DB=${1:-"nr"}
 CONFIG=$DB-ini.json
 CLUSTER_ID=blast-dataproc-${USER}
@@ -13,6 +10,7 @@ MAIN_CLASS=gov.nih.nlm.ncbi.blastjni.BC_MAIN
 JAR=$(find target -type f -name "*-with-dependencies.jar")
 LOG_CONF="--driver-java-options=-Dlog4j.configuration=file:log4j.properties"
 GCP_REGION=us-east4
+INPUT=a.txt
 
 if [[ $DB != "nr" && $DB != "nt" ]] ; then
     echo "Usage: $0 [nr|nt]"
@@ -28,5 +26,5 @@ if [ ! -z "$CLUSTER_ID" ] ; then
         --cluster ${CLUSTER_ID} \
         --region ${GCP_REGION} \
         --driver-log-levels=root=INFO \
-        --files=libblastjni.so,$CONFIG,${DB}-searches.txt -- $CONFIG ${DB}-searches.txt
+        --files=libblastjni.so,$CONFIG,${INPUT} -- $CONFIG ${INPUT}
 fi

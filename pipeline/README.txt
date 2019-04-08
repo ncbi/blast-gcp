@@ -96,3 +96,9 @@ how to set the number of executors?
     will enable dynamic alloction of executors.
     Tests have shown that this will fully utilize the cluster after about 5-10 requests.
 
+Inputs:
+    The input directory has files which can be provided as the first argument
+    to the main program to select requests to run. They are split by program;
+    the suffix represents the percentage of the input size (25%, 50%, 75% and
+    100%).
+    and 
