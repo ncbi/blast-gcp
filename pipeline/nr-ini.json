@@ -3,7 +3,7 @@
     [
 		{
 			"key" : "nr",
-			"worker_location" : "/tmp/blast/db",
+			"worker_location" : "/mnt/1/blast/db",
 			"source_location" : "gs://nr_50mb_chunks",
 			"extensions" : [ "psq", "pin", "pax" ]
 		}

@@ -3,7 +3,7 @@
     [
 		{
 			"key" : "nt",
-			"worker_location" : "/tmp/blast/db",
+			"worker_location" : "/mnt/1/blast/db",
 			"source_location" : "gs://nt_50mb_chunks",
 			"extensions" : [ "nsq", "nin", "nax" ]
 		}
