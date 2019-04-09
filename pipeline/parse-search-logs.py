@@ -73,7 +73,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Summarize BLAST on SPARK logs')
     parser.add_argument('--logs', metavar='DIR', dest='dir',
                         type=str, help='Directory with logs',
-                        default='reports')
+                        default='report')
     parser.add_argument('--hot-spot-plot', dest='hotspotplot',
                         action='store_true',
                         help='Generate database chunk search time for analysis of hot spots')
