@@ -2,12 +2,12 @@
 
 if [ $# -eq 0 ] ; then
     echo "Usage: $0 <input-file> [nt|nr]"
-    echo "\tif the input file name has blastn or blastp in its name, the database will be set appropriately"
+    echo -e "\tif the input file name has blastn or blastp in its name, the database will be set appropriately"
     exit 0
 fi
 
 DB=${2:-""}
-if [[ $1 =~ *"blastn"* ]] || [[ $1 =~ "nt"* ]] ; then
+if [[ "$1" =~ .*blastn.* ]] || [[ "$1" =~ .*nt.* ]] ; then
     DB=nt
 else
     DB=nr
