@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
     affinity = pd.Series(affinity)
     print('')
-    print('Affinity ({} database chunks):'.format(affinity.shape[0]))
+    print('Affinity:')
     print ('Percentiles for the max number of times a chunk was searched on the same host:')
     print(affinity.quantile(q = [0.1, 0.25, 0.5, 0.75, 0.9],
                             interpolation = 'nearest'))
