@@ -155,16 +155,17 @@ if __name__ == '__main__':
     print(affinity.quantile(q = [0.1, 0.25, 0.5, 0.75, 0.9],
                             interpolation = 'nearest'))
 
-    # generate plot with run time per database chunk
+    # generate a plot with run time per database chunk
     if args.hotspotplot:
-        # find chunks that take the longest for most requests
-        ch = [i for i, v in islice(chunk_time.idxmax().value_counts()
-                                   .sort_values(ascending = False).iteritems(), 5)]
+        # find RIDs with the longes chunk search times
+        rids = [i for i, v in islice(chunk_time.max().sort_values(
+                                         ascending = False).iteritems(), 5)]
 
     
+        # and plot these times against chunk names
         labels = []
-        for i in ch:
-            plt.scatter(x = range(0, chunk_time.shape[1]), y = chunk_time.loc[i])
+        for i in rids:
+            plt.scatter(x = range(0, chunk_time.shape[0]), y = chunk_time[i])
             labels.append(i)
         plt.legend(labels)
         plt.savefig('plot.pdf')
