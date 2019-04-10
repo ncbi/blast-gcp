@@ -1,16 +1,15 @@
 #!/bin/bash
 set -o nounset # same as -u
 set -o errexit # same as -e
-#set -o pipefail
-#shopt -s nullglob globstar #
 
 unset LC_ALL # Messes with sorting
 
 BC_CLASS="gov.nih.nlm.ncbi.blastjni.BC_MAIN"
 BC_JAR="./target/sparkblast-1-jar-with-dependencies.jar"
 BC_INI="ini_test.json"
+LOG_CONF="--driver-java-options=-Dlog4j.configuration=file:log4j.properties"
 
-command -v asntool || sudo apt install -y ncbi-tools-bin
+command -v asntool > /dev/null || sudo apt install -y ncbi-tools-bin
 
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 
@@ -20,13 +19,12 @@ command -v asntool || sudo apt install -y ncbi-tools-bin
 echo "Downloading test queries..."
 gsutil -m cp -n "gs://blast-test-requests-sprint11/*.json"  \
     stability_test/ > /dev/null 2>&1
-echo "Downloaded test queries."
+
+numtests=$(find stability_test/ -name "*.json" | wc -l)
+echo "Downloaded $numtests test queries."
 
 # Query databases in order
-grep -l nr_50M stability_test/*json | \
-    sort > stability_test/stability_tests.txt
-grep -l nt_50M stability_test/*json | \
-    sort >> stability_test/stability_tests.txt
+find stability_test/ -name "*.json" | sort > stability_test/stability_tests.txt
 
 cat << EOF > $BC_INI
     {
@@ -48,11 +46,11 @@ cat << EOF > $BC_INI
         "cluster" :
         {
             "transfer_files" : [ "libblastjni.so" ],
-            "parallel_jobs" : 20,
-            "XXnum-executors": 512,
-            "XXnum-executor-cores": 1,
+            "parallel_jobs" : 48,
+            "num-executor-cores": 1,
+            "executor-memory": 2G,
             "log_level" : "INFO",
-            "jni_log_level" : "WARN"
+            "jni_log_level" : "INFO"
         }
     }
 EOF
@@ -60,9 +58,9 @@ EOF
 echo -e ":wait\n:exit\n" \
  >> stability_test/stability_tests.txt
 
-#./run.sh stability_test/stability_tests.txt
 [ -f libblastjni.so ] || gsutil cp gs://blast-lib/libblastjni.so .
 spark-submit --master yarn \
+    "$LOG_CONF" \
     --class $BC_CLASS $BC_JAR $BC_INI stability_test/stability_tests.txt
 
 
@@ -73,14 +71,39 @@ for asn in *.asn1; do
         -t Seq-annot -d "$asn" -p "$asn.txt"
 done
 
-#rm -f ../*.result
-#wc -l -- *.asn1 | sort > ../asn1.wc.result
-wc -l -- *.asn1.txt | sort > ../asn1.txt.wc.result
+unset LC_ALL # Messes with sorting
+wc -l ./*.asn1.txt | awk '{print $1 "\t" $2;}' | sort -k2 > ../asn1.txt.wc.result
 
-#if diff asn1.wc.expected asn1.wc.result; then
-#    echo "Differences in .asn1 output"
-#fi
+DATE=$(date "+%Y%m%d%H%M")
+echo "Uploading test results to gs://blast-stability-test-results/$DATE"
+gsutil -m cp -r ./* "gs://blast-stability-test-results/$DATE" > /dev/null 2>&1
+echo "Uploaded  test results"
 
-if diff asn1.txt.wc.expected asn1.txt.wc.result; then
+cd ..
+
+diff asn1.txt.wc.expected asn1.txt.wc.result
+if [ $? -ne 0 ]; then
     echo "Differences in .asn1.txt output"
 fi
+
+### echo "Downloading reference results..."
+### gsutil -m cp -nr gs://blast-results-reference/ . > /dev/null 2>&1
+### numrefs=$(find blast-results-reference/ -name "*.gz" | wc -l)
+### echo "Downloaded $numrefs reference results."
+###
+### echo "Uncompressing reference results..."
+### cd blast-results-reference || exit
+### find ./ -name "*gz" -print0 | nice xargs -0 -n 8 -P 8 gunzip
+### echo "Uncompressed  reference results."
+### cd ..
+###
+### for check in blast-results-reference/*.asn; do
+###     base=$(basename "$check")
+###     req="report/REQ_${base}1.txt"
+###     diff "$check" "$req" > /dev/null 2>&1
+###     if [ $? -ne 0 ]; then
+###         echo "Differences with $check $req"
+###     else
+###         echo "Ok with $base"
+###     fi
+### done

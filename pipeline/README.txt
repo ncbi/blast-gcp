@@ -10,6 +10,11 @@ How to run the cluster:
 	> run the script './run.sh'
 	( the application will be ready to take commands after you see the string 'ready' on the console )
 
+Notes on the number of partitions spark uses to split the BLASTDB RDD:
+This can be configured on the `ini.json` file in the cluster section. If not
+set (or set to 0), Spark will split the RDD into the number of partitions of
+its choosing, otherwise the provided value is used.
+
 Available commands on the console:
 
 	'exit'	... terminates the application
@@ -91,3 +96,15 @@ how to set the number of executors?
     will enable dynamic alloction of executors.
     Tests have shown that this will fully utilize the cluster after about 5-10 requests.
 
+Inputs:
+    The input directory has files which can be provided as the first argument
+    to the main program to select requests to run. They are split by program;
+    the suffix represents the percentage of the input size (25%, 50%, 75% and
+    100%).
+    and 
+
+Outputs:
+    To preserve results run on a master node, run the `archive-results.py`
+    script. This will create a tarball with the `report` directory and the
+    provided configuration file and upload the tarball to a configurable
+    bucket in GCS.

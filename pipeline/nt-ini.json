@@ -1,0 +1,24 @@
+{
+    "databases" :
+    [
+		{
+			"key" : "nt",
+			"worker_location" : "/mnt/1/blast/db",
+			"source_location" : "gs://nt_50mb_chunks",
+			"extensions" : [ "nsq", "nin", "nax" ]
+		}
+	],
+
+    "cluster" :
+    {
+		"transfer_files" : [ "libblastjni.so" ],
+		"parallel_jobs" : 16,
+		"num_partitions" : 128,
+		"locality_wait" : "5s",
+        "num_executors" : 0,
+        "num_executor_cores" : 1,
+        "jni_log_level" : "INFO",
+        "log_level" : "INFO"
+    }
+
+}

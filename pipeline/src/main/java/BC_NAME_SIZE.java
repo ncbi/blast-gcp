@@ -49,4 +49,15 @@ public final class BC_NAME_SIZE implements Serializable
         name = a_name;
         size = a_size;
     }
+
+  /**
+   * getter for use by test-code
+   *
+   * @return returns the object as string
+   */
+    @Override public String toString()
+    {
+        return String.format("%s,%d bytes", name , size);
+    }
+
 }

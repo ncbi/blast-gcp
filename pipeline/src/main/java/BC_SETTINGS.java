@@ -64,8 +64,8 @@ public final class BC_SETTINGS
 
     /* CLUSTER */
     public List< String > transfer_files;
-    public String  spark_log_level = "ERROR";
-    public String  locality_wait = "";
+    public String  spark_log_level = "INFO";
+    public String  locality_wait = "24h";
     public boolean set_dyn_alloc = false;
     public boolean with_dyn_alloc = false;
     public String  executor_memory = "";
@@ -74,6 +74,7 @@ public final class BC_SETTINGS
     public boolean scheduler_fair = false;
     public int num_executors = 0;
     public int num_executor_cores = 0;
+    public int num_partitions = 0;
     public int parallel_jobs = 1;
     public String jni_log_level = "INFO";
     public int console_sleep_time = 200;
@@ -223,6 +224,8 @@ public final class BC_SETTINGS
             S = S + String.format( "\tnum-executors ...... %d\n", num_executors );
         if ( num_executor_cores > 0 )
             S = S + String.format( "\tnum-executor-cores . %d\n", num_executor_cores );
+        if ( num_partitions > 0 )
+            S = S + String.format( "\tnum-partitions ..... %d\n", num_partitions );
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
 

@@ -26,7 +26,8 @@
 
 package gov.nih.nlm.ncbi.blastjni;
 
-import java.io.PrintStream;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * command-class
@@ -34,9 +35,9 @@ import java.io.PrintStream;
 */
 public final class BC_COMMAND
 {
-    private final PrintStream origin_stream;
     private String[] parts;
     private final int num_parts;
+    private final Logger logger;
 
 /**
  * create instance of BC_COMMAND from a String
@@ -46,11 +47,11 @@ public final class BC_COMMAND
  * @param origin console or tcp-socket where the command originated
  * @param line   String obtained from console or tcp-socket
 */
-    BC_COMMAND( final PrintStream origin, final String line )
+    BC_COMMAND( final String line )
     {
-        origin_stream = origin;
         parts = line.trim().split( "\\s+" );    /* split on whitespace */
         num_parts = parts.length;
+        logger = LogManager.getLogger( BC_COMMAND.class );
     }
 
 /**
@@ -125,9 +126,9 @@ public final class BC_COMMAND
     private void handle_file_request( BC_CONTEXT context )
     {
         if ( num_parts > 1 )
-            context.add_request_file( parts[ 1 ], origin_stream );
+            context.add_request_file( parts[ 1 ] );
         else
-            origin_stream.printf( "filename is missing\n" );
+            logger.info( "file_request: filename is missing" );
     }
 
 /**
@@ -141,10 +142,10 @@ public final class BC_COMMAND
         if ( num_parts > 1 )
         {
             int limit = ( num_parts > 2 ) ? BC_UTILS.toInt( parts[ 2 ] ) : 0;
-            context.addRequestList( parts[ 1 ], origin_stream, limit );
+            context.addRequestList( parts[ 1 ], limit );
         }
         else
-            origin_stream.printf( "filename is missing\n" );
+            logger.info( "list_request: filename is missing" );
     }
 
 /**
@@ -158,10 +159,10 @@ public final class BC_COMMAND
         if ( num_parts > 1 )
         {
             int limit = ( num_parts > 2 ) ? BC_UTILS.toInt( parts[ 2 ] ) : 0;
-            context.addRequestBucket( parts[ 1 ], origin_stream, limit );
+            context.addRequestBucket( parts[ 1 ], limit );
         }
         else
-            origin_stream.printf( "bucket-url is missing\n" );
+            logger.info( "bucket_request: bucket-url is missing" );
     }
 
 /**
@@ -182,7 +183,7 @@ public final class BC_COMMAND
                 String s = context.get_cmd_history( idx );
                 if ( !s.isEmpty() )
                 {
-                    origin_stream.printf( String.format( "[%d] %s\n", idx, s ) );
+                    logger.info( String.format( "[%d] %s", idx, s ) );
                 }
             }
         }
@@ -203,8 +204,8 @@ public final class BC_COMMAND
             String s = context.get_cmd_history( idx );
             if ( !s.isEmpty() )
             {
-                origin_stream.printf( String.format( "%s\n", s ) );
-                context.push_command( origin_stream, s );
+                logger.info( s );
+                context.push_command( s );
             }
         }
     }
@@ -219,11 +220,11 @@ public final class BC_COMMAND
     {
         int time_limit = ( num_parts > 1 ) ? BC_UTILS.toInt( parts[ 1 ] ) : 0;
         if ( time_limit > 0 )
-            origin_stream.printf( String.format( "waiting for done or %d minutes\n", time_limit ) );
+            logger.info( String.format( "waiting for done or %d minutes", time_limit ) );
         else
-            origin_stream.printf( "waiting for done\n" );
+            logger.info( "waiting for done" );
         context.wait_for_empty( time_limit );
-        origin_stream.printf( "wait done\n" );
+        logger.info( "wait done\n" );
     }
 
 /**
@@ -241,9 +242,9 @@ public final class BC_COMMAND
         else if ( is_bucket_request() ) handle_bucket_request( context );
         else if ( is_history_request() ) handle_history_request( context );
         else if ( is_execute_request() ) handle_execute_request( context );
-        else if ( is_info_request() ) context.print_info( origin_stream );
+        else if ( is_info_request() ) context.print_info();
         else if ( is_wait_request() ) handle_wait_request( context );
-        else origin_stream.printf( "unknown: %s\n", parts );
+        else logger.info( String.format( "unknown: %s", parts ) );
     }
 }
 

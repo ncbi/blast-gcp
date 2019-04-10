@@ -32,7 +32,6 @@ import java.util.Map;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,6 @@ import java.net.URISyntaxException;
 
 import java.security.GeneralSecurityException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileLock;
 import java.util.Collection;
 
 import com.google.cloud.storage.Bucket;
@@ -272,9 +270,7 @@ public class BC_GCP_TOOLS
 */
     private boolean download_to_file( final String bucket, final String key, final String dst_filename )
     {
-        /* the constructor of BC_FILE_LOCK does create the parent-directory! */
-        BC_FILE_LOCK lock = new BC_FILE_LOCK( dst_filename );
-        boolean res = lock.aquire();
+        boolean res = true;
         if ( res )
         {
             try
@@ -283,30 +279,18 @@ public class BC_GCP_TOOLS
                 res = ( obj != null );
                 if ( res )
                 {
-                    obj.getMediaHttpDownloader().setDirectDownloadEnabled( true );
 
                     File f = new File( dst_filename );
                     FileOutputStream f_out = new FileOutputStream( f );
 
                     try
                     {
-                        /* f_lock does not apply across multiple JWMs, but we have BC_FILE_LOCK... */
-                        FileLock f_lock = f_out.getChannel().tryLock();
-                        if ( f_lock != null )
-                        {
-                            try
-                            {
-                                obj.executeMediaAndDownloadTo( f_out );
-                            }
-                            catch( Exception e )
-                            {
-                                e.printStackTrace();
-                                res = false;
-                            }
-                            finally
-                            {
-                                f_lock.release();
-                            }
+                        try {
+                            obj.executeMediaAndDownloadTo( f_out );
+                        }
+                        catch( Exception e ) {
+                            e.printStackTrace();
+                            res = false;
                         }
                     }
                     catch( Exception e )
@@ -338,7 +322,6 @@ public class BC_GCP_TOOLS
                 e.printStackTrace();
                 res = false;
             }
-            lock.release();
         }
         return res;
     }

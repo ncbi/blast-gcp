@@ -60,24 +60,21 @@ public final class gov.nih.nlm.ncbi.blastjni.BLAST_HSP_LIST implements java.io.S
 }
 Compiled from "BLAST_TB_LIST.java"
 public final class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Serializable, java.lang.Comparable<gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST> {
-  public static double epsilon;
-    descriptor: D
-  public int oid;
+  public int evalue;
     descriptor: I
-  public double evalue;
-    descriptor: D
+  public int score;
+    descriptor: I
+  public int seqid;
+    descriptor: I
   public byte[] asn1_blob;
     descriptor: [B
   public int top_n;
     descriptor: I
-  public gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST(int, double, byte[]);
-    descriptor: (ID[B)V
+  public gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST(int, int, int, byte[]);
+    descriptor: (III[B)V
 
   public java.lang.Boolean isEmpty();
     descriptor: ()Ljava/lang/Boolean;
-
-  public static int FuzzyEvalueComp(double, double);
-    descriptor: (DD)I
 
   public int compareTo(gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST);
     descriptor: (Lgov/nih/nlm/ncbi/blastjni/BLAST_TB_LIST;)I
@@ -90,7 +87,4 @@ public final class gov.nih.nlm.ncbi.blastjni.BLAST_TB_LIST implements java.io.Se
 
   public int compareTo(java.lang.Object);
     descriptor: (Ljava/lang/Object;)I
-
-  static {};
-    descriptor: ()V
 }
