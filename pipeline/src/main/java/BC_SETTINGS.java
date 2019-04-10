@@ -226,7 +226,7 @@ public final class BC_SETTINGS
             S = S + String.format( "\tnum-executor-cores . %d\n", num_executor_cores );
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
-        S = S + String.format( "\tpredownload-dbs ...... %s\n", Boolean.toString( predownload_dbs));
+        S = S + String.format( "\tpredownload dbs ...... %s\n", Boolean.toString( predownload_dbs));
 
         if ( debug.events_selected() )
         {
