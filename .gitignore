@@ -9,3 +9,6 @@ cscope.*
 vim.*
 tags
 .git-credentials
+
+*.tgz
+*.gz

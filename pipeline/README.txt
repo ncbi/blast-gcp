@@ -102,3 +102,9 @@ Inputs:
     the suffix represents the percentage of the input size (25%, 50%, 75% and
     100%).
     and 
+
+Outputs:
+    To preserve results run on a master node, run the `archive-results.py`
+    script. This will create a tarball with the `report` directory and the
+    provided configuration file and upload the tarball to a configurable
+    bucket in GCS.
