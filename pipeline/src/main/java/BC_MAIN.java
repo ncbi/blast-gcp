@@ -134,7 +134,8 @@ public final class BC_MAIN
              */
             JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = jsc.parallelize( entries, 64);
 
-            rdd = rdd.map(item -> {
+            if (settings.predownload_dbs) {
+                rdd = rdd.map(item -> {
 
                            List<String> error_list = new ArrayList<String>();
                            List<String> info_list = new ArrayList<String>();
@@ -142,10 +143,11 @@ public final class BC_MAIN
                            return item;
                           }).cache();
 
-            rdd.collect();
+                rdd.collect();
 
-            /* put the RDD in the database-dictionary */
-            db_dict.put( key, rdd );
+                /* put the RDD in the database-dictionary */
+                db_dict.put( key, rdd );
+            }
         }
 
         /* create the job-pool to process jobs in parallel */
