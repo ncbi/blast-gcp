@@ -74,6 +74,8 @@ if __name__ == '__main__':
     parser.add_argument('--logs', metavar='DIR', dest='dir',
                         type=str, help='Directory with logs',
                         default='report')
+    parser.add_argument('--hot-spots', dest='hotspots',
+                        action='store_true', help='Analyze hotspots')
     parser.add_argument('--hot-spot-plot', dest='hotspotplot',
                         action='store_true',
                         help='Generate database chunk search time for analysis of hot spots')
@@ -171,3 +173,34 @@ if __name__ == '__main__':
         plt.savefig('plot.pdf')
         
     
+    # find database chunks that consitently take longer to search than others
+    if args.hotspots:
+        norm_times = None
+        
+        # for each RID
+        for rid in chunk_time:
+
+            # select search times between 5th and 95th percentile
+            t = chunk_time[rid]
+            index = t.sort_values().index
+            p = int(float(len(index) * 5) / 100)
+            index = index[p:-p]
+
+            # normalize time by mean and standard deviation
+            m = t[index].mean()
+            s = t[index].std()
+            normalized_t = (t - m) / s
+
+            if norm_times is None:
+                norm_times = pd.DataFrame({rid: normalized_t})
+            else:
+                norm_times[rid] = normalized_t
+
+        # report number of times each database chunk was search longer than 3
+        # standard deviations than the mean
+        print('')
+        print('Hot spots:')
+        print('Number of requests for which a database chunk was search in time larger than 3 standard devations, than the mean across all chunks:')
+        hotspots = (norm_times > 3).sum(axis = 1).sort_values(ascending = False)
+        print(hotspots.head())
+            
