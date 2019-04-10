@@ -343,6 +343,8 @@ class CLUSTER_SETTINGS_READER
     private static final String key_parallel_jobs = "parallel_jobs";
     private static final String key_jni_log_level = "jni_log_level";
     private static final String  dflt_transfer_file = "libblastjni.so";
+    private static final String key_predownload_dbs = "predownload_dbs";
+    private static final boolean dflt_predownload_dbs = false;
 
 /**
  * extracts all cluster-settings from the JsonObject
@@ -385,6 +387,8 @@ class CLUSTER_SETTINGS_READER
                 key_parallel_jobs, settings.parallel_jobs);
             settings.jni_log_level = BC_JSON_UTILS.get_json_string( obj,
                 key_jni_log_level, settings.jni_log_level );
+            settings.predownload_dbs = BC_JSON_UTILS.get_json_bool( obj,
+                key_predownload_dbs, dflt_predownload_dbs );
         }
     }
 }

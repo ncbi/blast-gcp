@@ -136,8 +136,20 @@ public final class BC_MAIN
                 jsc.parallelize( entries, settings.num_partitions ) :
                 jsc.parallelize( entries );
 
-            /* put the RDD in the database-dictionary */
-            db_dict.put( key, rdd );
+            if (settings.predownload_dbs) {
+                rdd = rdd.map(item -> {
+
+                           List<String> error_list = new ArrayList<String>();
+                           List<String> info_list = new ArrayList<String>();
+                           item.downloadAndScan(error_list, info_list);
+                           return item;
+                          }).cache();
+
+                rdd.collect();
+
+                /* put the RDD in the database-dictionary */
+                db_dict.put( key, rdd );
+            }
         }
 
         /* create the job-pool to process jobs in parallel */

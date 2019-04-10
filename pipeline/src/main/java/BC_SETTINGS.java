@@ -79,6 +79,7 @@ public final class BC_SETTINGS
     public String jni_log_level = "INFO";
     public int console_sleep_time = 200;
     public int debug_receiver_sleep_time = 200;
+    public boolean predownload_dbs = false;
 
     /* DEBUG */
     BC_DEBUG_SETTINGS debug;
@@ -228,6 +229,7 @@ public final class BC_SETTINGS
             S = S + String.format( "\tnum-partitions ..... %d\n", num_partitions );
         S = S + String.format( "\tparallel jobs ...... %d\n", parallel_jobs );
         S = S + String.format( "\tjni log level ...... '%s'\n", jni_log_level );
+        S = S + String.format( "\tpredownload dbs ...... %s\n", Boolean.toString( predownload_dbs));
 
         if ( debug.events_selected() )
         {
