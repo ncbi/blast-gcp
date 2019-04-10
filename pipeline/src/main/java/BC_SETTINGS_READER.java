@@ -342,7 +342,7 @@ class CLUSTER_SETTINGS_READER
     private static final String key_parallel_jobs = "parallel_jobs";
     private static final String key_jni_log_level = "jni_log_level";
     private static final String  dflt_transfer_file = "libblastjni.so";
-    private static final String key_predownload_dbs = "predownload-dbs";
+    private static final String key_predownload_dbs = "predownload_dbs";
     private static final boolean dflt_predownload_dbs = false;
 
 /**
