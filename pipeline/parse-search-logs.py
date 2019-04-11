@@ -135,9 +135,11 @@ if __name__ == '__main__':
                        'Perc90th': p90})
 
     # Reports
-    print('{} requests searched in {:.2f} min'.format(df.shape[0],
-                                               df['Time'].sum() / 1000 / 60))
-    print('{:.2f} requests per second'.format(df.shape[0] / (df['Time'].sum() / 1000)))
+    start = df['Start'].sort_values().iloc[0]
+    end = df['End'].sort_values().iloc[df.shape[0] - 1]
+    wallclock_time = (end - start).seconds
+    print('{} requests searched in {:.2f} min'.format(df.shape[0], wallclock_time / 60))
+    print('{:.2f} requests per second'.format(df.shape[0] / wallclock_time))
     print('Time spent in BLAST searches: {:.2f} min'.format(
         chunk_time.sum().sum() / 100 / 60))
     
