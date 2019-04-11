@@ -146,10 +146,9 @@ public final class BC_MAIN
                           }).cache();
 
                 rdd.collect();
-
-                /* put the RDD in the database-dictionary */
-                db_dict.put( key, rdd );
             }
+            /* put the RDD in the database-dictionary */
+            db_dict.put( key, rdd );
         }
 
         /* create the job-pool to process jobs in parallel */
