@@ -74,6 +74,8 @@ if __name__ == '__main__':
     parser.add_argument('--logs', metavar='DIR', dest='dir',
                         type=str, help='Directory with logs',
                         default='report')
+    parser.add_argument('--chunk-times', metavar='FILE', dest='chunk_times',
+                        type=str, help='Save search times against each chunk to a tab-delimited file')
     parser.add_argument('--hot-spots', dest='hotspots',
                         action='store_true', help='Analyze hotspots')
     parser.add_argument('--hot-spot-plot', dest='hotspotplot',
@@ -141,7 +143,7 @@ if __name__ == '__main__':
     print('{} requests searched in {:.2f} min'.format(df.shape[0], wallclock_time / 60))
     print('{:.2f} requests per second'.format(df.shape[0] / wallclock_time))
     print('Time spent in BLAST searches: {:.2f} min'.format(
-        chunk_time.sum().sum() / 100 / 60))
+        chunk_time.sum().sum() / 1000 / 60))
     
     print('Latency percentiles [ms]:')
     print(df['Time'].quantile(q = [0.5, 0.75, 0.9, 0.95, 0.99],
@@ -158,6 +160,11 @@ if __name__ == '__main__':
     print ('Percentiles for the max number of times a chunk was searched on the same host:')
     print(affinity.quantile(q = [0.1, 0.25, 0.5, 0.75, 0.9],
                             interpolation = 'nearest'))
+
+    # save search times against each database chunks
+    if args.chunk_times:
+        chunk_time.to_csv(args.chunk_times, sep='\t', header=True)
+
 
     # generate a plot with run time per database chunk
     if args.hotspotplot:
@@ -177,32 +184,27 @@ if __name__ == '__main__':
     
     # find database chunks that consitently take longer to search than others
     if args.hotspots:
-        norm_times = None
+        outliers = None
         
         # for each RID
         for rid in chunk_time:
 
-            # select search times between 5th and 95th percentile
+            # find the position of a wisker in a box plot: Q3 + 1.5 * (Q3 - Q1),
+            # everyting above this value is shown as an outlier in a box plot
             t = chunk_time[rid]
-            index = t.sort_values().index
-            p = int(float(len(index) * 5) / 100)
-            index = index[p:-p]
-
-            # normalize time by mean and standard deviation
-            m = t[index].mean()
-            s = t[index].std()
-            normalized_t = (t - m) / s
-
-            if norm_times is None:
-                norm_times = pd.DataFrame({rid: normalized_t})
+            q = t.quantile(q = [0.25, 0.5, 0.75], interpolation = 'nearest')
+            wisker = q[0.75] + 1.5 * (q[0.75] - q[0.25])
+            
+            # subtract the wisker position from run times
+            if outliers is None:
+                outliers = pd.DataFrame({rid: t - wisker})
             else:
-                norm_times[rid] = normalized_t
+                outliers[rid] = t - wisker
 
-        # report number of times each database chunk was search longer than 3
-        # standard deviations than the mean
+        # find and count hotspots
+        hotspots = (outliers > 0).sum(axis = 1).sort_values(ascending = False)
         print('')
         print('Hot spots:')
-        print('Number of requests for which a database chunk was search in time larger than 3 standard devations, than the mean across all chunks:')
-        hotspots = (norm_times > 3).sum(axis = 1).sort_values(ascending = False)
-        print(hotspots.head())
-            
+        print('Number of time a database chunk was a hotspot:')
+        print(hotspots.head(20))
+        
