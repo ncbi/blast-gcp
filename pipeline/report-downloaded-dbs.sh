@@ -9,6 +9,6 @@ BASENAME=$CLUSTER_NAME-w-
 
 echo "worker number-of-db-chunks"
 for n in $(seq 0 $(( $NUM_WORKERS - 1 )) ) ; do
-    num_chunks=`ssh $BASENAME$n ls -1 /tmp/blast/db/| wc -l`
+    num_chunks=`ssh $BASENAME$n ls -1 /mnt/1/blast/db/| wc -l`
     echo $BASENAME$n $num_chunks
 done
