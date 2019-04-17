@@ -74,8 +74,9 @@ if __name__ == '__main__':
     parser.add_argument('--logs', metavar='DIR', dest='dir',
                         type=str, help='Directory with logs',
                         default='report')
-    parser.add_argument('--chunk-times', metavar='FILE', dest='chunk_times',
-                        type=str, help='Save search times against each chunk to a tab-delimited file')
+    parser.add_argument('--save-chunk-times', metavar='FILE',
+                        dest='chunk_times', type=str,
+                        help='Save search times against each chunk to a tab-delimited file')
     parser.add_argument('--hot-spots', dest='hotspots',
                         action='store_true', help='Analyze hotspots')
     parser.add_argument('--hot-spot-plot', dest='hotspotplot',
