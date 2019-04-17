@@ -8,5 +8,5 @@ NUM_WORKERS=$(gcloud dataproc clusters describe $CLUSTER_NAME --region $REGION |
 BASENAME=$CLUSTER_NAME-w-
 
 for n in $(seq 0 $(( $NUM_WORKERS - 1 )) ) ; do
-    ssh $BASENAME$n sudo systemctl restart ganglia-monitor
+    ssh -o "StrictHostKeyChecking=no" $BASENAME$n sudo systemctl restart ganglia-monitor
 done
