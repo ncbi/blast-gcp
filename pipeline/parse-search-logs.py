@@ -77,6 +77,9 @@ if __name__ == '__main__':
     parser.add_argument('--save-chunk-times', metavar='FILE',
                         dest='chunk_times', type=str,
                         help='Save search times against each chunk to a tab-delimited file')
+    parser.add_argument('--save-chunk-hosts', metavar='FILE',
+                        dest='chunk_hosts', type=str,
+                        help='Save search locations for each chunk to a tab-delimited file')
     parser.add_argument('--hot-spots', dest='hotspots',
                         action='store_true', help='Analyze hotspots')
     parser.add_argument('--hot-spot-plot', dest='hotspotplot',
@@ -161,6 +164,11 @@ if __name__ == '__main__':
     print ('Percentiles for the max number of times a chunk was searched on the same host:')
     print(affinity.quantile(q = [0.1, 0.25, 0.5, 0.75, 0.9],
                             interpolation = 'nearest'))
+
+    # save hosts where database chunks where searched
+    if args.chunk_hosts:
+        chunks.to_csv(args.chunk_hosts, sep='\t', header=True)
+
 
     # save search times against each database chunks
     if args.chunk_times:
