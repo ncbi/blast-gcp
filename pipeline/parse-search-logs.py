@@ -33,7 +33,7 @@ def parse(filename):
 
             if line.startswith('starting request'):
                 rid = fields[2][1:-1]
-                start_time = pd.Timestamp(fields[4][1:-7])
+                start_time = pd.Timestamp(fields[4][1:].split('[', 1)[0])
             elif 'search' in line:
                 chunk = fields[1]
                 prelim_hosts[chunk] = fields[0]
@@ -44,7 +44,7 @@ def parse(filename):
                 traceback_times[chunk] = int(fields[7])
                 traceback_num_results[chunk] = int(fields[4])
             elif 'done' in line:
-                end_time = pd.Timestamp(fields[4][1:-7])
+                end_time = pd.Timestamp(fields[4][1:].split('[', 1)[0])
                 runtime = int(fields[6])
                 errors = int(fields[11])
 
