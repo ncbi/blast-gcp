@@ -1,4 +1,4 @@
-"""Parse search log files and summarize results"""
+"""Parse search log files and summarize results (requires pandas)"""
 
 import pandas as pd
 import numpy as np
@@ -69,7 +69,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Summarize BLAST on SPARK logs')
     parser.add_argument('--logs', metavar='DIR', dest='dir',
-                        type=str, help='Directory with logs',
+                        type=str,
+                        help='Directory with logs (the report directory)',
                         default='report')
     parser.add_argument('--save-chunk-times', metavar='FILE',
                         dest='chunk_times', type=str,
@@ -96,6 +97,9 @@ if __name__ == '__main__':
     chunks = None
     chunk_time = None
 
+    prelim = pd.DataFrame()
+    traceback = pd.DataFrame()
+
     # for each file matching *.txt
     files = [f for f in os.listdir(args.dir) if f.endswith('.txt')]
     for filename in files:
@@ -114,6 +118,8 @@ if __name__ == '__main__':
         m = df['PrelimTime'] + df['TracebackTime']
         max_chunk_time[rid] = m.max()
         max_chunk[rid] = m.idxmax()
+        prelim[rid] = df['PrelimTime']
+        traceback[rid] = df['TracebackTime']
 
         p90[rid] = m.quantile(q = 0.9, interpolation = 'nearest')
 
@@ -161,6 +167,12 @@ if __name__ == '__main__':
     print ('Percentiles for the max number of times a chunk was searched on the same host:')
     print(affinity.quantile(q = [0.1, 0.25, 0.5, 0.75, 0.9],
                             interpolation = 'nearest'))
+
+
+    print('')
+    print('Preliminary to traceback ratio:')
+    print((prelim.sum() / traceback.sum()).quantile(
+        q = [0.25, 0.5, 0.75, 0.9], interpolation = 'nearest'))
 
     # save hosts where database chunks where searched
     if args.chunk_hosts:
