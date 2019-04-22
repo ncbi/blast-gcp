@@ -1,8 +1,5 @@
 """Parse search log files and summarize results"""
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from itertools import islice
@@ -177,6 +174,10 @@ if __name__ == '__main__':
 
     # generate a plot with run time per database chunk
     if args.hotspotplot:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+
         # find RIDs with the longes chunk search times
         rids = [i for i, v in islice(chunk_time.max().sort_values(
                                          ascending = False).iteritems(), 5)]
