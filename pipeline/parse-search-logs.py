@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Parse search log files and summarize results (requires pandas)"""
 
 import pandas as pd
