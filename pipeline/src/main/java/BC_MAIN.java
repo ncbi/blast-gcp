@@ -128,16 +128,22 @@ public final class BC_MAIN
             /* create a list of Database-RDD-entries using a static method of this class */
             List< BC_DATABASE_RDD_ENTRY > entries = BC_DATABASE_RDD_ENTRY.make_rdd_entry_list( db_setting, used_chunks );
 
-            /* ask the spark-context to distribute the RDD to the workers
-             * 16 parallel jobs, 64 partitions each = 1024
-             * 16 workers, 64 cores each =            1024
-             */
-            JavaRDD< BC_DATABASE_RDD_ENTRY > rdd = settings.num_partitions > 0 ?
-                jsc.parallelize( entries, settings.num_partitions ) :
-                jsc.parallelize( entries );
 
-            if (settings.predownload_dbs) {
-                rdd = rdd.map(item -> {
+            for (int i = 0;i < context.settings.parallel_jobs;i++) {
+
+                String key_plus = String.format("%s.%d", key, i);
+
+                /* ask the spark-context to distribute the RDD to the workers
+                 * 16 parallel jobs, 64 partitions each = 1024
+                 * 16 workers, 64 cores each =            1024
+                 */
+                JavaRDD< BC_DATABASE_RDD_ENTRY > rdd =
+                    settings.num_partitions > 0 ?
+                    jsc.parallelize( entries, settings.num_partitions ) :
+                    jsc.parallelize( entries );
+
+                if (settings.predownload_dbs) {
+                    rdd = rdd.map(item -> {
 
                            List<String> error_list = new ArrayList<String>();
                            List<String> info_list = new ArrayList<String>();
@@ -145,10 +151,11 @@ public final class BC_MAIN
                            return item;
                           }).cache();
 
-                rdd.collect();
+                    rdd.collect();
+                }
+                /* put the RDD in the database-dictionary */
+                db_dict.put( key_plus, rdd );
             }
-            /* put the RDD in the database-dictionary */
-            db_dict.put( key, rdd );
         }
 
         /* create the job-pool to process jobs in parallel */

@@ -155,7 +155,7 @@ class BC_JOB extends Thread
 
         JavaRDD< BC_DATABASE_RDD_ENTRY > chunks = db_dict.get( request.db );
         if ( chunks == null )
-            chunks = db_dict.get( request.db.substring( 0, 2 ) );
+            chunks = db_dict.get( String.format("%s.%d", request.db.substring(0, 2), id) );
 
         if ( chunks != null )
         {
