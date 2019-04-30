@@ -43,7 +43,7 @@ def parse(filename):
                 traceback_num_results[chunk] = int(fields[4])
             elif 'done' in line:
                 end_time = pd.Timestamp(fields[4][1:].split('[', 1)[0])
-                runtime = int(fields[6])
+                runtime = int(fields[6])    # Wall-clock in ms
                 errors = int(fields[11])
 
         phosts = pd.Series(prelim_hosts)
@@ -100,6 +100,7 @@ if __name__ == '__main__':
 
     prelim = pd.DataFrame()
     traceback = pd.DataFrame()
+    perc_overhead = {}
 
     # for each file matching *.txt
     files = [f for f in os.listdir(args.dir) if f.endswith('.txt')]
@@ -121,6 +122,9 @@ if __name__ == '__main__':
         max_chunk[rid] = m.idxmax()
         prelim[rid] = df['PrelimTime']
         traceback[rid] = df['TracebackTime']
+        avg_blast_time = df['PrelimTime'].mean() + df['TracebackTime'].mean()
+        perc_overhead[rid] = 1.0 - (avg_blast_time / runtime)
+
 
         p90[rid] = m.quantile(q = 0.9, interpolation = 'nearest')
 
@@ -156,7 +160,12 @@ if __name__ == '__main__':
     print('Latency percentiles [ms]:')
     print(df['Time'].quantile(q = [0.5, 0.75, 0.9, 0.95, 0.99],
                               interpolation = 'nearest'))
-    
+    print('')
+    df_overhead = pd.Series(perc_overhead)
+    print('Non-BLAST code overhead percentage (approximation):')
+    print(df_overhead.quantile(q = [0.5, 0.75, 0.9, 0.95, 0.99],
+                              interpolation = 'nearest'))
+
     chunks = chunks.transpose()
     affinity = {}
     for name, col in chunks.iteritems():
