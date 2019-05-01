@@ -55,6 +55,8 @@ def parse(filename):
         presults = pd.Series(prelim_num_results)
         ttimes = pd.Series(traceback_times, dtype=np.int64)
         tresults = pd.Series(traceback_times, dtype=np.int64)
+        prelim_start = pd.Series(prelim_start, dtype=np.int64)
+        traceback_start = pd.Series(traceback_start, dtype=np.int64)
 
         df = pd.DataFrame({'Host': phosts, 'PrelimTime': ptimes,
                            'PrelimResults': presults,
@@ -64,9 +66,13 @@ def parse(filename):
         df['TracebackTime'] = ttimes
         df['TracebackResults'] = tresults
 
+        # Traceback is not always run and logged, hence there are missing data. Pandas seems to convert
+        # columns with missing data to float64.
+        # Fill missing data with zeros and set type as int64.
         df.fillna(0, inplace = True)
         df['TracebackTime'] = df['TracebackTime'].astype('int64')
         df['TracebackResults'] = df['TracebackResults'].astype('int64')
+        df['TracebackStart'] = df['TracebackStart'].astype('int64')
 
         return (df, runtime, start_time, end_time)
 
