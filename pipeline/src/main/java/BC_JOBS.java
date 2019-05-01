@@ -193,8 +193,8 @@ class BC_JOB extends Thread
                             error_lst.add( String.format( "%s: %s - search: returned null", item.workername(), item.chunk.name ) );
                         else
                         {
-                            info_lst.add( String.format( "%s: %s - search: %d items ( %d ms )",
-                                                    item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ) ) );
+                            info_lst.add( String.format( "%s: %s - search: %d items ( %d ms ) %d",
+                                                    item.workername(), item.chunk.name, hsps.length, ( finishtime - starttime ), starttime ) );
                             if ( hsps.length > 0 )
                             {
                                 starttime = System.currentTimeMillis();
@@ -205,8 +205,8 @@ class BC_JOB extends Thread
                                     error_lst.add( String.format( "%s: %s - traceback: returned null", item.workername(), item.chunk.name ) );
                                 else
                                 {
-                                    info_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms )",
-                                                         item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ) ) );
+                                    info_lst.add( String.format( "%s: %s - traceback: %d items ( %d ms ) %d",
+                                                         item.workername(), item.chunk.name, tbs.length, ( finishtime - starttime ), starttime ) );
 
                                     for ( BLAST_TB_LIST tb : tbs )
                                         tp_lst.add( tb );

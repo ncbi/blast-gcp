@@ -21,9 +21,11 @@ def parse(filename):
     prelim_hosts = {}
     prelim_times = {}
     prelim_num_results = {}
+    prelim_start = {}
 
     traceback_times = {}
     traceback_num_results = {}
+    traceback_start = {}
 
     with open(filename) as f:
         for line in f:
@@ -37,10 +39,12 @@ def parse(filename):
                 prelim_hosts[chunk] = fields[0]
                 prelim_times[chunk] = int(fields[7])
                 prelim_num_results[chunk] = int(fields[4])
+                prelim_start[chunk] = int(fields[10])
             elif 'traceback' in line:
                 chunk = fields[1]
                 traceback_times[chunk] = int(fields[7])
                 traceback_num_results[chunk] = int(fields[4])
+                traceback_start[chunk] = int(fields[10])
             elif 'done' in line:
                 end_time = pd.Timestamp(fields[4][1:].split('[', 1)[0])
                 runtime = int(fields[6])    # Wall-clock in ms
@@ -53,7 +57,9 @@ def parse(filename):
         tresults = pd.Series(traceback_times, dtype=np.int64)
 
         df = pd.DataFrame({'Host': phosts, 'PrelimTime': ptimes,
-                           'PrelimResults': presults})
+                           'PrelimResults': presults,
+                           'PrelimStart': prelim_start,
+                           'TracebackStart': traceback_start})
 
         df['TracebackTime'] = ttimes
         df['TracebackResults'] = tresults
@@ -98,8 +104,14 @@ if __name__ == '__main__':
     chunks = None
     chunk_time = None
 
+    # run times for database chunks
     prelim = pd.DataFrame()
     traceback = pd.DataFrame()
+
+    # search start against a chunk
+    prelim_start = pd.DataFrame()
+    traceback_start = pd.DataFrame()
+    
     perc_overhead = {}
 
     # for each file matching *.txt
@@ -122,6 +134,8 @@ if __name__ == '__main__':
         max_chunk[rid] = m.idxmax()
         prelim[rid] = df['PrelimTime']
         traceback[rid] = df['TracebackTime']
+        prelim_start[rid] = df['PrelimStart']
+        traceback_start[rid] = df['TracebackStart']
         avg_blast_time = df['PrelimTime'].mean() + df['TracebackTime'].mean()
         perc_overhead[rid] = 1.0 - (avg_blast_time / runtime)
 
