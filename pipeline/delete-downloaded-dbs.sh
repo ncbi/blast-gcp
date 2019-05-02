@@ -9,5 +9,5 @@ BASENAME=$CLUSTER_NAME-w-
 
 for n in $(seq 0 $(( $NUM_WORKERS - 1 )) ) ; do
     echo "Deleting BLASTDBs from $BASENAME$n"
-    ssh $BASENAME$n sudo rm -fr /tmp/blast/db/*
+    ssh $BASENAME$n sudo rm -fr /mnt/1/blast/db/*
 done
