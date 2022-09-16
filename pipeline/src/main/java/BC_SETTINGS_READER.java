@@ -181,6 +181,7 @@ class DATABASES_SETTINGS_READER
     private static final String key_ext = "extensions";
     private static final String key_direct = "direct";
     private static final String key_limit = "limit";
+    private static final String key_ballast = "ballast";
 
 /**
  * extracts all database-settings from the JsonObject
@@ -215,6 +216,8 @@ class DATABASES_SETTINGS_READER
                         key_direct, db_settings.direct );
                     db_settings.limit = BC_JSON_UTILS.get_json_int( obj,
                         key_limit, db_settings.limit );
+                    db_settings.ballast = BC_JSON_UTILS.get_json_int( obj,
+                        key_ballast, db_settings.ballast );
 
                     if ( !db_settings.key.isEmpty() )
                         settings.dbs.put( db_settings.key, db_settings );

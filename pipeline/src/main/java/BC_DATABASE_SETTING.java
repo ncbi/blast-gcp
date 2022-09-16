@@ -48,6 +48,7 @@ public class BC_DATABASE_SETTING implements Serializable
     public Boolean direct = false;      /* are we adressing the chunks directly, in case of on-premise */
     public int limit = 0;               /* in case we want to limit the number of db-chunks */
     public List< String > extensions;   /* for nt: nsq, nin, nhr / nr: psq, pin, phr */
+    public int ballast = 0;             /* how much (unused) ballast we want to add to each RDD-entry */
 
 /**
  * create instance of BC_DATABASE_SETTING
@@ -81,6 +82,8 @@ public class BC_DATABASE_SETTING implements Serializable
         S =  S  +  String.format( "\t(%s).extensions ...... %s\n", key, extensions );
         if ( limit > 0 )
             S =  S  +  String.format( "\t(%s).limit ........... %d\n", key, limit );
+        if ( ballast > 0 )
+            S =  S  +  String.format( "\t(%s).ballast ......... %d\n", key, ballast );
         return S;
     }
 }
